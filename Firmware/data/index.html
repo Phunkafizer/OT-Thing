@@ -1,0 +1,1197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>OTThing OpenTherm controller</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #210;
+            color: #fd975a;
+            font-family: sans-serif;
+        }
+
+        #mainwrapper {
+            max-width: 400px;
+            margin: 0px auto;
+            background-color: black;
+            padding: 5px;
+        }
+
+        h2 {
+            background-color: #fd975a;
+            color: #000;
+            padding: 10px;
+        }
+
+        div.nav {
+            margin-bottom: 5px;
+            /*border: 1px solid #fd975a;;*/
+
+        }
+
+        div.nav li {
+            display: inline-block;
+            list-style-type: none;
+            padding: 5px;
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+
+        div.nav li,
+        div.nav a {
+            Color: #fd975a;
+            ;
+            font-weight: bold;
+            font-size: 0.8em;
+            text-decoration: None;
+        }
+
+        div.nav li:hover {
+            background-color: #444;
+            cursor: pointer;
+        }
+
+        div.nav li.active {
+            background-color: #fd975a;
+            ;
+            color: black;
+        }
+
+        div.group {
+            border: 1px solid grey;
+            margin-bottom: 5px;
+            padding: 5px;
+        }
+
+        div.paramline {
+            display: flex;
+        }
+
+        h3 {
+            font-size: 1.0em;
+            border-left: 6px solid #fd975a;
+            ;
+            margin: 0.5em 0 0.5em 0;
+            padding-left: 0.5em;
+        }
+
+        h4,
+        th {
+            font-size: 0.7em;
+        }
+
+        div.param input[type=range] {
+            width: 100%;
+        }
+
+        div.valunit {
+            display: inline-block;
+            width: 110px;
+        }
+
+        .statusvalue {
+            color: #fff;
+        }
+
+        div.param span.value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: white;
+        }
+
+        div.infobox {
+            display: none;
+            padding: 10px;
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        ul {
+            list-style-position: inside;
+        }
+
+        input[type=text],
+        input[type=password],
+        select {
+            background-color: #111;
+            margin: 5px 0;
+            border: 1px solid #fd975a;
+            color: #fff;
+            padding: 3px;
+        }
+
+        
+        input[type=range] {
+            -webkit-appearance: none;
+            background: #fd975a;
+            height: 5px;
+            margin: auto 10px;
+        }
+
+        div.curve {
+            text-align: center;
+            background-color: #000;
+            margin-top: 0.5em;
+        }
+
+        div.toolbar {
+            text-align: center;
+        }
+
+        button,
+        input[type=submit] {
+            background-color: #fd975a;
+            color: black;
+            padding: 0 1em;
+            border-radius: 8px;
+            border-style: none;
+            box-sizing: border-box;
+            font-weight: 500;
+            height: 30px;
+            outline: none;
+            touch-action: manipulation;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        button:focus {
+            background-color: #fd975a;
+        }
+
+        button:hover {
+            background-color: #6d99a4;
+        }
+
+        button:active {
+            background-color: #4d7984;
+        }
+
+        table {
+            width: 100%;
+            text-align: left;
+        }
+
+        table tbody {
+            color: #fff;
+            font-size: 0.9em;
+        }
+
+        table th.ot,
+        table th.ft {
+            width: 15%;
+        }
+
+        table th.rem {
+            width: 8%;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 28px;
+            margin: 5px 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #333;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 5px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: #8d5535;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 3px;
+        }
+
+        input:checked+.slider {
+            background-color: #fd975a;
+        }
+
+        input:focus+.slider {
+            box-shadow: 0 0 1px #8d5535;
+        }
+
+        input:checked+.slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+
+        div.footer {
+            text-align: center;
+            color: #fd975a;
+            margin-top: 1em;
+            padding: 5px;
+        }
+
+        div.footer a,
+        div.footer a:visited {
+            font-size: 0.8em;
+            color: #fd975a;
+            text-decoration: none;
+        }
+
+        #scanResults {
+            display: none;
+        }
+
+        #scanHint {
+            padding: 5px;
+            display: none;
+        }
+
+        #stickydiv {
+            position: sticky;
+            top: 0;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        #nocon {
+            display: none;
+            padding: 0.6em;
+            background-color: #c00;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="stickydiv">
+        <div id="nocon">No connection to device...</div>
+        <div id="confighint">Config mode!</div>
+    </div>
+
+    <div id="mainwrapper">
+        <h2>OTThing</h2>
+
+        <div class="nav">
+            <ul>
+                <li tab="status" class="active">Status</li>
+                <li tab="setup">Setup</li>
+                <li tab="heatingcurve">Heizkennlinie</li>
+            </ul>
+        </div>
+
+        <div class="tab" id="status">
+            <h3>WiFi</h3>
+            <div class="group">
+                <h4>MAC</h4>
+                <span class="statusvalue" field="wifi.mac"></span>
+                <h4>Status</h4>
+                <span class="statusvalue" field="wifi.status"></span>
+                <h4>SSID</h4>
+                <span class="statusvalue" field="wifi.sta_ssid"></span>
+                <h4>IP</h4>
+                <span class="statusvalue" field="wifi.ipsta"></span>
+                <h4>Hostname</h4>
+                <span class="statusvalue" field="wifi.hostname"></span>
+                <h4>RSSI</h4>
+                <span class="statusvalue" field="wifi.rssi" unit="dBm"></span>
+            </div>
+
+            <h3>MQTT</h3>
+            <div class="group">
+                <h4>Status</h4>
+                <span class="statusvalue" field="mqtt.connected"></span>
+            </div>
+
+            <h3>OpenWeather</h3>
+            <div class="group">
+                <h4>Status</h4>
+                <span>ok</span>
+                <h4>Außentemperatur</h4>
+                <span id="owtemp" class="statusvalue">25.8</span>
+                <span class="statusunit">&deg;C</span>
+            </div>
+            
+            <h3>OT Slave</h3>
+            <div class="group">
+                <div>
+                    <h4>Vorlauftemperatur</h4>
+                    <span class="statusvalue" field="ot.slaveValues.boiler_t" unit="&deg;C"></span>
+                </div>
+
+                <div>
+                    <h4>Rücklauftemperatur</h4>
+                    <span class="statusvalue" field="ot.slaveValue.return_t" unit="&deg;C"></span>
+                </div>
+
+                <div>
+                    <h4>Brauchwassertemperatur</h4>
+                    <span class="statusvalue" field="ot.slaveValues.dhw_t" unit="&deg;C"></span>
+                </div>
+
+                <div>
+                    <h4>Abgastemperatur</h4>
+                    <span class="statusvalue" field="ot.slaveValue.exhaust_t" unit="&deg;C"></span>
+                </div>
+
+                <div>
+                    <h4>Modulation</h4>
+                    <span class="statusvalue" field="ot.slaveValues.rel_mod" unit="%"></span>
+                </div>
+
+                <div>
+                    <h4>Druck Heizkreis</h4>
+                    <span class="statusvalue" field="ot.slaveValues.ch_pressure" unit="bar"></span>
+                </div>
+
+                <div>
+                    <h4>Betriebdsstunden Brenner</h4>
+                    <span class="statusvalue" field="ot.slaveValues.burner_op_hours" unit="h"></span>
+                </div>
+
+                <div>
+                    <h4>Brennerstarts</h4>
+                    <span class="statusvalue" field="ot.slaveValues.burner_starts" unit="bar"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab" id="heatingcurve">
+            <h3>Auslegung</h3>
+            <div class="group">
+                <div id="roomset" class="param">
+                    <h4>Raum Solltemperatur</h4>
+                    <div class="paramline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input type="range" min="17" max="23" step="0.1">
+                    </div>
+                    <div class="infobox">
+                    </div>
+                </div>
+
+                <div id="flowmax" class="param">
+                    <h4>Max. Vorlauftemperatur</h4>
+                    <div class="paramline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input type="range" min="30" max="90" step="1">
+                    </div>
+                    <div class="infobox">
+                        Gängige Systemtemperaturen Vorlauf/R&uuml;cklauf:
+                        <ul>
+                            <li>Alte Norm: 90 &deg;C / 70 &deg;C</li>
+                            <li>Neue Norm: 75 &deg;C / 65 &deg;C</li>
+                            <li>Niedertemperatur: 70 &deg;C / 50 &deg;C</li>
+                            <li>Brennwert: 60 &deg;C / 45 &deg;C</li>
+                            <li>Brennwert: 45 &deg;C / 35 &deg;C</li>
+                        </ul>
+                        <p>Quelle: <a href="www.bosy-online.de">www.bosy-online.de</a></p>
+                    </div>
+                </div>
+
+                <div id="exponent" class="param">
+                    <h4>Heizfl&auml;chenexponent</h4>
+                    <div class="paramline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                        </div>
+                        <input type="range" min="1.0" max="1.5" step="0.05">
+                    </div>
+                    <div class="infobox">
+                        Je nach Anteil von Leitung, Konvektion und Strahlung ist das Verhältnis von Vorlauftemperatur
+                        und
+                        Wärmeabgabe überliniear:
+                        <ul>
+                            <li>Fußbodenheizung: 1,0 - 1,05</li>
+                            <li>Flachheizkörper: 1,26 - 1,33</li>
+                            <li>Handtuchradiatoren: 1,20 - 1,30</li>
+                            <li>Heizkörper nach DIN 4703: 1,3</li>
+                            <li>Konvektoren: 1,30 - 1,50</li>
+                        </ul>
+                        <p>Quelle: <a href="www.bosy-online.de">www.bosy-online.de</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Betriebsparameter</h3>
+            <div class="group">
+                <div id="gradient" class="param">
+                    <h4>Steilheit</h4>
+                    <div class="paramline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                        </div>
+                        <input type="range" min="0.2" max="3" step="0.05">
+                    </div>
+                    <div class="infobox">
+                        <p>
+                            Quelle: <a href="http://www.bosy-online.de/Heizkurve.htm">www.bosy-online.de</a>
+                        </p>
+                    </div>
+                </div>
+
+                <div id="offset" class="param">
+                    <h4>Niveau</h4>
+                    <div class="paramline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input type="range" min="-10" max="10" step="0.5">
+                    </div>
+                </div>
+            </div>
+
+            <div class="curve">
+                <canvas id="canvas" height="375px" width="375px">
+                </canvas>
+            </div>
+
+            <h3>Marker</h3>
+            <div class="group">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="comment">Kommentar</th>
+                            <th class="ot">Au&szlig;en</th>
+                            <th class="ft">Vorlauf</th>
+                            <th class="rem"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="markerbody">
+                    </tbody>
+                </table>
+                <input type="text" id="comment" />
+                <button id="addmarker">+</button>
+            </div>
+        </div>
+
+        <div class="tab" id="setup">
+            <h3>WiFi</h3>
+            <div class="group">
+                <button id="scan">Scan</button><span id="scanHint">Scan läuft...</span>
+                <div id="scanResults">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>SSID</th>
+                                <th>channel</th>
+                                <th>RSSI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scanbody">
+                        </tbody>
+                    </table>
+                    <h4>SSID</h4>
+                    <input id="wifissid" type="text"/>
+                    <h4>Passwort</h4>
+                    <input id="wifipass" type="password"/>
+                    <div><button id="btnsavewifi">Save</button></div>
+                </div>
+            </div>
+
+            <h3>OpenTherm</h3>
+            <div class="group">
+                <div class="param">
+                    <h4>Heizung</h4>
+                    <div class="paramline">
+                        <div>
+                            <label class="switch">
+                                <input id="chOn" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="dhwtemp" class="param">
+                    <h4>Brauchwasser</h4>
+                    <div>
+                        <label class="switch">
+                            <input id="dhwOn" type="checkbox" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="paramline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input type="range" min="30" max="70" step="1" />
+                    </div>
+                </div>
+            </div>
+
+            <h3>MQTT</h3>
+            <div class="group">
+                <h4>Host</h4>
+                <input id="mqttHost" type="text" />
+                <h4>Port</h4>
+                <input id="mqttPort" type="text" />
+                <h4>TLS</h4>
+                <div>
+                    <label class="switch">
+                        <input id="mqttTls" type="checkbox" />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <h4>Username</h4>
+                <input id="mqttUser" type="text" />
+                <h4>Password</h4>
+                <input id="mqttPass" type="password" />
+                
+            </div>
+
+            <h3>Außentemperatur</h3>
+            <div class="group">
+                <h4>Quelle</h4>
+                <select id="selectOT">
+                    <option selected>OpenWeather</option>
+                    <option>1wire</option>
+                    <option>MQTT</option>
+                </select>
+
+                <div class="otOpt">
+                    <h4>API-Key</h4>
+                    <input id="inpapikey" type="password" />
+                    <h4>Breitengrad</h4>
+                    <input id="inplat" type="text" />
+                    <h4>L&auml;ngengrad</h4>
+                    <input id="inplon" type="text" />
+                    <h4>Interval / s</h4>
+                    <input id="inpinterval" type="text" />
+                </div>
+
+                <div class="otOpt">
+                    <h4>Sensor</h4>
+                    <select>
+                        <option>12345</option>
+                        <option>12345</option>
+                        <option>12345</option>
+                    </select>
+                </div>
+
+                <div class="otOpt">
+                    <h4>Topic</h4>
+                    <input id="otemptopic" type="text" />
+                </div>
+            </div>
+
+            <h3>Firmware</h3>
+            <div class="group">
+                <h4>Installierte Firmware</h4>
+                <span class="statusvalue" field="fw_version"></span>
+                <form id="form_upload" method='POST' enctype='multipart/form-data'>
+                    <input id="inp_file" type='file' accept='.bin,.bin.gz' name='firmware'>
+                    <input id="btn_upload" type='submit' value='Upload'>
+                    <div id="progressDiv" class="progress">
+                        <span class="progress-bar" id="progressBar" style="width: 0%"></span>
+                        <span id="progressText"></span>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        
+
+        <div class="toolbar">
+            <button id="save">
+                speichern
+            </button>
+            <button id="reboot">
+                reboot
+            </button>
+        </div>
+
+        <div class="footer"><a href="http://www.seegel-systeme.de" target="_blank">www.seegel-systeme.de</a></div>
+    </div>
+    <script>
+        var config = {
+            openTherm: {
+                roomSetTemperature: 20,
+                chOn: true,
+                dhwOn: true,
+                dhwTemperature: 50
+            },
+            chControl: {
+                flowMax: 60,
+                exponent: 1.3,
+                gradient: 1.4,
+                offset: 0,
+                marker: [],
+            },
+            otSource: {
+                source: 0
+            },
+            mqtt: {
+            }
+        },
+        statuscache = {};
+
+        function _(query) {
+            return document.querySelector(query);
+        }
+
+        function __(elename) {
+            return document.createElement(elename);
+        }
+
+        window.onload = () => {
+            items = document.querySelectorAll("div.nav li");
+            items.forEach(function (item) {
+                item.onclick = (ev) => {
+                    document.querySelectorAll("div.nav li").forEach((item) => {
+                        item.classList.remove("active");
+                    });
+                    document.querySelectorAll(".tab").forEach(function (item) {
+                        item.style.display = "none";
+                    });
+                    document.getElementById(ev.target.getAttribute("tab")).style.display = "";
+                    ev.target.classList.add("active");
+                };
+            });
+            _("div.nav li.active").click();
+
+            //eventhandler for save button
+            _("#save").onclick = () => {
+                config.otSource = {
+                    source: _('#selectOT').selectedIndex,
+                    apikey: _("#inpapikey").value,
+                    lat: parseFloat(_("#inplat").value),
+                    lon: parseFloat(_("#inplon").value),
+                    interval: parseInt(_("#inpinterval").value),
+                    topic: _("#otemptopic").value
+                };
+
+                config.openTherm.chOn = _("#chOn").checked;
+                config.openTherm.dhwOn = _("#dhwOn").checked;
+
+                config.mqtt = {
+                    host: _("#mqttHost").value,
+                    port: parseInt(_("#mqttPort").value),
+                    user: _("#mqttUser").value,
+                    pass: _("#mqttPass").value,
+                    tls: _("#mqttTls").checked
+                };
+
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "config");
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.send(JSON.stringify(config));
+            };
+
+            //eventhandler for save button
+            let xhrWiFiSet = new XMLHttpRequest();
+            xhrWiFiSet.onload = (ev) => {
+            };
+            _("#btnsavewifi").onclick = (ev) => {
+                xhrWiFiSet.open('POST', 'setwifi');
+                xhrWiFiSet.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+                let params = "ssid=" + encodeURIComponent(_("#wifissid").value) + 
+                        "&pass=" + encodeURIComponent(_("#wifipass").value); 
+                xhrWiFiSet.send(params);
+            };
+
+            //eventhandler for add marker button
+            _("#addmarker").onclick = () => {
+                let ft = getFlowTemperature(
+                    5, 
+                    config.openTherm.roomSetTemperature, 
+                    config.chControl.flowMax, 
+                    config.chControl.exponent, 
+                    config.chControl.gradient, 
+                    config.chControl.offset
+                );
+                let comment = _("#comment").value;
+                config.chControl.marker.push({
+                    comment: comment,
+                    ot: statuscache.outsideTemp,
+                    ft: Math.round(ft * 10) / 10
+                });
+                _("#comment").value = "";
+                drawMarkerTable();
+                drawCurve();
+            };
+
+            let xhrWiFiScan = new XMLHttpRequest();
+            xhrWiFiScan.onload = (e) => {
+                let scanObj = JSON.parse(e.target.responseText);
+                if (scanObj.status < 0) {
+                    setTimeout(scanWiFi, 1000);
+                    return;
+                }
+
+                _("#scanResults").style.display = 'block';
+                _("#scanHint").style.display = 'none';
+
+                scanObj.results.forEach(element => {
+                    let newrow = __("tr");
+                    scanbody.appendChild(newrow);
+
+                    let td = __("td");
+                    let inp = __("input");
+                    inp.type = "radio";
+                    inp.name = "ssid";
+                    inp.value = element.ssid;
+                    inp.onclick = (ev) => {
+                        _("#wifissid").value = ev.target.value;
+                    };
+                    td.appendChild(inp);
+                    newrow.appendChild(td);
+
+                    td = __("td");
+                    td.innerText = element.ssid;
+                    newrow.appendChild(td);
+                    td = __("td");
+                    td.innerText = element.channel;
+                    newrow.appendChild(td);
+                    td = __("td");
+                    td.innerText = element.rssi;
+                    newrow.appendChild(td);    
+                });
+            };
+            // eventhandler for scan button
+            _("#scan").onclick = (ev) => {
+                _("#scanResults").style.display = 'none';
+                _("#scanHint").style.display = 'inline';
+                _("#scanbody").innerHTML = "";
+                scanWiFi();
+            };
+            function scanWiFi() {
+                xhrWiFiScan.open("GET", "scan");    
+                xhrWiFiScan.send();
+            }
+
+            _("#selectOT").onchange = (ev) => {
+                document.querySelectorAll('.otOpt').forEach((ele, index) => {
+                    ele.style.display = (index == ev.target.selectedIndex) ? "block" : "none";
+                });
+            };
+
+            function drawMarkerTable() {
+                _("#markerbody").innerHTML = "";
+                var i = 0;
+
+                config.chControl.marker.forEach(function (item) {
+                    let tr = __("tr");
+
+                    let td = __("td");
+                    td.innerText = item.comment;
+                    tr.appendChild(td);
+
+                    td = __("td");
+                    td.innerHTML = item.ot;
+                    tr.appendChild(td);
+
+                    td = __("td");
+                    td.innerHTML = item.ft;
+                    tr.appendChild(td);
+
+                    td = __("td");
+                    let btn = __("button");
+                    btn.className = "rmmarker";
+                    btn.innerHTML = "-";
+                    btn.setAttribute("index", i);
+                    btn.onclick = (ev) => {
+                        config.chControl.marker.splice(this.getAttribute("index"), 1);
+                        drawMarkerTable();
+                        drawCurve();
+                    };
+                    td.appendChild(btn);
+
+                    tr.appendChild(td);
+                    _("#markerbody").appendChild(tr);
+
+                    i++;
+                });
+            }
+
+            function setParam(name, val) {
+                var slider = _('#' + name + " input[type=range]");
+                slider.value = val;
+                _("#" + name + " span.value").innerHTML = val;
+            }
+
+            function initRangeParam(name, configPath) {
+                var cfgVal = config;
+                let p = configPath.split('.');
+                for (var i=0, len = p.length; i<len; i++) {
+                    cfgVal = cfgVal[p[i]];
+                };
+
+                setParam(name, cfgVal);
+
+                var slider = _('#' + name + " input[type=range]");
+                var path = configPath;
+                slider.addEventListener("input", (ev) => {
+                    setParam(name, ev.target.value);
+
+                    var cfgVal = config;
+                    var p = path.split('.')
+                    for (var i=0, len = p.length; i<len; i++) {
+                        if (i<len-1) {
+                            cfgVal = cfgVal[p[i]];
+                        }
+                        else
+                            cfgVal[p[i]] = parseFloat(ev.target.value);
+                    };
+                    drawCurve();
+                });
+            }
+
+            document.querySelectorAll("input[type=checkbox]").forEach(function (item) {
+                item.onclick = (ev) => {
+                    config[ev.target.id] = ev.target.checked;
+                };
+            });
+
+
+            let xhrConfig = new XMLHttpRequest();
+            xhrConfig.onload = (ev) => {
+                try {
+                    config = JSON.parse(ev.target.responseText);
+                }
+                catch (err) {
+                }
+                configToUi();
+            };
+            xhrConfig.onerror = (ev) => {
+                configToUi();
+            };
+            xhrConfig.open("GET", "config");
+            xhrConfig.send();
+            function configToUi() {
+                _("#selectOT").selectedIndex = config.otSource.source;
+                _("#selectOT").dispatchEvent(new Event('change'));
+                _("#inpapikey").value = config.otSource.apikey;
+                _("#inplat").value = config.otSource.lat || null;
+                _("#inplon").value = config.otSource.lon || null;
+                _("#inpinterval").value = config.otSource.interval || null;
+                _("#otemptopic").value = config.otSource.topic || null;
+
+                _("#chOn").checked = config.openTherm.chOn;
+                _("#dhwOn").checked = config.openTherm.dhwOn;
+
+                initRangeParam("roomset", "openTherm.roomSetTemperature");
+                initRangeParam("dhwtemp", "openTherm.dhwTemperature");
+                initRangeParam("flowmax", "chControl.flowMax");
+                initRangeParam("exponent", "chControl.exponent");
+                initRangeParam("gradient", "chControl.gradient");
+                initRangeParam("offset", "chControl.offset");
+
+                drawMarkerTable();
+                drawCurve();
+
+                _("#mqttHost").value = config.mqtt.host || null;
+                _("#mqttPort").value = config.mqtt.port || 1883;
+                _("#mqttTls").checked = config.mqtt.tls || false;
+                _("#mqttUser").value = config.mqtt.user || null;
+                _("#mqttPass").value = config.mqtt.pass || null;
+            }
+
+            var xhrStatus = new XMLHttpRequest();
+            xhrStatus.onload = (ev) => {
+                try {
+                    statuscache = JSON.parse(ev.target.responseText);
+                }
+                catch (err) {
+                }
+
+                _("#nocon").style.display = "none";
+
+                document.querySelectorAll(".statusvalue").forEach((ele) => {
+                    var val = null;
+                    try {
+                        var f = ele.getAttribute('field').split('.');
+                        val = statuscache;
+                        for (var i=0; i<f.length; i++) {
+                            val = val[f[i]];
+                        }
+                        
+                        if ((val !== null) && (val !== undefined)) {
+                            ele.innerText = val;
+                            if (ele.hasAttribute('unit'))
+                                ele.innerText += ' ' + ele.getAttribute('unit');
+                        }
+                    }
+                    catch (ex) {
+                        val = null;
+                    }
+
+                    if ((val !== null) && (val !== undefined))
+                        ele.parentElement.style.display = "block";
+                    else
+                        ele.parentElement.style.display = "none";
+                });
+
+                drawCurve();
+                setTimeout(fetchStatus, 5000);
+            };
+            xhrStatus.onerror = (ev) => {
+                _("#nocon").style.display = "block";
+                setTimeout(fetchStatus, 10000);
+            };
+
+            function fetchStatus() {
+                xhrStatus.open("GET", "status");
+                xhrStatus.send();
+            }
+            fetchStatus();
+            drawCurve();
+
+            _("#reboot").onclick = (ev) => {
+                //if (!_("#noSleep").checked)
+                  //  confirm("After reboot device will remain in deep sleep. Push button long on device to access again!");
+                //setOnline(false);
+                let xhr = new XMLHttpRequest();
+                xhr.open("GET", "/reboot");
+                xhr.send("");
+            };
+
+            var xhrUpl = new XMLHttpRequest();
+            _("#form_upload").onsubmit = (ev) =>{
+                ev.preventDefault();
+
+                var file = _("#inp_file").files[0];
+                var formdata = new FormData();
+                formdata.append(_("#inp_file").name, file, file.name);
+                
+                xhrUpl.upload.onprogress = (ev) => {
+                    var perc = Math.round(ev.loaded / ev.total * 100);
+                    _("#progressBar").style.width = perc + '%';
+                    _("#progressText").innerHTML = "Uploading...";
+                };
+
+                xhrUpl.onload = () => {
+                    _("#inp_file").value = "";
+                    _("#progressText").innerHTML = "Upload successful. Rebooting...";
+                };
+
+                xhrUpl.onloadstart = () => {
+                    _("#progressDiv").style.display = "block";
+                    _("#btn_upload").disabled = true;
+                    _("#inp_file").disabled = true;
+                };
+
+                xhrUpl.onerror = () => {
+                    console.log("error" + ajaxUpl.status);
+                };
+
+                xhrUpl.open('post', '/update');
+                xhrUpl.setRequestHeader('Access-Control-Allow-Headers', '*');
+                xhrUpl.setRequestHeader('Access-Control-Allow-Origin', '*');
+                xhrUpl.send(formdata);
+            };
+        };
+
+        function getMinOutsideTemp(rs, mf, g) {
+            return rs - (mf - rs) / g; //minimal outside temperature at mf
+        }
+
+        /*
+            ot: outside temperature
+            rs: room set temperature
+            mf: max. flow temperature
+            n: heating exponent
+            g: gradient
+            s: shift
+        */
+        function getFlowTemperature(ot, rs, mf, n, g, s) {
+            let am = getMinOutsideTemp(rs, mf, g);
+            //calculate c1
+            let c1 = (mf - rs) / ((rs - am) ** (1.0 / n));
+            return rs + c1 * (rs - ot) ** (1.0 / n) + s;
+        }
+
+        function drawCurve() {
+            var canvas = document.getElementById("canvas");
+            var ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            let origin = {
+                x: 20,
+                y: canvas.height - 20
+            };
+            let xaxis = {
+                min: 20,
+                max: -20,
+                step: 5,
+                zoom: (canvas.width - origin.x * 2) / (20 - (-20))
+            };
+            let yaxis = {
+                min: 20,
+                max: 90,
+                step: 10,
+                zoom: (canvas.height - (canvas.height - origin.y) * 2) / (90 - 20)
+            }; //°C
+
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = "#666";
+            ctx.fillStyle = "#FFF";
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+            ctx.font = '11px sans-serif';
+
+            //draw horizontal grid
+            ctx.beginPath();
+            for (var i = yaxis.min; i <= yaxis.max; i += yaxis.step) {
+                let y = origin.y - (i - yaxis.min) * yaxis.zoom;
+                ctx.moveTo(origin.x, y);
+                ctx.lineTo(origin.x + (xaxis.min - xaxis.max) * xaxis.zoom, y);
+                ctx.fillText(i, origin.x - 10, y);
+            }
+            ctx.stroke();
+            ctx.strokeStyle = "#333";
+            ctx.beginPath();
+            for (var i = yaxis.min + yaxis.step / 2; i <= yaxis.max; i += yaxis.step) {
+                let y = origin.y - (i - yaxis.min) * yaxis.zoom;
+                ctx.moveTo(origin.x, y);
+                ctx.lineTo(origin.x + (xaxis.min - xaxis.max) * xaxis.zoom, y);
+            }
+            ctx.stroke();
+
+            ctx.strokeStyle = "#666";
+            //draw vertical grid
+            ctx.beginPath();
+            for (var i = xaxis.min; i >= xaxis.max; i -= xaxis.step) {
+                let x = origin.x + (xaxis.min - i) * xaxis.zoom;
+                ctx.moveTo(x, origin.y);
+                ctx.lineTo(x, origin.y - (yaxis.max - yaxis.min) * yaxis.zoom);
+                ctx.fillText(i, x, origin.y + 10);
+            }
+            ctx.stroke();
+            ctx.strokeStyle = "#333";
+            ctx.beginPath();
+            for (var i = xaxis.min - xaxis.step / 2; i >= xaxis.max; i -= xaxis.step) {
+                let x = origin.x + (xaxis.min - i) * xaxis.zoom;
+                ctx.moveTo(x, origin.y);
+                ctx.lineTo(x, origin.y - (yaxis.max - yaxis.min) * yaxis.zoom);
+                ctx.stroke();
+            }
+            ctx.stroke();
+
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "#fff";
+
+            //draw x-axis
+            ctx.beginPath();
+            ctx.moveTo(origin.x, origin.y);
+            ctx.lineTo(origin.x + (xaxis.min - xaxis.max) * xaxis.zoom, origin.y);
+            ctx.stroke();
+
+            //draw y-axis
+            ctx.beginPath();
+            ctx.moveTo(origin.x, origin.y);
+            ctx.lineTo(origin.x, origin.y - (yaxis.max - yaxis.min) * yaxis.zoom);
+            ctx.stroke();
+            ctx.save();
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText("Vorlauf / °C", -80, 30);
+            ctx.restore();
+
+
+            let roomset = parseFloat(_("#roomset input").value);
+            let flowmax = parseFloat(_("#flowmax input").value);
+            let gradient = parseFloat(_("#gradient input").value);
+            let exponent = parseFloat(_("#exponent input").value);
+            let offset = parseFloat(_("#offset input").value);
+
+            function getPoint(ot, ft) {
+                return {
+                    x: origin.x + (xaxis.min - ot) * xaxis.zoom,
+                    y: origin.y - (ft - yaxis.min) * yaxis.zoom
+                }
+            }
+
+            let ft = getFlowTemperature(roomset, roomset, flowmax, exponent, gradient, offset);
+            let p1 = getPoint(roomset, ft); //foot
+
+            ctx.fillStyle = "#A33";
+            ctx.fillRect(p1.x - 3, p1.y - 3, 6, 6);
+
+            ctx.strokeStyle = "#F00";
+            ctx.lineWidth = 3;
+            let p = p1;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            let otf = false;
+            for (var ot = roomset; ot >= xaxis.max; ot -= 0.5) {
+                let ft = getFlowTemperature(ot, roomset, flowmax, exponent, gradient, offset);
+
+                if ((ft >= flowmax) && !otf) {
+                    ctx.stroke();
+                    ctx.strokeStyle = "#888";
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    otf = true;
+                }
+
+                p = getPoint(ot, ft);
+                ctx.lineTo(p.x, p.y);
+
+                if (ft >= yaxis.max)
+                    break;
+            }
+            ctx.stroke();
+
+            //draw curve's basepoint
+            ctx.fillStyle = "#F00";
+            ctx.fillRect(p1.x - 3, p1.y - 3, 6, 6);
+
+            //draw markers
+            ctx.fillStyle = "#3f8";
+            config.chControl.marker.forEach(function (m) {
+                let p = getPoint(m.ot, m.ft);
+                ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
+            });
+
+            if (statuscache.outsideTemp !== undefined) {
+                //draw outsidetemp & it's flowtemperature
+                let ftsensor = getFlowTemperature(statuscache.outsideTemp, roomset, flowmax, exponent, gradient, offset);
+                if (ftsensor > flowmax)
+                    ftsensor = flowmax;
+                let psensor = getPoint(statuscache.outsideTemp, ftsensor);
+                ctx.fillStyle = "#F83";
+                ctx.strokeStyle = "#F83";
+                ctx.lineWidth = 1;
+                ctx.fillRect(psensor.x - 3, psensor.y - 3, 6, 6);
+                ctx.beginPath();
+                ctx.moveTo(origin.x, psensor.y);
+                ctx.lineTo(psensor.x, psensor.y);
+                ctx.lineTo(psensor.x, origin.y);
+                ctx.stroke();
+                ctx.fillText(Math.round(ftsensor * 10) / 10, origin.x + 20, psensor.y - 8);
+            }
+        }
+    </script>
+</body>
+
+</html>

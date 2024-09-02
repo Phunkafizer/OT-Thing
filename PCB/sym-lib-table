@@ -1,0 +1,5 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "OTThing-rescue")(type "Legacy")(uri "${KIPRJMOD}/OTThing-rescue.lib")(options "")(descr ""))
+  (lib (name "espressif")(type "KiCad")(uri "${KICAD_USER_SYMBOL_DIR}/Espressif.kicad_sym")(options "")(descr ""))
+)
