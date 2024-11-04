@@ -74,16 +74,25 @@ struct ChControlConfig {
 
 class OTControl {
     friend void otCbSlave(unsigned long response, OpenThermResponseStatus status);
+    friend void otCbMaster(unsigned long response, OpenThermResponseStatus status);
 private:
+    void OnRxMaster(const unsigned long msg, const OpenThermResponseStatus status);
+    void OnRxSlave(const unsigned long msg, const OpenThermResponseStatus status);
     unsigned long lastMillis;
-    void onResponse();
-    void onRequest();
+    enum OTMode {
+        OTMODE_MASTER,
+        OTMODE_GATEWAY,
+        OTMODE_LOOPBACK
+    } otMode;
+    uint32_t loopbackData; // testdata for loopback test
 public:
     OTControl();
     void begin();
     void loop();
     void getJson(JsonObject &obj) const;
     void setChCtrlConfig(ChControlConfig &config);
+    
+    
 };
 
 extern OTControl otcontrol;

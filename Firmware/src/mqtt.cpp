@@ -40,6 +40,7 @@ void Mqtt::loop() {
         cli.setClient(espClient);
         cli.setServer(config.host.c_str(), config.port);
         cli.setCallback(mqttCb);
+        Serial.println("Connectingn to " + config.host);
     
         String conId = "OTThing-" + WiFi.macAddress();
         cli.connect(conId.c_str(), "", "");

@@ -36,7 +36,7 @@ String DevStatus::getJson() {
     jmqtt[F("connected")] = mqtt.connected();
 
     JsonObject jot = doc.createNestedObject(F("ot"));
-    //otcontrol.getJson(jot);
+    otcontrol.getJson(jot);
 
     String str;
     serializeJson(doc, str);

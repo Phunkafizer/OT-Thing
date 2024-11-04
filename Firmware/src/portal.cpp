@@ -28,12 +28,12 @@ void Portal::begin(bool configMode) {
     websrv.begin();
 
     websrv.on("/", HTTP_GET, [] (AsyncWebServerRequest *request) {
-        #ifdef DEBUG
+        //#ifdef DEBUG
         if (LittleFS.exists(F("/index.html"))) {
             request->send(LittleFS, F("/index.html"), F("text/html"));
             return;
         }
-        #endif
+        //#endif
         //request->send_P(200, F("text/html"), html);
     });
 
@@ -61,13 +61,14 @@ void Portal::begin(bool configMode) {
 
             if (confBuf.length() == total) {
                 devconfig.write(confBuf);
+                Serial.println("Write DevConfig");
                 request->send(200);
             }
         }
     );
 
     websrv.on("/scan", HTTP_GET, [this] (AsyncWebServerRequest *request) {
-        DynamicJsonDocument doc(2048);
+        JsonDocument doc;
         JsonObject jobj = doc.to<JsonObject>();
 
         int n = WiFi.scanComplete();

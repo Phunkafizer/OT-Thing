@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "user")(type "KiCad")(uri "${KICAD6_3RD_PARTY}/footprints.pretty")(options "")(descr ""))
+)

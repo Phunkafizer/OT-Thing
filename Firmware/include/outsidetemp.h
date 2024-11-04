@@ -7,7 +7,7 @@
 class OutsideTemp {
 private:
     int source;
-    AsyncHTTPRequest httpcli;
+    //AsyncHTTPRequest httpcli;
 public:
     OutsideTemp();
     void loop();

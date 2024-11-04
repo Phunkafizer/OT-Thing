@@ -3,7 +3,7 @@
 #include "otcontrol.h"
 #include "outsidetemp.h"
 
-const char CFG_FILENAME[] PROGMEM = "config.json";
+const char CFG_FILENAME[] PROGMEM = "/config.json";
 
 DevConfig devconfig;
 

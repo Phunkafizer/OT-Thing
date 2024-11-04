@@ -75,6 +75,11 @@
             display: flex;
         }
 
+        div.param {
+            padding-right: 1em;
+
+        }
+
         h3 {
             font-size: 1.0em;
             border-left: 6px solid #fd975a;
@@ -520,32 +525,43 @@
 
             <h3>OpenTherm</h3>
             <div class="group">
-                <div class="param">
-                    <h4>Heizung</h4>
-                    <div class="paramline">
-                        <div>
-                            <label class="switch">
-                                <input id="chOn" type="checkbox" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
+                <div class="paramline">
+                    <div class="param">
+                        <h4>Heizkreis 1</h4>
+                        <label class="switch">
+                            <input id="chOn" type="checkbox" />
+                            <span class="slider"></span>
+                        </label>
                     </div>
-                </div>
-
-                <div id="dhwtemp" class="param">
-                    <h4>Brauchwasser</h4>
-                    <div>
+                    <div class="param">
+                        <h4>Heizkreis 2</h4>
+                        <label class="switch">
+                            <input id="chOn" type="checkbox" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="param">
+                        <h4>Kühlung</h4>
+                        <label class="switch">
+                            <input id="coolOn" type="checkbox" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="param">
+                        <h4>Brauchwasser</h4>
                         <label class="switch">
                             <input id="dhwOn" type="checkbox" />
                             <span class="slider"></span>
                         </label>
                     </div>
+                </div>
+
+                <div id="dhwtemp" class="param">
+                    <h4>Brauchwassertemperatur</h4>
                     <div class="paramline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">&deg;C</span>
-                        </div>
-                        <input type="range" min="30" max="70" step="1" />
+                        <span class="value"></span>
+                        <span class="unit">&deg;C</span>
+                        <input id="dhwtt" type="range" min="30" max="70" step="1" />
                     </div>
                 </div>
             </div>
@@ -619,8 +635,6 @@
                 </form>
             </div>
         </div>
-
-        
 
         <div class="toolbar">
             <button id="save">

@@ -1,5 +1,4 @@
 #include "outsidetemp.h"
-#include <AsyncHTTPRequest_Generic.h>
 
 OutsideTemp outsideTemp;
 
@@ -23,7 +22,7 @@ static void httpcliCB(void *optParm, AsyncHTTPRequest *request, int readyState) 
 
 OutsideTemp::OutsideTemp():
         source(-1) {
-    httpcli.onReadyStateChange(httpcliCB);
+    //httpcli.onReadyStateChange(httpcliCB);
 }
 
 void OutsideTemp::loop() {
@@ -40,11 +39,11 @@ void OutsideTemp::loop() {
             url += "&lat=" + String(49.476);
             url += "&lon=" + String(10.989);
             url += "&appid=" + String("5a3314b35f5a86234217381962342d27");
-            httpcli.setDebug(true);
+            //httpcli.setDebug(true);
             Serial.print("Open: ");
-            bool x = httpcli.open("GET", url.c_str());
-            Serial.println(x);
-            httpcli.send();
+            //bool x = httpcli.open("GET", url.c_str());
+            //Serial.println(x);
+            //httpcli.send();
         }
         break;
     }
