@@ -8382,7 +8382,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 140.97 105.41 270)
+		(at 129.54 105.41 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -8390,7 +8390,7 @@
 		(dnp no)
 		(uuid "5b0ddf6a-e2e2-475b-b79e-06b715d36a58")
 		(property "Reference" "R24"
-			(at 136.398 100.584 0)
+			(at 124.968 100.584 0)
 			(effects
 				(font
 					(size 1.4986 1.4986)
@@ -8399,7 +8399,7 @@
 			)
 		)
 		(property "Value" "100"
-			(at 138.938 103.632 90)
+			(at 127.508 103.632 90)
 			(effects
 				(font
 					(size 1.4986 1.4986)
@@ -8408,7 +8408,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
-			(at 140.97 103.632 90)
+			(at 129.54 103.632 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8417,7 +8417,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 140.97 105.41 0)
+			(at 129.54 105.41 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8426,7 +8426,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 140.97 105.41 0)
+			(at 129.54 105.41 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8435,7 +8435,7 @@
 			)
 		)
 		(property "LCSC" "C17408"
-			(at 140.97 105.41 0)
+			(at 129.54 105.41 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10230,7 +10230,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" ""
+		(property "LCSC" "C2927038"
 			(at 34.29 44.45 0)
 			(effects
 				(font
@@ -10977,6 +10977,15 @@
 				(hide yes)
 			)
 		)
+		(property "LCSC" "C2934560"
+			(at 81.28 146.05 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "9d04af34-e84b-48de-9922-678c426e8d69")
 		)
@@ -11117,7 +11126,7 @@
 	)
 	(symbol
 		(lib_id "Device:LED")
-		(at 129.54 105.41 180)
+		(at 140.97 105.41 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -11125,7 +11134,7 @@
 		(dnp no)
 		(uuid "c0952410-4dd5-4f84-850a-8935ba58184f")
 		(property "Reference" "D13"
-			(at 127.254 107.95 0)
+			(at 138.684 107.95 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11134,7 +11143,7 @@
 			)
 		)
 		(property "Value" "GN"
-			(at 123.952 106.426 0)
+			(at 135.382 106.426 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11143,7 +11152,7 @@
 			)
 		)
 		(property "Footprint" "LED_SMD:LED_0805_2012Metric"
-			(at 129.54 105.41 0)
+			(at 140.97 105.41 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11152,7 +11161,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 129.54 105.41 0)
+			(at 140.97 105.41 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11161,7 +11170,7 @@
 			)
 		)
 		(property "Description" "Light emitting diode"
-			(at 129.54 105.41 0)
+			(at 140.97 105.41 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11170,7 +11179,7 @@
 			)
 		)
 		(property "LCSC" "C965847"
-			(at 129.54 105.41 0)
+			(at 140.97 105.41 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11949,7 +11958,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C2041531"
+		(property "LCSC" "C98020"
 			(at 205.74 106.68 0)
 			(effects
 				(font

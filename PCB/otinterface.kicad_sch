@@ -2295,7 +2295,7 @@
 	)
 	(wire
 		(pts
-			(xy 193.04 88.9) (xy 220.98 88.9)
+			(xy 199.39 88.9) (xy 220.98 88.9)
 		)
 		(stroke
 			(width 0)
@@ -2735,7 +2735,7 @@
 	)
 	(wire
 		(pts
-			(xy 193.04 92.71) (xy 175.26 92.71)
+			(xy 199.39 92.71) (xy 175.26 92.71)
 		)
 		(stroke
 			(width 0)
@@ -3155,7 +3155,7 @@
 	)
 	(wire
 		(pts
-			(xy 193.04 88.9) (xy 193.04 92.71)
+			(xy 199.39 88.9) (xy 199.39 92.71)
 		)
 		(stroke
 			(width 0)
@@ -4663,7 +4663,7 @@
 				)
 			)
 		)
-		(property "Value" "G6K-2"
+		(property "Value" "G6K-2F-Y-5V"
 			(at 167.64 85.09 90)
 			(effects
 				(font
@@ -4699,7 +4699,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C47190"
+		(property "LCSC" "C2982926"
 			(at 167.64 102.87 0)
 			(effects
 				(font
