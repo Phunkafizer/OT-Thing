@@ -4,6 +4,12 @@
 	(generator_version "8.0")
 	(uuid "47d9a4eb-21dd-4bad-a853-6f4801b812cf")
 	(paper "A4")
+	(title_block
+		(title "OT Thing")
+		(date "2025-01-08")
+		(rev "2/25")
+		(company "Seegel Systeme")
+	)
 	(lib_symbols
 		(symbol "Device:D_Zener_Dual_CommonAnode_KKA_Parallel"
 			(pin_names
