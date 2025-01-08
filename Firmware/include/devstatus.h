@@ -7,7 +7,7 @@
 
 extern class DevStatus {
 private:
-    DynamicJsonDocument doc;
+    JsonDocument doc;
 public:
     DevStatus();
     String getJson();

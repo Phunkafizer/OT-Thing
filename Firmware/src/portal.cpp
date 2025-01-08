@@ -9,6 +9,7 @@ static const char APP_JSON[] PROGMEM = "application/json";
 static const IPAddress apAddress(4, 3, 2, 1);
 Portal portal;
 static AsyncWebServer websrv(80);
+AsyncWebSocket ws("/ws");
 
 Portal::Portal():
     reboot(false),
@@ -19,13 +20,14 @@ void Portal::begin(bool configMode) {
      if (configMode) {
         WiFi.persistent(false);
         WiFi.softAPConfig(apAddress, apAddress, IPAddress(255, 255, 255, 0));
-        WiFi.softAP("OTThing", F("12345678"));
+        WiFi.softAP(F(AP_SSID), F(AP_PASSWORD));
         WiFi.mode(WIFI_AP_STA);
         WiFi.setAutoReconnect(true);
         WiFi.persistent(true);
     }
 
     websrv.begin();
+    websrv.addHandler(&ws);
 
     websrv.on("/", HTTP_GET, [] (AsyncWebServerRequest *request) {
         //#ifdef DEBUG
@@ -61,7 +63,7 @@ void Portal::begin(bool configMode) {
 
             if (confBuf.length() == total) {
                 devconfig.write(confBuf);
-                Serial.println("Write DevConfig");
+                Serial1.println("Write DevConfig");
                 request->send(200);
             }
         }
@@ -77,9 +79,9 @@ void Portal::begin(bool configMode) {
             WiFi.scanNetworks(true);
         else
             if (n >= 0) {
-                JsonArray results = jobj.createNestedArray(F("results"));
+                JsonArray results = jobj[F("results")].to<JsonArray>();
                 for (int i=0; i<n; i++) {
-                    JsonObject result = results.createNestedObject();
+                    JsonObject result = results.add<JsonObject>();
                     result[F("ssid")] = WiFi.SSID(i);
                     result[F("rssi")] = WiFi.RSSI(i);
                     result[F("channel")] = WiFi.channel(i);
@@ -94,16 +96,16 @@ void Portal::begin(bool configMode) {
 
     websrv.on("/setwifi", HTTP_POST, [this] (AsyncWebServerRequest *request) {
         if (request->hasArg(F("ssid")) && request->hasArg(F("pass"))) {
-            String ssid = request->arg(F("ssid"));
-            String pass = request->arg(F("pass"));
-            Serial.println(ssid);
-            Serial.println(pass);
+            request->send(200);
+
             WiFi.disconnect();
-            WiFi.begin(ssid, pass);
-            //WiFi.setAutoConnect(false); // do not connect automatically on power on
             WiFi.persistent(true);
+            String ssid = request->arg(F("ssid"));
+            WiFi.begin(ssid, request->arg(F("pass")));
+            WiFi.setAutoReconnect(true);
         }
-        request->send(200);
+        else
+            request->send(400); // bad request
     });
 
     websrv.on("/status", HTTP_GET, [this](AsyncWebServerRequest *request) {

@@ -1,0 +1,3 @@
+[submodule "Firmware/lib/opentherm_library"]
+	path = Firmware/lib/opentherm_library
+	url = https://github.com/Phunkafizer/opentherm_library

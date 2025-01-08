@@ -1,7 +1,7 @@
-#ifndef _mqtt_h
-#define _mqtt_h
+#pragma once
 
-#include <PubSubClient.h>
+#include <AsyncMqttClient.h>
+#include <ArduinoJson.h>
 
 struct MqttConfig {
     String host;
@@ -11,19 +11,21 @@ struct MqttConfig {
 
 class Mqtt {
 private:
-    PubSubClient cli;
+    AsyncMqttClient cli;
     uint32_t lastConTry;
     uint32_t lastStatus;
     MqttConfig config;
     bool configSet;
+    bool newConnection;
+    String stateTopic;
 public:
     Mqtt();
     void begin();
     void loop();
     bool connected();
     void setConfig(const MqttConfig conf);
+    bool publish(String topic, JsonDocument &payload);
+    void onMessage(const char *payload, const size_t size);
 };
 
 extern Mqtt mqtt;
-
-#endif

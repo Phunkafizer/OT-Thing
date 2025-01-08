@@ -17,7 +17,7 @@ void handleClientDisconnect(void* arg, AsyncClient* client) {
 OtGwCommand::OtGwCommand():
         enableOtEvents(true),
         server(25238) {
-    //server.onClient(&handleNewClient, &server);
+    server.onClient(&handleNewClient, &server);
 }
 
 void OtGwCommand::onNewClient(void* arg, AsyncClient* client) {

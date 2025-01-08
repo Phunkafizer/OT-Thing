@@ -3,8 +3,6 @@
 
 #include <OpenTherm.h>
 #include "ArduinoJson.h"
-//#include <InfluxDbClient.h>
-//#include <InfluxDbCloud.h>
 
 class OTValue {
 private:
@@ -15,15 +13,20 @@ private:
 protected:
     const char *name;
     uint16_t value;
-    OpenThermResponseStatus lastStatus;
+    bool enabled;
+    bool isSet;
+    bool discFlag;
+    virtual bool sendDiscovery();
 public:
     OTValue(const char *name, const OpenThermMessageID id, const unsigned int interval);
     bool process();
     OpenThermMessageID getId() const;
     void setValue(uint16_t val);
     const char *getName() const;
-    void setStatus(OpenThermResponseStatus status);
+    void setStatus(const OpenThermMessageType mt);
     void getJson(JsonObject &obj) const;
+    void enable(const bool enable);
+    void setTimeout();
 };
 
 class OTValueu16: public OTValue {
@@ -40,7 +43,6 @@ private:
 public:
     OTValuei16(const char *name, const OpenThermMessageID id, const unsigned int interval);
     int16_t getValue() const;
-    
 };
 
 class OTValueFloat: public OTValue {
@@ -54,6 +56,13 @@ public:
 class OTValueStatus: public OTValue {
 private:
     void getValue(JsonObject &obj) const;
+    const char *STATUS_FLAME PROGMEM = "flame";
+    const char *STATUS_DHW_MODE PROGMEM = "dhw_mode";
+    const char *STATUS_CH_MODE PROGMEM = "ch_mode";
+    const char *STATUS_FAULT PROGMEM = "fault";
+
+protected:
+    bool sendDiscovery();
 public:    
     OTValueStatus();
 };
@@ -63,6 +72,13 @@ private:
     void getValue(JsonObject &obj) const;
 public:    
     OTValueSlaveConfigMember();
+};
+
+class OTValueProductVersion: public OTValue {
+private:
+    void getValue(JsonObject &obj) const;
+public:    
+    OTValueProductVersion(const char *name, const OpenThermMessageID id);
 };
 
 struct ChControlConfig {
@@ -80,19 +96,20 @@ private:
     void OnRxSlave(const unsigned long msg, const OpenThermResponseStatus status);
     unsigned long lastMillis;
     enum OTMode {
+        OTMODE_BYPASS,
         OTMODE_MASTER,
         OTMODE_GATEWAY,
-        OTMODE_LOOPBACK
+        OTMODE_LOOPBACKTEST
     } otMode;
     uint32_t loopbackData; // testdata for loopback test
+    unsigned long lastRxMaster;
 public:
     OTControl();
+    void setMode(const OTMode mode);
     void begin();
     void loop();
     void getJson(JsonObject &obj) const;
     void setChCtrlConfig(ChControlConfig &config);
-    
-    
 };
 
 extern OTControl otcontrol;

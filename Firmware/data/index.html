@@ -3,7 +3,7 @@
 <html>
 
 <head>
-    <title>OTThing OpenTherm controller</title>
+    <title>OT Thing OpenTherm controller</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
@@ -73,6 +73,7 @@
 
         div.paramline {
             display: flex;
+            margin-bottom: 1em;
         }
 
         div.param {
@@ -287,6 +288,19 @@
             padding: 0.6em;
             background-color: #c00;
         }
+
+        #console {
+            background-color: black;
+            height: 40em;
+            color: white;
+            resize: vertical;
+            overflow: auto;
+            padding: 0 0.5em;
+        }
+
+        #console div {
+            font-family: "Lucida Console", "Courier New", monospace;
+        }
     </style>
 </head>
 
@@ -303,7 +317,9 @@
             <ul>
                 <li tab="status" class="active">Status</li>
                 <li tab="setup">Setup</li>
-                <li tab="heatingcurve">Heizkennlinie</li>
+                <li tab="heatingcurve1">Heizkreis 1</li>
+                <li tab="heatingcurve2">Heizkreis 2</li>
+                <li tab="log">Log</li>
             </ul>
         </div>
 
@@ -339,54 +355,67 @@
                 <span class="statusunit">&deg;C</span>
             </div>
             
-            <h3>OT Slave</h3>
+            <h3>Therme</h3>
             <div class="group">
                 <div>
-                    <h4>Vorlauftemperatur</h4>
-                    <span class="statusvalue" field="ot.slaveValues.boiler_t" unit="&deg;C"></span>
+                    <h4>Brenner</h4>
+                    <span class="statusvalue" field="boiler.status.flame"></span>
                 </div>
-
+                <div>
+                    <h4>Heizkreis 1 aktiv</h4>
+                    <span class="statusvalue" field="boiler.status.ch_mode"></span>
+                </div>
+                <div>
+                    <h4>Heizkreis 2 aktiv</h4>
+                    <span class="statusvalue" field="boiler.status.ch2_mode"></span>
+                </div>
+                <div>
+                    <h4>Vorlauftemperatur</h4>
+                    <span class="statusvalue" field="boiler.flow_t" unit="&deg;C"></span>
+                </div>
+                <div>
+                    <h4>Vorlauftemperatur 2</h4>
+                    <span class="statusvalue" field="boiler.flow_t2" unit="&deg;C"></span>
+                </div>
                 <div>
                     <h4>Rücklauftemperatur</h4>
-                    <span class="statusvalue" field="ot.slaveValue.return_t" unit="&deg;C"></span>
+                    <span class="statusvalue" field="boiler.return_t" unit="&deg;C"></span>
                 </div>
-
                 <div>
                     <h4>Brauchwassertemperatur</h4>
-                    <span class="statusvalue" field="ot.slaveValues.dhw_t" unit="&deg;C"></span>
+                    <span class="statusvalue" field="boiler.dhw_t" unit="&deg;C"></span>
                 </div>
-
+                <div>
+                    <h4>Brauchwassertemperatur 2</h4>
+                    <span class="statusvalue" field="boiler.dhw_t2" unit="&deg;C"></span>
+                </div>
                 <div>
                     <h4>Abgastemperatur</h4>
-                    <span class="statusvalue" field="ot.slaveValue.exhaust_t" unit="&deg;C"></span>
+                    <span class="statusvalue" field="boiler.exhaust_t" unit="&deg;C"></span>
                 </div>
-
                 <div>
                     <h4>Modulation</h4>
-                    <span class="statusvalue" field="ot.slaveValues.rel_mod" unit="%"></span>
+                    <span class="statusvalue" field="boiler.rel_mod" unit="%"></span>
                 </div>
-
                 <div>
                     <h4>Druck Heizkreis</h4>
-                    <span class="statusvalue" field="ot.slaveValues.ch_pressure" unit="bar"></span>
+                    <span class="statusvalue" field="boiler.ch_pressure" unit="bar"></span>
                 </div>
-
                 <div>
                     <h4>Betriebdsstunden Brenner</h4>
-                    <span class="statusvalue" field="ot.slaveValues.burner_op_hours" unit="h"></span>
+                    <span class="statusvalue" field="boiler.burner_op_hours" unit="h"></span>
                 </div>
-
                 <div>
                     <h4>Brennerstarts</h4>
-                    <span class="statusvalue" field="ot.slaveValues.burner_starts" unit="bar"></span>
+                    <span class="statusvalue" field="boiler.burner_starts"></span>
                 </div>
             </div>
         </div>
 
-        <div class="tab" id="heatingcurve">
+        <div class="tab" id="heatingcurve1">
             <h3>Auslegung</h3>
             <div class="group">
-                <div id="roomset" class="param">
+                <div id="roomset1" class="param">
                     <h4>Raum Solltemperatur</h4>
                     <div class="paramline">
                         <div class="valunit">
@@ -399,7 +428,7 @@
                     </div>
                 </div>
 
-                <div id="flowmax" class="param">
+                <div id="flowmax1" class="param">
                     <h4>Max. Vorlauftemperatur</h4>
                     <div class="paramline">
                         <div class="valunit">
@@ -421,7 +450,7 @@
                     </div>
                 </div>
 
-                <div id="exponent" class="param">
+                <div id="exponent1" class="param">
                     <h4>Heizfl&auml;chenexponent</h4>
                     <div class="paramline">
                         <div class="valunit">
@@ -447,7 +476,7 @@
 
             <h3>Betriebsparameter</h3>
             <div class="group">
-                <div id="gradient" class="param">
+                <div id="gradient1" class="param">
                     <h4>Steilheit</h4>
                     <div class="paramline">
                         <div class="valunit">
@@ -462,7 +491,7 @@
                     </div>
                 </div>
 
-                <div id="offset" class="param">
+                <div id="offset1" class="param">
                     <h4>Niveau</h4>
                     <div class="paramline">
                         <div class="valunit">
@@ -475,7 +504,7 @@
             </div>
 
             <div class="curve">
-                <canvas id="canvas" height="375px" width="375px">
+                <canvas id="canvas1" height="375px" width="375px">
                 </canvas>
             </div>
 
@@ -490,11 +519,126 @@
                             <th class="rem"></th>
                         </tr>
                     </thead>
-                    <tbody id="markerbody">
+                    <tbody id="markerbody1">
                     </tbody>
                 </table>
-                <input type="text" id="comment" />
-                <button id="addmarker">+</button>
+                <input type="text" id="comment1" />
+                <button id="addmarker1">+</button>
+            </div>
+        </div>
+
+        <div class="tab" id="heatingcurve2">
+            <h3>Auslegung</h3>
+            <div class="group">
+                <div id="roomset2" class="param">
+                    <h4>Raum Solltemperatur</h4>
+                    <div class="paramline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input type="range" min="17" max="23" step="0.1">
+                    </div>
+                    <div class="infobox">
+                    </div>
+                </div>
+
+                <div id="flowmax2" class="param">
+                    <h4>Max. Vorlauftemperatur</h4>
+                    <div class="paramline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input type="range" min="30" max="90" step="1">
+                    </div>
+                    <div class="infobox">
+                        Gängige Systemtemperaturen Vorlauf/R&uuml;cklauf:
+                        <ul>
+                            <li>Alte Norm: 90 &deg;C / 70 &deg;C</li>
+                            <li>Neue Norm: 75 &deg;C / 65 &deg;C</li>
+                            <li>Niedertemperatur: 70 &deg;C / 50 &deg;C</li>
+                            <li>Brennwert: 60 &deg;C / 45 &deg;C</li>
+                            <li>Brennwert: 45 &deg;C / 35 &deg;C</li>
+                        </ul>
+                        <p>Quelle: <a href="www.bosy-online.de">www.bosy-online.de</a></p>
+                    </div>
+                </div>
+
+                <div id="exponent2" class="param">
+                    <h4>Heizfl&auml;chenexponent</h4>
+                    <div class="paramline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                        </div>
+                        <input type="range" min="1.0" max="1.5" step="0.05">
+                    </div>
+                    <div class="infobox">
+                        Je nach Anteil von Leitung, Konvektion und Strahlung ist das Verhältnis von Vorlauftemperatur
+                        und
+                        Wärmeabgabe überliniear:
+                        <ul>
+                            <li>Fußbodenheizung: 1,0 - 1,05</li>
+                            <li>Flachheizkörper: 1,26 - 1,33</li>
+                            <li>Handtuchradiatoren: 1,20 - 1,30</li>
+                            <li>Heizkörper nach DIN 4703: 1,3</li>
+                            <li>Konvektoren: 1,30 - 1,50</li>
+                        </ul>
+                        <p>Quelle: <a href="www.bosy-online.de">www.bosy-online.de</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Betriebsparameter</h3>
+            <div class="group">
+                <div id="gradient2" class="param">
+                    <h4>Steilheit</h4>
+                    <div class="paramline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                        </div>
+                        <input type="range" min="0.2" max="3" step="0.05">
+                    </div>
+                    <div class="infobox">
+                        <p>
+                            Quelle: <a href="http://www.bosy-online.de/Heizkurve.htm">www.bosy-online.de</a>
+                        </p>
+                    </div>
+                </div>
+
+                <div id="offset2" class="param">
+                    <h4>Niveau</h4>
+                    <div class="paramline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input type="range" min="-10" max="10" step="0.5">
+                    </div>
+                </div>
+            </div>
+
+            <div class="curve">
+                <canvas id="canvas2" height="375px" width="375px">
+                </canvas>
+            </div>
+
+            <h3>Marker</h3>
+            <div class="group">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="comment">Kommentar</th>
+                            <th class="ot">Au&szlig;en</th>
+                            <th class="ft">Vorlauf</th>
+                            <th class="rem"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="markerbody2">
+                    </tbody>
+                </table>
+                <input type="text" id="comment2" />
+                <button id="addmarker2">+</button>
             </div>
         </div>
 
@@ -527,16 +671,26 @@
             <div class="group">
                 <div class="paramline">
                     <div class="param">
+                        <input type="radio" name="otMode" value="0">
+                        <label>Master</label>
+                    </div>
+                    <div class="param">
+                        <input type="radio" name="otMode" value="1">
+                        <label>Gateway</label>
+                    </div>
+                </div>
+                <div class="paramline">
+                    <div class="param">
                         <h4>Heizkreis 1</h4>
                         <label class="switch">
-                            <input id="chOn" type="checkbox" />
+                            <input id="chOn1" type="checkbox" />
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div class="param">
                         <h4>Heizkreis 2</h4>
                         <label class="switch">
-                            <input id="chOn" type="checkbox" />
+                            <input id="chOn2" type="checkbox" />
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -570,20 +724,31 @@
             <div class="group">
                 <h4>Host</h4>
                 <input id="mqttHost" type="text" />
-                <h4>Port</h4>
-                <input id="mqttPort" type="text" />
-                <h4>TLS</h4>
-                <div>
-                    <label class="switch">
-                        <input id="mqttTls" type="checkbox" />
-                        <span class="slider"></span>
-                    </label>
+                <div class="paramline">
+                    <div class="param">
+                        <h4>Port</h4>
+                        <input id="mqttPort" type="text" />
+                    </div>
+                    <div class="param">
+                        <h4>TLS</h4>
+                        <div>
+                            <label class="switch">
+                                <input id="mqttTls" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
-                <h4>Username</h4>
-                <input id="mqttUser" type="text" />
-                <h4>Password</h4>
-                <input id="mqttPass" type="password" />
-                
+                <div class="paramline">
+                    <div class="param">
+                        <h4>Username</h4>
+                        <input id="mqttUser" type="text" />
+                    </div>
+                    <div class="param">
+                        <h4>Password</h4>
+                        <input id="mqttPass" type="password" />
+                    </div>
+                </div>                
             </div>
 
             <h3>Außentemperatur</h3>
@@ -636,6 +801,14 @@
             </div>
         </div>
 
+        <div class="tab" id="log">
+            <div id="console">
+            </div>
+            <div class="toolbar">
+                <button id="btnclearlog">clear log</button>
+            </div>
+        </div>
+
         <div class="toolbar">
             <button id="save">
                 speichern
@@ -649,18 +822,35 @@
     </div>
     <script>
         var config = {
-            openTherm: {
-                roomSetTemperature: 20,
-                chOn: true,
+            boiler: {
                 dhwOn: true,
-                dhwTemperature: 50
-            },
-            chControl: {
-                flowMax: 60,
-                exponent: 1.3,
-                gradient: 1.4,
-                offset: 0,
-                marker: [],
+                dhwTemperature: 50,
+                heating: [
+                    {
+                        roomSetTemperature: 21,
+                        chOn: true,
+                        flowMax: 60,
+                        exponent: 1.3,
+                        gradient: 1.4,
+                        offset: 0,
+                        marker: [
+                            {
+                                comment: "Testmarker",
+                                ot: 10.5,
+                                ft: 45
+                            }
+                        ]
+                    },
+                    {
+                        roomSetTemperature: 21,
+                        chOn: true,
+                        flowMax: 60,
+                        exponent: 1.3,
+                        gradient: 1.4,
+                        offset: 0,
+                        marker: []
+                    }
+                ]
             },
             otSource: {
                 source: 0
@@ -705,8 +895,9 @@
                     topic: _("#otemptopic").value
                 };
 
-                config.openTherm.chOn = _("#chOn").checked;
-                config.openTherm.dhwOn = _("#dhwOn").checked;
+                config.boiler.heating[0].chOn = _("#chOn1").checked;
+                config.boiler.heating[1].chOn = _("#chOn2").checked;
+                config.boiler.dhwOn = _("#dhwOn").checked;
 
                 config.mqtt = {
                     host: _("#mqttHost").value,
@@ -734,25 +925,34 @@
                 xhrWiFiSet.send(params);
             };
 
-            //eventhandler for add marker button
-            _("#addmarker").onclick = () => {
+            function addMarker(hk) {
+                let heatCfg = config.boiler.heating[hk - 1];
                 let ft = getFlowTemperature(
                     5, 
-                    config.openTherm.roomSetTemperature, 
-                    config.chControl.flowMax, 
-                    config.chControl.exponent, 
-                    config.chControl.gradient, 
-                    config.chControl.offset
+                    heatCfg.roomSetTemperature, 
+                    heatCfg.flowMax, 
+                    heatCfg.exponent, 
+                    heatCfg.gradient, 
+                    heatCfg.offset
                 );
-                let comment = _("#comment").value;
-                config.chControl.marker.push({
+                let comment = _("#comment" + hk).value;
+                heatCfg.marker.push({
                     comment: comment,
                     ot: statuscache.outsideTemp,
                     ft: Math.round(ft * 10) / 10
                 });
-                _("#comment").value = "";
-                drawMarkerTable();
-                drawCurve();
+                _("#comment" + hk).value = "";
+                drawMarkerTable(hk);
+                drawCurve(hk);
+            }
+            
+            //eventhandler for add marker button
+            _("#addmarker1").onclick = () => {
+                addMarker(1);
+            };
+            //eventhandler for add marker button
+            _("#addmarker2").onclick = () => {
+                addMarker(2);
             };
 
             let xhrWiFiScan = new XMLHttpRequest();
@@ -810,11 +1010,16 @@
                 });
             };
 
-            function drawMarkerTable() {
-                _("#markerbody").innerHTML = "";
+            function drawMarkerTable(hk) {
+                if (hk === undefined) {
+                    drawMarkerTable(1);
+                    drawMarkerTable(2);
+                    return;
+                }
+                _("#markerbody" + hk).innerHTML = "";
                 var i = 0;
 
-                config.chControl.marker.forEach(function (item) {
+                config.boiler.heating[hk - 1].marker.forEach(function (item) {
                     let tr = __("tr");
 
                     let td = __("td");
@@ -835,14 +1040,14 @@
                     btn.innerHTML = "-";
                     btn.setAttribute("index", i);
                     btn.onclick = (ev) => {
-                        config.chControl.marker.splice(this.getAttribute("index"), 1);
-                        drawMarkerTable();
-                        drawCurve();
+                        config.boiler.heating[hk - 1].marker.splice(ev.target.getAttribute("index"), 1);
+                        drawMarkerTable(hk);
+                        drawCurve(hk);
                     };
                     td.appendChild(btn);
 
                     tr.appendChild(td);
-                    _("#markerbody").appendChild(tr);
+                    _("#markerbody" + hk).appendChild(tr);
 
                     i++;
                 });
@@ -911,24 +1116,32 @@
                 _("#inpinterval").value = config.otSource.interval || null;
                 _("#otemptopic").value = config.otSource.topic || null;
 
-                _("#chOn").checked = config.openTherm.chOn;
-                _("#dhwOn").checked = config.openTherm.dhwOn;
-
-                initRangeParam("roomset", "openTherm.roomSetTemperature");
-                initRangeParam("dhwtemp", "openTherm.dhwTemperature");
-                initRangeParam("flowmax", "chControl.flowMax");
-                initRangeParam("exponent", "chControl.exponent");
-                initRangeParam("gradient", "chControl.gradient");
-                initRangeParam("offset", "chControl.offset");
-
-                drawMarkerTable();
-                drawCurve();
-
                 _("#mqttHost").value = config.mqtt.host || null;
                 _("#mqttPort").value = config.mqtt.port || 1883;
                 _("#mqttTls").checked = config.mqtt.tls || false;
                 _("#mqttUser").value = config.mqtt.user || null;
                 _("#mqttPass").value = config.mqtt.pass || null;
+
+
+                _("#dhwOn").checked = config.boiler.dhwOn;
+                initRangeParam("dhwtemp", "boiler.dhwTemperature");
+
+                _("#chOn1").checked = config.boiler.heating[0].chOn;
+                initRangeParam("roomset1", "boiler.heating.0.roomSetTemperature");
+                initRangeParam("flowmax1", "boiler.heating.0.flowMax");
+                initRangeParam("exponent1", "boiler.heating.0.exponent");
+                initRangeParam("gradient1", "boiler.heating.0.gradient");
+                initRangeParam("offset1", "boiler.heating.0.offset");
+
+                _("#chOn2").checked = config.boiler.heating[1].chOn;
+                initRangeParam("roomset2", "boiler.heating.1.roomSetTemperature");
+                initRangeParam("flowmax2", "boiler.heating.1.flowMax");
+                initRangeParam("exponent2", "boiler.heating.1.exponent");
+                initRangeParam("gradient2", "boiler.heating.1.gradient");
+                initRangeParam("offset2", "boiler.heating.1.offset");
+                
+                drawMarkerTable();
+                drawCurve();
             }
 
             var xhrStatus = new XMLHttpRequest();
@@ -979,7 +1192,7 @@
                 xhrStatus.send();
             }
             fetchStatus();
-            drawCurve();
+            drawCurve(1);
 
             _("#reboot").onclick = (ev) => {
                 //if (!_("#noSleep").checked)
@@ -1045,8 +1258,13 @@
             return rs + c1 * (rs - ot) ** (1.0 / n) + s;
         }
 
-        function drawCurve() {
-            var canvas = document.getElementById("canvas");
+        function drawCurve(hk) {
+            if (hk === undefined) {
+                drawCurve(1);
+                drawCurve(2);
+                return;
+            }
+            var canvas = document.getElementById("canvas" + hk);
             var ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -1132,11 +1350,11 @@
             ctx.restore();
 
 
-            let roomset = parseFloat(_("#roomset input").value);
-            let flowmax = parseFloat(_("#flowmax input").value);
-            let gradient = parseFloat(_("#gradient input").value);
-            let exponent = parseFloat(_("#exponent input").value);
-            let offset = parseFloat(_("#offset input").value);
+            let roomset = parseFloat(_("#roomset" + hk + " input").value);
+            let flowmax = parseFloat(_("#flowmax" + hk + " input").value);
+            let gradient = parseFloat(_("#gradient" + hk + " input").value);
+            let exponent = parseFloat(_("#exponent" + hk + " input").value);
+            let offset = parseFloat(_("#offset" + hk + " input").value);
 
             function getPoint(ot, ft) {
                 return {
@@ -1182,7 +1400,7 @@
 
             //draw markers
             ctx.fillStyle = "#3f8";
-            config.chControl.marker.forEach(function (m) {
+            config.boiler.heating[hk - 1].marker.forEach(function (m) {
                 let p = getPoint(m.ot, m.ft);
                 ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
             });

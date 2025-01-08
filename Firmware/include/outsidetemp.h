@@ -2,16 +2,25 @@
 #define _outsidetemp_h
 
 #include <ArduinoJson.h>
-#include <AsyncHTTPRequest_Generic.hpp>
+#include <WiFiClient.h>
 
 class OutsideTemp {
 private:
     int source;
-    //AsyncHTTPRequest httpcli;
+    double lat, lon;
+    WiFiClient cli;
+    String replyBuf;
+    unsigned long nextMillis;
+    enum {
+        HTTP_IDLE,
+        HTTP_CONNECTING,
+        HTTP_RECEIVING
+    } httpState;
 public:
     OutsideTemp();
     void loop();
     void setConfig(JsonObject &obj);
+    double temp;
 };
 
 extern OutsideTemp outsideTemp;

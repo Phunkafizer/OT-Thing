@@ -11,6 +11,15 @@
         "list": "cpp",
         "initializer_list": "cpp",
         "ranges": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "memory": "cpp",
+        "random": "cpp",
+        "algorithm": "cpp",
+        "typeinfo": "cpp",
+        "fstream": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "sstream": "cpp",
+        "thread": "cpp"
     }
 }

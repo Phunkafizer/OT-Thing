@@ -3,16 +3,12 @@
 #include <rom/rtc.h>
 #include "mqtt.h"
 #include "otcontrol.h"
+#include "outsidetemp.h"
 
 
 DevStatus devstatus;
 
-DevStatus::DevStatus():
-        doc(4096) {
-}
-
-void DevStatus::setOutsideTemp(double t) {
-    doc[F("outsideTemp")] = t;
+DevStatus::DevStatus() {
 }
 
 String DevStatus::getJson() {
@@ -21,9 +17,9 @@ String DevStatus::getJson() {
     doc[F("millis")] = millis();
     doc[F("freeHeap")] = ESP.getFreeHeap();
     doc[F("resetInfo")] = rtc_get_reset_reason(0);
-    doc[F("fw_version")] = FW_VER;
+    doc[F("fw_version")] = BUILD_VERSION;
 
-    JsonObject jwifi = doc.createNestedObject(F("wifi"));
+    JsonObject jwifi = doc[F("wifi")].to<JsonObject>();
     jwifi[F("status")] =  WiFi.status();
     jwifi[F("mode")] = WiFi.getMode();
     jwifi[F("ipsta")] = WiFi.localIP().toString();
@@ -32,11 +28,13 @@ String DevStatus::getJson() {
     jwifi[F("sta_ssid")] = WiFi.SSID();
     jwifi[F("rssi")] = WiFi.RSSI();
     
-    JsonObject jmqtt = doc.createNestedObject(F("mqtt"));
+    JsonObject jmqtt = doc[F("mqtt")].to<JsonObject>();
     jmqtt[F("connected")] = mqtt.connected();
 
-    JsonObject jot = doc.createNestedObject(F("ot"));
+    JsonObject jot = doc.as<JsonObject>();
     otcontrol.getJson(jot);
+
+    doc[F("outsideTemp")] = outsideTemp.temp;
 
     String str;
     serializeJson(doc, str);

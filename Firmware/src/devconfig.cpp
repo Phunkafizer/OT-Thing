@@ -15,10 +15,10 @@ void DevConfig::begin() {
 void DevConfig::update() {
     File f = getFile();
     if (f) {
-        DynamicJsonDocument doc(2048);
+        JsonDocument doc;
         deserializeJson(doc, f);
 
-        if (doc.containsKey(F("mqtt"))) {
+        if (doc[F("mqtt")].is<JsonObject>()) {
             MqttConfig mc;
             const JsonObject &jobj = doc["mqtt"].as<JsonObject>();
             mc.host = jobj["host"].as<String>();
@@ -27,7 +27,7 @@ void DevConfig::update() {
             mqtt.setConfig(mc);
         }
 
-        if (doc.containsKey(F("chControl"))) {
+        if (doc[F("chControl")].is<JsonObject>()) {
             ChControlConfig chcfg;
             const JsonObject &obj = doc[F("chControl")].as<JsonObject>();
             chcfg.flowMax = obj[F("flowMax")];
@@ -38,7 +38,7 @@ void DevConfig::update() {
             //otcontrol.setChCtrlConfig(chcfg);
         }
 
-        if (doc.containsKey(F("otSource"))) {
+        if (doc[F("otSource")].is<JsonObject>()) {
             JsonObject obj = doc[F("otSource")];
             outsideTemp.setConfig(obj);
         }
