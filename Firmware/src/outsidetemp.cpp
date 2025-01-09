@@ -14,7 +14,6 @@ void OutsideTemp::loop() {
         switch (httpState) {
         case HTTP_IDLE:
             if (millis() > nextMillis) {
-                Serial.println("Connecting");
                 cli.connect("api.openweathermap.org", 80);
                 httpState = HTTP_CONNECTING;
                 nextMillis = millis() + 5000;
@@ -28,8 +27,8 @@ void OutsideTemp::loop() {
                 Serial.println("HTTP get!");
                 
                 String cmd = "GET /data/2.5/weather/?units=metric";
-                cmd += "&lat=" + String(49.476);
-                cmd += "&lon=" + String(10.989);
+                cmd += "&lat=" + String(lat);
+                cmd += "&lon=" + String(lon);
                 cmd += "&appid=" + String("xxxxxxxxxxxxxxxxxxxxx\r\n\r\n");
                 Serial.print("Open: ");
                 Serial.println(cmd);
@@ -49,18 +48,15 @@ void OutsideTemp::loop() {
         case HTTP_RECEIVING: {
             if (cli.available()) {
                 replyBuf += cli.readString();
-                //cli.stop();
-                //nextMillis = millis() + 10000;
-                //httpState = HTTP_IDLE;
             }
             if (!cli.connected()) {
                 JsonDocument doc;
                 deserializeJson(doc, replyBuf);
+                replyBuf.clear();
 
                 doc[F("main")][F("temp")].is<JsonFloat>();
                 temp = doc[F("main")][F("temp")];
 
-                Serial.print("Client was closed, temp is ");
                 Serial.println(temp);
                 nextMillis = millis() + 10000;
                 httpState = HTTP_IDLE;

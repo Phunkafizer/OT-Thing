@@ -44,14 +44,14 @@ void wifiEvent(WiFiEvent_t event) {
 }
 
 void setup() {
-    pinMode(20, OUTPUT);
+    pinMode(GPIO_BYPASS_RELAY, OUTPUT);
     pinMode(21, OUTPUT);
-    pinMode(2, OUTPUT);
+    pinMode(GPIO_OTMASTER_LED, OUTPUT);
     pinMode(GPIO_STATUS_LED, OUTPUT);
     pinMode(GPIO_CONFIG_BUTTON, INPUT);
-    digitalWrite(20, LOW);
+    digitalWrite(GPIO_BYPASS_RELAY, LOW);
     digitalWrite(21, LOW);
-    digitalWrite(2, HIGH); // active low
+    digitalWrite(GPIO_OTMASTER_LED, HIGH); // active low
     digitalWrite(GPIO_STATUS_LED, HIGH); // active low
 
     statusLedTicker.attach(0.2, statusLedLoop);
@@ -81,6 +81,24 @@ void setup() {
 }
 
 void loop() {
+    unsigned long now = millis();
+
+    static unsigned long btnDown = 0;
+    if (digitalRead(GPIO_CONFIG_BUTTON) == 0) {
+        if ((now - btnDown) > 10000) {
+            statusLedTicker.detach();
+            digitalWrite(GPIO_STATUS_LED, false); // LED on
+            devconfig.remove();
+            WiFi.disconnect(true, true);
+            while (digitalRead(GPIO_CONFIG_BUTTON) == 0)
+                yield();
+            ESP.restart();
+        }
+        return;
+    }
+    else
+        btnDown = now;
+
 #ifdef DEBUG
     ArduinoOTA.handle();
 #endif

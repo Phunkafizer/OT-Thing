@@ -12,6 +12,7 @@ public:
     void begin();
     File getFile();
     void write(String str);
+    void remove();
 } devconfig;
 
 #endif

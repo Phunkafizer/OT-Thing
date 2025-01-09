@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <devstatus.h>
 #include "HADiscLocal.h"
+#include "otcontrol.h"
 
 Mqtt mqtt;
 static WiFiClient espClient;
@@ -57,10 +58,12 @@ void Mqtt::loop() {
         if (newConnection) {
             newConnection = false;
 
+            otcontrol.resetDiscovery();
+
             cli.onMessage(mqttMessageReceived);
             String topic = stateTopic + F("/set");
             auto id = cli.subscribe(topic.c_str(), 0);
-            Serial.print("Subscripbe ");
+            Serial.print("Subscribe ");
             Serial.print(id);
             Serial.println(topic);
         }

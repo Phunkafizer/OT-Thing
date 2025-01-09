@@ -678,6 +678,14 @@
                         <input type="radio" name="otMode" value="1">
                         <label>Gateway</label>
                     </div>
+                    <div class="param">
+                        <input type="radio" name="otMode" value="2">
+                        <label>Bypass</label>
+                    </div>
+                    <div class="param">
+                        <input type="radio" name="otMode" value="3">
+                        <label>Looptest</label>
+                    </div>
                 </div>
                 <div class="paramline">
                     <div class="param">
@@ -754,7 +762,7 @@
             <h3>Außentemperatur</h3>
             <div class="group">
                 <h4>Quelle</h4>
-                <select id="selectOT">
+                <select id="selectOutsideTempSource">
                     <option selected>OpenWeather</option>
                     <option>1wire</option>
                     <option>MQTT</option>
@@ -822,6 +830,7 @@
     </div>
     <script>
         var config = {
+            otMode: 1,
             boiler: {
                 dhwOn: true,
                 dhwTemperature: 50,
@@ -834,11 +843,6 @@
                         gradient: 1.4,
                         offset: 0,
                         marker: [
-                            {
-                                comment: "Testmarker",
-                                ot: 10.5,
-                                ft: 45
-                            }
                         ]
                     },
                     {
@@ -852,7 +856,7 @@
                     }
                 ]
             },
-            otSource: {
+            outsideTemp: {
                 source: 0
             },
             mqtt: {
@@ -864,12 +868,16 @@
             return document.querySelector(query);
         }
 
+        function _$(query) {
+            return document.querySelectorAll(query);
+        }
+
         function __(elename) {
             return document.createElement(elename);
         }
 
         window.onload = () => {
-            items = document.querySelectorAll("div.nav li");
+            items = _$("div.nav li");
             items.forEach(function (item) {
                 item.onclick = (ev) => {
                     document.querySelectorAll("div.nav li").forEach((item) => {
@@ -886,8 +894,9 @@
 
             //eventhandler for save button
             _("#save").onclick = () => {
-                config.otSource = {
-                    source: _('#selectOT').selectedIndex,
+                config.otMode = parseInt(_('input[name="otMode"]:checked').value),
+                config.outsideTemp = {
+                    source: _('#selectOutsideTempSource').selectedIndex,
                     apikey: _("#inpapikey").value,
                     lat: parseFloat(_("#inplat").value),
                     lon: parseFloat(_("#inplon").value),
@@ -1004,7 +1013,7 @@
                 xhrWiFiScan.send();
             }
 
-            _("#selectOT").onchange = (ev) => {
+            _("#selectOutsideTempSource").onchange = (ev) => {
                 document.querySelectorAll('.otOpt').forEach((ele, index) => {
                     ele.style.display = (index == ev.target.selectedIndex) ? "block" : "none";
                 });
@@ -1021,7 +1030,6 @@
 
                 config.boiler.heating[hk - 1].marker.forEach(function (item) {
                     let tr = __("tr");
-
                     let td = __("td");
                     td.innerText = item.comment;
                     tr.appendChild(td);
@@ -1108,13 +1116,15 @@
             xhrConfig.open("GET", "config");
             xhrConfig.send();
             function configToUi() {
-                _("#selectOT").selectedIndex = config.otSource.source;
-                _("#selectOT").dispatchEvent(new Event('change'));
-                _("#inpapikey").value = config.otSource.apikey;
-                _("#inplat").value = config.otSource.lat || null;
-                _("#inplon").value = config.otSource.lon || null;
-                _("#inpinterval").value = config.otSource.interval || null;
-                _("#otemptopic").value = config.otSource.topic || null;
+                _$('input[name="otMode"]')[config.otMode].checked = true;
+
+                _("#selectOutsideTempSource").selectedIndex = config.outsideTemp.source;
+                _("#selectOutsideTempSource").dispatchEvent(new Event('change'));
+                _("#inpapikey").value = config.outsideTemp.apikey;
+                _("#inplat").value = config.outsideTemp.lat || null;
+                _("#inplon").value = config.outsideTemp.lon || null;
+                _("#inpinterval").value = config.outsideTemp.interval || null;
+                _("#otemptopic").value = config.outsideTemp.topic || null;
 
                 _("#mqttHost").value = config.mqtt.host || null;
                 _("#mqttPort").value = config.mqtt.port || 1883;
@@ -1195,9 +1205,6 @@
             drawCurve(1);
 
             _("#reboot").onclick = (ev) => {
-                //if (!_("#noSleep").checked)
-                  //  confirm("After reboot device will remain in deep sleep. Push button long on device to access again!");
-                //setOnline(false);
                 let xhr = new XMLHttpRequest();
                 xhr.open("GET", "/reboot");
                 xhr.send("");
@@ -1237,6 +1244,13 @@
                 xhrUpl.setRequestHeader('Access-Control-Allow-Origin', '*');
                 xhrUpl.send(formdata);
             };
+
+            let otModeItems = _$('input[name="otMode"]');
+            otModeItems.forEach(function (item) {
+                item.onclick = (ev) => {
+                    console.log(ev.target.value);
+                }
+            });
         };
 
         function getMinOutsideTemp(rs, mf, g) {
@@ -1363,8 +1377,9 @@
                 }
             }
 
-            let ft = getFlowTemperature(roomset, roomset, flowmax, exponent, gradient, offset);
-            let p1 = getPoint(roomset, ft); //foot
+            let otStart = Math.min(roomset, xaxis.min);
+            let ft = getFlowTemperature(otStart, roomset, flowmax, exponent, gradient, offset);
+            let p1 = getPoint(otStart, ft); //foot
 
             ctx.fillStyle = "#A33";
             ctx.fillRect(p1.x - 3, p1.y - 3, 6, 6);
@@ -1375,7 +1390,7 @@
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             let otf = false;
-            for (var ot = roomset; ot >= xaxis.max; ot -= 0.5) {
+            for (var ot = otStart; ot >= xaxis.max; ot -= 0.5) {
                 let ft = getFlowTemperature(ot, roomset, flowmax, exponent, gradient, offset);
 
                 if ((ft >= flowmax) && !otf) {

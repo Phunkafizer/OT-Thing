@@ -8,7 +8,7 @@ const char CFG_FILENAME[] PROGMEM = "/config.json";
 DevConfig devconfig;
 
 void DevConfig::begin() {
-    LittleFS.begin();
+    LittleFS.begin(true);
     update();
 }
 
@@ -27,16 +27,8 @@ void DevConfig::update() {
             mqtt.setConfig(mc);
         }
 
-        if (doc[F("chControl")].is<JsonObject>()) {
-            ChControlConfig chcfg;
-            const JsonObject &obj = doc[F("chControl")].as<JsonObject>();
-            chcfg.flowMax = obj[F("flowMax")];
-            chcfg.exponent = obj[F("exponent")];
-            chcfg.gradient = obj[F("gradient")];
-            chcfg.offset = obj[F("offset")];
-
-            //otcontrol.setChCtrlConfig(chcfg);
-        }
+        JsonObject cfg = doc.as<JsonObject>();
+        otcontrol.setChCtrlConfig(cfg);
 
         if (doc[F("otSource")].is<JsonObject>()) {
             JsonObject obj = doc[F("otSource")];
@@ -56,4 +48,8 @@ void DevConfig::write(String str) {
     f.write((uint8_t *) str.c_str(), str.length());
     f.close();
     update();
+}
+
+void DevConfig::remove() {
+    LittleFS.remove(FPSTR(CFG_FILENAME));
 }

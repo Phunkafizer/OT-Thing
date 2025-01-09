@@ -4,12 +4,14 @@
 #include <ArduinoJson.h>
 #include "devstatus.h"
 #include "devconfig.h"
+#include "html.h"
 
 static const char APP_JSON[] PROGMEM = "application/json";
 static const IPAddress apAddress(4, 3, 2, 1);
 Portal portal;
 static AsyncWebServer websrv(80);
 AsyncWebSocket ws("/ws");
+
 
 Portal::Portal():
     reboot(false),
@@ -30,13 +32,13 @@ void Portal::begin(bool configMode) {
     websrv.addHandler(&ws);
 
     websrv.on("/", HTTP_GET, [] (AsyncWebServerRequest *request) {
-        //#ifdef DEBUG
+        #ifdef DEBUG
         if (LittleFS.exists(F("/index.html"))) {
             request->send(LittleFS, F("/index.html"), F("text/html"));
             return;
         }
-        //#endif
-        //request->send_P(200, F("text/html"), html);
+        #endif
+        request->send_P(200, F("text/html"), html);
     });
 
     websrv.on("/config", HTTP_GET, [this] (AsyncWebServerRequest *request) {
@@ -63,7 +65,6 @@ void Portal::begin(bool configMode) {
 
             if (confBuf.length() == total) {
                 devconfig.write(confBuf);
-                Serial1.println("Write DevConfig");
                 request->send(200);
             }
         }

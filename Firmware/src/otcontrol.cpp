@@ -2,6 +2,7 @@
 #include "command.h"
 #include "HADiscLocal.h"
 #include "mqtt.h"
+#include "hwdef.h"
 
 static OpenTherm otmaster(3, 1);
 static OpenTherm otslave(6, 7, true);
@@ -25,6 +26,9 @@ const char ID_STR_BURNER_OP_HOURS[] PROGMEM = "burner_op_hours";
 const char ID_STR_RETURN_T[] PROGMEM = "return_t";
 const char ID_STR_CH_PUMP_STARTS[] PROGMEM = "ch_pump_starts";
 const char ID_STR_SLAVE_PROD_VERSION[] PROGMEM = "slave_prod_version";
+const char ID_STR_DHW_SET_T[] PROGMEM = "dhw_set_t";
+const char ID_STR_CH_SET_T[] PROGMEM = "ch_set_t";
+const char ID_STR_CAPACITY_MODULATION[] PROGMEM = "cap_mod";
 
 const char STR_MAX_REL_MOD[] PROGMEM = "max_rel_mode";
 const char STR_DHW_BURNER_STARTS[] PROGMEM = "dhw_burner_starts";
@@ -53,14 +57,16 @@ OTValue *boilerValues[] = { // data collected from boiler
     //new OTValueu16(     STR_DHW_PUMP_VALUE_STARTS,  OpenThermMessageID::DHWPumpValveStarts,     10),
     //new OTValueu16(     STR_DHW_BURNER_STARTS,      OpenThermMessageID::DHWBurnerStarts,        60),
     new OTValueu16(             ID_STR_BURNER_OP_HOURS,         OpenThermMessageID::BurnerOperationHours,   120),
-    new OTValueProductVersion(  ID_STR_SLAVE_PROD_VERSION,      OpenThermMessageID::SlaveVersion)
+    new OTValueProductVersion(  ID_STR_SLAVE_PROD_VERSION,      OpenThermMessageID::SlaveVersion),
+    new OTValueFloat(           ID_STR_DHW_SET_T,               OpenThermMessageID::TdhwSet,                -1),
+    new OTValueFloat(           ID_STR_CH_SET_T,                OpenThermMessageID::TSet,                   -1),
+    new OTValueCapacityModulation()
     //new OTValueu16(     STR_CH_PUMP_OP_HOURS,       OpenThermMessageID::CHPumpOperationHours,   60),
     //new OTValueu16("dhw_pumpt_valve_op_hours", DHWPumpValveOperationHours, 60),
     //new OTValueu16("dhw_burner_op_hours", DHWBurnerOperationHours, 60),
     //new OTValueFloat(str_max_rel_mod, MaxRelModLevelSetting, 0),
     ////new OTValue("max_boiler_cap_min_rel_mod", MaxCapacityMinModLevel, 0),
     //new OTValueFloat(str_ot_slave_version, OpenThermVersionSlave, 0),
-    //new OTValueFloat(   STR_SLAVE_PROD_VERSION,     OpenThermMessageID::SlaveVersion,           0),
 };
 
 OTValue *thermostatValues[] = {
@@ -68,13 +74,35 @@ OTValue *thermostatValues[] = {
     new OTValueFloat(       ID_STR_ROOM_T,                  OpenThermMessageID::Tr,                     0)
 };
 
+constexpr uint16_t floatToOT(double f) {
+    return (((int) f) << 8) | (int) ((f - (int) f) * 256);
+}
 
-OTValue::OTValue(const char *name, const OpenThermMessageID id, const unsigned int interval):
+const struct {
+    OpenThermMessageID id;
+    uint16_t value;
+} loopbackTestData[] PROGMEM = {
+    {OpenThermMessageID::Status,                    0x0000},
+    {OpenThermMessageID::Tboiler,                   floatToOT(48.5)},
+    {OpenThermMessageID::Texhaust,                  96},
+    {OpenThermMessageID::RelModLevel,               floatToOT(33.3)},
+    {OpenThermMessageID::CHPressure,                floatToOT(1.25)},
+    {OpenThermMessageID::DHWFlowRate,               floatToOT(2.4)},
+    {OpenThermMessageID::Tret,                      floatToOT(41.7)},
+    {OpenThermMessageID::Tdhw,                      floatToOT(37.5)},
+    {OpenThermMessageID::SuccessfulBurnerStarts,    9876},
+    {OpenThermMessageID::BurnerOperationHours,      12385}
+};
+
+/**
+ * @param interval -1: never query. 0: only query once. >0: query every interval seconds
+ */
+OTValue::OTValue(const char *name, const OpenThermMessageID id, const int interval):
         id(id),
         interval(interval),
         name(name),
         value(0),
-        enabled(true),
+        enabled(interval != -1),
         isSet(false),
         discFlag(false) {
 }
@@ -147,8 +175,13 @@ void OTValue::setValue(uint16_t val) {
     }
 }
 
-void OTValue::enable(const bool enabled) {
+void OTValue::disable() {
+    this->enabled = false;
+}
+
+void OTValue::init(const bool enabled) {
     this->enabled = enabled;
+    isSet = false;
 }
 
 const char *OTValue::getName() const {
@@ -165,7 +198,7 @@ void OTValue::getJson(JsonObject &obj) const {
         getValue(obj);        
 }
 
-OTValueu16::OTValueu16(const char *name, const OpenThermMessageID id, const unsigned int interval):
+OTValueu16::OTValueu16(const char *name, const OpenThermMessageID id, const int interval):
         OTValue(name, id, interval) {
 }
 
@@ -178,7 +211,7 @@ void OTValueu16::getValue(JsonObject &obj) const {
 }
 
 
-OTValuei16::OTValuei16(const char *name, const OpenThermMessageID id, const unsigned int interval):
+OTValuei16::OTValuei16(const char *name, const OpenThermMessageID id, const int interval):
         OTValue(name, id, interval) {
 }
 
@@ -191,7 +224,7 @@ void OTValuei16::getValue(JsonObject &obj) const {
 }
 
 
-OTValueFloat::OTValueFloat(const char *name, const OpenThermMessageID id, const unsigned int interval):
+OTValueFloat::OTValueFloat(const char *name, const OpenThermMessageID id, const int interval):
         OTValue(name, id, interval) {
 }
 
@@ -209,7 +242,7 @@ void OTValueFloat::getValue(JsonObject &obj) const {
 
 
 OTValueStatus::OTValueStatus():
-        OTValue(ID_STR_STATUS, OpenThermMessageID::Status, 0) {
+        OTValue(ID_STR_STATUS, OpenThermMessageID::Status, -1) {
     enabled = false;
 }
 
@@ -283,6 +316,18 @@ void OTValueProductVersion::getValue(JsonObject &obj) const {
     obj[FPSTR(name)] = v;
 }
 
+OTValueCapacityModulation::OTValueCapacityModulation():
+        OTValue(nullptr, OpenThermMessageID::MaxCapacityMinModLevel, 0) {
+}
+
+bool OTValueCapacityModulation::sendDiscovery() {
+    return true;
+}
+
+void OTValueCapacityModulation::getValue(JsonObject &obj) const {
+    obj[F("max_capacity")] = value >> 8;
+    obj[F("min_modulation")] = value & 0xFF;
+}
 
 void IRAM_ATTR handleIrqMaster() {
     otmaster.handleInterrupt();
@@ -312,34 +357,33 @@ void otCbSlave(unsigned long response, OpenThermResponseStatus status) {
 
 OTControl::OTControl():
         lastMillis(millis()),
-        otMode(OTMODE_MASTER),
-        loopbackData(0) {
+        otMode(OTMODE_LOOPBACKTEST) {
 }
 
 void OTControl::begin() {
     // +24V enable for room unit (OT slave)
-    pinMode(10, OUTPUT);
+    pinMode(GPIO_STEPUP_ENABLE, OUTPUT);
 
     // relay
-    pinMode(20, OUTPUT);
+    pinMode(GPIO_BYPASS_RELAY, OUTPUT);
 
-    setMode(otMode);
+    setOTMode(otMode);
 
     otmaster.begin(handleIrqMaster, otCbMaster, 1, handleTimerIrqMaster);
     otslave.begin(handleIrqSlave, otCbSlave, 0, handleTimerIrqSlave);
 }
 
-void OTControl::setMode(const OTMode mode) {
+void OTControl::setOTMode(const OTMode mode) {
     otMode = mode;
 
     // set bypass rely
-    digitalWrite(20, mode != OTMODE_BYPASS);
+    digitalWrite(GPIO_BYPASS_RELAY, mode != OTMODE_BYPASS);
 
-    // set +24V
-    digitalWrite(10, (mode == OTMODE_GATEWAY) || (mode == OTMODE_LOOPBACKTEST) || true); // TODO temp for boiler emu
+    // set +24V steup up
+    digitalWrite(GPIO_STEPUP_ENABLE, (mode == OTMODE_GATEWAY) || (mode == OTMODE_LOOPBACKTEST));
 
     for (auto *valobj: boilerValues)
-        valobj->enable(mode == OTMODE_MASTER);
+        valobj->init((mode == OTMODE_MASTER) || (mode == OTMODE_LOOPBACKTEST));
 }
 
 void OTControl::loop() {
@@ -347,13 +391,17 @@ void OTControl::loop() {
     otslave.process();
 
     if (millis() > lastRxMaster + 100)
-        digitalWrite(2, HIGH);
+        digitalWrite(GPIO_OTMASTER_LED, HIGH);
+
+    if (millis() > lastRxSlave + 100)
+        digitalWrite(GPIO_OTSLAVE_LED, LOW);
 
     if (!otmaster.isReady())
         return;
 
     switch (otMode) {
     case OTMODE_MASTER:
+    case OTMODE_LOOPBACKTEST:
         for (auto *valobj: boilerValues) {
             if (valobj->process())
                 return;
@@ -386,24 +434,18 @@ void OTControl::loop() {
             return;
         }
         break;
-
-    case OTMODE_LOOPBACKTEST:
-        if (millis() > lastMillis + 500) {
-            lastMillis = millis();
-            uint32_t req = otmaster.buildRequest(OpenThermMessageType::READ, OpenThermMessageID::Status, ++loopbackData);
-            otmaster.sendRequestAsync(req);
-        }
-        break;
     }
 }
 
 void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatus status) {
-    if (status == OpenThermResponseStatus::TIMEOUT)
+    if (status == OpenThermResponseStatus::TIMEOUT) {
+        if (otMode == OTMODE_LOOPBACKTEST)
+            Serial.println("LOOPBACK failure (timeout)");
         return;
-
-    digitalWrite(2, LOW);
+    }
+        
+    digitalWrite(GPIO_OTMASTER_LED, LOW);
     lastRxMaster = millis();
-
 
     // received response from boiler
     auto id = OpenTherm::getDataID(msg);
@@ -419,15 +461,16 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
 
     switch (otMode) {
     case OTMODE_LOOPBACKTEST:
-        Serial.print("Master RX ");
-        Serial.println((int) status);
-        command.sendOtEvent('B', msg);
-        if (loopbackData == (msg & 0xFFFF)) {
-            Serial.println("LOOPBACK CHECK PASS");
+        for (unsigned int i = 0; i< sizeof(loopbackTestData) / sizeof(loopbackTestData[0]); i++) {
+            if (loopbackTestData[i].id == id) {
+                if (loopbackTestData[i].value == (msg & 0xFFFF))
+                    Serial.println("LOOPBACK OK");
+                else
+                    Serial.println("LOOPBACK failure");
+                break;
+            }
         }
-        else
-            Serial.println("LOOPBACK CHECK FAIL!");
-        return;
+        break;
 
     case OTMODE_GATEWAY:
         // forward reply from boiler to room unit
@@ -455,7 +498,7 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         if (otval) {
             OpenThermMessageType mt = OpenTherm::getMessageType(msg);
             if (mt >= OpenThermMessageType::DATA_INVALID)
-                otval->enable(false);
+                otval->disable();
         }
         break;
     }
@@ -467,7 +510,9 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
 }
 
 void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus status) {
-    // received request from thermostat
+    digitalWrite(GPIO_OTSLAVE_LED, HIGH);
+    lastRxSlave = millis();
+
     OpenThermMessageID id = OpenTherm::getDataID(msg);
 
     OTValue *otval = nullptr;
@@ -479,26 +524,6 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
     }
 
     switch (otMode) {
-    case OTMODE_MASTER: {
-        // TODO temporary, boiler emulation for tests!
-        /*unsigned long response;
-        switch (id) {
-        case OpenThermMessageID::Tboiler:
-            response = otslave.buildResponse(OpenThermMessageType::READ_ACK, id, 45 << 8);
-            otslave.status = OpenThermStatus::READY;
-            otslave.sendResponse(response);
-            break;
-
-        case OpenThermMessageID::RelModLevel:
-            response = otslave.buildResponse(OpenThermMessageType::READ_ACK, id, 33 << 8);
-            otslave.status = OpenThermStatus::READY;
-            otslave.sendResponse(response);
-            break;
-        }*/
-
-        break;
-    }
-
     case OTMODE_GATEWAY: {
         // we received a request from the room unit, forward it to boiler
         // TODO check for special commands, e. g. outside temp
@@ -506,11 +531,11 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
         unsigned long newMsg = msg;
         switch (id) {
         case OpenThermMessageID::TSet:
-            newMsg = otmaster.buildRequest(OpenThermMessageType::WRITE_DATA, id, 57 << 8);
+            //newMsg = otmaster.buildRequest(OpenThermMessageType::WRITE_DATA, id, 57 << 8);
             break;
 
         case OpenThermMessageID::Status:
-            newMsg = otmaster.buildRequest(OpenThermMessageType::READ_DATA, id, msg & 0xFFFF | 0x100<<3); // activate OTC
+            //newMsg = otmaster.buildRequest(OpenThermMessageType::READ_DATA, id, msg & 0xFFFF | 0x100<<3); // activate OTC
             break;
         }
 
@@ -527,8 +552,16 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
     }
 
     case OTMODE_LOOPBACKTEST: {
+        // we received a request from OT master
         auto id = OpenTherm::getDataID(msg);
-        uint32_t reply = otslave.buildResponse(OpenThermMessageType::READ_ACK, id, msg & 0xFFFF);
+        uint32_t reply = otslave.buildResponse(OpenThermMessageType::UNKNOWN_DATA_ID, id, 0x0000);
+
+        for (unsigned int i = 0; i< sizeof(loopbackTestData) / sizeof(loopbackTestData[0]); i++) {
+            if (loopbackTestData[i].id == id) {
+                reply = otslave.buildResponse(OpenThermMessageType::READ_ACK, id, loopbackTestData[i].value);
+                break;
+            }
+        }
         otslave.status = OpenThermStatus::READY;
         otslave.sendResponse(reply);
         break;
@@ -564,6 +597,16 @@ void OTControl::getJson(JsonObject &obj) const {
 
 }
 
-void OTControl::setChCtrlConfig(ChControlConfig &config) {
+void OTControl::resetDiscovery() {
+    for (auto *valobj: boilerValues)
+        valobj->discFlag = false;
+}
 
+void OTControl::setChCtrlConfig(JsonObject &config) {
+    OTMode mode = OTMODE_LOOPBACKTEST;
+
+    if (config[F("otMode")].is<JsonInteger>())
+        mode = (OTMode) (int) config[F("otMode")];
+    
+    setOTMode(mode);
 }
