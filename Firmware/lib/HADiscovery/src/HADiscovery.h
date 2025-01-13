@@ -6,7 +6,7 @@ extern const char *HA_DEVICE_CLASS_PROBLEM PROGMEM;
 
 class HADiscovery {
 private:
-    void init(String &name, String &id);
+    void init(String &name, String &id, String component);
 public:
     HADiscovery();
     JsonDocument doc;
@@ -14,9 +14,16 @@ public:
     const char *devName;
     const char *manufacturer;
     String devPrefix;
-    String stateTopic;
+    String defaultStateTopic;
     virtual void publish(String topic, JsonDocument &doc) {}
     void setValueTemplate(String valueTemplate);
+    void setStateTopic(String &stateTopic);
+    void setMinMax(double min, double max, double step);
+    void setMinMaxTemp(double min, double max, double step);
+    void setTemperatureStateTopic(String topic);
+    void setTemperatureStateTemplate(String stateTemplate);
+    void setCurrentTemperatureTopic(String topic);
+    void setCurrentTemperatureTemplate(String templ);
 
     void createTempSensor(String name, String id);
     void createPowerFactorSensor(String name, String id);
@@ -24,4 +31,6 @@ public:
     void createHourDuration(String name, String id);
     void createSensor(String name, String id);
     void createBinarySensor(String name, String id, String deviceClass);
+    void createNumber(String name, String id, String cmdTopic);
+    void createClima(String name, String id, String tmpCmdTopic);
 };

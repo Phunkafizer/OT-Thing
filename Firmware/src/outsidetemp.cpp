@@ -3,7 +3,7 @@
 OutsideTemp outsideTemp;
 
 OutsideTemp::OutsideTemp():
-        source(0),
+        source(1),
         nextMillis(0),
         httpState(HTTP_IDLE) {
 }

@@ -54,7 +54,7 @@ void setup() {
     digitalWrite(GPIO_OTMASTER_LED, HIGH); // active low
     digitalWrite(GPIO_STATUS_LED, HIGH); // active low
 
-    statusLedTicker.attach(0.2, statusLedLoop);
+    statusLedTicker.attach(0.1, statusLedLoop);
 
     unsigned long ts = millis();
     while (millis() - ts < 1000)

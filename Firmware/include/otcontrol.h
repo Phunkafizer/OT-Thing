@@ -105,6 +105,17 @@ private:
     } otMode;
     unsigned long lastRxMaster;
     unsigned long lastRxSlave;
+    struct HeatingParams {
+        bool chOn;
+        double roomSet;
+        double flowMax;
+        double exponent;
+        double gradient;
+        double offset;
+    } heatingParams[2];
+    double dhwTemp;
+    bool dhwOn;
+    bool discFlag;
 public:
     OTControl();
     void setOTMode(const OTMode mode);
@@ -113,6 +124,7 @@ public:
     void getJson(JsonObject &obj) const;
     void setChCtrlConfig(JsonObject &config);
     void resetDiscovery();
+    void setDhwTemp(double temp);
 };
 
 extern OTControl otcontrol;

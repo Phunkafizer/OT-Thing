@@ -71,9 +71,15 @@
             padding: 5px;
         }
 
-        div.paramline {
+        div.flexline {
             display: flex;
-            margin-bottom: 1em;
+            margin-bottom: 0.4em;
+            flex-wrap: wrap;
+        }
+
+        div.statusfield {
+            min-width: 50%;
+            padding-bottom: 0.5em;
         }
 
         div.param {
@@ -84,7 +90,6 @@
         h3 {
             font-size: 1.0em;
             border-left: 6px solid #fd975a;
-            ;
             margin: 0.5em 0 0.5em 0;
             padding-left: 0.5em;
         }
@@ -94,13 +99,9 @@
             font-size: 0.7em;
         }
 
-        div.param input[type=range] {
-            width: 100%;
-        }
-
         div.valunit {
             display: inline-block;
-            width: 110px;
+            width: 20%;
         }
 
         .statusvalue {
@@ -139,7 +140,8 @@
             -webkit-appearance: none;
             background: #fd975a;
             height: 5px;
-            margin: auto 10px;
+            margin: auto 0;
+            width: 80%;
         }
 
         div.curve {
@@ -326,18 +328,32 @@
         <div class="tab" id="status">
             <h3>WiFi</h3>
             <div class="group">
-                <h4>MAC</h4>
-                <span class="statusvalue" field="wifi.mac"></span>
-                <h4>Status</h4>
-                <span class="statusvalue" field="wifi.status"></span>
-                <h4>SSID</h4>
-                <span class="statusvalue" field="wifi.sta_ssid"></span>
-                <h4>IP</h4>
-                <span class="statusvalue" field="wifi.ipsta"></span>
-                <h4>Hostname</h4>
-                <span class="statusvalue" field="wifi.hostname"></span>
-                <h4>RSSI</h4>
-                <span class="statusvalue" field="wifi.rssi" unit="dBm"></span>
+                <div class="flexline">
+                    <div class="statusfield">
+                        <h4>MAC</h4>
+                        <span class="statusvalue" field="wifi.mac"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>IP</h4>
+                        <span class="statusvalue" field="wifi.ipsta"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>SSID</h4>
+                        <span class="statusvalue" field="wifi.sta_ssid"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Hostname</h4>
+                        <span class="statusvalue" field="wifi.hostname"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Status</h4>
+                        <span class="statusvalue" field="wifi.status"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>RSSI</h4>
+                        <span class="statusvalue" field="wifi.rssi" unit="dBm"></span>
+                    </div>
+                </div>
             </div>
 
             <h3>MQTT</h3>
@@ -357,57 +373,71 @@
             
             <h3>Therme</h3>
             <div class="group">
-                <div>
-                    <h4>Brenner</h4>
-                    <span class="statusvalue" field="boiler.status.flame"></span>
-                </div>
-                <div>
-                    <h4>Heizkreis 1 aktiv</h4>
-                    <span class="statusvalue" field="boiler.status.ch_mode"></span>
-                </div>
-                <div>
-                    <h4>Heizkreis 2 aktiv</h4>
-                    <span class="statusvalue" field="boiler.status.ch2_mode"></span>
-                </div>
-                <div>
-                    <h4>Vorlauftemperatur</h4>
-                    <span class="statusvalue" field="boiler.flow_t" unit="&deg;C"></span>
-                </div>
-                <div>
-                    <h4>Vorlauftemperatur 2</h4>
-                    <span class="statusvalue" field="boiler.flow_t2" unit="&deg;C"></span>
-                </div>
-                <div>
-                    <h4>Rücklauftemperatur</h4>
-                    <span class="statusvalue" field="boiler.return_t" unit="&deg;C"></span>
-                </div>
-                <div>
-                    <h4>Brauchwassertemperatur</h4>
-                    <span class="statusvalue" field="boiler.dhw_t" unit="&deg;C"></span>
-                </div>
-                <div>
-                    <h4>Brauchwassertemperatur 2</h4>
-                    <span class="statusvalue" field="boiler.dhw_t2" unit="&deg;C"></span>
-                </div>
-                <div>
-                    <h4>Abgastemperatur</h4>
-                    <span class="statusvalue" field="boiler.exhaust_t" unit="&deg;C"></span>
-                </div>
-                <div>
-                    <h4>Modulation</h4>
-                    <span class="statusvalue" field="boiler.rel_mod" unit="%"></span>
-                </div>
-                <div>
-                    <h4>Druck Heizkreis</h4>
-                    <span class="statusvalue" field="boiler.ch_pressure" unit="bar"></span>
-                </div>
-                <div>
-                    <h4>Betriebdsstunden Brenner</h4>
-                    <span class="statusvalue" field="boiler.burner_op_hours" unit="h"></span>
-                </div>
-                <div>
-                    <h4>Brennerstarts</h4>
-                    <span class="statusvalue" field="boiler.burner_starts"></span>
+                <div class="flexline">
+                    <div class="statusfield">
+                        <h4>Brenner</h4>
+                        <span class="statusvalue" field="boiler.status.flame"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Modulation</h4>
+                        <span class="statusvalue" field="boiler.rel_mod" unit="%"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Heizkreis 1 aktiv</h4>
+                        <span class="statusvalue" field="boiler.status.ch_mode"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Heizkreis 2 aktiv</h4>
+                        <span class="statusvalue" field="boiler.status.ch2_mode"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Vorlauftemperatur</h4>
+                        <span class="statusvalue" field="boiler.flow_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Vorlauftemperatur 2</h4>
+                        <span class="statusvalue" field="boiler.flow_t2" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Vorlaufsolltemperatur</h4>
+                        <span class="statusvalue" field="boiler.ch_set_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Vorlaufsolltemperatur 2</h4>
+                        <span class="statusvalue" field="boiler.ch_set_t2" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Brauchwassertemperatur</h4>
+                        <span class="statusvalue" field="boiler.dhw_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Brauchwassertemperatur 2</h4>
+                        <span class="statusvalue" field="boiler.dhw_t2" unit="&deg;C"></span>    
+                    </div>
+                    <div class="statusfield">
+                        <h4>Brauchwassersolltemperatur</h4>
+                        <span class="statusvalue" field="boiler.dhw_set_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Abgastemperatur</h4>
+                        <span class="statusvalue" field="boiler.exhaust_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Rücklauftemperatur</h4>
+                        <span class="statusvalue" field="boiler.return_t" unit="&deg;C"></span>    
+                    </div>
+                    <div class="statusfield">
+                        <h4>Betriebdsstunden Brenner</h4>
+                        <span class="statusvalue" field="boiler.burner_op_hours" unit="h"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Brennerstarts</h4>
+                        <span class="statusvalue" field="boiler.burner_starts"></span>    
+                    </div>
+                    <div class="statusfield">
+                        <h4>Druck Heizkreis</h4>
+                        <span class="statusvalue" field="boiler.ch_pressure" unit="bar"></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -417,7 +447,7 @@
             <div class="group">
                 <div id="roomset1" class="param">
                     <h4>Raum Solltemperatur</h4>
-                    <div class="paramline">
+                    <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
                             <span class="unit">&deg;C</span>
@@ -430,7 +460,7 @@
 
                 <div id="flowmax1" class="param">
                     <h4>Max. Vorlauftemperatur</h4>
-                    <div class="paramline">
+                    <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
                             <span class="unit">&deg;C</span>
@@ -452,7 +482,7 @@
 
                 <div id="exponent1" class="param">
                     <h4>Heizfl&auml;chenexponent</h4>
-                    <div class="paramline">
+                    <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
                         </div>
@@ -478,7 +508,7 @@
             <div class="group">
                 <div id="gradient1" class="param">
                     <h4>Steilheit</h4>
-                    <div class="paramline">
+                    <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
                         </div>
@@ -493,7 +523,7 @@
 
                 <div id="offset1" class="param">
                     <h4>Niveau</h4>
-                    <div class="paramline">
+                    <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
                             <span class="unit">&deg;C</span>
@@ -532,7 +562,7 @@
             <div class="group">
                 <div id="roomset2" class="param">
                     <h4>Raum Solltemperatur</h4>
-                    <div class="paramline">
+                    <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
                             <span class="unit">&deg;C</span>
@@ -545,7 +575,7 @@
 
                 <div id="flowmax2" class="param">
                     <h4>Max. Vorlauftemperatur</h4>
-                    <div class="paramline">
+                    <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
                             <span class="unit">&deg;C</span>
@@ -567,7 +597,7 @@
 
                 <div id="exponent2" class="param">
                     <h4>Heizfl&auml;chenexponent</h4>
-                    <div class="paramline">
+                    <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
                         </div>
@@ -593,7 +623,7 @@
             <div class="group">
                 <div id="gradient2" class="param">
                     <h4>Steilheit</h4>
-                    <div class="paramline">
+                    <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
                         </div>
@@ -608,7 +638,7 @@
 
                 <div id="offset2" class="param">
                     <h4>Niveau</h4>
-                    <div class="paramline">
+                    <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
                             <span class="unit">&deg;C</span>
@@ -669,7 +699,7 @@
 
             <h3>OpenTherm</h3>
             <div class="group">
-                <div class="paramline">
+                <div class="flexline">
                     <div class="param">
                         <input type="radio" name="otMode" value="0">
                         <label>Master</label>
@@ -687,7 +717,7 @@
                         <label>Looptest</label>
                     </div>
                 </div>
-                <div class="paramline">
+                <div class="flexline">
                     <div class="param">
                         <h4>Heizkreis 1</h4>
                         <label class="switch">
@@ -718,12 +748,25 @@
                     </div>
                 </div>
 
+                <div id="chset1" class="param">
+                    <h4>Vorlauftemperatur (Vorgabe)</h4>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input type="range" min="25" max="90" step="1" />
+                    </div>
+                </div>
+
                 <div id="dhwtemp" class="param">
                     <h4>Brauchwassertemperatur</h4>
-                    <div class="paramline">
-                        <span class="value"></span>
-                        <span class="unit">&deg;C</span>
-                        <input id="dhwtt" type="range" min="30" max="70" step="1" />
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input type="range" min="30" max="70" step="1" />
                     </div>
                 </div>
             </div>
@@ -732,7 +775,7 @@
             <div class="group">
                 <h4>Host</h4>
                 <input id="mqttHost" type="text" />
-                <div class="paramline">
+                <div class="flexline">
                     <div class="param">
                         <h4>Port</h4>
                         <input id="mqttPort" type="text" />
@@ -747,7 +790,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="paramline">
+                <div class="flexline">
                     <div class="param">
                         <h4>Username</h4>
                         <input id="mqttUser" type="text" />
@@ -830,13 +873,14 @@
     </div>
     <script>
         var config = {
-            otMode: 1,
+            otMode: 2, // bypass mode
             boiler: {
                 dhwOn: true,
                 dhwTemperature: 50,
                 heating: [
                     {
-                        roomSetTemperature: 21,
+                        flow: 52,
+                        roomSet: 21,
                         chOn: true,
                         flowMax: 60,
                         exponent: 1.3,
@@ -846,7 +890,8 @@
                         ]
                     },
                     {
-                        roomSetTemperature: 21,
+                        flow: 52,
+                        roomSet: 21,
                         chOn: true,
                         flowMax: 60,
                         exponent: 1.3,
@@ -868,16 +913,16 @@
             return document.querySelector(query);
         }
 
-        function _$(query) {
+        function __(query) {
             return document.querySelectorAll(query);
         }
 
-        function __(elename) {
+        function _$(elename) {
             return document.createElement(elename);
         }
 
         window.onload = () => {
-            items = _$("div.nav li");
+            items = __("div.nav li");
             items.forEach(function (item) {
                 item.onclick = (ev) => {
                     document.querySelectorAll("div.nav li").forEach((item) => {
@@ -907,6 +952,7 @@
                 config.boiler.heating[0].chOn = _("#chOn1").checked;
                 config.boiler.heating[1].chOn = _("#chOn2").checked;
                 config.boiler.dhwOn = _("#dhwOn").checked;
+                config.boiler.coolOn = _("#coolOn").checked;
 
                 config.mqtt = {
                     host: _("#mqttHost").value,
@@ -938,7 +984,7 @@
                 let heatCfg = config.boiler.heating[hk - 1];
                 let ft = getFlowTemperature(
                     5, 
-                    heatCfg.roomSetTemperature, 
+                    heatCfg.roomSet, 
                     heatCfg.flowMax, 
                     heatCfg.exponent, 
                     heatCfg.gradient, 
@@ -976,11 +1022,11 @@
                 _("#scanHint").style.display = 'none';
 
                 scanObj.results.forEach(element => {
-                    let newrow = __("tr");
+                    let newrow = _$("tr");
                     scanbody.appendChild(newrow);
 
-                    let td = __("td");
-                    let inp = __("input");
+                    let td = _$("td");
+                    let inp = _$("input");
                     inp.type = "radio";
                     inp.name = "ssid";
                     inp.value = element.ssid;
@@ -990,13 +1036,13 @@
                     td.appendChild(inp);
                     newrow.appendChild(td);
 
-                    td = __("td");
+                    td = _$("td");
                     td.innerText = element.ssid;
                     newrow.appendChild(td);
-                    td = __("td");
+                    td = _$("td");
                     td.innerText = element.channel;
                     newrow.appendChild(td);
-                    td = __("td");
+                    td = _$("td");
                     td.innerText = element.rssi;
                     newrow.appendChild(td);    
                 });
@@ -1029,21 +1075,21 @@
                 var i = 0;
 
                 config.boiler.heating[hk - 1].marker.forEach(function (item) {
-                    let tr = __("tr");
-                    let td = __("td");
+                    let tr = _$("tr");
+                    let td = _$("td");
                     td.innerText = item.comment;
                     tr.appendChild(td);
 
-                    td = __("td");
+                    td = _$("td");
                     td.innerHTML = item.ot;
                     tr.appendChild(td);
 
-                    td = __("td");
+                    td = _$("td");
                     td.innerHTML = item.ft;
                     tr.appendChild(td);
 
-                    td = __("td");
-                    let btn = __("button");
+                    td = _$("td");
+                    let btn = _$("button");
                     btn.className = "rmmarker";
                     btn.innerHTML = "-";
                     btn.setAttribute("index", i);
@@ -1094,13 +1140,6 @@
                 });
             }
 
-            document.querySelectorAll("input[type=checkbox]").forEach(function (item) {
-                item.onclick = (ev) => {
-                    config[ev.target.id] = ev.target.checked;
-                };
-            });
-
-
             let xhrConfig = new XMLHttpRequest();
             xhrConfig.onload = (ev) => {
                 try {
@@ -1116,7 +1155,7 @@
             xhrConfig.open("GET", "config");
             xhrConfig.send();
             function configToUi() {
-                _$('input[name="otMode"]')[config.otMode].checked = true;
+                __('input[name="otMode"]')[config.otMode].checked = true;
 
                 _("#selectOutsideTempSource").selectedIndex = config.outsideTemp.source;
                 _("#selectOutsideTempSource").dispatchEvent(new Event('change'));
@@ -1134,17 +1173,19 @@
 
 
                 _("#dhwOn").checked = config.boiler.dhwOn;
+                _("#coolOn").checked = config.boiler.coolOn;
                 initRangeParam("dhwtemp", "boiler.dhwTemperature");
 
                 _("#chOn1").checked = config.boiler.heating[0].chOn;
-                initRangeParam("roomset1", "boiler.heating.0.roomSetTemperature");
+                initRangeParam("chset1", "boiler.heating.0.flow");
+                initRangeParam("roomset1", "boiler.heating.0.roomSet");
                 initRangeParam("flowmax1", "boiler.heating.0.flowMax");
                 initRangeParam("exponent1", "boiler.heating.0.exponent");
                 initRangeParam("gradient1", "boiler.heating.0.gradient");
                 initRangeParam("offset1", "boiler.heating.0.offset");
 
                 _("#chOn2").checked = config.boiler.heating[1].chOn;
-                initRangeParam("roomset2", "boiler.heating.1.roomSetTemperature");
+                initRangeParam("roomset2", "boiler.heating.1.roomSet");
                 initRangeParam("flowmax2", "boiler.heating.1.flowMax");
                 initRangeParam("exponent2", "boiler.heating.1.exponent");
                 initRangeParam("gradient2", "boiler.heating.1.gradient");
@@ -1245,7 +1286,7 @@
                 xhrUpl.send(formdata);
             };
 
-            let otModeItems = _$('input[name="otMode"]');
+            let otModeItems = __('input[name="otMode"]');
             otModeItems.forEach(function (item) {
                 item.onclick = (ev) => {
                     console.log(ev.target.value);

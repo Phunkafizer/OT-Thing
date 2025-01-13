@@ -3,6 +3,9 @@
 #include <AsyncMqttClient.h>
 #include <ArduinoJson.h>
 
+extern const char *MQTTSETVAR_OUTSIDETEMP PROGMEM;
+extern const char *MQTTSETVAR_DHWSETTEMP PROGMEM;
+
 struct MqttConfig {
     String host;
     uint16_t port;
@@ -17,7 +20,8 @@ private:
     MqttConfig config;
     bool configSet;
     bool newConnection;
-    String stateTopic;
+    void onConnect();
+    friend void mqttConnectCb(bool sessionPresent);
 public:
     Mqtt();
     void begin();
@@ -25,7 +29,8 @@ public:
     bool connected();
     void setConfig(const MqttConfig conf);
     bool publish(String topic, JsonDocument &payload);
-    void onMessage(const char *payload, const size_t size);
+    void onMessage(const char *topic, const char *payload, const size_t size);
+    String baseTopic;
 };
 
 extern Mqtt mqtt;

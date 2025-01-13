@@ -24,6 +24,21 @@ const char HA_STATE_CLASS_MEASUREMENT[]         PROGMEM = "measurement";
 const char HA_DEVICE_CLASS_TEMPERATURE[]        PROGMEM = "temperature";
 const char HA_ICON[]                            PROGMEM = "ic";
 const char HA_MANUFACTURER[]                    PROGMEM = "mf";
+const char HA_PLATFORM[]                        PROGMEM = "p";
+const char HA_MIN[]                             PROGMEM = "min";
+const char HA_MAX[]                             PROGMEM = "max";
+const char HA_STEP[]                            PROGMEM = "step";
+const char HA_TEMPERATURE_COMMAND_TOPIC[]       PROGMEM = "temp_cmd_t";
+const char HA_MODES[]                           PROGMEM = "modes";
+const char HA_MAX_TEMP[]                        PROGMEM = "max_temp";
+const char HA_MIN_TEMP[]                        PROGMEM = "min_temp";
+const char HA_TEMP_STEP[]                       PROGMEM = "temp_step";
+const char HA_TEMPERATURE_STATE_TOPIC[]         PROGMEM = "temperature_state_topic";
+const char HA_TEMPERATURE_STATE_TEMPLATE[]      PROGMEM = "temperature_state_template";
+const char HA_CURRENT_TEMPERATURE_TEMPLATE[]    PROGMEM = "current_temperature_template";
+const char HA_CURRENT_TEMPERATURE_TOPIC[]       PROGMEM = "current_temperature_topic";
+
+
 
 const char *ha_prefix = "homeassistant";
 
@@ -32,70 +47,105 @@ HADiscovery::HADiscovery():
         manufacturer(nullptr) {
 }
 
-void HADiscovery::init(String &name, String &id) {
+void HADiscovery::init(String &name, String &id, String component) {
     doc.clear();
     doc[FPSTR(HA_DEVICE)][FPSTR(HA_IDENTIFIERS)][0] = devPrefix;
-    doc[FPSTR(HA_DEVICE)][FPSTR(HA_SW_VERSION)] = "1.2";
+    doc[FPSTR(HA_DEVICE)][FPSTR(HA_SW_VERSION)] = BUILD_VERSION;
     doc[FPSTR(HA_DEVICE)][FPSTR(HA_NAME)] = FPSTR(devName);
 
     doc[FPSTR(HA_NAME)] = name;
     doc[FPSTR(HA_UNIQUE_ID)] = devPrefix + "_" + id;
     doc[FPSTR(HA_OBJECT_ID)] = doc[FPSTR(HA_UNIQUE_ID)];
 
-    doc[FPSTR(HA_STATE_TOPIC)] = stateTopic;
-
     topic = FPSTR(ha_prefix);
-    topic += "/sensor/" + devPrefix + "/" + id + "/config";
+    topic += '/' + component + '/' + devPrefix + '/' + id + "/config";
+
+    setStateTopic(defaultStateTopic);
 }
 
 void HADiscovery::setValueTemplate(String valueTemplate) {
     doc[FPSTR(HA_VALUE_TEMPLATE)] = valueTemplate;
 }
 
-void HADiscovery::createTempSensor(String name, String id) {
-    init(name, id);
+void HADiscovery::setTemperatureStateTopic(String topic) {
+    doc[FPSTR(HA_TEMPERATURE_STATE_TOPIC)] = topic;
+}
 
+void HADiscovery::setTemperatureStateTemplate(String stateTemplate) {
+    doc[FPSTR(HA_TEMPERATURE_STATE_TEMPLATE)] = stateTemplate;
+}
+
+void HADiscovery::setCurrentTemperatureTopic(String topic) {
+    doc[FPSTR(HA_CURRENT_TEMPERATURE_TOPIC)] = topic;
+}
+
+void HADiscovery::setCurrentTemperatureTemplate(String templ) {
+    doc[FPSTR(HA_CURRENT_TEMPERATURE_TEMPLATE)] = templ;
+}
+
+void HADiscovery::setStateTopic(String &stateTopic) {
+    doc[FPSTR(HA_STATE_TOPIC)] = stateTopic;
+}
+
+void HADiscovery::setMinMax(double min, double max, double step) {
+    doc[FPSTR(HA_MIN)] = min;
+    doc[FPSTR(HA_MAX)] = max;
+    doc[FPSTR(HA_STEP)] = step;
+}
+
+void HADiscovery::setMinMaxTemp(double min, double max, double step) {
+    doc[FPSTR(HA_MIN_TEMP)] = min;
+    doc[FPSTR(HA_MAX_TEMP)] = max;
+    doc[FPSTR(HA_TEMP_STEP)] = step;
+}
+
+void HADiscovery::createSensor(String name, String id) {
+    init(name, id, F("sensor"));
     doc[FPSTR(HA_STATE_CLASS)] = F("measurement");
+    //doc[FPSTR(HA_ICON)] = F("mdi:counter");
+}
+
+void HADiscovery::createTempSensor(String name, String id) {
+    createSensor(name, id);
     doc[FPSTR(HA_DEVICE_CLASS)] = F("temperature");
     doc[FPSTR(HA_UNIT_OF_MEASUREMENT)] = F("°C"); 
 }
 
 void HADiscovery::createPowerFactorSensor(String name, String id) {
-    init(name, id);
-
-    doc[FPSTR(HA_STATE_CLASS)] = F("measurement");
+    createSensor(name, id);
     doc[FPSTR(HA_DEVICE_CLASS)] = F("power_factor");
     doc[FPSTR(HA_UNIT_OF_MEASUREMENT)] = F("%");
 }
 
 void HADiscovery::createPressureSensor(String name, String id) {
-    init(name, id);
-
-    doc[FPSTR(HA_STATE_CLASS)] = F("measurement");
+    createSensor(name, id);
     doc[FPSTR(HA_DEVICE_CLASS)] = F("pressure");
     doc[FPSTR(HA_UNIT_OF_MEASUREMENT)] = F("bar");
 }
 
 void HADiscovery::createHourDuration(String name, String id) {
-    init(name, id);
-
-    doc[FPSTR(HA_STATE_CLASS)] = F("measurement");
+    createSensor(name, id);
     doc[FPSTR(HA_DEVICE_CLASS)] = F("duration");
     doc[FPSTR(HA_UNIT_OF_MEASUREMENT)] = F("h");
-    //doc[FPSTR(HA_ICON)] = F("timer-sand-complete");
-}
-
-void HADiscovery::createSensor(String name, String id) {
-    init(name, id);
-    doc[FPSTR(HA_STATE_CLASS)] = F("measurement");
-    doc[FPSTR(HA_ICON)] = F("mdi:counter");
+    doc[FPSTR(HA_ICON)] = F("mdi:timer-sand-complete");
 }
 
 void HADiscovery::createBinarySensor(String name, String id, String deviceClass) {
-    init(name, id);
-
+    init(name, id, F("binary_sensor"));
     doc[FPSTR(HA_DEVICE_CLASS)] = deviceClass;
+}
 
-    topic = FPSTR(ha_prefix);
-    topic += "/binary_sensor/" + devPrefix + "/" + id + "/config";
+void HADiscovery::createNumber(String name, String id, String cmdTopic) {
+    init(name, id, F("number"));
+    doc[FPSTR(HA_PLATFORM)] = F("number");
+    doc[FPSTR(HA_COMMAND_TOPIC)] = cmdTopic;
+}
+
+void HADiscovery::createClima(String name, String id, String tmpCmdTopic) {
+    init(name, id, F("climate"));
+    doc[FPSTR(HA_TEMPERATURE_COMMAND_TOPIC)] = tmpCmdTopic;
+    
+    JsonArray modes = doc[F("modes")].to<JsonArray>();
+    modes.add(F("off"));
+    modes.add(F("heat"));
 }
