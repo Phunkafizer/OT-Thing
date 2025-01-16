@@ -33,11 +33,14 @@ const char HA_MODES[]                           PROGMEM = "modes";
 const char HA_MAX_TEMP[]                        PROGMEM = "max_temp";
 const char HA_MIN_TEMP[]                        PROGMEM = "min_temp";
 const char HA_TEMP_STEP[]                       PROGMEM = "temp_step";
-const char HA_TEMPERATURE_STATE_TOPIC[]         PROGMEM = "temperature_state_topic";
-const char HA_TEMPERATURE_STATE_TEMPLATE[]      PROGMEM = "temperature_state_template";
-const char HA_CURRENT_TEMPERATURE_TEMPLATE[]    PROGMEM = "current_temperature_template";
-const char HA_CURRENT_TEMPERATURE_TOPIC[]       PROGMEM = "current_temperature_topic";
-
+const char HA_TEMPERATURE_STATE_TOPIC[]         PROGMEM = "temp_stat_t";
+const char HA_TEMPERATURE_STATE_TEMPLATE[]      PROGMEM = "temp_stat_tpl";
+const char HA_CURRENT_TEMPERATURE_TEMPLATE[]    PROGMEM = "curr_temp_tpl";
+const char HA_CURRENT_TEMPERATURE_TOPIC[]       PROGMEM = "curr_temp_t";
+const char HA_INITIAL[]                         PROGMEM = "initial";
+const char HA_MODE_COMMAND_TOPIC[]              PROGMEM = "mode_cmd_t";
+const char HA_OPTIMISTIC[]                      PROGMEM = "optimistic";
+const char HA_RETAIN[]                          PROGMEM = "retain";
 
 
 const char *ha_prefix = "homeassistant";
@@ -49,9 +52,11 @@ HADiscovery::HADiscovery():
 
 void HADiscovery::init(String &name, String &id, String component) {
     doc.clear();
-    doc[FPSTR(HA_DEVICE)][FPSTR(HA_IDENTIFIERS)][0] = devPrefix;
-    doc[FPSTR(HA_DEVICE)][FPSTR(HA_SW_VERSION)] = BUILD_VERSION;
-    doc[FPSTR(HA_DEVICE)][FPSTR(HA_NAME)] = FPSTR(devName);
+    JsonObject dev = doc[FPSTR(HA_DEVICE)].to<JsonObject>();
+    dev[FPSTR(HA_IDENTIFIERS)][0] = devPrefix;
+    dev[FPSTR(HA_SW_VERSION)] = BUILD_VERSION;
+    dev[FPSTR(HA_NAME)] = FPSTR(devName);
+    dev[FPSTR(HA_MANUFACTURER)] = F("Seegel Systeme");
 
     doc[FPSTR(HA_NAME)] = name;
     doc[FPSTR(HA_UNIQUE_ID)] = devPrefix + "_" + id;
@@ -97,6 +102,27 @@ void HADiscovery::setMinMaxTemp(double min, double max, double step) {
     doc[FPSTR(HA_MIN_TEMP)] = min;
     doc[FPSTR(HA_MAX_TEMP)] = max;
     doc[FPSTR(HA_TEMP_STEP)] = step;
+}
+
+void HADiscovery::setInitial(double initial) {
+    doc[FPSTR(HA_INITIAL)] = initial;
+}
+
+void HADiscovery::setModeCommandTopic(String topic) {
+    doc[FPSTR(HA_MODE_COMMAND_TOPIC)] = topic;
+}
+
+void HADiscovery::setOptimistic(const bool opt) {
+    doc[FPSTR(HA_OPTIMISTIC)] = opt;
+}
+
+void HADiscovery::setRetain(const bool retain) {
+    doc[FPSTR(HA_RETAIN)] = retain;
+}
+
+void HADiscovery::setIcon(String icon) {
+    doc[FPSTR(HA_ICON)] = icon;
+
 }
 
 void HADiscovery::createSensor(String name, String id) {
@@ -148,4 +174,5 @@ void HADiscovery::createClima(String name, String id, String tmpCmdTopic) {
     JsonArray modes = doc[F("modes")].to<JsonArray>();
     modes.add(F("off"));
     modes.add(F("heat"));
+    modes.add(F("auto"));
 }

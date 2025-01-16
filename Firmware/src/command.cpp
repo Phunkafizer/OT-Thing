@@ -1,4 +1,5 @@
 #include "command.h"
+#include "portal.h"
 
 OtGwCommand command;
 
@@ -160,24 +161,24 @@ void OtGwCommand::sendAll(String s) {
 }
 
 void OtGwCommand::sendOtEvent(const char source, const uint32_t data) {
-    if (enableOtEvents) {
-        String line(source);
+    String line(source);
+    int pos = 28;
+    while (pos > 0) {
+        pos -= 4;
+        if (((data>>pos) & 0xF0) != 0)
+            break;
 
-        int pos = 28;
-        while (pos > 0) {
-            pos -= 4;
-            if (((data>>pos) & 0xF0) != 0)
-                break;
-
-            line += '0';
-        }
-        line += String(data, HEX);
-        sendAll(line);
+        line += '0';
     }
+    line += String(data, HEX);
+
+    if (enableOtEvents)
+        sendAll(line);
+    
+    portal.textAll(line);
 }
 
 void OtGwCommand::loop() {
-
 }
 
 

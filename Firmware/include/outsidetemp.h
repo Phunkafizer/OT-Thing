@@ -6,8 +6,8 @@
 
 class OutsideTemp {
 private:
-    int source;
     double lat, lon;
+    String apikey;
     WiFiClient cli;
     String replyBuf;
     unsigned long nextMillis;
@@ -21,6 +21,10 @@ public:
     void loop();
     void setConfig(JsonObject &obj);
     double temp;
+    enum OutsideTempSource {
+        OUTSIDETEMP_OPENWEATHER,
+        OUTSIDETEMP_MQTT
+    } source;
 };
 
 extern OutsideTemp outsideTemp;

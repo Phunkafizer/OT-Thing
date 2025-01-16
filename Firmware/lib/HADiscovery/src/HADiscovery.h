@@ -24,6 +24,11 @@ public:
     void setTemperatureStateTemplate(String stateTemplate);
     void setCurrentTemperatureTopic(String topic);
     void setCurrentTemperatureTemplate(String templ);
+    void setInitial(double initial);
+    void setModeCommandTopic(String topic);
+    void setOptimistic(const bool opt);
+    void setRetain(const bool retain);
+    void setIcon(String icon);
 
     void createTempSensor(String name, String id);
     void createPowerFactorSensor(String name, String id);

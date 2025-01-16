@@ -4,6 +4,7 @@
 #include "mqtt.h"
 #include "hwdef.h"
 #include "outsidetemp.h"
+#include "portal.h"
 
 static OpenTherm otmaster(3, 1);
 static OpenTherm otslave(6, 7, true);
@@ -90,8 +91,8 @@ const struct {
     {OpenThermMessageID::DHWFlowRate,               floatToOT(2.4)},
     {OpenThermMessageID::Tret,                      floatToOT(41.7)},
     {OpenThermMessageID::Tdhw,                      floatToOT(37.5)},
-    {OpenThermMessageID::SuccessfulBurnerStarts,    9876},
-    {OpenThermMessageID::BurnerOperationHours,      12385}
+    {OpenThermMessageID::SuccessfulBurnerStarts,    9999},
+    {OpenThermMessageID::BurnerOperationHours,      8888}
 };
 
 /**
@@ -108,7 +109,7 @@ OTValue::OTValue(const char *name, const OpenThermMessageID id, const int interv
 }
 
 bool OTValue::process() {
-    if (!enabled)
+    if (!enabled || (interval == -1))
         return false;
 
     if (isSet && (interval == 0))
@@ -118,8 +119,7 @@ bool OTValue::process() {
         return false;
 
     unsigned long request = otmaster.buildRequest(OpenThermMessageType::READ_DATA, id, value);
-    command.sendOtEvent('T', request);
-    otmaster.sendRequestAsync(request);
+    otcontrol.master.sendRequest('T', request);
     lastTransfer = millis();
     return true;
 }
@@ -131,7 +131,7 @@ OpenThermMessageID OTValue::getId() const {
 bool OTValue::sendDiscovery() {
     switch (id) {
         case OpenThermMessageID::Tboiler:
-            haDisc.createTempSensor(F("Boiler"), FPSTR(name));
+            haDisc.createTempSensor(F("Vorlauftemperatur"), FPSTR(name));
             break;
 
         case OpenThermMessageID::RelModLevel:
@@ -153,6 +153,21 @@ bool OTValue::sendDiscovery() {
         case OpenThermMessageID::SuccessfulBurnerStarts:
             haDisc.createSensor(F("Brennerstarts"), FPSTR(name));
             break;
+
+        case OpenThermMessageID::TSet:
+            haDisc.createTempSensor(F("Vorlaufsolltemperatur"), FPSTR(name));
+            break;
+
+        // TODO
+        case OpenThermMessageID::DHWFlowRate:
+        case OpenThermMessageID::TflowCH2:
+        case OpenThermMessageID::Tdhw2:
+        case OpenThermMessageID::Tret:
+        case OpenThermMessageID::Texhaust:
+        case OpenThermMessageID::CHPumpStarts:
+        case OpenThermMessageID::SlaveVersion:
+        case OpenThermMessageID::TdhwSet:
+            return false;
 
         default:
             return false;
@@ -176,7 +191,8 @@ void OTValue::setValue(uint16_t val) {
 }
 
 void OTValue::disable() {
-    this->enabled = false;
+    enabled = false;
+    isSet = false;
 }
 
 void OTValue::init(const bool enabled) {
@@ -189,13 +205,12 @@ const char *OTValue::getName() const {
 }
 
 void OTValue::getJson(JsonObject &obj) const {
-    if (!enabled)
-        return;
-
-    if (!isSet)
-        obj[FPSTR(name)] = (char*) NULL;
-    else
-        getValue(obj);        
+    if (enabled) {
+        if (isSet)
+            getValue(obj);        
+        else
+            obj[FPSTR(name)] = (char*) NULL;
+    }
 }
 
 OTValueu16::OTValueu16(const char *name, const OpenThermMessageID id, const int interval):
@@ -306,7 +321,6 @@ void OTValueSlaveConfigMember::getValue(JsonObject &obj) const {
 
 OTValueProductVersion::OTValueProductVersion(const char *name, const OpenThermMessageID id):
         OTValue(name, id, 0) {
-
 }
 
 void OTValueProductVersion::getValue(JsonObject &obj) const {
@@ -355,10 +369,40 @@ void otCbSlave(unsigned long response, OpenThermResponseStatus status) {
     otcontrol.OnRxSlave(response, status);
 }
 
+OTControl::OT::OT(OpenTherm &ot):
+        ot(ot) {
+    resetCounters();
+}
+
+void OTControl::OT::sendRequest(const char source, const unsigned long msg) {
+    command.sendOtEvent('T', msg);
+    ot.sendRequestAsync(msg);
+    txCount++;
+}
+
+void OTControl::OT::resetCounters() {
+    txCount = 0;
+    rxCount = 0;
+}
+
+void OTControl::OT::onReceive(const char source, const unsigned long msg) {
+    command.sendOtEvent(source, msg);
+    rxCount++;
+}
+
+void OTControl::OT::sendResponse(const unsigned long msg) {
+    ot.sendResponse(msg);
+    txCount++;
+}
+
 OTControl::OTControl():
         lastMillis(millis()),
-        otMode(OTMODE_BYPASS),
-        discFlag(false) {
+        otMode(OTMODE_LOOPBACKTEST),
+        discFlag(false),
+        nextDHWSet(0),
+        nextBoilerTemp(0),
+        master(otmaster),
+        slave(otslave) {
 }
 
 void OTControl::begin() {
@@ -391,21 +435,31 @@ void OTControl::loop() {
     if (!discFlag) {
         discFlag = true;
 
-        String cmdTopic = mqtt.baseTopic + '/';
-        cmdTopic += FPSTR(MQTTSETVAR_OUTSIDETEMP);
-        cmdTopic += "/set";
-        haDisc.createNumber(F("Außentemperatur"), FPSTR(MQTTSETVAR_OUTSIDETEMP), cmdTopic);
+        haDisc.createNumber(F("Außentemperatur"), FPSTR(MQTTSETVAR_OUTSIDETEMP), mqtt.getVarSetTopic(MQTTSETVAR_OUTSIDETEMP));
         haDisc.setValueTemplate(F("{{ value_json.outsideTemp }}"));
         haDisc.setMinMax(-20, 20, 0.1);
         discFlag &= mqtt.publish(haDisc.topic, haDisc.doc);
 
-        cmdTopic = mqtt.baseTopic + '/';
-        cmdTopic += FPSTR(MQTTSETVAR_DHWSETTEMP);
-        cmdTopic += "/set";
-        haDisc.createClima(F("Brauchwasser"), FPSTR(MQTTSETVAR_DHWSETTEMP), cmdTopic);
+        haDisc.createClima(F("Brauchwasser"), FPSTR(MQTTSETVAR_DHWSETTEMP), mqtt.getVarSetTopic(MQTTSETVAR_DHWSETTEMP));
         haDisc.setMinMaxTemp(25, 70, 1);
         haDisc.setCurrentTemperatureTemplate(F("{{ value_json.boiler.dhw_t }}"));
         haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
+        haDisc.setInitial(50);
+        haDisc.setIcon(F("mdi:shower"));
+        haDisc.setRetain(true);
+        discFlag &= mqtt.publish(haDisc.topic, haDisc.doc);
+
+        haDisc.createClima(F("Vorlaufsolltemperatur"), FPSTR(MQTTSETVAR_CHSETTEMP), mqtt.getVarSetTopic(MQTTSETVAR_CHSETTEMP));
+        haDisc.setMinMaxTemp(25, 90, 0.5);
+        haDisc.setCurrentTemperatureTemplate(F("{{ value_json.boiler.flow_t }}"));
+        haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
+        haDisc.setInitial(30);
+        haDisc.setModeCommandTopic(mqtt.getVarSetTopic(MQTTSETVAR_CHMODE));
+        haDisc.setTemperatureStateTopic(haDisc.defaultStateTopic);
+        haDisc.setTemperatureStateTemplate(F("{{ value_json.boiler.ch_set_t }}"));
+        haDisc.setOptimistic(true);
+        haDisc.setIcon(F("mdi:heating-coil"));
+        haDisc.setRetain(true);
         discFlag &= mqtt.publish(haDisc.topic, haDisc.doc);
     }
     otmaster.process();
@@ -436,39 +490,54 @@ void OTControl::loop() {
                 false, 
                 false, 
                 heatingParams[1].chOn);
-            otmaster.sendRequestAsync(req);
-            command.sendOtEvent('T', req);
+            master.sendRequest('T', req);
             return;
         }
 
-        static uint32_t lastBoilerTemp = -10000;
-        if (millis() > lastBoilerTemp + 10000) {
+        if (millis() > nextBoilerTemp) {
             Serial.println("Calcing flow temp!");
 
             HeatingParams &hp = heatingParams[0];
+            double flow = heatingParams[0].flowDefault;
 
-            double minOutside = hp.roomSet - (hp.flowMax - hp.roomSet) / hp.gradient;
-            double c1 = (hp.flowMax - hp.roomSet) / pow(hp.roomSet - minOutside, 1.0 / hp.exponent);
-            double flow = hp.roomSet + c1 * pow(hp.roomSet - outsideTemp.temp, 1.0 / hp.exponent) + hp.offset;
-            if (flow > hp.flowMax)
-                flow = hp.flowMax;
+            switch (heatingParams[0].ctrlMode) {
+            case CTRLMODE_ON:
+                flow = heatingParams[0].flow;
+                break;
+
+            case CTRLMODE_AUTO: {
+                // TODO check if outside temp available, if not -> default flow
+                double minOutside = hp.roomSet - (hp.flowMax - hp.roomSet) / hp.gradient;
+                double c1 = (hp.flowMax - hp.roomSet) / pow(hp.roomSet - minOutside, 1.0 / hp.exponent);
+                flow = hp.roomSet + c1 * pow(hp.roomSet - outsideTemp.temp, 1.0 / hp.exponent) + hp.offset;
+                if (flow > hp.flowMax)
+                    flow = hp.flowMax;
+                break;
+            }
+
+            case CTRLMODE_OFF:
+                flow = 0;
+                break;
+            
+            default:
+                break;
+            }
 
             Serial.println(flow);
+            if (flow > 0) {
+                uint32_t req = otmaster.buildSetBoilerTemperatureRequest(flow);
+                master.sendRequest('T', req);
+            }
 
-            lastBoilerTemp = millis();
-            uint32_t req = otmaster.buildSetBoilerTemperatureRequest(flow);
-            otmaster.sendRequestAsync(req);
-            command.sendOtEvent('T', req);
+            nextBoilerTemp = millis() + 10000;
             return;
         }
 
-        static uint32_t lastDHWSet = -10000;
-        if (millis() > lastDHWSet + 10000) {
-            lastDHWSet = millis();
+        if (millis() > nextDHWSet) {
+            nextDHWSet = millis() +  30000;
             uint16_t data = OpenTherm::temperatureToData(dhwTemp);
             uint32_t req = otmaster.buildRequest(OpenThermMessageType::WRITE_DATA, OpenThermMessageID::TdhwSet, data); //otmaster.setDHWSetpoint(50);
-            otmaster.sendRequestAsync(req);
-            command.sendOtEvent('T', req);
+            master.sendRequest('T', req);
             return;
         }
         break;
@@ -478,7 +547,7 @@ void OTControl::loop() {
 void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatus status) {
     if (status == OpenThermResponseStatus::TIMEOUT) {
         if (otMode == OTMODE_LOOPBACKTEST)
-            Serial.println("LOOPBACK failure (timeout)");
+            portal.textAll(F("LOOPBACK failure (timeout)"));
         return;
     }
         
@@ -515,16 +584,16 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         // TODO manipulate some frames, e. g. outsidetemp 
         switch (id) {
         case OpenThermMessageID::Toutside:
-            newMsg = otmaster.buildRequest(OpenThermMessageType::READ_ACK, id, 0 << 8 | 127);
+            //newMsg = otmaster.buildRequest(OpenThermMessageType::READ_ACK, id, 0 << 8 | 127);
             break;
         }
-        otslave.sendResponse(newMsg);
+        slave.sendResponse(newMsg);
     }
 
     switch (status) {
     case OpenThermResponseStatus::SUCCESS: {
         if (newMsg == msg)
-            command.sendOtEvent('B', msg);
+            master.onReceive('B', msg);
         if (otval)
             otval->setValue(newMsg & 0xFFFF);
         break;
@@ -532,7 +601,7 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
 
     case OpenThermResponseStatus::INVALID: {
         if (newMsg == msg)
-            command.sendOtEvent('E', msg);
+            master.onReceive('E', msg);
         if (otval) {
             OpenThermMessageType mt = OpenTherm::getMessageType(msg);
             if (mt >= OpenThermMessageType::DATA_INVALID)
@@ -544,7 +613,10 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         break;
     }
     if (msg != newMsg)
-        command.sendOtEvent('A', newMsg);
+        master.onReceive('A', newMsg);
+
+    if (!otval)
+        portal.textAll(F("no otval!"));
 }
 
 void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus status) {
@@ -578,11 +650,9 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
         }
 
         if (msg != newMsg)
-            command.sendOtEvent('R', newMsg);
+            master.sendRequest('R', newMsg);
         else
-            command.sendOtEvent('T', msg);
-
-        otmaster.sendRequestAsync(newMsg);
+            master.sendRequest('T', newMsg);
 
         if (otval)
             otval->setValue(newMsg & 0xFFFF);
@@ -596,7 +666,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
         case OpenThermMessageType::WRITE_DATA: {
             uint32_t reply = otslave.buildResponse(OpenThermMessageType::WRITE_ACK, id, msg & 0xFFFF);
             otslave.status = OpenThermStatus::READY;
-            otslave.sendResponse(reply);
+            slave.sendResponse(reply);
             break;
         }
 
@@ -610,7 +680,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 }
             }
             otslave.status = OpenThermStatus::READY;
-            otslave.sendResponse(reply);
+            slave.sendResponse(reply);
             break;
         }
         default:
@@ -640,12 +710,22 @@ void OTControl::getJson(JsonObject &obj) const {
         break;
     }
     boiler[F("connected")] = slaveConnected;
+    boiler[F("txCount")] = master.txCount;
+    boiler[F("rxCount")] = master.rxCount;
 
-
-    JsonObject thermostat = obj[F("thermostat")].to<JsonObject>();
-    for (auto *valobj: thermostatValues)
-        valobj->getJson(thermostat);
-
+    switch (otMode) {
+    case OTMODE_GATEWAY:
+    case OTMODE_LOOPBACKTEST: {
+        JsonObject thermostat = obj[F("thermostat")].to<JsonObject>();
+        for (auto *valobj: thermostatValues)
+            valobj->getJson(thermostat);
+        thermostat[F("txCount")] = master.txCount;
+        thermostat[F("rxCount")] = master.rxCount;
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 void OTControl::resetDiscovery() {
@@ -657,6 +737,7 @@ void OTControl::resetDiscovery() {
 
 void OTControl::setDhwTemp(double temp) {
     dhwTemp = temp;
+    nextDHWSet = 0;
 }
 
 void OTControl::setChCtrlConfig(JsonObject &config) {
@@ -673,12 +754,33 @@ void OTControl::setChCtrlConfig(JsonObject &config) {
         heatingParams[i].chOn = hpObj[F("chOn")];
         heatingParams[i].roomSet = hpObj[F("roomSet")] | 21.0;
         heatingParams[i].flowMax = hpObj[F("flowMax")] | 40;
-        heatingParams[i].exponent= hpObj[F("exponent")] | 1.0;
+        heatingParams[i].exponent = hpObj[F("exponent")] | 1.0;
         heatingParams[i].gradient = hpObj[F("gradient")] | 1.0;
         heatingParams[i].offset = hpObj[F("offset")] | 0;
+        heatingParams[i].flowDefault = hpObj[F("flow")] | 35;
+        heatingParams[i].flow = heatingParams[i].flowDefault;
+        heatingParams[i].override = false;
+        heatingParams[i].ctrlMode = CTRLMODE_AUTO;
     }
 
     dhwOn = boiler[F("dhwOn")];
     dhwTemp = config[F("boiler")][F("dhwTemperature")] | 45;
+
     setOTMode(mode);
+
+    nextDHWSet = 0;
 }
+
+void OTControl::setChCtrlMode(const CtrlMode mode) {
+    heatingParams[0].ctrlMode = mode;
+    nextBoilerTemp = 0;
+}
+
+void OTControl::setChTemp(const double temp) {
+    if (temp == 0)
+        heatingParams[0].ctrlMode = CTRLMODE_AUTO;
+    else
+        heatingParams[0].flow = temp;
+    nextBoilerTemp = 0;
+}
+

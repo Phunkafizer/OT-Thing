@@ -11,6 +11,9 @@
 #include "command.h"
 #include "outsidetemp.h"
 
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
 #ifdef DEBUG
 #include <ArduinoOTA.h>
 #endif
@@ -18,6 +21,8 @@
 Ticker statusLedTicker;
 volatile uint16_t statusLedData = 0x8000;
 bool configMode = false;
+
+OneWire oneWire(4);
 
 void statusLedLoop() {
     static uint16_t mask = 0x8000;
@@ -106,4 +111,30 @@ void loop() {
     mqtt.loop();
     otcontrol.loop();
     outsideTemp.loop();
+
+    return;
+    
+    static uint32_t lastSensors = 0;
+    if (now - lastSensors > 90000) {
+        lastSensors = now;
+        Serial.println("Searching 1wire");
+
+        uint8_t addr[8];
+        if (!oneWire.search(addr)) {
+            Serial.println("No more addresses");
+            oneWire.reset_search();
+        }
+        else {
+            for (int i=0; i<8; i++) {
+                Serial.print(addr[i], HEX);
+                Serial.write(':');
+            }
+            Serial.println("");
+
+            DallasTemperature ds(&oneWire);
+            ds.requestTemperatures();
+            double t = ds.getTempC(addr);
+            Serial.println(t);
+        }
+    }
 }

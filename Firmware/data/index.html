@@ -152,6 +152,7 @@
 
         div.toolbar {
             text-align: center;
+            padding: 0.3em 0;
         }
 
         button,
@@ -258,7 +259,7 @@
         div.footer {
             text-align: center;
             color: #fd975a;
-            margin-top: 1em;
+            margin-top: 0.5em;
             padding: 5px;
         }
 
@@ -302,6 +303,7 @@
 
         #console div {
             font-family: "Lucida Console", "Courier New", monospace;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -437,6 +439,14 @@
                     <div class="statusfield">
                         <h4>Druck Heizkreis</h4>
                         <span class="statusvalue" field="boiler.ch_pressure" unit="bar"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Frames gesendet</h4>
+                        <span class="statusvalue" field="boiler.txCount"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Frames empfangen</h4>
+                        <span class="statusvalue" field="boiler.rxCount"></span>
                     </div>
                 </div>
             </div>
@@ -712,9 +722,9 @@
                         <input type="radio" name="otMode" value="2">
                         <label>Bypass</label>
                     </div>
-                    <div class="param">
+                    <div class="param" style="display: none">
                         <input type="radio" name="otMode" value="3">
-                        <label>Looptest</label>
+                        <label>Loopbacktest</label>
                     </div>
                 </div>
                 <div class="flexline">
@@ -807,8 +817,8 @@
                 <h4>Quelle</h4>
                 <select id="selectOutsideTempSource">
                     <option selected>OpenWeather</option>
-                    <option>1wire</option>
                     <option>MQTT</option>
+                    <option>Bluetooth</option>
                 </select>
 
                 <div class="otOpt">
@@ -823,17 +833,13 @@
                 </div>
 
                 <div class="otOpt">
-                    <h4>Sensor</h4>
-                    <select>
-                        <option>12345</option>
-                        <option>12345</option>
-                        <option>12345</option>
-                    </select>
+                    <h4>Topic</h4>
+                    <span class="statusvalue" field="outsideTempTopic"></span>
                 </div>
 
                 <div class="otOpt">
-                    <h4>Topic</h4>
-                    <input id="otemptopic" type="text" />
+                    <h4>Adresse</h4>
+                    <input id="inpbluetoothaddress" type="text" />
                 </div>
             </div>
 
@@ -873,7 +879,7 @@
     </div>
     <script>
         var config = {
-            otMode: 2, // bypass mode
+            otMode: 3,
             boiler: {
                 dhwOn: true,
                 dhwTemperature: 50,
@@ -939,14 +945,13 @@
 
             //eventhandler for save button
             _("#save").onclick = () => {
-                config.otMode = parseInt(_('input[name="otMode"]:checked').value),
+                config.otMode = (_('input[name="otMode"]:checked') !== undefined) ? parseInt(_('input[name="otMode"]:checked').value) : null,
                 config.outsideTemp = {
                     source: _('#selectOutsideTempSource').selectedIndex,
                     apikey: _("#inpapikey").value,
                     lat: parseFloat(_("#inplat").value),
                     lon: parseFloat(_("#inplon").value),
                     interval: parseInt(_("#inpinterval").value),
-                    topic: _("#otemptopic").value
                 };
 
                 config.boiler.heating[0].chOn = _("#chOn1").checked;
@@ -1155,7 +1160,8 @@
             xhrConfig.open("GET", "config");
             xhrConfig.send();
             function configToUi() {
-                __('input[name="otMode"]')[config.otMode].checked = true;
+                if (__('input[name="otMode"]')[config.otMode] !== undefined)
+                    __('input[name="otMode"]')[config.otMode].checked = true;
 
                 _("#selectOutsideTempSource").selectedIndex = config.outsideTemp.source;
                 _("#selectOutsideTempSource").dispatchEvent(new Event('change'));
@@ -1163,14 +1169,12 @@
                 _("#inplat").value = config.outsideTemp.lat || null;
                 _("#inplon").value = config.outsideTemp.lon || null;
                 _("#inpinterval").value = config.outsideTemp.interval || null;
-                _("#otemptopic").value = config.outsideTemp.topic || null;
 
                 _("#mqttHost").value = config.mqtt.host || null;
                 _("#mqttPort").value = config.mqtt.port || 1883;
                 _("#mqttTls").checked = config.mqtt.tls || false;
                 _("#mqttUser").value = config.mqtt.user || null;
                 _("#mqttPass").value = config.mqtt.pass || null;
-
 
                 _("#dhwOn").checked = config.boiler.dhwOn;
                 _("#coolOn").checked = config.boiler.coolOn;
@@ -1292,6 +1296,25 @@
                     console.log(ev.target.value);
                 }
             });
+
+            websocket = new WebSocket("ws");
+            websocket.onopen = (ev) => {
+            }
+
+            websocket.onclose = (ev) => {
+            }
+
+            websocket.onmessage = (ev) => {
+                let e = _$("div");
+                e.innerHTML = ev.data;
+                let cons = _("#console");
+                cons.append(e);
+                cons.scrollTop = cons.scrollHeight;
+            }
+
+            _("#btnclearlog").onclick = (ev) => {
+                _("#console").innerHTML = "";
+            };
         };
 
         function getMinOutsideTemp(rs, mf, g) {

@@ -1,19 +1,22 @@
 #include "outsidetemp.h"
 
+#include <BLEDevice.h>
+
 OutsideTemp outsideTemp;
 
 OutsideTemp::OutsideTemp():
-        source(1),
+        source(OUTSIDETEMP_MQTT),
         nextMillis(0),
         httpState(HTTP_IDLE) {
 }
 
 void OutsideTemp::loop() {
     switch (source) {
-    case 0: // open weather
+    case OUTSIDETEMP_OPENWEATHER: // open weather
         switch (httpState) {
         case HTTP_IDLE:
             if (millis() > nextMillis) {
+                Serial.println("Connecting open weather");
                 cli.connect("api.openweathermap.org", 80);
                 httpState = HTTP_CONNECTING;
                 nextMillis = millis() + 5000;
@@ -24,15 +27,10 @@ void OutsideTemp::loop() {
             if (cli.connected()) {
                 // send HTTP GET
                 httpState = HTTP_RECEIVING;
-                Serial.println("HTTP get!");
-                
                 String cmd = "GET /data/2.5/weather/?units=metric";
                 cmd += "&lat=" + String(lat);
                 cmd += "&lon=" + String(lon);
-                cmd += "&appid=" + String("xxxxxxxxxxxxxxxxxxxxx\r\n\r\n");
-                Serial.print("Open: ");
-                Serial.println(cmd);
-
+                cmd += "&appid=" + apikey + "\r\n\r\n";
                 replyBuf.clear();
                 cli.write(cmd.c_str());
             }
@@ -71,7 +69,8 @@ void OutsideTemp::loop() {
 }
 
 void OutsideTemp::setConfig(JsonObject &obj) {
-    source = obj[F("source")];
+    source = (OutsideTempSource) obj[F("source")];
     lat = obj[F("lat")];
     lon = obj[F("lon")];
+    apikey = obj[F("apikey")].as<String>();
 }

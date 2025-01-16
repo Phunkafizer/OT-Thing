@@ -161,3 +161,8 @@ void Portal::loop() {
         ESP.restart();
     }
 }
+
+
+void Portal::textAll(String text) {
+    ws.textAll(text);
+}

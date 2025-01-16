@@ -12,6 +12,7 @@ public:
     Portal();
     void begin(bool configMode);
     void loop();
+    void textAll(String text);
 };
 
 extern Portal portal;

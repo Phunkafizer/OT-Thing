@@ -24,14 +24,16 @@ void DevConfig::update() {
             mc.host = jobj["host"].as<String>();
             mc.port = jobj["port"].as<uint16_t>();
             mc.tls = jobj["tls"].as<bool>();
+            mc.user = jobj["user"].as<String>();
+            mc.pass = jobj["pass"].as<String>();
             mqtt.setConfig(mc);
         }
 
         JsonObject cfg = doc.as<JsonObject>();
         otcontrol.setChCtrlConfig(cfg);
 
-        if (doc[F("otSource")].is<JsonObject>()) {
-            JsonObject obj = doc[F("otSource")];
+        if (doc[F("outsideTemp")].is<JsonObject>()) {
+            JsonObject obj = doc[F("outsideTemp")];
             outsideTemp.setConfig(obj);
         }
 
