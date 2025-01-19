@@ -315,7 +315,7 @@
     </div>
 
     <div id="mainwrapper">
-        <h2>OTThing</h2>
+        <h2>OT Thing</h2>
 
         <div class="nav">
             <ul>
@@ -413,6 +413,10 @@
                         <span class="statusvalue" field="boiler.dhw_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
+                        <h4>Brauchwasserdurchfluss</h4>
+                        <span class="statusvalue" field="boiler.dhw_flow_rate" unit="l/min"></span>
+                    </div>
+                    <div class="statusfield">
                         <h4>Brauchwassertemperatur 2</h4>
                         <span class="statusvalue" field="boiler.dhw_t2" unit="&deg;C"></span>    
                     </div>
@@ -421,8 +425,20 @@
                         <span class="statusvalue" field="boiler.dhw_set_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
+                        <h4>Brauchwassertemp. min</h4>
+                        <span class="statusvalue" field="boiler.dhwMin" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Brauchwassertemp. max</h4>
+                        <span class="statusvalue" field="boiler.dhwMax" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
                         <h4>Abgastemperatur</h4>
                         <span class="statusvalue" field="boiler.exhaust_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Außentemperatur</h4>
+                        <span class="statusvalue" field="boiler.outside_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h4>Rücklauftemperatur</h4>
@@ -441,12 +457,46 @@
                         <span class="statusvalue" field="boiler.ch_pressure" unit="bar"></span>
                     </div>
                     <div class="statusfield">
+                        <h4>Produktversion</h4>
+                        <span class="statusvalue" field="boiler.slave_prod_version"></span>
+                    </div>
+                    <div class="statusfield">
                         <h4>Frames gesendet</h4>
                         <span class="statusvalue" field="boiler.txCount"></span>
                     </div>
                     <div class="statusfield">
                         <h4>Frames empfangen</h4>
                         <span class="statusvalue" field="boiler.rxCount"></span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Thermostat</h3>
+            <div class="group">
+                <div class="flexline">
+                    <div class="statusfield">
+                        <h4>Vorlaufsoltemperatur</h4>
+                        <span class="statusvalue" field="thermostat.ch_set_t"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Raumtemperatur</h4>
+                        <span class="statusvalue" field="thermostat.room_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Raumsolltemperatur</h4>
+                        <span class="statusvalue" field="thermostat.room_set_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Produktversion</h4>
+                        <span class="statusvalue" field="thermostat.master_prod_version"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Frames gesendet</h4>
+                        <span class="statusvalue" field="thermostat.txCount"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Frames empfangen</h4>
+                        <span class="statusvalue" field="thermostat.rxCount"></span>
                     </div>
                 </div>
             </div>
@@ -722,7 +772,7 @@
                         <input type="radio" name="otMode" value="2">
                         <label>Bypass</label>
                     </div>
-                    <div class="param" style="display: none">
+                    <div class="param" style="display: block">
                         <input type="radio" name="otMode" value="3">
                         <label>Loopbacktest</label>
                     </div>

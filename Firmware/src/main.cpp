@@ -21,6 +21,7 @@
 Ticker statusLedTicker;
 volatile uint16_t statusLedData = 0x8000;
 bool configMode = false;
+const char hostname[] PROGMEM = HOSTNAME;
 
 OneWire oneWire(4);
 
@@ -38,10 +39,12 @@ void wifiEvent(WiFiEvent_t event) {
     Serial.println(event);
 
     switch (event) {
-    case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-        WiFi.setHostname("otthing");
+    case ARDUINO_EVENT_WIFI_STA_GOT_IP: {
+        String hn(FPSTR(hostname));
+        WiFi.setHostname(hn.c_str());
         MDNS.addService("http", "tcp", 80);
         break;
+    }
 
     default:
         break;
@@ -50,16 +53,16 @@ void wifiEvent(WiFiEvent_t event) {
 
 void setup() {
     pinMode(GPIO_BYPASS_RELAY, OUTPUT);
-    pinMode(21, OUTPUT);
+    pinMode(GPIO_OTSLAVE_LED, OUTPUT);
     pinMode(GPIO_OTMASTER_LED, OUTPUT);
     pinMode(GPIO_STATUS_LED, OUTPUT);
     pinMode(GPIO_CONFIG_BUTTON, INPUT);
     digitalWrite(GPIO_BYPASS_RELAY, LOW);
-    digitalWrite(21, LOW);
+    digitalWrite(GPIO_OTSLAVE_LED, LOW);
     digitalWrite(GPIO_OTMASTER_LED, HIGH); // active low
     digitalWrite(GPIO_STATUS_LED, HIGH); // active low
 
-    statusLedTicker.attach(0.1, statusLedLoop);
+    statusLedTicker.attach(0.2, statusLedLoop);
 
     unsigned long ts = millis();
     while (millis() - ts < 1000)
@@ -74,7 +77,8 @@ void setup() {
     WiFi.onEvent(wifiEvent);
     WiFi.begin();
 
-    //MDNS.begin("otthing");
+    String hn(FPSTR(hostname));
+    MDNS.begin(hn.c_str());
     devconfig.begin();
     portal.begin(configMode);
     command.begin();

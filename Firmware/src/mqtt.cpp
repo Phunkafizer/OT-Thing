@@ -15,8 +15,15 @@ Mqtt mqtt;
 static WiFiClient espClient;
 
 void mqttConnectCb(bool sessionPresent) {
+    Serial.println("MQTT connect cb");
     mqtt.onConnect();
 }
+
+void mqttDisconnectCb(AsyncMqttClientDisconnectReason reason) {
+    Serial.print("MQTT Disc ");
+    Serial.println((int) reason);
+}
+
 
 static void mqttMessageReceived(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
     mqtt.onMessage(topic, payload, total);
@@ -34,10 +41,11 @@ Mqtt::Mqtt():
         shortMac.remove(idx, 1);
     baseTopic = F("otthing/");
     baseTopic += shortMac;
+    cli.onConnect(mqttConnectCb);
+    cli.onDisconnect(mqttDisconnectCb);
 }
 
-void Mqtt::begin() {
-    cli.onConnect(mqttConnectCb);
+void Mqtt::onConnect() {
 }
 
 bool Mqtt::connected() {
@@ -48,7 +56,7 @@ void Mqtt::setConfig(const MqttConfig conf) {
     config = conf;
     configSet = true;
     lastConTry = millis() - 10000;
-    cli.disconnect();
+    cli.disconnect(true);
     cli.setServer(config.host.c_str(), config.port);
     cli.setCredentials(config.user.c_str(), config.pass.c_str());
 }
@@ -62,6 +70,7 @@ String Mqtt::getVarSetTopic(const char *str) {
 
 void Mqtt::loop() {
     if (!cli.connected() && ((millis() - lastConTry) > 10000) && WiFi.isConnected() && configSet) {
+        Serial.println("Connecting MQTT...");
         lastConTry = millis();
         cli.connect();
         newConnection = true;
@@ -73,6 +82,7 @@ void Mqtt::loop() {
             newConnection = false;
 
             portal.textAll(F("MQTT connected"));
+            Serial.println(F("MQTT connected"));
 
             String statusTopic = baseTopic + ("/status");
             cli.setWill(statusTopic.c_str(), 0, false, "offline");

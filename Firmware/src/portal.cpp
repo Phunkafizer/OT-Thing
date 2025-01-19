@@ -8,6 +8,7 @@
 
 static const char APP_JSON[] PROGMEM = "application/json";
 static const IPAddress apAddress(4, 3, 2, 1);
+static const IPAddress apMask(255, 255, 255, 0);
 Portal portal;
 static AsyncWebServer websrv(80);
 AsyncWebSocket ws("/ws");
@@ -21,7 +22,7 @@ Portal::Portal():
 void Portal::begin(bool configMode) {
      if (configMode) {
         WiFi.persistent(false);
-        WiFi.softAPConfig(apAddress, apAddress, IPAddress(255, 255, 255, 0));
+        WiFi.softAPConfig(apAddress, apAddress, apMask);
         WiFi.softAP(F(AP_SSID), F(AP_PASSWORD));
         WiFi.mode(WIFI_AP_STA);
         WiFi.setAutoReconnect(true);

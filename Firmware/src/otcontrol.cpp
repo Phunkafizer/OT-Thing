@@ -20,6 +20,7 @@ const char ID_STR_FLOW_T2[] PROGMEM = "flow_t2";
 const char ID_STR_DHW_T[] PROGMEM = "dhw_t";
 const char ID_STR_DHW_T2[] PROGMEM = "dhw_t2";
 const char ID_STR_ROOM_T[] PROGMEM = "room_t";
+const char ID_STR_ROOM_SET_T[] PROGMEM = "room_set_t";
 const char ID_STR_DHW_FLOW_RATE[] PROGMEM = "dhw_flow_rate";
 const char ID_STR_EXHAUST_T[] PROGMEM = "exhaust_t";
 const char ID_STR_BURNER_STARTS[] PROGMEM = "burner_starts";
@@ -30,49 +31,77 @@ const char ID_STR_SLAVE_PROD_VERSION[] PROGMEM = "slave_prod_version";
 const char ID_STR_DHW_SET_T[] PROGMEM = "dhw_set_t";
 const char ID_STR_CH_SET_T[] PROGMEM = "ch_set_t";
 const char ID_STR_CAPACITY_MODULATION[] PROGMEM = "cap_mod";
+const char ID_STR_OUTSIDE_T[] PROGMEM = "outside_t";
+const char ID_STR_MASTER_PROD_VERSION[] PROGMEM = "master_prod_version";
+const char ID_STR_MAX_REL_MOD[] PROGMEM = "max_rel_mod";
+const char ID_STR_MASTER_OT_VERSION[] PROGMEM = "master_ot_version";
 
-const char STR_MAX_REL_MOD[] PROGMEM = "max_rel_mode";
-const char STR_DHW_BURNER_STARTS[] PROGMEM = "dhw_burner_starts";
-const char STR_OUTSIDE_T[] PROGMEM = "outside_t";
-const char str_ot_slave_version[] PROGMEM = "ot_slave_version";
-const char STR_SLAVE_PROD_VERSION[] PROGMEM = "slave_prod_version";
-const char STR_CH_PUMP_OP_HOURS[] PROGMEM = "ch_pump_op_hours";
-const char STR_DHW_PUMP_VALUE_STARTS[] PROGMEM = "dhw_pump_valve_starts";
+OtItem OTITEMS[] PROGMEM = {
+    {OpenThermMessageID::Status,                    ID_STR_STATUS},
+    {OpenThermMessageID::RelModLevel,               ID_STR_REL_MOD},
+    {OpenThermMessageID::CHPressure,                ID_STR_CH_PRESSURE},
+    {OpenThermMessageID::DHWFlowRate,               ID_STR_DHW_FLOW_RATE},
+    {OpenThermMessageID::Tboiler,                   ID_STR_FLOW_T},
+    {OpenThermMessageID::TflowCH2,                  ID_STR_FLOW_T2},
+    {OpenThermMessageID::Tdhw,                      ID_STR_DHW_T},
+    {OpenThermMessageID::Tdhw2,                     ID_STR_DHW_T2},
+    {OpenThermMessageID::Toutside,                  ID_STR_OUTSIDE_T},
+    {OpenThermMessageID::Tret,                      ID_STR_RETURN_T},
+    {OpenThermMessageID::TdhwSet,                   ID_STR_DHW_SET_T},
+    {OpenThermMessageID::TSet,                      ID_STR_CH_SET_T},
+    {OpenThermMessageID::Tr,                        ID_STR_ROOM_T},
+    {OpenThermMessageID::TrSet,                     ID_STR_ROOM_SET_T},
+    {OpenThermMessageID::MaxRelModLevelSetting,     ID_STR_MAX_REL_MOD},
+    {OpenThermMessageID::SConfigSMemberIDcode,      ID_STR_SLAVE_CONFIG_MEMBER},
+    {OpenThermMessageID::SlaveVersion,              ID_STR_SLAVE_PROD_VERSION},
+    {OpenThermMessageID::MasterVersion,             ID_STR_MASTER_PROD_VERSION},
+    {OpenThermMessageID::Texhaust,                  ID_STR_EXHAUST_T},
+    {OpenThermMessageID::SuccessfulBurnerStarts,    ID_STR_BURNER_STARTS},
+    {OpenThermMessageID::CHPumpStarts,              ID_STR_CH_PUMP_STARTS},
+    {OpenThermMessageID::BurnerOperationHours,      ID_STR_BURNER_OP_HOURS},
+    {OpenThermMessageID::OpenThermVersionMaster,    ID_STR_MASTER_OT_VERSION}
+};
+
+const char* OtItem::getName(OpenThermMessageID id) {
+    for (int i=0; i<sizeof(OTITEMS) / sizeof(OTITEMS[0]); i++)
+        if (OTITEMS[i].id == id)
+            return OTITEMS[i].name;
+    return nullptr;
+}
 
 OTValue *boilerValues[] = { // data collected from boiler
     new OTValueStatus(),
     new OTValueSlaveConfigMember(),
-    //new PTValueFloat(   STR_MAX_REL_MOD         MaxRelModLevelSetting,  0),
-    new OTValueFloat(           ID_STR_REL_MOD,                 OpenThermMessageID::RelModLevel,            10),
-    new OTValueFloat(           ID_STR_CH_PRESSURE,             OpenThermMessageID::CHPressure,             30),
-    new OTValueFloat(           ID_STR_DHW_FLOW_RATE,           OpenThermMessageID::DHWFlowRate,            10),
-    new OTValueFloat(           ID_STR_FLOW_T,                  OpenThermMessageID::Tboiler,                10),
-    new OTValueFloat(           ID_STR_FLOW_T2,                 OpenThermMessageID::TflowCH2,               10),
-    new OTValueFloat(           ID_STR_DHW_T,                   OpenThermMessageID::Tdhw,                   10),
-    new OTValueFloat(           ID_STR_DHW_T2,                  OpenThermMessageID::Tdhw2,                  10),
-    //new OTValueFloat(   STR_OUTSIDE_T,              OpenThermMessageID::Toutside,               10),
-    new OTValueFloat(           ID_STR_RETURN_T,                OpenThermMessageID::Tret,                   10),
-    new OTValuei16(             ID_STR_EXHAUST_T,               OpenThermMessageID::Texhaust,               10),
-    new OTValueu16(             ID_STR_BURNER_STARTS,           OpenThermMessageID::SuccessfulBurnerStarts, 30),
-    new OTValueu16(             ID_STR_CH_PUMP_STARTS,          OpenThermMessageID::CHPumpStarts,           30),
-    //new OTValueu16(     STR_DHW_PUMP_VALUE_STARTS,  OpenThermMessageID::DHWPumpValveStarts,     10),
-    //new OTValueu16(     STR_DHW_BURNER_STARTS,      OpenThermMessageID::DHWBurnerStarts,        60),
-    new OTValueu16(             ID_STR_BURNER_OP_HOURS,         OpenThermMessageID::BurnerOperationHours,   120),
-    new OTValueProductVersion(  ID_STR_SLAVE_PROD_VERSION,      OpenThermMessageID::SlaveVersion),
-    new OTValueFloat(           ID_STR_DHW_SET_T,               OpenThermMessageID::TdhwSet,                -1),
-    new OTValueFloat(           ID_STR_CH_SET_T,                OpenThermMessageID::TSet,                   -1),
-    new OTValueCapacityModulation()
-    //new OTValueu16(     STR_CH_PUMP_OP_HOURS,       OpenThermMessageID::CHPumpOperationHours,   60),
-    //new OTValueu16("dhw_pumpt_valve_op_hours", DHWPumpValveOperationHours, 60),
-    //new OTValueu16("dhw_burner_op_hours", DHWBurnerOperationHours, 60),
-    //new OTValueFloat(str_max_rel_mod, MaxRelModLevelSetting, 0),
-    ////new OTValue("max_boiler_cap_min_rel_mod", MaxCapacityMinModLevel, 0),
-    //new OTValueFloat(str_ot_slave_version, OpenThermVersionSlave, 0),
+    new OTValueCapacityModulation(),
+    new OTValueDHWBounds(),
+    new OTValueFloat(           OpenThermMessageID::RelModLevel,            10),
+    new OTValueFloat(           OpenThermMessageID::CHPressure,             30),
+    new OTValueFloat(           OpenThermMessageID::DHWFlowRate,            10),
+    new OTValueFloat(           OpenThermMessageID::Tboiler,                10),
+    new OTValueFloat(           OpenThermMessageID::TflowCH2,               10),
+    new OTValueFloat(           OpenThermMessageID::Tdhw,                   10),
+    new OTValueFloat(           OpenThermMessageID::Tdhw2,                  10),
+    new OTValueFloat(           OpenThermMessageID::Toutside,               30),
+    new OTValueFloat(           OpenThermMessageID::Tret,                   10),
+    new OTValuei16(             OpenThermMessageID::Texhaust,               10),
+    new OTValueu16(             OpenThermMessageID::SuccessfulBurnerStarts, 30),
+    new OTValueu16(             OpenThermMessageID::CHPumpStarts,           30),
+    new OTValueu16(             OpenThermMessageID::BurnerOperationHours,   120),
+    new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,           0),
+    new OTValueFloat(           OpenThermMessageID::TdhwSet,                -1),
+    new OTValueFloat(           OpenThermMessageID::TSet,                   -1),
+
+    //TODO 5, 6, 
 };
 
 OTValue *thermostatValues[] = {
-    new OTValueFloat(       ID_STR_CH_SET_T,        OpenThermMessageID::TSet,                   0),
-    new OTValueFloat(       ID_STR_ROOM_T,                  OpenThermMessageID::Tr,                     0)
+    new OTValueFloat(           OpenThermMessageID::TSet,                   -1),
+    new OTValueFloat(           OpenThermMessageID::Tr,                     -1),
+    new OTValueFloat(           OpenThermMessageID::TrSet,                  -1),
+    new OTValueProductVersion(  OpenThermMessageID::MasterVersion,          -1),
+    new OTValueFloat(           OpenThermMessageID::MaxRelModLevelSetting,  -1),
+    new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionMaster, -1),
+    new OTValueMasterConfig()
 };
 
 constexpr uint16_t floatToOT(double f) {
@@ -85,23 +114,26 @@ const struct {
 } loopbackTestData[] PROGMEM = {
     {OpenThermMessageID::Status,                    0x0000},
     {OpenThermMessageID::Tboiler,                   floatToOT(48.5)},
-    {OpenThermMessageID::Texhaust,                  96},
+    {OpenThermMessageID::TflowCH2,                  floatToOT(48.6)},
+    {OpenThermMessageID::Texhaust,                  90},
     {OpenThermMessageID::RelModLevel,               floatToOT(33.3)},
     {OpenThermMessageID::CHPressure,                floatToOT(1.25)},
     {OpenThermMessageID::DHWFlowRate,               floatToOT(2.4)},
     {OpenThermMessageID::Tret,                      floatToOT(41.7)},
     {OpenThermMessageID::Tdhw,                      floatToOT(37.5)},
+    {OpenThermMessageID::Tdhw2,                     floatToOT(37.6)},
+    {OpenThermMessageID::Toutside,                  floatToOT(3.5)},
     {OpenThermMessageID::SuccessfulBurnerStarts,    9999},
-    {OpenThermMessageID::BurnerOperationHours,      8888}
+    {OpenThermMessageID::BurnerOperationHours,      8888},
+    {OpenThermMessageID::SlaveVersion,              0x0404}
 };
 
 /**
  * @param interval -1: never query. 0: only query once. >0: query every interval seconds
  */
-OTValue::OTValue(const char *name, const OpenThermMessageID id, const int interval):
+OTValue::OTValue(const OpenThermMessageID id, const int interval):
         id(id),
         interval(interval),
-        name(name),
         value(0),
         enabled(interval != -1),
         isSet(false),
@@ -129,9 +161,21 @@ OpenThermMessageID OTValue::getId() const {
 }
 
 bool OTValue::sendDiscovery() {
+    const char *name = getName();
+    if (name == nullptr)
+        return false;
+
     switch (id) {
         case OpenThermMessageID::Tboiler:
             haDisc.createTempSensor(F("Vorlauftemperatur"), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::TflowCH2:
+            haDisc.createTempSensor(F("Vorlauftemperatur 2"), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::Tret:
+            haDisc.createTempSensor(F("Rücklauftemperatur"), FPSTR(name));
             break;
 
         case OpenThermMessageID::RelModLevel:
@@ -140,6 +184,10 @@ bool OTValue::sendDiscovery() {
 
         case OpenThermMessageID::Tdhw:
             haDisc.createTempSensor(F("Brauchwasser"), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::Tdhw2:
+            haDisc.createTempSensor(F("Brauchwasser 2"), FPSTR(name));
             break;
 
         case OpenThermMessageID::CHPressure:
@@ -158,26 +206,49 @@ bool OTValue::sendDiscovery() {
             haDisc.createTempSensor(F("Vorlaufsolltemperatur"), FPSTR(name));
             break;
 
+        case OpenThermMessageID::Texhaust:
+            haDisc.createTempSensor(F("Abgastemperatur"), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::SlaveVersion:
+            haDisc.createTempSensor(F("Produktversion Slave"), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::MasterVersion:
+            haDisc.createTempSensor(F("Produktversion Master"), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::OpenThermVersionMaster:
+            haDisc.createTempSensor(F("OT-Version Master"), FPSTR(name));
+            break;
+
         // TODO
         case OpenThermMessageID::DHWFlowRate:
-        case OpenThermMessageID::TflowCH2:
-        case OpenThermMessageID::Tdhw2:
-        case OpenThermMessageID::Tret:
-        case OpenThermMessageID::Texhaust:
         case OpenThermMessageID::CHPumpStarts:
-        case OpenThermMessageID::SlaveVersion:
-        case OpenThermMessageID::TdhwSet:
-            return false;
+            //return false;
 
         default:
             return false;
     }
 
-    String valTempl = F("{{ value_json.boiler.# }}");
+    String valTempl;
+    for (auto *valobj: boilerValues) {
+        if (valobj == this) {
+            valTempl = F("{{ value_json.boiler.# }}");
+            break;
+        }
+    }
+    if (valTempl.isEmpty())
+        valTempl = F("{{ value_json.thermostat.# }}");
+        
     valTempl.replace("#", FPSTR(name));
     haDisc.setValueTemplate(valTempl);
         
     return mqtt.publish(haDisc.topic, haDisc.doc);
+}
+
+const char* OTValue::getName() const {
+    return OtItem::getName(id);
 }
 
 void OTValue::setValue(uint16_t val) {
@@ -200,21 +271,20 @@ void OTValue::init(const bool enabled) {
     isSet = false;
 }
 
-const char *OTValue::getName() const {
-    return name;
-}
-
 void OTValue::getJson(JsonObject &obj) const {
     if (enabled) {
         if (isSet)
             getValue(obj);        
-        else
-            obj[FPSTR(name)] = (char*) NULL;
+        else {
+            const char *name = getName();
+            if (name)
+                obj[FPSTR(name)] = (char*) NULL;
+        }
     }
 }
 
-OTValueu16::OTValueu16(const char *name, const OpenThermMessageID id, const int interval):
-        OTValue(name, id, interval) {
+OTValueu16::OTValueu16(const OpenThermMessageID id, const int interval):
+        OTValue(id, interval) {
 }
 
 uint16_t OTValueu16::getValue() const {
@@ -222,12 +292,12 @@ uint16_t OTValueu16::getValue() const {
 }
 
 void OTValueu16::getValue(JsonObject &obj) const {
-    obj[FPSTR(name)] = getValue();
+    obj[FPSTR(getName())] = getValue();
 }
 
 
-OTValuei16::OTValuei16(const char *name, const OpenThermMessageID id, const int interval):
-        OTValue(name, id, interval) {
+OTValuei16::OTValuei16(const OpenThermMessageID id, const int interval):
+        OTValue(id, interval) {
 }
 
 int16_t OTValuei16::getValue() const {
@@ -235,12 +305,12 @@ int16_t OTValuei16::getValue() const {
 }
 
 void OTValuei16::getValue(JsonObject &obj) const {
-    obj[FPSTR(name)] = getValue();
+    obj[FPSTR(getName())] = getValue();
 }
 
 
-OTValueFloat::OTValueFloat(const char *name, const OpenThermMessageID id, const int interval):
-        OTValue(name, id, interval) {
+OTValueFloat::OTValueFloat(const OpenThermMessageID id, const int interval):
+        OTValue(id, interval) {
 }
 
 double OTValueFloat::getValue() const {
@@ -252,12 +322,12 @@ double OTValueFloat::getValue() const {
 }
 
 void OTValueFloat::getValue(JsonObject &obj) const {
-    obj[FPSTR(name)] = getValue();
+    obj[FPSTR(getName())] = getValue();
 }
 
 
 OTValueStatus::OTValueStatus():
-        OTValue(ID_STR_STATUS, OpenThermMessageID::Status, -1) {
+        OTValue(OpenThermMessageID::Status, -1) {
     enabled = false;
 }
 
@@ -304,7 +374,7 @@ bool OTValueStatus::sendDiscovery() {
 }
 
 OTValueSlaveConfigMember::OTValueSlaveConfigMember():
-        OTValue(ID_STR_SLAVE_CONFIG_MEMBER, OpenThermMessageID::SConfigSMemberIDcode, 0) {
+        OTValue(OpenThermMessageID::SConfigSMemberIDcode, 0) {
 }
 
 void OTValueSlaveConfigMember::getValue(JsonObject &obj) const {
@@ -319,19 +389,19 @@ void OTValueSlaveConfigMember::getValue(JsonObject &obj) const {
     obj[F("slaveMemberId")] = value & 0xFF;
 }
 
-OTValueProductVersion::OTValueProductVersion(const char *name, const OpenThermMessageID id):
-        OTValue(name, id, 0) {
+OTValueProductVersion::OTValueProductVersion(const OpenThermMessageID id, const int interval):
+        OTValue(id, interval) {
 }
 
 void OTValueProductVersion::getValue(JsonObject &obj) const {
     String v = String(value >> 8);
     v += '.';
     v += String(value & 0xFF);
-    obj[FPSTR(name)] = v;
+    obj[FPSTR(getName())] = v;
 }
 
 OTValueCapacityModulation::OTValueCapacityModulation():
-        OTValue(nullptr, OpenThermMessageID::MaxCapacityMinModLevel, 0) {
+        OTValue(OpenThermMessageID::MaxCapacityMinModLevel, 0) {
 }
 
 bool OTValueCapacityModulation::sendDiscovery() {
@@ -342,6 +412,33 @@ void OTValueCapacityModulation::getValue(JsonObject &obj) const {
     obj[F("max_capacity")] = value >> 8;
     obj[F("min_modulation")] = value & 0xFF;
 }
+
+OTValueDHWBounds::OTValueDHWBounds():
+        OTValue(OpenThermMessageID::TdhwSetUBTdhwSetLB, 0) {
+}
+
+void OTValueDHWBounds::getValue(JsonObject &obj) const {
+    obj[F("dhwMax")] = value >> 8;
+    obj[F("dhwMin")] = value & 0xFF;
+}
+
+bool OTValueDHWBounds::sendDiscovery() {
+    return true;
+}
+
+
+OTValueMasterConfig::OTValueMasterConfig():
+        OTValue(OpenThermMessageID::MConfigMMemberIDcode, -1) {
+}
+
+void OTValueMasterConfig::getValue(JsonObject &obj) const {
+    obj[F("memberId")] = value & 0xFF;
+}
+
+bool OTValueMasterConfig::sendDiscovery() {
+    return true;
+}
+
 
 void IRAM_ATTR handleIrqMaster() {
     otmaster.handleInterrupt();
@@ -375,7 +472,7 @@ OTControl::OT::OT(OpenTherm &ot):
 }
 
 void OTControl::OT::sendRequest(const char source, const unsigned long msg) {
-    command.sendOtEvent('T', msg);
+    command.sendOtEvent(source, msg);
     ot.sendRequestAsync(msg);
     txCount++;
 }
@@ -386,8 +483,10 @@ void OTControl::OT::resetCounters() {
 }
 
 void OTControl::OT::onReceive(const char source, const unsigned long msg) {
-    command.sendOtEvent(source, msg);
+    if (source)
+        command.sendOtEvent(source, msg);
     rxCount++;
+    lastRx = millis();
 }
 
 void OTControl::OT::sendResponse(const unsigned long msg) {
@@ -421,14 +520,19 @@ void OTControl::begin() {
 void OTControl::setOTMode(const OTMode mode) {
     otMode = mode;
 
-    // set bypass rely
+    // set bypass relay
     digitalWrite(GPIO_BYPASS_RELAY, mode != OTMODE_BYPASS);
 
-    // set +24V steup up
+    // set +24V stepup up
     digitalWrite(GPIO_STEPUP_ENABLE, (mode == OTMODE_GATEWAY) || (mode == OTMODE_LOOPBACKTEST));
 
     for (auto *valobj: boilerValues)
         valobj->init((mode == OTMODE_MASTER) || (mode == OTMODE_LOOPBACKTEST));
+
+    for (auto *valobj: thermostatValues)
+        valobj->init(false);
+
+    resetDiscovery();
 }
 
 void OTControl::loop() {
@@ -465,10 +569,10 @@ void OTControl::loop() {
     otmaster.process();
     otslave.process();
 
-    if (millis() > lastRxMaster + 100)
+    if (millis() > master.lastRx + 100)
         digitalWrite(GPIO_OTMASTER_LED, HIGH);
 
-    if (millis() > lastRxSlave + 100)
+    if (millis() > slave.lastRx + 100)
         digitalWrite(GPIO_OTSLAVE_LED, LOW);
 
     if (!otmaster.isReady())
@@ -495,8 +599,6 @@ void OTControl::loop() {
         }
 
         if (millis() > nextBoilerTemp) {
-            Serial.println("Calcing flow temp!");
-
             HeatingParams &hp = heatingParams[0];
             double flow = heatingParams[0].flowDefault;
 
@@ -552,10 +654,10 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
     }
         
     digitalWrite(GPIO_OTMASTER_LED, LOW);
-    lastRxMaster = millis();
 
     // received response from boiler
     auto id = OpenTherm::getDataID(msg);
+    auto mt = OpenTherm::getMessageType(msg);
     OTValue *otval = nullptr;
     for (auto *valobj: boilerValues) {
         if (valobj->getId() == id) {
@@ -603,7 +705,6 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         if (newMsg == msg)
             master.onReceive('E', msg);
         if (otval) {
-            OpenThermMessageType mt = OpenTherm::getMessageType(msg);
             if (mt >= OpenThermMessageType::DATA_INVALID)
                 otval->disable();
         }
@@ -615,15 +716,16 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
     if (msg != newMsg)
         master.onReceive('A', newMsg);
 
-    if (!otval)
+    if (!otval && (mt == OpenThermMessageType::READ_ACK))
         portal.textAll(F("no otval!"));
 }
 
 void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus status) {
     digitalWrite(GPIO_OTSLAVE_LED, HIGH);
-    lastRxSlave = millis();
+    slave.onReceive(0, msg);
 
-    OpenThermMessageID id = OpenTherm::getDataID(msg);
+    auto id = OpenTherm::getDataID(msg);
+    auto mt = OpenTherm::getMessageType(msg);
 
     OTValue *otval = nullptr;
     for (auto *valobj: thermostatValues) {
@@ -649,10 +751,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             break;
         }
 
-        if (msg != newMsg)
-            master.sendRequest('R', newMsg);
-        else
-            master.sendRequest('T', newMsg);
+        master.sendRequest((msg == newMsg) ? 'T' : 'R', newMsg);
 
         if (otval)
             otval->setValue(newMsg & 0xFFFF);
@@ -691,6 +790,9 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
     default:
         break;
     }
+
+    if (!otval && (mt == OpenThermMessageType::WRITE_ACK))
+        portal.textAll(F("no otval!"));
 }
 
 void OTControl::getJson(JsonObject &obj) const {
@@ -719,8 +821,8 @@ void OTControl::getJson(JsonObject &obj) const {
         JsonObject thermostat = obj[F("thermostat")].to<JsonObject>();
         for (auto *valobj: thermostatValues)
             valobj->getJson(thermostat);
-        thermostat[F("txCount")] = master.txCount;
-        thermostat[F("rxCount")] = master.rxCount;
+        thermostat[F("txCount")] = slave.txCount;
+        thermostat[F("rxCount")] = slave.rxCount;
         break;
     }
     default:
@@ -730,6 +832,9 @@ void OTControl::getJson(JsonObject &obj) const {
 
 void OTControl::resetDiscovery() {
     for (auto *valobj: boilerValues)
+        valobj->discFlag = false;
+
+    for (auto *valobj: thermostatValues)
         valobj->discFlag = false;
 
     discFlag = false;
