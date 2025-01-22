@@ -1,119 +1,8 @@
-#ifndef _otcontrol_h_
-#define _otcontrol_h_
+#pragma once
 
 #include <OpenTherm.h>
 #include "ArduinoJson.h"
 
-
-struct OtItem {
-    OpenThermMessageID id;
-    const char* name;
-    static const char* getName(OpenThermMessageID id);
-};
-extern OtItem OTITEMS[] PROGMEM;
-
-class OTValue {
-private:
-    const OpenThermMessageID id;
-    unsigned long lastTransfer;
-    const int interval;
-    virtual void getValue(JsonObject &stat) const = 0;
-protected:
-    uint16_t value;
-    bool enabled;
-    bool isSet;
-    virtual bool sendDiscovery();
-    const char* getName() const;
-public:
-    OTValue(const OpenThermMessageID id, const int interval);
-    bool process();
-    OpenThermMessageID getId() const;
-    void setValue(uint16_t val);
-    void setStatus(const OpenThermMessageType mt);
-    void getJson(JsonObject &obj) const;
-    void disable();
-    void init(const bool enabled);
-    void setTimeout();
-    bool discFlag;
-};
-
-class OTValueu16: public OTValue {
-private:
-    void getValue(JsonObject &obj) const;
-public:
-    OTValueu16(const OpenThermMessageID id, const int interval);
-    uint16_t getValue() const;
-};
-
-class OTValuei16: public OTValue {
-private:
-    void getValue(JsonObject &stat) const;
-public:
-    OTValuei16(const OpenThermMessageID id, const int interval);
-    int16_t getValue() const;
-};
-
-class OTValueFloat: public OTValue {
-private:
-    void getValue(JsonObject &obj) const;
-public:
-    OTValueFloat(const OpenThermMessageID id, const int interval);
-    double getValue() const;
-};
-
-class OTValueStatus: public OTValue {
-private:
-    void getValue(JsonObject &obj) const;
-    const char *STATUS_FLAME PROGMEM = "flame";
-    const char *STATUS_DHW_MODE PROGMEM = "dhw_mode";
-    const char *STATUS_CH_MODE PROGMEM = "ch_mode";
-    const char *STATUS_FAULT PROGMEM = "fault";
-protected:
-    bool sendDiscovery();
-public:    
-    OTValueStatus();
-};
-
-class OTValueSlaveConfigMember: public OTValue {
-private:
-    void getValue(JsonObject &obj) const;
-public:    
-    OTValueSlaveConfigMember();
-};
-
-class OTValueProductVersion: public OTValue {
-private:
-    void getValue(JsonObject &obj) const;
-public:    
-    OTValueProductVersion(const OpenThermMessageID id, const int interval);
-};
-
-class OTValueCapacityModulation: public OTValue {
-private:
-    void getValue(JsonObject &obj) const;
-protected:
-    bool sendDiscovery();
-public:    
-    OTValueCapacityModulation();
-};
-
-class OTValueDHWBounds: public OTValue {
-private:
-    void getValue(JsonObject &obj) const;
-protected:
-    bool sendDiscovery();
-public:    
-    OTValueDHWBounds();
-};
-
-class OTValueMasterConfig: public OTValue {
-private:
-    void getValue(JsonObject &obj) const;
-protected:
-    bool sendDiscovery();
-public:    
-    OTValueMasterConfig();
-};
 class OTControl {
 public:
     enum CtrlMode: uint8_t {
@@ -127,12 +16,15 @@ public:
 private:
     void OnRxMaster(const unsigned long msg, const OpenThermResponseStatus status);
     void OnRxSlave(const unsigned long msg, const OpenThermResponseStatus status);
+    bool setThermostatVal(const unsigned long msg);
+    void sendRequest(const char source, const unsigned long msg);
     unsigned long lastMillis;
     enum OTMode: int8_t {
         OTMODE_MASTER = 0,
         OTMODE_GATEWAY = 1,
         OTMODE_BYPASS = 2,
-        OTMODE_LOOPBACKTEST = 3
+        OTMODE_LOOPBACKTEST = 3,
+        OTMODE_ETEST = 4
     } otMode;
     struct HeatingParams {
         bool chOn;
@@ -180,4 +72,3 @@ public:
 };
 
 extern OTControl otcontrol;
-#endif

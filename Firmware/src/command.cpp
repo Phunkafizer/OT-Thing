@@ -1,6 +1,6 @@
 #include "command.h"
 #include "portal.h"
-#include "otcontrol.h"
+#include "otvalues.h"
 
 OtGwCommand command;
 
@@ -94,7 +94,7 @@ void OtGwCommand::sendOtEvent(const char source, const uint32_t data) {
         break;
     }
 
-    const char *name = OtItem::getName(id);
+    const char *name = OTItem::getName(id);
     line += ' ';
     if (name != nullptr)
         line += FPSTR(name);

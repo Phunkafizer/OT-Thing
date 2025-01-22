@@ -53,13 +53,13 @@ void wifiEvent(WiFiEvent_t event) {
 
 void setup() {
     pinMode(GPIO_BYPASS_RELAY, OUTPUT);
-    pinMode(GPIO_OTSLAVE_LED, OUTPUT);
-    pinMode(GPIO_OTMASTER_LED, OUTPUT);
+    pinMode(GPIO_OTRED_LED, OUTPUT);
+    pinMode(GPIO_OTGREEN_LED, OUTPUT);
     pinMode(GPIO_STATUS_LED, OUTPUT);
     pinMode(GPIO_CONFIG_BUTTON, INPUT);
     digitalWrite(GPIO_BYPASS_RELAY, LOW);
-    digitalWrite(GPIO_OTSLAVE_LED, LOW);
-    digitalWrite(GPIO_OTMASTER_LED, HIGH); // active low
+    digitalWrite(GPIO_OTGREEN_LED, LOW);
+    digitalWrite(GPIO_OTRED_LED, HIGH); // active low
     digitalWrite(GPIO_STATUS_LED, HIGH); // active low
 
     statusLedTicker.attach(0.2, statusLedLoop);
