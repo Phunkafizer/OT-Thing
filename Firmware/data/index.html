@@ -101,7 +101,7 @@
 
         div.valunit {
             display: inline-block;
-            width: 20%;
+            width: 25%;
         }
 
         .statusvalue {
@@ -141,7 +141,13 @@
             background: #fd975a;
             height: 5px;
             margin: auto 0;
-            width: 80%;
+            width: 75%;
+            cursor: pointer;
+        }
+
+        input[type=radio] {
+            margin: 5px 0;
+            cursor: pointer;
         }
 
         div.curve {
@@ -369,7 +375,7 @@
                 <h4>Status</h4>
                 <span>ok</span>
                 <h4>Außentemperatur</h4>
-                <span id="owtemp" class="statusvalue">25.8</span>
+                <span id="owtemp" class="statusvalue">0.0</span>
                 <span class="statusunit">&deg;C</span>
             </div>
             
@@ -385,20 +391,28 @@
                         <span class="statusvalue" field="boiler.rel_mod" unit="%"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Heizkreis 1 aktiv</h4>
-                        <span class="statusvalue" field="boiler.status.ch_mode"></span>
+                        <h4>Diagnose</h4>
+                        <span class="statusvalue" field="boiler.status.diagnostic"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Heizkreis 2 aktiv</h4>
-                        <span class="statusvalue" field="boiler.status.ch2_mode"></span>
+                        <h4>Heizkreis 1 aktiv</h4>
+                        <span class="statusvalue" field="boiler.status.ch_mode"></span>
                     </div>
                     <div class="statusfield">
                         <h4>Vorlauftemperatur</h4>
                         <span class="statusvalue" field="boiler.flow_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
+                        <h4>Heizkreis 2 aktiv</h4>
+                        <span class="statusvalue" field="boiler.status.ch2_mode"></span>
+                    </div>
+                    <div class="statusfield">
                         <h4>Vorlauftemperatur 2</h4>
                         <span class="statusvalue" field="boiler.flow_t2" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Brauchwasserbereitung</h4>
+                        <span class="statusvalue" field="boiler.status.dhw_mode"></span>
                     </div>
                     <div class="statusfield">
                         <h4>Brauchwassertemperatur</h4>
@@ -449,6 +463,10 @@
                         <span class="statusvalue" field="boiler.slave_prod_version"></span>
                     </div>
                     <div class="statusfield">
+                        <h4>Member ID</h4>
+                        <span class="statusvalue" field="boiler.slaveMemberId"></span>
+                    </div>
+                    <div class="statusfield">
                         <h4>Frames gesendet</h4>
                         <span class="statusvalue" field="boiler.txCount"></span>
                     </div>
@@ -463,8 +481,24 @@
             <div class="group">
                 <div class="flexline">
                     <div class="statusfield">
-                        <h4>Vorlaufsoltemperatur</h4>
-                        <span class="statusvalue" field="thermostat.ch_set_t"></span>
+                        <h4>Heizkreis 1</h4>
+                        <span class="statusvalue" field="thermostat.status.ch_enable"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Heizkreis 2</h4>
+                        <span class="statusvalue" field="thermostat.status.ch2_enable"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Brauchwasser</h4>
+                        <span class="statusvalue" field="thermostat.status.dhw_enable"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Außentmp. Komp.</h4>
+                        <span class="statusvalue" field="thermostat.status.otc_enable"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Vorlaufsolltemperatur</h4>
+                        <span class="statusvalue" field="thermostat.ch_set_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h4>Vorlaufsolltemperatur 2</h4>
@@ -755,21 +789,26 @@
 
             <h3>OpenTherm</h3>
             <div class="group">
+                <h4>Modus</h4>
                 <div class="flexline">
                     <div class="param">
                         <input type="radio" name="otMode" value="0">
-                        <label>Master</label>
+                        <label>Bypass</label>
                     </div>
                     <div class="param">
                         <input type="radio" name="otMode" value="1">
-                        <label>Gateway</label>
+                        <label>Master</label>
                     </div>
                     <div class="param">
                         <input type="radio" name="otMode" value="2">
-                        <label>Bypass</label>
+                        <label>Gateway</label>
+                    </div>
+                    <div class="param">
+                        <input type="radio" name="otMode" value="3">
+                        <label>Repeater</label>
                     </div>
                     <div class="param" style="display: block">
-                        <input type="radio" name="otMode" value="3">
+                        <input type="radio" name="otMode" value="4">
                         <label>Loopbacktest</label>
                     </div>
                 </div>
@@ -862,10 +901,15 @@
             <div class="group">
                 <h4>Quelle</h4>
                 <select id="selectOutsideTempSource">
-                    <option selected>OpenWeather</option>
-                    <option>MQTT</option>
+                    <option selected>MQTT</option>
+                    <option>OpenWeather</option>
                     <option>Bluetooth</option>
                 </select>
+
+                <div class="otOpt">
+                    <h4>Topic</h4>
+                    <span class="statusvalue" field="outsideTempTopic"></span>
+                </div>
 
                 <div class="otOpt">
                     <h4>API-Key</h4>
@@ -876,11 +920,6 @@
                     <input id="inplon" type="text" />
                     <h4>Interval / s</h4>
                     <input id="inpinterval" type="text" />
-                </div>
-
-                <div class="otOpt">
-                    <h4>Topic</h4>
-                    <span class="statusvalue" field="outsideTempTopic"></span>
                 </div>
 
                 <div class="otOpt">
@@ -925,7 +964,7 @@
     </div>
     <script>
         var config = {
-            otMode: 3,
+            otMode: 4,
             boiler: {
                 dhwOn: true,
                 dhwTemperature: 50,

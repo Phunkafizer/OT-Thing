@@ -57,7 +57,7 @@ OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::OpenThermVersionMaster,    ID_STR_MASTER_OT_VERSION}
 };
 
-OTValue *boilerValues[] = { // data collected from boiler
+OTValue *boilerValues[18] = { // data collected from boiler
     new OTValueStatus(),
     new OTValueSlaveConfigMember(),
     new OTValueCapacityModulation(),
@@ -82,7 +82,7 @@ OTValue *boilerValues[] = { // data collected from boiler
     //TODO 5, 6, 
 };
 
-OTValue *thermostatValues[] = {
+OTValue *thermostatValues[10] = {
     new OTValueFloat(           OpenThermMessageID::TSet,                   -1),
     new OTValueFloat(           OpenThermMessageID::TsetCH2,                -1),
     new OTValueFloat(           OpenThermMessageID::Tr,                     -1),
@@ -92,6 +92,7 @@ OTValue *thermostatValues[] = {
     new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionMaster, -1),
     new OTValueMasterConfig(),
     new OTValueFloat(           OpenThermMessageID::TdhwSet,                -1),
+    new OTValueMasterStatus(),
 };
 
 const char* OTItem::getName(OpenThermMessageID id) {
@@ -142,7 +143,7 @@ bool OTValue::process() {
         return false;
 
     unsigned long request = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, id, value);
-    otcontrol.master.sendRequest('T', request);
+    otcontrol.sendRequest('T', request);
     lastTransfer = millis();
     return true;
 }
@@ -319,7 +320,6 @@ void OTValueFloat::getValue(JsonObject &obj) const {
 
 OTValueStatus::OTValueStatus():
         OTValue(OpenThermMessageID::Status, -1) {
-    enabled = false;
 }
 
 void OTValueStatus::getValue(JsonObject &obj) const {
@@ -331,13 +331,6 @@ void OTValueStatus::getValue(JsonObject &obj) const {
     slaveStatus[F("cooling")] = (bool) (value & (1<<4));
     slaveStatus[F("ch2_mode")] = (bool) (value & (1<<5));
     slaveStatus[F("diagnostic")] = (bool) (value & (1<<6));
-
-    /*JsonObject masterStatus = obj[F("masterStatus")].to<JsonObject>();
-    masterStatus[F("ch_enable")] = (bool) (value & (1<<8));
-    masterStatus[F("dhw_enable")] = (bool) (value & (1<<9));
-    masterStatus[F("cooling_enable")] = (bool) (value & (1<<10));
-    masterStatus[F("otc_active")] = (bool) (value & (1<<11));
-    masterStatus[F("ch2_enable")] = (bool) (value & (1<<12));*/
 }
 
 bool OTValueStatus::sendDiscovery() {
@@ -363,6 +356,48 @@ bool OTValueStatus::sendDiscovery() {
   
     return true;
 }
+
+
+OTValueMasterStatus::OTValueMasterStatus():
+        OTValue(OpenThermMessageID::Status, -1) {
+}
+
+void OTValueMasterStatus::getValue(JsonObject &obj) const {
+    JsonObject status = obj[F("status")].to<JsonObject>();
+
+    status[FPSTR(STATUS_CH_ENABLE)] = (bool) (value & (0x100<<0));
+    status[FPSTR(STATUS_DHW_ENABLE)] = (bool) (value & (0x100<<1));
+    status[FPSTR(STATUS_COOLING_ENABLE)] = (bool) (value & (0x100<<2));
+    status[FPSTR(STATUS_OTC_ACTIVE)] = (bool) (value & (0x100<<3));
+    status[FPSTR(STATUS_CH2_ENABLE)] = (bool) (value & (0x100<<4));
+}
+
+bool OTValueMasterStatus::sendDiscovery() {
+    /*
+    auto send = [](String name, const char *field, const char *devClass)  {
+        haDisc.createBinarySensor(name, FPSTR(field), FPSTR(devClass));
+        String valTmpl = F("{{ 'ON' if value_json.boiler.status.# else 'OFF' }}");
+        valTmpl.replace("#", FPSTR(field));
+        haDisc.setValueTemplate(valTmpl);
+        return mqtt.publish(haDisc.topic, haDisc.doc);;
+    };
+
+    if (!send(F("Brenner"), STATUS_FLAME, HA_DEVICE_CLASS_RUNNING))
+        return false;
+
+    if (!send(F("Brauchwasserbereitung"), STATUS_DHW_MODE, HA_DEVICE_CLASS_RUNNING))
+        return false;
+
+    if (!send(F("Heizung"), STATUS_CH_MODE, HA_DEVICE_CLASS_RUNNING))
+        return false;
+
+    if (!send(F("Fehler"), STATUS_FAULT, HA_DEVICE_CLASS_PROBLEM))
+        return false;
+  */
+    return true;
+}
+
+
 
 OTValueSlaveConfigMember::OTValueSlaveConfigMember():
         OTValue(OpenThermMessageID::SConfigSMemberIDcode, 0) {

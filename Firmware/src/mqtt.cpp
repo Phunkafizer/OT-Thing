@@ -54,11 +54,11 @@ bool Mqtt::connected() {
 
 void Mqtt::setConfig(const MqttConfig conf) {
     config = conf;
-    configSet = true;
     lastConTry = millis() - 10000;
     cli.disconnect(true);
     cli.setServer(config.host.c_str(), config.port);
     cli.setCredentials(config.user.c_str(), config.pass.c_str());
+    configSet = !config.host.isEmpty();
 }
 
 String Mqtt::getVarSetTopic(const char *str) {
@@ -127,7 +127,7 @@ void Mqtt::onMessage(const char *topic, const char *payload, const size_t size) 
     String tmp = FPSTR(MQTTSETVAR_OUTSIDETEMP);
     if (topicStr.compareTo(tmp) == 0) {
         double d = String(payload).toFloat();
-        if (outsideTemp.source = OutsideTemp::OUTSIDETEMP_MQTT)
+        if (outsideTemp.source == OutsideTemp::OUTSIDETEMP_MQTT)
             outsideTemp.temp = d;
         return;
     }

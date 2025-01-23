@@ -22,8 +22,9 @@ public:
     void setConfig(JsonObject &obj);
     double temp;
     enum OutsideTempSource {
-        OUTSIDETEMP_OPENWEATHER,
-        OUTSIDETEMP_MQTT
+        OUTSIDETEMP_MQTT = 0,
+        OUTSIDETEMP_OPENWEATHER = 1,
+        OUTSIDETEMP_BLUETOOTH = 2
     } source;
 };
 

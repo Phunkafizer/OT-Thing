@@ -73,6 +73,20 @@ public:
     OTValueStatus();
 };
 
+class OTValueMasterStatus: public OTValue {
+private:
+    void getValue(JsonObject &obj) const;
+    const char *STATUS_CH_ENABLE PROGMEM = "ch_enable";
+    const char *STATUS_DHW_ENABLE PROGMEM = "dhw_enable";
+    const char *STATUS_COOLING_ENABLE PROGMEM = "cooling_enable";
+    const char *STATUS_OTC_ACTIVE PROGMEM = "otc_active";
+    const char *STATUS_CH2_ENABLE PROGMEM = "ch2_enable";
+protected:
+    bool sendDiscovery();
+public:    
+    OTValueMasterStatus();
+};
+
 class OTValueSlaveConfigMember: public OTValue {
 private:
     void getValue(JsonObject &obj) const;
@@ -116,4 +130,4 @@ public:
 
 extern OTItem OTITEMS[] PROGMEM;
 extern OTValue *boilerValues[18];
-extern OTValue *thermostatValues[9];
+extern OTValue *thermostatValues[10];
