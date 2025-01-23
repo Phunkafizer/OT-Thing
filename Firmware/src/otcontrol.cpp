@@ -320,8 +320,13 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
             //newMsg = otmaster.buildRequest(OpenThermMessageType::READ_ACK, id, 0 << 8 | 127);
             break;
         }
-        delay(250);
         slave.sendResponse(newMsg);
+
+
+    case OTMODE_REPEATER:
+        // we implicitely have sent a frame on slave
+        slave.txCount++;
+        break;
     }
 
     switch (status) {
@@ -371,7 +376,6 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             //newMsg = otmaster.buildRequest(OpenThermMessageType::READ_DATA, id, msg & 0xFFFF | 0x100<<3); // activate OTC
             break;
         }
-        delay(250);
         master.sendRequest(0, newMsg);
         break;
     }
