@@ -34,7 +34,8 @@ const struct {
     {OpenThermMessageID::SConfigSMemberIDcode,      0x0101},
     {OpenThermMessageID::MaxCapacityMinModLevel,    0x1240},
     {OpenThermMessageID::TdhwSetUBTdhwSetLB,        0x0540},
-    {OpenThermMessageID::CHPumpStarts,              7777}
+    {OpenThermMessageID::CHPumpStarts,              7777},
+    {OpenThermMessageID::RBPflags,                  0x0101}
 };
 
 
@@ -80,6 +81,7 @@ void OTControl::OTInterface::sendRequest(const char source, const unsigned long 
 void OTControl::OTInterface::resetCounters() {
     txCount = 0;
     rxCount = 0;
+    timeoutCount = 0;
 }
 
 void OTControl::OTInterface::onReceive(const char source, const unsigned long msg) {
@@ -238,12 +240,16 @@ void OTControl::loop() {
                 break;
 
             case CTRLMODE_AUTO: {
-                // TODO check if outside temp available, if not -> default flow
-                double minOutside = hp.roomSet - (hp.flowMax - hp.roomSet) / hp.gradient;
-                double c1 = (hp.flowMax - hp.roomSet) / pow(hp.roomSet - minOutside, 1.0 / hp.exponent);
-                flow = hp.roomSet + c1 * pow(hp.roomSet - outsideTemp.temp, 1.0 / hp.exponent) + hp.offset;
-                if (flow > hp.flowMax)
-                    flow = hp.flowMax;
+                double outTmp;
+                if ((heatingParams[0].ctrlMode == CTRLMODE_AUTO) && outsideTemp.get(outTmp)) {
+                    double minOutside = hp.roomSet - (hp.flowMax - hp.roomSet) / hp.gradient;
+                    double c1 = (hp.flowMax - hp.roomSet) / pow(hp.roomSet - minOutside, 1.0 / hp.exponent);
+                    flow = hp.roomSet + c1 * pow(hp.roomSet - outTmp, 1.0 / hp.exponent) + hp.offset;
+                    if (flow > hp.flowMax)
+                        flow = hp.flowMax;
+                }
+                else
+                    flow = heatingParams[0].flow;
                 break;
             }
 
@@ -287,6 +293,7 @@ void OTControl::sendRequest(const char source, const unsigned long msg) {
 
 void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatus status) {
     if (status == OpenThermResponseStatus::TIMEOUT) {
+        master.timeoutCount++;
         if (otMode == OTMODE_LOOPBACKTEST)
             portal.textAll(F("LOOPBACK failure (timeout)"));
         return;
@@ -459,6 +466,7 @@ void OTControl::getJson(JsonObject &obj) {
     boiler[F("connected")] = slaveConnected;
     boiler[F("txCount")] = master.txCount;
     boiler[F("rxCount")] = master.rxCount;
+    boiler[F("timeouts")] = master.timeoutCount;
 
     JsonObject thermostat = obj[F("thermostat")].to<JsonObject>();
     for (auto *valobj: thermostatValues)
@@ -502,7 +510,6 @@ void OTControl::setChCtrlConfig(JsonObject &config) {
 
     for (int i=0; i<sizeof(heatingParams) / sizeof(heatingParams[0]); i++) {
         JsonObject hpObj = boiler[F("heating")][i];
-
         heatingParams[i].chOn = hpObj[F("chOn")];
         heatingParams[i].roomSet = hpObj[F("roomSet")] | 21.0;
         heatingParams[i].flowMax = hpObj[F("flowMax")] | 40;
@@ -521,6 +528,9 @@ void OTControl::setChCtrlConfig(JsonObject &config) {
     setOTMode(mode);
 
     nextDHWSet = 0;
+
+    master.resetCounters();
+    slave.resetCounters();
 }
 
 void OTControl::setChCtrlMode(const CtrlMode mode) {

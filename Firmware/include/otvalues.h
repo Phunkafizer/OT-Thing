@@ -128,6 +128,15 @@ public:
     OTValueMasterConfig();
 };
 
-extern OTItem OTITEMS[] PROGMEM;
+class OTValueRemoteParameter: public OTValue {
+private:
+    void getValue(JsonObject &obj) const;
+protected:
+    bool sendDiscovery();
+public:    
+    OTValueRemoteParameter();
+};
+
+//extern OTItem OTITEMS[] PROGMEM;
 extern OTValue *boilerValues[18];
 extern OTValue *thermostatValues[10];

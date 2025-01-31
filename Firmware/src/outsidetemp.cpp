@@ -7,7 +7,8 @@ OutsideTemp outsideTemp;
 OutsideTemp::OutsideTemp():
         source(OUTSIDETEMP_MQTT),
         nextMillis(0),
-        httpState(HTTP_IDLE) {
+        httpState(HTTP_IDLE),
+        available(false) {
 }
 
 void OutsideTemp::loop() {
@@ -16,7 +17,6 @@ void OutsideTemp::loop() {
         switch (httpState) {
         case HTTP_IDLE:
             if (millis() > nextMillis) {
-                Serial.println("Connecting open weather");
                 cli.connect("api.openweathermap.org", 80);
                 httpState = HTTP_CONNECTING;
                 nextMillis = millis() + 5000;
@@ -36,7 +36,7 @@ void OutsideTemp::loop() {
             }
             else {
                 if (millis() > nextMillis) {
-                    nextMillis = millis() + 10000;
+                    nextMillis = millis() + interval;
                     cli.stop();
                     httpState = HTTP_IDLE;
                 }
@@ -52,11 +52,14 @@ void OutsideTemp::loop() {
                 deserializeJson(doc, replyBuf);
                 replyBuf.clear();
 
-                doc[F("main")][F("temp")].is<JsonFloat>();
-                temp = doc[F("main")][F("temp")];
+                if (doc[F("main")][F("temp")].is<JsonFloat>()) {
+                    value = doc[F("main")][F("temp")];
+                    available = true;
+                }
+                else
+                    available = false;
 
-                Serial.println(temp);
-                nextMillis = millis() + 10000;
+                nextMillis = millis() + interval;
                 httpState = HTTP_IDLE;
             }
             break;
@@ -73,4 +76,19 @@ void OutsideTemp::setConfig(JsonObject &obj) {
     lat = obj[F("lat")];
     lon = obj[F("lon")];
     apikey = obj[F("apikey")].as<String>();
+    interval = obj[F("interval")];
+    if (interval == 0)
+        interval = 30000;
+}
+
+bool OutsideTemp::get(double &value) {
+    value = this->value;
+    return available;
+}
+
+void OutsideTemp::setFromMqtt(const double t) {
+    if (source == OUTSIDETEMP_MQTT) {
+        value = t;
+        available = true;
+    }
 }

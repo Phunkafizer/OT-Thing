@@ -54,6 +54,7 @@ private:
         OpenTherm hal;
         uint32_t txCount;
         uint32_t rxCount;
+        uint32_t timeoutCount;
         unsigned long lastRx;
         unsigned long lastTx;
         void sendRequest(const char source, const unsigned long msg);

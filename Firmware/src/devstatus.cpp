@@ -34,7 +34,10 @@ String DevStatus::getJson() {
     JsonObject jot = doc.as<JsonObject>();
     otcontrol.getJson(jot);
 
-    doc[F("outsideTemp")] = outsideTemp.temp;
+    double outT;
+    if (outsideTemp.get(outT))
+        doc[F("outsideTemp")] = outT;;
+    
     doc[F("outsideTempTopic")] = mqtt.getVarSetTopic(MQTTSETVAR_OUTSIDETEMP);
 
     String str;

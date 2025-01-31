@@ -29,6 +29,7 @@ const char ID_STR_OUTSIDE_T[] PROGMEM = "outside_t";
 const char ID_STR_MASTER_PROD_VERSION[] PROGMEM = "master_prod_version";
 const char ID_STR_MAX_REL_MOD[] PROGMEM = "max_rel_mod";
 const char ID_STR_MASTER_OT_VERSION[] PROGMEM = "master_ot_version";
+const char ID_STR_RPFLAGS[] PROGMEM = "rp_flags";
 
 OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::Status,                    ID_STR_STATUS},
@@ -54,7 +55,8 @@ OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::SuccessfulBurnerStarts,    ID_STR_BURNER_STARTS},
     {OpenThermMessageID::CHPumpStarts,              ID_STR_CH_PUMP_STARTS},
     {OpenThermMessageID::BurnerOperationHours,      ID_STR_BURNER_OP_HOURS},
-    {OpenThermMessageID::OpenThermVersionMaster,    ID_STR_MASTER_OT_VERSION}
+    {OpenThermMessageID::OpenThermVersionMaster,    ID_STR_MASTER_OT_VERSION},
+    {OpenThermMessageID::RBPflags,                  ID_STR_RPFLAGS} 
 };
 
 OTValue *boilerValues[18] = { // data collected from boiler
@@ -203,21 +205,21 @@ bool OTValue::sendDiscovery() {
             break;
 
         case OpenThermMessageID::SlaveVersion:
-            haDisc.createTempSensor(F("Produktversion Slave"), FPSTR(name));
+            haDisc.createSensor(F("Produktversion Slave"), FPSTR(name));
             break;
 
         case OpenThermMessageID::MasterVersion:
-            haDisc.createTempSensor(F("Produktversion Master"), FPSTR(name));
+            haDisc.createSensor(F("Produktversion Master"), FPSTR(name));
             break;
 
         case OpenThermMessageID::OpenThermVersionMaster:
-            haDisc.createTempSensor(F("OT-Version Master"), FPSTR(name));
+            haDisc.createSensor(F("OT-Version Master"), FPSTR(name));
             break;
 
         // TODO
         case OpenThermMessageID::DHWFlowRate:
         case OpenThermMessageID::CHPumpStarts:
-            //return false;
+            return false;
 
         default:
             return false;
@@ -462,5 +464,22 @@ void OTValueMasterConfig::getValue(JsonObject &obj) const {
 }
 
 bool OTValueMasterConfig::sendDiscovery() {
+    return true;
+}
+
+OTValueRemoteParameter::OTValueRemoteParameter():
+        OTValue(OpenThermMessageID::RBPflags, 0) {
+}
+
+void OTValueRemoteParameter::getValue(JsonObject &obj) const {
+    JsonObject rpFlags = obj[F("rpFlags")].to<JsonObject>();
+    rpFlags[F("dhw_setpoint_trans")] = (bool) (value & (0x10<<0));
+    rpFlags[F("max_ch_setpoint_trans")] = (bool) (value & (0x10<<1));
+
+    rpFlags[F("dhw_setpoint_rw")] = (bool) (value & (1<<0));
+    rpFlags[F("max_ch_setpoint_rw")] = (bool) (value & (1<<1));
+}
+
+bool OTValueRemoteParameter::sendDiscovery() {
     return true;
 }

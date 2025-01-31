@@ -16,16 +16,20 @@ private:
         HTTP_CONNECTING,
         HTTP_RECEIVING
     } httpState;
-public:
-    OutsideTemp();
-    void loop();
-    void setConfig(JsonObject &obj);
-    double temp;
+    double value;
+    bool available;
     enum OutsideTempSource {
         OUTSIDETEMP_MQTT = 0,
         OUTSIDETEMP_OPENWEATHER = 1,
         OUTSIDETEMP_BLUETOOTH = 2
     } source;
+    unsigned int interval;
+public:
+    OutsideTemp();
+    void loop();
+    void setConfig(JsonObject &obj);
+    bool get(double &value);
+    void setFromMqtt(const double t);
 };
 
 extern OutsideTemp outsideTemp;
