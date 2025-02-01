@@ -1,11 +1,10 @@
 #include "outsidetemp.h"
-
 #include <BLEDevice.h>
 
 OutsideTemp outsideTemp;
 
 OutsideTemp::OutsideTemp():
-        source(OUTSIDETEMP_MQTT),
+        source(SOURCE_MQTT),
         nextMillis(0),
         httpState(HTTP_IDLE),
         available(false) {
@@ -13,7 +12,7 @@ OutsideTemp::OutsideTemp():
 
 void OutsideTemp::loop() {
     switch (source) {
-    case OUTSIDETEMP_OPENWEATHER: // open weather
+    case SOURCE_OPENWEATHER: // open weather
         switch (httpState) {
         case HTTP_IDLE:
             if (millis() > nextMillis) {
@@ -36,7 +35,7 @@ void OutsideTemp::loop() {
             }
             else {
                 if (millis() > nextMillis) {
-                    nextMillis = millis() + interval;
+                    nextMillis = millis() + interval * 1000UL;
                     cli.stop();
                     httpState = HTTP_IDLE;
                 }
@@ -59,7 +58,7 @@ void OutsideTemp::loop() {
                 else
                     available = false;
 
-                nextMillis = millis() + interval;
+                nextMillis = millis() + interval * 1000UL;
                 httpState = HTTP_IDLE;
             }
             break;
@@ -72,7 +71,7 @@ void OutsideTemp::loop() {
 }
 
 void OutsideTemp::setConfig(JsonObject &obj) {
-    source = (OutsideTempSource) obj[F("source")];
+    source = (Source) obj[F("source")];
     lat = obj[F("lat")];
     lon = obj[F("lon")];
     apikey = obj[F("apikey")].as<String>();
@@ -86,8 +85,8 @@ bool OutsideTemp::get(double &value) {
     return available;
 }
 
-void OutsideTemp::setFromMqtt(const double t) {
-    if (source == OUTSIDETEMP_MQTT) {
+void OutsideTemp::set(const double t, const Source source) {
+    if (source == this->source) {
         value = t;
         available = true;
     }

@@ -3,12 +3,22 @@
 
 #include <ArduinoJson.h>
 #include <WiFiClient.h>
+#include <AsyncTCP.h>
 
 class OutsideTemp {
+public:
+    enum Source {
+        SOURCE_MQTT = 0,
+        SOURCE_OPENWEATHER = 1,
+        SOURCE_BLUETOOTH = 2,
+        SOURCE_OPENTHERM = 3
+    };
 private:
+    Source source;
     double lat, lon;
     String apikey;
     WiFiClient cli;
+    AsyncClient acli;
     String replyBuf;
     unsigned long nextMillis;
     enum {
@@ -18,18 +28,13 @@ private:
     } httpState;
     double value;
     bool available;
-    enum OutsideTempSource {
-        OUTSIDETEMP_MQTT = 0,
-        OUTSIDETEMP_OPENWEATHER = 1,
-        OUTSIDETEMP_BLUETOOTH = 2
-    } source;
     unsigned int interval;
 public:
     OutsideTemp();
     void loop();
     void setConfig(JsonObject &obj);
     bool get(double &value);
-    void setFromMqtt(const double t);
+    void set(const double t, const Source source);
 };
 
 extern OutsideTemp outsideTemp;

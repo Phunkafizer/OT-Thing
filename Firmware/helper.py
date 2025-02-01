@@ -27,10 +27,22 @@ def post_build(source, target, env):
         upload_port = env.get("UPLOAD_PORT", "none")
     print("Upload port", upload_port)
     with esptool.cmds.detect_chip(port=upload_port) as esp:
+        esp.soft_reset(True)
+
+
+def after_upload(source, target, env):
+    upload_port = env.get("UPLOAD_PORT", None)
+    if upload_port == None:
+        env.AutodetectUploadPort()
+        upload_port = env.get("UPLOAD_PORT", "none")
+    print("Upload port", upload_port)
+    with esptool.cmds.detect_chip(port=upload_port) as esp:
         mac = esp.read_mac()
         macstr = ":".join(map(lambda x: "%02X" % x, mac))
         print("MAC is ", macstr)
+        esp.hard_reset()
 
 
 env.AddPreAction("$BUILD_DIR/src/portal.cpp.o", copy_html)
 env.AddPostAction("buildprog", post_build)
+env.AddPostAction("upload", after_upload)

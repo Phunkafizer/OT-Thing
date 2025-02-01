@@ -17,7 +17,7 @@ const struct {
     OpenThermMessageID id;
     uint16_t value;
 } loopbackTestData[] PROGMEM = {
-    {OpenThermMessageID::Status,                    0x0000},
+    {OpenThermMessageID::Status,                    0x000E},
     {OpenThermMessageID::Tboiler,                   floatToOT(48.5)},
     {OpenThermMessageID::TflowCH2,                  floatToOT(48.6)},
     {OpenThermMessageID::Texhaust,                  90},
@@ -76,6 +76,8 @@ void OTControl::OTInterface::sendRequest(const char source, const unsigned long 
         command.sendOtEvent(source, msg);
     hal.sendRequestAsync(msg);
     txCount++;
+    lastTx = millis();
+    lastTxMsg = msg;
 }
 
 void OTControl::OTInterface::resetCounters() {
@@ -95,6 +97,7 @@ void OTControl::OTInterface::sendResponse(const unsigned long msg) {
     hal.sendResponse(msg);
     txCount++;
     lastTx = millis();
+    lastTxMsg = msg;
 }
 
 
@@ -203,7 +206,7 @@ void OTControl::loop() {
 
     if (otMode == OTMODE_MASTER) {
         // in OTMASTER mode use OT LEDs as master TX & RX
-        if (millis() > master.lastRx + 50)
+        if (millis() > master.lastTx + 50)
             digitalWrite(GPIO_OTRED_LED, HIGH);
     }
 
@@ -261,7 +264,6 @@ void OTControl::loop() {
                 break;
             }
 
-            Serial.println(flow);
             if (flow > 0) {
                 uint32_t req = OpenTherm::buildSetBoilerTemperatureRequest(flow);
                 sendRequest('T', req);
@@ -287,15 +289,12 @@ void OTControl::sendRequest(const char source, const unsigned long msg) {
     if (otMode == OTMODE_MASTER) {
         setThermostatVal(msg);
         digitalWrite(GPIO_OTRED_LED, LOW); // when we're OTMASTER use red LED as TX LED
-        master.lastRx = millis();
     }
 }
 
 void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatus status) {
     if (status == OpenThermResponseStatus::TIMEOUT) {
         master.timeoutCount++;
-        if (otMode == OTMODE_LOOPBACKTEST)
-            portal.textAll(F("LOOPBACK failure (timeout)"));
         return;
     }
 
@@ -308,14 +307,9 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
 
     switch (otMode) {
     case OTMODE_LOOPBACKTEST:
-        for (unsigned int i = 0; i< sizeof(loopbackTestData) / sizeof(loopbackTestData[0]); i++) {
-            if (loopbackTestData[i].id == id) {
-                if (loopbackTestData[i].value == (msg & 0xFFFF))
-                    Serial.println("LOOPBACK OK");
-                else
-                    Serial.println("LOOPBACK failure");
-                break;
-            }
+        if (slave.lastTxMsg != msg) {
+            Serial.println(F("looperror slave->master !"));
+            portal.textAll(F("looperror slave->master !"));
         }
         break;
 
@@ -328,7 +322,7 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
             break;
         }
         slave.sendResponse(newMsg);
-
+        break;
 
     case OTMODE_REPEATER:
         // we implicitely have sent a frame on slave
@@ -340,8 +334,11 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
     case OpenThermResponseStatus::SUCCESS: {
         if (newMsg == msg)
             master.onReceive('B', msg);
-        if (otval && ( (mt == OpenThermMessageType::READ_ACK)))
+        if (otval && ( (mt == OpenThermMessageType::READ_ACK))) {
             otval->setValue(newMsg & 0xFFFF);
+            if (id == OpenThermMessageID::Toutside)
+                outsideTemp.set(OpenTherm::getFloat(msg), OutsideTemp::SOURCE_OPENTHERM);
+        }
         break;
     }
 
@@ -357,6 +354,7 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
     default:
         break;
     }
+
     if (msg != newMsg)
         master.onReceive('A', newMsg);
 
@@ -389,6 +387,10 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
 
     case OTMODE_LOOPBACKTEST: {
         // we received a request from OT master
+        if (master.lastTxMsg != msg) {
+            Serial.println(F("looperror master->slave !"));
+            portal.textAll(F("looperror master->slave !"));
+        }
         switch (mt) {
         case OpenThermMessageType::WRITE_DATA: {
             uint32_t reply = OpenTherm::buildResponse(OpenThermMessageType::WRITE_ACK, id, msg & 0xFFFF);
@@ -406,13 +408,16 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                     break;
                 }
             }
+
             slave.hal.status = OpenThermStatus::READY;
             slave.sendResponse(reply);
             break;
         }
+
         default:
             break;
         }
+        break;
     }
 
     case OTMODE_REPEATER:
@@ -427,7 +432,10 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
         break;
     }
 
-    slave.onReceive((msg == newMsg) ? 'T' : 'R', msg);
+    if (otMode == OTMODE_LOOPBACKTEST)
+        slave.onReceive(0, msg);
+    else
+        slave.onReceive((msg == newMsg) ? 'T' : 'R', msg);
 
     if ( (mt == OpenThermMessageType::WRITE) || (id == OpenThermMessageID::Status) )
         if (!setThermostatVal(newMsg))

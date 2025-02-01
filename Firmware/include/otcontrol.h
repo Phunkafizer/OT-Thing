@@ -55,8 +55,9 @@ private:
         uint32_t txCount;
         uint32_t rxCount;
         uint32_t timeoutCount;
-        unsigned long lastRx;
-        unsigned long lastTx;
+        unsigned long lastRx; // millis
+        unsigned long lastTx; // millis
+        unsigned long lastTxMsg;
         void sendRequest(const char source, const unsigned long msg);
         void resetCounters();
         void onReceive(const char source, const unsigned long msg);

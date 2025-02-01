@@ -127,7 +127,7 @@ void Mqtt::onMessage(const char *topic, const char *payload, const size_t size) 
     String tmp = FPSTR(MQTTSETVAR_OUTSIDETEMP);
     if (topicStr.compareTo(tmp) == 0) {
         double d = String(payload).toFloat();
-        outsideTemp.setFromMqtt(d);
+        outsideTemp.set(d, OutsideTemp::SOURCE_MQTT);
         return;
     }
 
