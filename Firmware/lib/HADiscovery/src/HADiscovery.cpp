@@ -68,6 +68,10 @@ void HADiscovery::init(String &name, String &id, String component) {
     setStateTopic(defaultStateTopic);
 }
 
+void HADiscovery::clearDoc() {
+    doc.clear();
+}
+
 void HADiscovery::setValueTemplate(String valueTemplate) {
     doc[FPSTR(HA_VALUE_TEMPLATE)] = valueTemplate;
 }

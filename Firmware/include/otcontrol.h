@@ -34,7 +34,7 @@ private:
     } otMode;
     struct HeatingParams {
         bool chOn;
-        double roomSet;
+        double roomSet; // default room set point
         double flowMax;
         double exponent;
         double gradient;
@@ -48,7 +48,7 @@ private:
     bool dhwOn;
     bool discFlag;
     uint32_t nextDHWSet;
-    uint32_t nextBoilerTemp;
+    uint32_t nextBoilerTemp[2];
     struct OTInterface {
         OTInterface(const uint8_t inPin, const uint8_t outPin, const bool isSlave);
         OpenTherm hal;
@@ -72,8 +72,8 @@ public:
     void setChCtrlConfig(JsonObject &config);
     void resetDiscovery();
     void setDhwTemp(const double temp);
-    void setChTemp(const double temp);
-    void setChCtrlMode(const CtrlMode mode);
+    void setChTemp(const double temp, const uint8_t channel);
+    void setChCtrlMode(const CtrlMode mode, const uint8_t channel);
 };
 
 extern OTControl otcontrol;

@@ -3,13 +3,21 @@
 #include <devstatus.h>
 #include "HADiscLocal.h"
 #include "otcontrol.h"
-#include "outsidetemp.h"
 #include "portal.h"
+#include "sensors.h"
+#include "HADiscLocal.h"
+#include "hwdef.h"
 
 const char *MQTTSETVAR_OUTSIDETEMP PROGMEM = "outsideTemp";
 const char *MQTTSETVAR_DHWSETTEMP PROGMEM = "dwhSetTemp";
-const char *MQTTSETVAR_CHSETTEMP PROGMEM = "chSetTemp";
-const char *MQTTSETVAR_CHMODE PROGMEM = "chMode";
+const char *MQTTSETVAR_CHSETTEMP1 PROGMEM = "chSetTemp1";
+const char *MQTTSETVAR_CHSETTEMP2 PROGMEM = "chSetTemp2";
+const char *MQTTSETVAR_CHMODE1 PROGMEM = "chMode1";
+const char *MQTTSETVAR_CHMODE2 PROGMEM = "chMode2";
+const char *MQTTSETVAR_ROOMTEMP1 PROGMEM = "roomTemp1";
+const char *MQTTSETVAR_ROOMTEMP2 PROGMEM = "roomTemp2";
+const char *MQTTSETVAR_ROOMSETPOINT1 PROGMEM = "roomSetpoint1";
+const char *MQTTSETVAR_ROOMSETPOINT2 PROGMEM = "roomSetpoint2";
 
 Mqtt mqtt;
 static WiFiClient espClient;
@@ -24,7 +32,6 @@ void mqttDisconnectCb(AsyncMqttClientDisconnectReason reason) {
     Serial.println((int) reason);
 }
 
-
 static void mqttMessageReceived(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
     mqtt.onMessage(topic, payload, total);
 }
@@ -32,8 +39,7 @@ static void mqttMessageReceived(char* topic, char* payload, AsyncMqttClientMessa
 Mqtt::Mqtt():
         lastConTry(0),
         lastStatus(0),
-        configSet(false),
-        newConnection(false) {
+        configSet(false) {
     String shortMac = WiFi.macAddress();
     shortMac.remove(0, 9);
     int idx;
@@ -43,9 +49,20 @@ Mqtt::Mqtt():
     baseTopic += shortMac;
     cli.onConnect(mqttConnectCb);
     cli.onDisconnect(mqttDisconnectCb);
+    cli.onMessage(mqttMessageReceived);
 }
 
 void Mqtt::onConnect() {
+    portal.textAll(F("MQTT connected"));
+    Serial.println(F("MQTT connected"));
+
+    String statusTopic = baseTopic + F("/status");
+    cli.setWill(statusTopic.c_str(), 0, false, "offline");
+    cli.publish(statusTopic.c_str(), 0, false, "online");
+
+    String topic = baseTopic + F("/+/set");
+    cli.subscribe(topic.c_str(), 0);
+    otcontrol.resetDiscovery();
 }
 
 bool Mqtt::connected() {
@@ -54,8 +71,8 @@ bool Mqtt::connected() {
 
 void Mqtt::setConfig(const MqttConfig conf) {
     config = conf;
-    lastConTry = millis() - 10000;
-    cli.disconnect(true);
+    lastConTry = millis() - 8000;
+    cli.disconnect(false);
     cli.setServer(config.host.c_str(), config.port);
     cli.setCredentials(config.user.c_str(), config.pass.c_str());
     configSet = !config.host.isEmpty();
@@ -68,33 +85,19 @@ String Mqtt::getVarSetTopic(const char *str) {
     return result;
 }
 
+String Mqtt::getBaseTopic() {
+    return baseTopic;
+}
+
 void Mqtt::loop() {
     if (!cli.connected() && ((millis() - lastConTry) > 10000) && WiFi.isConnected() && configSet) {
         Serial.println("Connecting MQTT...");
         lastConTry = millis();
         cli.connect();
-        newConnection = true;
         haDisc.defaultStateTopic = baseTopic + F("/state");
     }
 
     if (cli.connected()) {
-        if (newConnection) {
-            newConnection = false;
-
-            portal.textAll(F("MQTT connected"));
-            Serial.println(F("MQTT connected"));
-
-            String statusTopic = baseTopic + ("/status");
-            cli.setWill(statusTopic.c_str(), 0, false, "offline");
-            cli.publish(statusTopic.c_str(), 0, false, "online");
-
-            otcontrol.resetDiscovery();
-
-            cli.onMessage(mqttMessageReceived);
-            String topic = baseTopic + F("/+/set");
-            cli.subscribe(topic.c_str(), 0);
-        }
-
         if ((millis() - lastStatus) > 5000) {
             lastStatus = millis();
             cli.publish(haDisc.defaultStateTopic.c_str(), 0, false, devstatus.getJson().c_str());
@@ -102,13 +105,14 @@ void Mqtt::loop() {
     }
 }
 
-bool Mqtt::publish(String topic, JsonDocument &payload) {
+bool Mqtt::publish(String topic, JsonDocument &payload, const bool retain) {
     if (!cli.connected())
         return false;
 
     String ps;
-    serializeJson(payload, ps);
-    cli.publish(topic.c_str(), 0, true, ps.c_str());
+    if (!payload.isNull())
+        serializeJson(payload, ps);
+    cli.publish(topic.c_str(), 0, retain, ps.c_str());
     return true;
 }
 
@@ -138,14 +142,14 @@ void Mqtt::onMessage(const char *topic, const char *payload, const size_t size) 
         return;
     }
 
-    tmp = FPSTR(MQTTSETVAR_CHSETTEMP);
+    tmp = FPSTR(MQTTSETVAR_CHSETTEMP1);
     if (topicStr.compareTo(tmp) == 0) {
         double d = String(payload).toFloat();
-        otcontrol.setChTemp(d);
+        otcontrol.setChTemp(d, 0);
         return;
     }
 
-    tmp = FPSTR(MQTTSETVAR_CHMODE);
+    tmp = FPSTR(MQTTSETVAR_CHMODE1);
     if (topicStr.compareTo(tmp) == 0) {
         OTControl::CtrlMode mode;
         if (String(payload).compareTo("heat") == 0)
@@ -157,7 +161,35 @@ void Mqtt::onMessage(const char *topic, const char *payload, const size_t size) 
         else
             return;
 
-        otcontrol.setChCtrlMode(mode);
+        otcontrol.setChCtrlMode(mode, 0);
+        return;
+    }
+
+    tmp = FPSTR(MQTTSETVAR_ROOMTEMP1);
+    if (topicStr.compareTo(tmp) == 0) {
+        double d = String(payload).toFloat();
+        roomTemp[0].set(d, Sensor::SOURCE_MQTT);
+        return;
+    }
+
+    tmp = FPSTR(MQTTSETVAR_ROOMTEMP2);
+    if (topicStr.compareTo(tmp) == 0) {
+        double d = String(payload).toFloat();
+        roomTemp[1].set(d, Sensor::SOURCE_MQTT);
+        return;
+    }
+
+    tmp = FPSTR(MQTTSETVAR_ROOMSETPOINT1);
+    if (topicStr.compareTo(tmp) == 0) {
+        double d = String(payload).toFloat();
+        roomSetPoint[0].set(d, Sensor::SOURCE_MQTT);
+        return;
+    }
+
+    tmp = FPSTR(MQTTSETVAR_ROOMSETPOINT2);
+    if (topicStr.compareTo(tmp) == 0) {
+        double d = String(payload).toFloat();
+        roomSetPoint[1].set(d, Sensor::SOURCE_MQTT);
         return;
     }
 }

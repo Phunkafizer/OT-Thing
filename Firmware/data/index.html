@@ -3,7 +3,7 @@
 <html>
 
 <head>
-    <title>OT Thing OpenTherm controller</title>
+    <title>OT-Thing OpenTherm controller</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
@@ -34,7 +34,6 @@
         div.nav {
             margin-bottom: 5px;
             /*border: 1px solid #fd975a;;*/
-
         }
 
         div.nav li {
@@ -66,8 +65,8 @@
         }
 
         div.group {
-            border: 1px solid grey;
-            margin-bottom: 5px;
+            border: 2px solid #fd975a;
+            border-radius: 6px;
             padding: 5px;
         }
 
@@ -84,7 +83,7 @@
 
         div.param {
             padding-right: 1em;
-
+            padding-bottom: 0.3em;
         }
 
         h3 {
@@ -327,16 +326,20 @@
             <ul>
                 <li tab="status" class="active">Status</li>
                 <li tab="setup">Setup</li>
-                <li tab="heatingcurve1">Heizkreis 1</li>
-                <li tab="heatingcurve2">Heizkreis 2</li>
+                <li tab="heatingcurve1">Heating circuit 1</li>
+                <li tab="heatingcurve2">Heating circuit 2</li>
                 <li tab="log">Log</li>
             </ul>
         </div>
 
         <div class="tab" id="status">
-            <h3>WiFi</h3>
+            <h3>System</h3>
             <div class="group">
                 <div class="flexline">
+                    <div class="statusfield">
+                        <h4>Runtime</h4>
+                        <span class="statusvalue" id="runtime"></span>
+                    </div>
                     <div class="statusfield">
                         <h4>MAC</h4>
                         <span class="statusvalue" field="wifi.mac"></span>
@@ -361,29 +364,28 @@
                         <h4>RSSI</h4>
                         <span class="statusvalue" field="wifi.rssi" unit="dBm"></span>
                     </div>
+                    <div class="statusfield">
+                        <h4>MQTT connected</h4>
+                        <span class="statusvalue" field="mqtt.connected"></span>
+                    </div>
                 </div>
             </div>
-
-            <h3>MQTT</h3>
-            <div class="group">
-                <h4>Status</h4>
-                <span class="statusvalue" field="mqtt.connected"></span>
-            </div>
-
-            <h3>OpenWeather</h3>
-            <div class="group">
-                <h4>Status</h4>
-                <span>ok</span>
-                <h4>Außentemperatur</h4>
-                <span id="owtemp" class="statusvalue">0.0</span>
-                <span class="statusunit">&deg;C</span>
+            <div id="owdiv">
+                <h3>OpenWeather</h3>
+                <div class="group">
+                    <h4>Status</h4>
+                    <span></span>
+                    <h4>Außentemperatur</h4>
+                    <span class="statusvalue" field="outsideTemp"></span>
+                    <span class="statusunit">&deg;C</span>
+                </div>
             </div>
             
-            <h3>Therme</h3>
+            <h3>Boiler</h3>
             <div class="group">
                 <div class="flexline">
                     <div class="statusfield">
-                        <h4>Brenner</h4>
+                        <h4>Flame</h4>
                         <span class="statusvalue" field="boiler.status.flame"></span>
                     </div>
                     <div class="statusfield">
@@ -391,87 +393,91 @@
                         <span class="statusvalue" field="boiler.rel_mod" unit="%"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Diagnose</h4>
+                        <h4>Diagnosis</h4>
                         <span class="statusvalue" field="boiler.status.diagnostic"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Heizkreis 1 aktiv</h4>
+                        <h4>Heater circuit 1 active</h4>
                         <span class="statusvalue" field="boiler.status.ch_mode"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Vorlauftemperatur</h4>
+                        <h4>Flow temperature</h4>
                         <span class="statusvalue" field="boiler.flow_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Heizkreis 2 aktiv</h4>
+                        <h4>Heater circuit 2 active</h4>
                         <span class="statusvalue" field="boiler.status.ch2_mode"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Vorlauftemperatur 2</h4>
+                        <h4>Flow temperature 2</h4>
                         <span class="statusvalue" field="boiler.flow_t2" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Brauchwasserbereitung</h4>
+                        <h4>DHW active</h4>
                         <span class="statusvalue" field="boiler.status.dhw_mode"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Brauchwassertemperatur</h4>
+                        <h4>DHW temperature</h4>
                         <span class="statusvalue" field="boiler.dhw_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Brauchwasserdurchfluss</h4>
+                        <h4>DHW flow rate</h4>
                         <span class="statusvalue" field="boiler.dhw_flow_rate" unit="l/min"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Brauchwassertemperatur 2</h4>
+                        <h4>DHW temperature 2</h4>
                         <span class="statusvalue" field="boiler.dhw_t2" unit="&deg;C"></span>    
                     </div>
                     <div class="statusfield">
-                        <h4>Brauchwassertemp. min</h4>
+                        <h4>DHW min. temperature</h4>
                         <span class="statusvalue" field="boiler.dhwMin" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Brauchwassertemp. max</h4>
+                        <h4>DHW max. temperature</h4>
                         <span class="statusvalue" field="boiler.dhwMax" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Abgastemperatur</h4>
+                        <h4>Exhaust temperature</h4>
                         <span class="statusvalue" field="boiler.exhaust_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Außentemperatur</h4>
+                        <h4>Outside temperature</h4>
                         <span class="statusvalue" field="boiler.outside_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Rücklauftemperatur</h4>
+                        <h4>Return temperature</h4>
                         <span class="statusvalue" field="boiler.return_t" unit="&deg;C"></span>    
                     </div>
                     <div class="statusfield">
-                        <h4>Betriebdsstunden Brenner</h4>
+                        <h4>Operating hours burner</h4>
                         <span class="statusvalue" field="boiler.burner_op_hours" unit="h"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Brennerstarts</h4>
+                        <h4>Burner starts</h4>
                         <span class="statusvalue" field="boiler.burner_starts"></span>    
                     </div>
                     <div class="statusfield">
-                        <h4>Druck Heizkreis</h4>
+                        <h4>Pressure</h4>
                         <span class="statusvalue" field="boiler.ch_pressure" unit="bar"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Produktversion</h4>
+                        <h4>Product version</h4>
                         <span class="statusvalue" field="boiler.slave_prod_version"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Member ID</h4>
-                        <span class="statusvalue" field="boiler.slaveMemberId"></span>
+                        <h4>OT version</h4>
+                        <span class="statusvalue" field="boiler.slave_ot_version"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Frames gesendet</h4>
+                        <h4>Member ID</h4>
+                        <span class="statusvalue" field="boiler.memberId"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Frames sent</h4>
                         <span class="statusvalue" field="boiler.txCount"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Frames empfangen</h4>
+                        <h4>Frames received</h4>
                         <span class="statusvalue" field="boiler.rxCount"></span>
                     </div>
                     <div class="statusfield">
@@ -485,51 +491,63 @@
             <div class="group">
                 <div class="flexline">
                     <div class="statusfield">
-                        <h4>Heizkreis 1</h4>
+                        <h4>Heater circuit 1 enabled</h4>
                         <span class="statusvalue" field="thermostat.status.ch_enable"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Heizkreis 2</h4>
+                        <h4>Heater circuit 2 enabled</h4>
                         <span class="statusvalue" field="thermostat.status.ch2_enable"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Brauchwasser</h4>
+                        <h4>DHW enabled</h4>
                         <span class="statusvalue" field="thermostat.status.dhw_enable"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Außentmp. Komp.</h4>
+                        <h4>Outside temp. compensation</h4>
                         <span class="statusvalue" field="thermostat.status.otc_enable"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Vorlaufsolltemperatur</h4>
+                        <h4>Flow set temperature</h4>
                         <span class="statusvalue" field="thermostat.ch_set_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Vorlaufsolltemperatur 2</h4>
+                        <h4>Flow set temperature 2</h4>
                         <span class="statusvalue" field="thermostat.ch_set_t2" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Brauchwassersolltemperatur</h4>
+                        <h4>DHW set temperature</h4>
                         <span class="statusvalue" field="thermostat.dhw_set_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Raumtemperatur</h4>
+                        <h4>Room temperature</h4>
                         <span class="statusvalue" field="thermostat.room_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Raumsolltemperatur</h4>
+                        <h4>Room set temperature</h4>
                         <span class="statusvalue" field="thermostat.room_set_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Produktversion</h4>
+                        <h4>Room temperature 2</h4>
+                        <span class="statusvalue" field="thermostat.room_t2" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Room set temperature 2</h4>
+                        <span class="statusvalue" field="thermostat.room_set_t2" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Product version</h4>
                         <span class="statusvalue" field="thermostat.master_prod_version"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Frames gesendet</h4>
+                        <h4>OT version</h4>
+                        <span class="statusvalue" field="thermostat.master_ot_version"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Frames sent</h4>
                         <span class="statusvalue" field="thermostat.txCount"></span>
                     </div>
                     <div class="statusfield">
-                        <h4>Frames empfangen</h4>
+                        <h4>Frames received</h4>
                         <span class="statusvalue" field="thermostat.rxCount"></span>
                     </div>
                 </div>
@@ -537,23 +555,10 @@
         </div>
 
         <div class="tab" id="heatingcurve1">
-            <h3>Auslegung</h3>
+            <h3>Dimensioning</h3>
             <div class="group">
-                <div id="roomset1" class="param">
-                    <h4>Raum Solltemperatur</h4>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">&deg;C</span>
-                        </div>
-                        <input type="range" min="17" max="23" step="0.1">
-                    </div>
-                    <div class="infobox">
-                    </div>
-                </div>
-
                 <div id="flowmax1" class="param">
-                    <h4>Max. Vorlauftemperatur</h4>
+                    <h4>Max. flow temperature</h4>
                     <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
@@ -575,7 +580,7 @@
                 </div>
 
                 <div id="exponent1" class="param">
-                    <h4>Heizfl&auml;chenexponent</h4>
+                    <h4>Heating surface exponent</h4>
                     <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
@@ -598,10 +603,86 @@
                 </div>
             </div>
 
-            <h3>Betriebsparameter</h3>
+            <h3>Setup</h3>
+            <div class="group">
+                <div id="chset1" class="param">
+                    <h4>flow set temperature (default)</h4>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input type="range" min="25" max="90" step="1" />
+                    </div>
+                </div>
+
+                <div id="roomset1" class="param">
+                    <h4>Room set temperature (default)</h4>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input type="range" min="17" max="23" step="0.1">
+                    </div>
+                </div>
+
+                <div class="param">
+                    <h4>Room setpoint source</h4>
+                    <select id="selectRoomSetpointSource1" field="boiler.heating.0.roomsetpoint.source">
+                        <option value="0">MQTT</option>
+                        <option value="1">OT roomunit</option>
+                    </select>
+                    <div class="selopt">
+                        <h4>Topic</h4>
+                        <div class="statusfield statusvalue">
+                            <span class="mqttbasetopic"></span><span>/roomSetpoint1/set</span>
+                        </div>
+                    </div>
+                    <div class="selopt">
+                    </div>
+                </div>
+
+                <div id="roomtempcomp1" class="param">
+                    <h4>Room temperature compensation</h4>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C/&deg;C</span>
+                        </div>
+                        <input type="range" min="0" max="5" step="0.1">
+                    </div>
+                </div>
+
+                <div class="param">
+                    <h4>Current room temperature source</h4>
+                    <select id="selectRoomTempSource1" field="boiler.heating.0.roomtemp.source">
+                        <option value="0">MQTT</option>
+                        <option value="1">OT roomunit</option>
+                        <option value="2">Bluetooth</option>
+                        <option value="3">1wire</option>
+                    </select>
+                    <div class="selopt">
+                        <h4>Topic</h4>
+                        <div class="statusfield statusvalue">
+                            <span class="mqttbasetopic"></span><span>/roomTemp1/set</span>
+                        </div>
+                    </div>
+                    <div class="selopt">
+                    </div>
+                    <div class="selopt">
+                        address
+                    </div>
+                    <div class="selopt">
+                        address
+                    </div>
+                </div>
+            </div>
+
+            <h3>Heating curve</h3>
             <div class="group">
                 <div id="gradient1" class="param">
-                    <h4>Steilheit</h4>
+                    <h4>Gradient</h4>
                     <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
@@ -616,7 +697,7 @@
                 </div>
 
                 <div id="offset1" class="param">
-                    <h4>Niveau</h4>
+                    <h4>Offset</h4>
                     <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
@@ -625,11 +706,26 @@
                         <input type="range" min="-10" max="10" step="0.5">
                     </div>
                 </div>
-            </div>
 
-            <div class="curve">
-                <canvas id="canvas1" height="375px" width="375px">
-                </canvas>
+                <div class="flexline">
+                    <div class="statusfield">
+                        <h4>Outside temperature</h4>
+                        <span class="statusvalue" field="outsideTemp" unit="°C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Room set point</h4>
+                        <span class="statusvalue" field="heatercircuit.0.roomsetpoint" unit="°C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Room temperature</h4>
+                        <span class="statusvalue" field="heatercircuit.0.roomtemp" unit="&deg;C"></span>
+                    </div>
+                </div>
+
+                <div class="curve">
+                    <canvas id="canvas1" height="375px" width="375px">
+                    </canvas>
+                </div>
             </div>
 
             <h3>Marker</h3>
@@ -637,9 +733,9 @@
                 <table>
                     <thead>
                         <tr>
-                            <th class="comment">Kommentar</th>
-                            <th class="ot">Au&szlig;en</th>
-                            <th class="ft">Vorlauf</th>
+                            <th class="comment">comment</th>
+                            <th class="ot">outside</th>
+                            <th class="ft">flow</th>
                             <th class="rem"></th>
                         </tr>
                     </thead>
@@ -652,23 +748,10 @@
         </div>
 
         <div class="tab" id="heatingcurve2">
-            <h3>Auslegung</h3>
+            <h3>Dimensioning</h3>
             <div class="group">
-                <div id="roomset2" class="param">
-                    <h4>Raum Solltemperatur</h4>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">&deg;C</span>
-                        </div>
-                        <input type="range" min="17" max="23" step="0.1">
-                    </div>
-                    <div class="infobox">
-                    </div>
-                </div>
-
                 <div id="flowmax2" class="param">
-                    <h4>Max. Vorlauftemperatur</h4>
+                    <h4>Max. flow temperature</h4>
                     <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
@@ -690,7 +773,7 @@
                 </div>
 
                 <div id="exponent2" class="param">
-                    <h4>Heizfl&auml;chenexponent</h4>
+                    <h4>Heating surface exponent</h4>
                     <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
@@ -713,10 +796,85 @@
                 </div>
             </div>
 
-            <h3>Betriebsparameter</h3>
+            <h3>Setup</h3>
+            <div class="group">
+                <div id="chset2" class="param">
+                    <h4>flow set temperature (default)</h4>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input type="range" min="25" max="90" step="1" />
+                    </div>
+                </div>
+
+                <div id="roomset2" class="param">
+                    <h4>Room set temperature (default)</h4>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input type="range" min="17" max="23" step="0.1">
+                    </div>
+                    <div class="infobox">
+                    </div>
+                </div>
+                <div class="param">
+                    <h4>Room setpoint source</h4>
+                    <select id="selectRoomSetpointSource2" field="boiler.heating.1.roomsetpoint.source">
+                        <option value="0">MQTT</option>
+                        <option value="1">OT roomunit</option>
+                    </select>
+                    <div class="selopt">
+                        <h4>Topic</h4>
+                        <div class="statusfield statusvalue">
+                            <span class="mqttbasetopic"></span><span>/roomSetpoint2/set</span>
+                        </div>
+                    </div>
+                    <div class="selopt">
+                    </div>
+                </div>
+                <div id="roomtempcomp2" class="param">
+                    <h4>Room temperature compensation</h4>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C/&deg;C</span>
+                        </div>
+                        <input type="range" min="0" max="5" step="0.1">
+                    </div>
+                </div>
+                <div class="param">
+                    <h4>Current room temperature source</h4>
+                    <select id="selectRoomTempSource2" field="boiler.heating.1.roomtemp.source">
+                        <option value="0">MQTT</option>
+                        <option value="1">OT roomunit</option>
+                        <option value="2">Bluetooth</option>
+                        <option value="3">1wire</option>
+                    </select>
+                    <div class="selopt">
+                        <h4>Topic</h4>
+                        <div class="statusfield statusvalue">
+                            <span class="mqttbasetopic"></span><span>/roomTemp2/set</span>
+                        </div>
+                    </div>
+                    <div class="selopt">
+                    </div>
+                    <div class="selopt">
+                        address
+                    </div>
+                    <div class="selopt">
+                        address
+                    </div>
+                </div>
+            </div>
+
+            <h3>Heating curve</h3>
             <div class="group">
                 <div id="gradient2" class="param">
-                    <h4>Steilheit</h4>
+                    <h4>Gradient</h4>
                     <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
@@ -731,7 +889,7 @@
                 </div>
 
                 <div id="offset2" class="param">
-                    <h4>Niveau</h4>
+                    <h4>Offset</h4>
                     <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
@@ -740,11 +898,26 @@
                         <input type="range" min="-10" max="10" step="0.5">
                     </div>
                 </div>
-            </div>
 
-            <div class="curve">
-                <canvas id="canvas2" height="375px" width="375px">
-                </canvas>
+                <div class="flexline">
+                    <div class="statusfield">
+                        <h4>Outside temperature</h4>
+                        <span class="statusvalue" field="outsideTemp" unit="°C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Room set point</h4>
+                        <span class="statusvalue" field="heatercircuit.1.roomsetpoint" unit="°C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Room temperature</h4>
+                        <span class="statusvalue" field="heatercircuit.1.roomtemp" unit="°C"></span>
+                    </div>
+                </div>
+
+                <div class="curve">
+                    <canvas id="canvas2" height="375px" width="375px">
+                    </canvas>
+                </div>
             </div>
 
             <h3>Marker</h3>
@@ -752,9 +925,9 @@
                 <table>
                     <thead>
                         <tr>
-                            <th class="comment">Kommentar</th>
-                            <th class="ot">Au&szlig;en</th>
-                            <th class="ft">Vorlauf</th>
+                            <th class="comment">comment</th>
+                            <th class="ot">outside</th>
+                            <th class="ft">flow</th>
                             <th class="rem"></th>
                         </tr>
                     </thead>
@@ -818,28 +991,28 @@
                 </div>
                 <div class="flexline">
                     <div class="param">
-                        <h4>Heizkreis 1</h4>
+                        <h4>Circuit 1</h4>
                         <label class="switch">
                             <input id="chOn1" type="checkbox" />
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div class="param">
-                        <h4>Heizkreis 2</h4>
+                        <h4>Circuit 2</h4>
                         <label class="switch">
                             <input id="chOn2" type="checkbox" />
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div class="param">
-                        <h4>Kühlung</h4>
+                        <h4>Cooling</h4>
                         <label class="switch">
                             <input id="coolOn" type="checkbox" />
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div class="param">
-                        <h4>Brauchwasser</h4>
+                        <h4>DHW</h4>
                         <label class="switch">
                             <input id="dhwOn" type="checkbox" />
                             <span class="slider"></span>
@@ -847,19 +1020,8 @@
                     </div>
                 </div>
 
-                <div id="chset1" class="param">
-                    <h4>Vorlauftemperatur (Vorgabe)</h4>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">&deg;C</span>
-                        </div>
-                        <input type="range" min="25" max="90" step="1" />
-                    </div>
-                </div>
-
                 <div id="dhwtemp" class="param">
-                    <h4>Brauchwassertemperatur</h4>
+                    <h4>DHW set temperature</h4>
                     <div class="flexline">
                         <div class="valunit">
                             <span class="value"></span>
@@ -904,19 +1066,25 @@
             <h3>Außentemperatur</h3>
             <div class="group">
                 <h4>Quelle</h4>
-                <select id="selectOutsideTempSource">
-                    <option selected>MQTT</option>
-                    <option>OpenWeather</option>
-                    <option>Bluetooth</option>
-                    <option>OpenTherm sensor</option>
+                <select id="selectOutsideTempSource" field="outsideTemp.source">
+                    <option value="0">MQTT</option>
+                    <option value="1">OT boiler</option>
+                    <option value="2">Bluetooth</option>
+                    <option value="4">OpenWeather</option>
                 </select>
-
-                <div class="otOpt">
+                <div class="selopt">
                     <h4>Topic</h4>
-                    <span class="statusvalue" field="outsideTempTopic"></span>
+                    <div class="statusfield statusvalue">
+                        <span class="mqttbasetopic"></span><span>/outsideTemp/set</span>
+                    </div>
                 </div>
-
-                <div class="otOpt">
+                <div class="selopt">
+                </div>
+                <div class="selopt">
+                    <h4>Address</h4>
+                    <input id="inpbluetoothaddress" type="text" />
+                </div>
+                <div class="selopt">
                     <h4>API-Key</h4>
                     <input id="inpapikey" type="password" />
                     <h4>Breitengrad</h4>
@@ -925,14 +1093,6 @@
                     <input id="inplon" type="text" />
                     <h4>Interval / s</h4>
                     <input id="inpinterval" type="text" />
-                </div>
-
-                <div class="otOpt">
-                    <h4>Adresse</h4>
-                    <input id="inpbluetoothaddress" type="text" />
-                </div>
-
-                <div class="otOpt">
                 </div>
             </div>
 
@@ -978,19 +1138,27 @@
                 dhwTemperature: 50,
                 heating: [
                     {
-                        flow: 52,
+                        flow: 45,
                         roomSet: 21,
+                        roomtempcomp: 0,
                         chOn: true,
                         flowMax: 60,
                         exponent: 1.3,
                         gradient: 1.4,
                         offset: 0,
                         marker: [
-                        ]
+                        ],
+                        roomsetpoint: {
+                            "source": 0
+                        },
+                        roomtemp: {
+                            "source": 1
+                        }
                     },
                     {
-                        flow: 52,
+                        flow: 30,
                         roomSet: 21,
+                        roomtempcomp: 0,
                         chOn: true,
                         flowMax: 60,
                         exponent: 1.3,
@@ -1024,10 +1192,10 @@
             items = __("div.nav li");
             items.forEach(function (item) {
                 item.onclick = (ev) => {
-                    document.querySelectorAll("div.nav li").forEach((item) => {
+                    __("div.nav li").forEach((item) => {
                         item.classList.remove("active");
                     });
-                    document.querySelectorAll(".tab").forEach(function (item) {
+                    __(".tab").forEach(function (item) {
                         item.style.display = "none";
                     });
                     document.getElementById(ev.target.getAttribute("tab")).style.display = "";
@@ -1040,7 +1208,7 @@
             _("#save").onclick = () => {
                 config.otMode = (_('input[name="otMode"]:checked') !== undefined) ? parseInt(_('input[name="otMode"]:checked').value) : null,
                 config.outsideTemp = {
-                    source: _('#selectOutsideTempSource').selectedIndex,
+                    source: parseInt(_('#selectOutsideTempSource').value),
                     apikey: _("#inpapikey").value,
                     lat: parseFloat(_("#inplat").value),
                     lon: parseFloat(_("#inplon").value),
@@ -1049,6 +1217,7 @@
 
                 config.boiler.heating[0].chOn = _("#chOn1").checked;
                 config.boiler.heating[1].chOn = _("#chOn2").checked;
+                
                 config.boiler.dhwOn = _("#dhwOn").checked;
                 config.boiler.coolOn = _("#coolOn").checked;
 
@@ -1079,9 +1248,13 @@
             };
 
             function addMarker(hk) {
+                if (!('outsideTemp' in statuscache)) {
+                    alert("No outside temperature available!");
+                    return;
+                }
                 let heatCfg = config.boiler.heating[hk - 1];
                 let ft = getFlowTemperature(
-                    5, 
+                    statuscache.outsideTemp, 
                     heatCfg.roomSet, 
                     heatCfg.flowMax, 
                     heatCfg.exponent, 
@@ -1157,11 +1330,29 @@
                 xhrWiFiScan.send();
             }
 
-            _("#selectOutsideTempSource").onchange = (ev) => {
-                document.querySelectorAll('.otOpt').forEach((ele, index) => {
-                    ele.style.display = (index == ev.target.selectedIndex) ? "block" : "none";
-                });
-            };
+            __("select").forEach((ele, index) => {
+                ele.onchange = (ev) => {
+                    var f = ele.getAttribute('field');
+                    if (f == null)
+                        return;
+                    f = f.split('.');
+                    val = config;
+                    var i;
+                    for (i=0; i<f.length-1; i++) {
+                        if (!(f[i] in val))
+                            val[f[i]] = {}
+                        val = val[f[i]];
+                    }
+                    val[f[i]] = parseInt(ev.target.value);
+                    ev.target.parentElement.querySelectorAll("div.selopt").forEach((ele, index) => {
+                        ele.style.display = (index == ev.target.selectedIndex) ? "block": "none";
+                    });
+                }
+            });
+
+            _("#selectOutsideTempSource").addEventListener("change", (ev) => {
+                _("#owdiv").style.display = (ev.target.value == 4) ? "block" : "none";
+            });
 
             function drawMarkerTable(hk) {
                 if (hk === undefined) {
@@ -1256,7 +1447,7 @@
                 if (__('input[name="otMode"]')[config.otMode] !== undefined)
                     __('input[name="otMode"]')[config.otMode].checked = true;
 
-                _("#selectOutsideTempSource").selectedIndex = config.outsideTemp.source;
+                _("#selectOutsideTempSource").value = config.outsideTemp.source;
                 _("#selectOutsideTempSource").dispatchEvent(new Event('change'));
                 _("#inpapikey").value = config.outsideTemp.apikey;
                 _("#inplat").value = config.outsideTemp.lat || null;
@@ -1280,19 +1471,39 @@
                 initRangeParam("exponent1", "boiler.heating.0.exponent");
                 initRangeParam("gradient1", "boiler.heating.0.gradient");
                 initRangeParam("offset1", "boiler.heating.0.offset");
+                initRangeParam("roomtempcomp1", "boiler.heating.0.roomtempcomp");
+
+                if ('roomtemp' in config.boiler.heating[0])
+                    _("#selectRoomTempSource1").value = config.boiler.heating[0].roomtemp.source;
+                _("#selectRoomTempSource1").dispatchEvent(new Event('change'));
+
+                if ('roomsetpoint' in config.boiler.heating[0])
+                    _("#selectRoomSetpointSource1").value = config.boiler.heating[0].roomsetpoint.source;
+                _("#selectRoomSetpointSource1").dispatchEvent(new Event('change'));
 
                 _("#chOn2").checked = config.boiler.heating[1].chOn;
+                initRangeParam("chset2", "boiler.heating.1.flow");
                 initRangeParam("roomset2", "boiler.heating.1.roomSet");
                 initRangeParam("flowmax2", "boiler.heating.1.flowMax");
                 initRangeParam("exponent2", "boiler.heating.1.exponent");
                 initRangeParam("gradient2", "boiler.heating.1.gradient");
                 initRangeParam("offset2", "boiler.heating.1.offset");
-                
+                initRangeParam("roomtempcomp2", "boiler.heating.1.roomtempcomp");
+
+                if ('roomtemp' in config.boiler.heating[1])
+                    _("#selectRoomTempSource2").value = config.boiler.heating[1].roomtemp.source;
+                _("#selectRoomTempSource2").dispatchEvent(new Event('change'));
+
+                if ('roomsetpoint' in config.boiler.heating[1])
+                    _("#selectRoomSetpointSource2").value = config.boiler.heating[1].roomsetpoint.source;
+                _("#selectRoomSetpointSource2").dispatchEvent(new Event('change'));
+
                 drawMarkerTable();
                 drawCurve();
             }
 
             var xhrStatus = new XMLHttpRequest();
+            xhrStatus.timeout = 3000;
             xhrStatus.onload = (ev) => {
                 try {
                     statuscache = JSON.parse(ev.target.responseText);
@@ -1301,9 +1512,29 @@
                 }
 
                 _("#nocon").style.display = "none";
+                _("#progressDiv").style.display = "none";
 
-                document.querySelectorAll(".statusvalue").forEach((ele) => {
+                let rtstr = "";
+                let runtime = statuscache.runtime;
+                rtstr = (runtime % 60) + " s";
+                runtime = Math.floor(runtime / 60);
+                if (runtime > 0) {
+                    rtstr = (runtime % 60) + " m, " + rtstr;
+                    runtime = Math.floor(runtime / 60);
+                    if (runtime > 0) {
+                        rtstr = (runtime % 24) + " h, " + rtstr;
+                        runtime = Math.floor(runtime / 24);
+                        if (runtime > 0) {
+                            rtstr = runtime + " d, " + rtstr;
+                        }
+                    }
+                }
+                _("#runtime").innerText = rtstr;
+
+                __(".statusvalue").forEach((ele) => {
                     var val = null;
+                    if (!ele.hasAttribute('field'))
+                        return;
                     try {
                         var f = ele.getAttribute('field').split('.');
                         val = statuscache;
@@ -1325,6 +1556,10 @@
                         ele.parentElement.style.display = "block";
                     else
                         ele.parentElement.style.display = "none";
+                });
+
+                __(".mqttbasetopic").forEach((ele) => {
+                    ele.innerHTML = statuscache.mqtt.basetopic;
                 });
 
                 drawCurve();
@@ -1374,7 +1609,7 @@
                 };
 
                 xhrUpl.onerror = () => {
-                    console.log("error" + ajaxUpl.status);
+                    _("#progressText").innerHTML = "Error: " + ajaxUpl.status;
                 };
 
                 xhrUpl.open('post', '/update');
@@ -1386,7 +1621,6 @@
             let otModeItems = __('input[name="otMode"]');
             otModeItems.forEach(function (item) {
                 item.onclick = (ev) => {
-                    console.log(ev.target.value);
                 }
             });
 
@@ -1517,11 +1751,20 @@
             ctx.stroke();
             ctx.save();
             ctx.rotate(-Math.PI / 2);
-            ctx.fillText("Vorlauf / °C", -80, 30);
+            ctx.fillText("flow / °C", -80, 30);
             ctx.restore();
 
-
             let roomset = parseFloat(_("#roomset" + hk + " input").value);
+            let roomdelta = 0;
+            if ("heatercircuit" in statuscache) {
+                hc = statuscache.heatercircuit[hk - 1];
+                if ("roomsetpoint" in hc) {
+                    roomset = hc.roomsetpoint;
+                    if ("roomtemp" in hc)
+                        roomdelta = config.boiler.heating[hk-1].roomtempcomp * (roomset - hc.roomtemp);
+                }
+            }
+                
             let flowmax = parseFloat(_("#flowmax" + hk + " input").value);
             let gradient = parseFloat(_("#gradient" + hk + " input").value);
             let exponent = parseFloat(_("#exponent" + hk + " input").value);
@@ -1534,59 +1777,60 @@
                 }
             }
 
+            function drawMarkerPoint(p, color) {
+                ctx.fillStyle = color;
+                ctx.fillRect(p.x - 3, p.y - 3, 6, 6);    
+            }
+
             let otStart = Math.min(roomset, xaxis.min);
             let ft = getFlowTemperature(otStart, roomset, flowmax, exponent, gradient, offset);
             let p1 = getPoint(otStart, ft); //foot
 
-            ctx.fillStyle = "#A33";
-            ctx.fillRect(p1.x - 3, p1.y - 3, 6, 6);
+            drawMarkerPoint(p1, '#A33');
 
-            ctx.strokeStyle = "#F00";
-            ctx.lineWidth = 3;
-            let p = p1;
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            let otf = false;
-            for (var ot = otStart; ot >= xaxis.max; ot -= 0.5) {
-                let ft = getFlowTemperature(ot, roomset, flowmax, exponent, gradient, offset);
+            function drawFlowCurve(color, delta) {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+                let ft = getFlowTemperature(otStart, roomset, flowmax, exponent, gradient, offset);
+                let p = getPoint(otStart, ft);
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                let otf = false;
+                for (var ot = otStart; ot >= xaxis.max; ot -= 0.5) {
+                    ft = getFlowTemperature(ot, roomset, flowmax, exponent, gradient, offset) + delta;
 
-                if ((ft >= flowmax) && !otf) {
-                    ctx.stroke();
-                    ctx.strokeStyle = "#888";
-                    ctx.beginPath();
-                    ctx.moveTo(p.x, p.y);
-                    otf = true;
+                    if ((ft >= flowmax) && !otf) {
+                        ctx.stroke();
+                        ctx.strokeStyle = "#888";
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        otf = true;
+                    }
+
+                    p = getPoint(ot, ft);
+                    ctx.lineTo(p.x, p.y);
+
+                    if (ft >= yaxis.max)
+                        break;
                 }
-
-                p = getPoint(ot, ft);
-                ctx.lineTo(p.x, p.y);
-
-                if (ft >= yaxis.max)
-                    break;
+                ctx.stroke();
             }
-            ctx.stroke();
+            drawFlowCurve("#F00", 0);
+            if (roomdelta != 0)
+                drawFlowCurve("#0F0", roomdelta);
 
             //draw curve's basepoint
-            ctx.fillStyle = "#F00";
-            ctx.fillRect(p1.x - 3, p1.y - 3, 6, 6);
-
-            //draw markers
-            ctx.fillStyle = "#3f8";
-            config.boiler.heating[hk - 1].marker.forEach(function (m) {
-                let p = getPoint(m.ot, m.ft);
-                ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
-            });
+            drawMarkerPoint(p1, '#F00');
 
             if (statuscache.outsideTemp !== undefined) {
                 //draw outsidetemp & it's flowtemperature
-                let ftsensor = getFlowTemperature(statuscache.outsideTemp, roomset, flowmax, exponent, gradient, offset);
+                let ftsensor = getFlowTemperature(statuscache.outsideTemp, roomset, flowmax, exponent, gradient, offset) + roomdelta;
                 if (ftsensor > flowmax)
                     ftsensor = flowmax;
                 let psensor = getPoint(statuscache.outsideTemp, ftsensor);
-                ctx.fillStyle = "#F83";
+                drawMarkerPoint(psensor, '#F83');
                 ctx.strokeStyle = "#F83";
                 ctx.lineWidth = 1;
-                ctx.fillRect(psensor.x - 3, psensor.y - 3, 6, 6);
                 ctx.beginPath();
                 ctx.moveTo(origin.x, psensor.y);
                 ctx.lineTo(psensor.x, psensor.y);
@@ -1594,8 +1838,12 @@
                 ctx.stroke();
                 ctx.fillText(Math.round(ftsensor * 10) / 10, origin.x + 20, psensor.y - 8);
             }
+
+            //draw markers
+            config.boiler.heating[hk - 1].marker.forEach(function (m) {
+                drawMarkerPoint(getPoint(m.ot, m.ft), '#3f8');
+            });
         }
     </script>
 </body>
-
 </html>

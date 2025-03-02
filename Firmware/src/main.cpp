@@ -9,8 +9,7 @@
 #include "devstatus.h"
 #include "devconfig.h"
 #include "command.h"
-#include "outsidetemp.h"
-
+#include "sensors.h"
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
@@ -114,31 +113,31 @@ void loop() {
     portal.loop();
     mqtt.loop();
     otcontrol.loop();
-    outsideTemp.loop();
-
-    return;
+    Sensor::loopAll();
+    devconfig.loop();
     
     static uint32_t lastSensors = 0;
-    if (now - lastSensors > 90000) {
-        lastSensors = now;
-        Serial.println("Searching 1wire");
-
+    if (now - lastSensors > 10000) {
         uint8_t addr[8];
         if (!oneWire.search(addr)) {
-            Serial.println("No more addresses");
             oneWire.reset_search();
+            lastSensors = now;
         }
         else {
+            String adr;
             for (int i=0; i<8; i++) {
-                Serial.print(addr[i], HEX);
-                Serial.write(':');
+                if (addr[i] < 0x10)
+                    adr += '0';
+                adr += String(addr[i], HEX);
             }
-            Serial.println("");
 
             DallasTemperature ds(&oneWire);
             ds.requestTemperatures();
             double t = ds.getTempC(addr);
-            Serial.println(t);
+            JsonDocument doc;
+            doc["temp"] = t;
+            String topic = mqtt.getBaseTopic() + F("/1wire/") + adr;
+            mqtt.publish(topic, doc, false);
         }
     }
 }

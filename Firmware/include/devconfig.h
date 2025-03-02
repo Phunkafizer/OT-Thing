@@ -8,11 +8,15 @@
 extern class DevConfig {
 private:
     void update();
+    bool writeBufFlag;
+    String writeBuf;
 public:
+    DevConfig();
     void begin();
     File getFile();
-    void write(String str);
+    void write(String &str);
     void remove();
+    void loop();
 } devconfig;
 
 #endif

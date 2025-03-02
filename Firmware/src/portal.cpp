@@ -66,6 +66,7 @@ void Portal::begin(bool configMode) {
 
             if (confBuf.length() == total) {
                 devconfig.write(confBuf);
+                confBuf.clear();
                 request->send(200);
             }
         }

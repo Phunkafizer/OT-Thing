@@ -60,36 +60,80 @@ public:
     double getValue() const;
 };
 
-class OTValueStatus: public OTValue {
-private:
+class OTValueFlags: public OTValue {
+protected:
+    struct Flag {
+        uint8_t bit;
+        const char *name;
+    };
+    OTValueFlags(const OpenThermMessageID id, const int interval, const Flag *flagtable, const uint8_t numFlags);
     void getValue(JsonObject &obj) const;
+private:
+    uint8_t numFlags;
+    const Flag *flagTable;
+};
+
+class OTValueStatus: public OTValueFlags {
+private:
     const char *STATUS_FLAME PROGMEM = "flame";
     const char *STATUS_DHW_MODE PROGMEM = "dhw_mode";
     const char *STATUS_CH_MODE PROGMEM = "ch_mode";
     const char *STATUS_FAULT PROGMEM = "fault";
+    const char *STATUS_COOLING PROGMEM = "cooling";
+    const char *STATUS_CH_MODE2 PROGMEM = "ch2_mode";
+    const char *STATUS_DIAGNOSTIC PROGMEM = "diagnostic";
+    const Flag flags[7] PROGMEM = {
+        {0, STATUS_FAULT},
+        {1, STATUS_CH_MODE},
+        {2, STATUS_DHW_MODE},
+        {3, STATUS_FLAME},
+        {4, STATUS_COOLING},
+        {5, STATUS_CH_MODE2},
+        {6, STATUS_DIAGNOSTIC}
+    };
 protected:
     bool sendDiscovery();
 public:    
     OTValueStatus();
 };
 
-class OTValueMasterStatus: public OTValue {
+class OTValueMasterStatus: public OTValueFlags {
 private:
-    void getValue(JsonObject &obj) const;
     const char *STATUS_CH_ENABLE PROGMEM = "ch_enable";
     const char *STATUS_DHW_ENABLE PROGMEM = "dhw_enable";
     const char *STATUS_COOLING_ENABLE PROGMEM = "cooling_enable";
     const char *STATUS_OTC_ACTIVE PROGMEM = "otc_active";
     const char *STATUS_CH2_ENABLE PROGMEM = "ch2_enable";
+    const Flag flags[5] PROGMEM = {
+        {8, STATUS_CH_ENABLE},
+        {9, STATUS_DHW_ENABLE},
+        {10, STATUS_COOLING_ENABLE},
+        {11, STATUS_OTC_ACTIVE},
+        {12, STATUS_CH2_ENABLE}
+    };
 protected:
     bool sendDiscovery();
 public:    
     OTValueMasterStatus();
 };
 
-class OTValueSlaveConfigMember: public OTValue {
+class OTValueSlaveConfigMember: public OTValueFlags {
 private:
     void getValue(JsonObject &obj) const;
+    const char *DHW_PRESENT PROGMEM = "dhw_present";
+    const char *CTRL_TYPE PROGMEM = "ctrl_type";
+    const char *COOLONG_CFG PROGMEM = "cooling_config";
+    const char *DHW_CONFIG PROGMEM = "dhw_config";
+    const char *MASTER_LOW_PUMP PROGMEM = "master_lowoff_pumpctrl";
+    const char *CH2_PRESENT PROGMEM = "ch2_present";
+    const Flag flags[6] PROGMEM = {
+        {8, DHW_PRESENT},
+        {9, CTRL_TYPE},
+        {10, COOLONG_CFG},
+        {11, DHW_CONFIG},
+        {12, MASTER_LOW_PUMP},
+        {13, CH2_PRESENT}
+    };
 public:    
     OTValueSlaveConfigMember();
 };
@@ -119,7 +163,7 @@ public:
     OTValueDHWBounds();
 };
 
-class OTValueMasterConfig: public OTValue {
+class OTValueMasterConfig: public OTValueFlags {
 private:
     void getValue(JsonObject &obj) const;
 protected:
@@ -128,15 +172,24 @@ public:
     OTValueMasterConfig();
 };
 
-class OTValueRemoteParameter: public OTValue {
+class OTValueRemoteParameter: public OTValueFlags {
 private:
-    void getValue(JsonObject &obj) const;
+    const char *DHW_SETPOINT_RW PROGMEM = "dhw_setpoint_rw";
+    const char *MAX_CH_SETPOINT_RW PROGMEM = "max_ch_setpoint_rw";
+    const char *DHW_SETPOINT_TRANS PROGMEM = "dhw_setpoint_trans";
+    const char *MAX_CH_SETPOINT_TRANS PROGMEM = "max_ch_setpoint_trans";
+    const Flag flags[4] PROGMEM = {
+        {0, DHW_SETPOINT_RW},
+        {1, MAX_CH_SETPOINT_RW},
+        {8, DHW_SETPOINT_TRANS},
+        {9, MAX_CH_SETPOINT_TRANS}
+
+    };
 protected:
     bool sendDiscovery();
 public:    
     OTValueRemoteParameter();
 };
 
-//extern OTItem OTITEMS[] PROGMEM;
-extern OTValue *boilerValues[18];
-extern OTValue *thermostatValues[10];
+extern OTValue *boilerValues[19];
+extern OTValue *thermostatValues[13];

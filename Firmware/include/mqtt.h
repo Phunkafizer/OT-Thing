@@ -5,8 +5,14 @@
 
 extern const char *MQTTSETVAR_OUTSIDETEMP PROGMEM;
 extern const char *MQTTSETVAR_DHWSETTEMP PROGMEM;
-extern const char *MQTTSETVAR_CHSETTEMP PROGMEM;
-extern const char *MQTTSETVAR_CHMODE PROGMEM;
+extern const char *MQTTSETVAR_CHSETTEMP1 PROGMEM;
+extern const char *MQTTSETVAR_CHSETTEMP2 PROGMEM;
+extern const char *MQTTSETVAR_CHMODE1 PROGMEM;
+extern const char *MQTTSETVAR_CHMODE2 PROGMEM;
+extern const char *MQTTSETVAR_ROOMTEMP1 PROGMEM;
+extern const char *MQTTSETVAR_ROOMTEMP2 PROGMEM;
+extern const char *MQTTSETVAR_ROOMSETPOINT1 PROGMEM;
+extern const char *MQTTSETVAR_ROOMSETPOINT2 PROGMEM;
 
 struct MqttConfig {
     String host;
@@ -25,16 +31,16 @@ private:
     uint32_t lastStatus;
     MqttConfig config;
     bool configSet;
-    bool newConnection;
     String baseTopic;
 public:
     Mqtt();
     void loop();
     bool connected();
     void setConfig(const MqttConfig conf);
-    bool publish(String topic, JsonDocument &payload);
+    bool publish(String topic, JsonDocument &payload, const bool retain);
     void onMessage(const char *topic, const char *payload, const size_t size);
     String getVarSetTopic(const char *str);
+    String getBaseTopic();
 };
 
 extern Mqtt mqtt;

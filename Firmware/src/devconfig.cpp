@@ -1,11 +1,15 @@
 #include "devconfig.h"
 #include "mqtt.h"
 #include "otcontrol.h"
-#include "outsidetemp.h"
+#include "sensors.h"
 
 const char CFG_FILENAME[] PROGMEM = "/config.json";
 
 DevConfig devconfig;
+
+DevConfig::DevConfig():
+        writeBufFlag(false) {
+}
 
 void DevConfig::begin() {
     LittleFS.begin(true);
@@ -37,6 +41,14 @@ void DevConfig::update() {
             outsideTemp.setConfig(obj);
         }
 
+        for (int i=0; i<2; i++) {
+            JsonObject obj = doc[F("boiler")][F("heating")][i][F("roomtemp")];
+            roomTemp[i].setConfig(obj);
+
+            JsonObject obj2 = doc[F("boiler")][F("heating")][i][F("roomsetpoint")];
+            roomSetPoint[i].setConfig(obj2);
+        }
+
         f.close();
     }
 }
@@ -45,13 +57,21 @@ File DevConfig::getFile() {
     return LittleFS.open(FPSTR(CFG_FILENAME), "r");
 }
 
-void DevConfig::write(String str) {
-    File f = LittleFS.open(FPSTR(CFG_FILENAME), "w");
-    f.write((uint8_t *) str.c_str(), str.length());
-    f.close();
-    update();
+void DevConfig::write(String &str) {
+    writeBuf = str;
+    writeBufFlag = true;
 }
 
 void DevConfig::remove() {
     LittleFS.remove(FPSTR(CFG_FILENAME));
+}
+
+void DevConfig::loop() {
+    if (writeBufFlag) {
+        writeBufFlag = false;
+        File f = LittleFS.open(FPSTR(CFG_FILENAME), "w");
+        f.write((uint8_t *) writeBuf.c_str(), writeBuf.length());
+        f.close();
+        update();
+    }
 }

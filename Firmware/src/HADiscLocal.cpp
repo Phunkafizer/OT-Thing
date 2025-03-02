@@ -1,5 +1,6 @@
 #include "HADiscLocal.h"
 #include <WiFi.h>
+#include "mqtt.h"
 
 OTThingHADiscovery haDisc;
 
@@ -17,4 +18,8 @@ OTThingHADiscovery::OTThingHADiscovery() {
         shortMac.remove(idx, 1);
     devPrefix = F("otthing_");
     devPrefix += shortMac;
+}
+
+bool OTThingHADiscovery::publish() {
+    return mqtt.publish(topic, doc, true);
 }

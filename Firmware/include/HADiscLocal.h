@@ -4,6 +4,7 @@
 class OTThingHADiscovery: public HADiscovery {
 public:
     OTThingHADiscovery();
+    bool publish();
 };
 
 extern OTThingHADiscovery haDisc;

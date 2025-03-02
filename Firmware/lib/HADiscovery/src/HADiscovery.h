@@ -7,15 +7,17 @@ extern const char *HA_DEVICE_CLASS_PROBLEM PROGMEM;
 class HADiscovery {
 private:
     void init(String &name, String &id, String component);
-public:
-    HADiscovery();
+protected:
     JsonDocument doc;
     String topic;
+public:
+    HADiscovery();
     const char *devName;
     const char *manufacturer;
     String devPrefix;
     String defaultStateTopic;
-    virtual void publish(String topic, JsonDocument &doc) {}
+    virtual bool publish() {return false;}
+    void clearDoc();
     void setValueTemplate(String valueTemplate);
     void setStateTopic(String &stateTopic);
     void setMinMax(double min, double max, double step);
