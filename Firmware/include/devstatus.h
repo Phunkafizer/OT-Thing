@@ -4,15 +4,18 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
+#include <mutex>
 
 extern class DevStatus {
 private:
     JsonDocument doc;
+    std::mutex mutex;
 public:
     DevStatus();
-    String getJson();
-    void getJson(AsyncResponseStream &response);
-    void setOutsideTemp(double t);
+    void lock();
+    void unlock();
+    JsonDocument &buildDoc();
+    void getJson(String &str);
 } devstatus;
 
 #endif

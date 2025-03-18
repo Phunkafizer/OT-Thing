@@ -10,13 +10,21 @@ DevStatus devstatus;
 DevStatus::DevStatus() {
 }
 
-String DevStatus::getJson() {
+void DevStatus::lock() {
+    mutex.lock();
+}
+void DevStatus::unlock() {
+    doc.clear();
+    mutex.unlock();
+}
+
+JsonDocument &DevStatus::buildDoc() {
     doc.clear();
 
     doc[F("runtime")] = millis() / 1000UL;
     doc[F("freeHeap")] = ESP.getFreeHeap();
     doc[F("resetInfo")] = rtc_get_reset_reason(0);
-    doc[F("fw_version")] = BUILD_VERSION;
+    doc[F("fw_version")] = F(BUILD_VERSION);
 
     JsonObject jwifi = doc[F("wifi")].to<JsonObject>();
     jwifi[F("status")] =  WiFi.status();
@@ -47,13 +55,11 @@ String DevStatus::getJson() {
         if (roomTemp[i].get(d))
             hc[F("roomtemp")] = d;
     }
-    
-    String str;
-    serializeJson(doc, str);
-    return str;
+
+    return doc;
 }
 
-void DevStatus::getJson(AsyncResponseStream &response) {
-    getJson();
-    serializeJson(doc, response);
+void DevStatus::getJson(String &str) {
+    buildDoc();
+    serializeJson(doc, str);
 }

@@ -46,22 +46,23 @@ private:
     } heatingParams[2];
     double dhwTemp;
     bool dhwOn;
-    bool discFlag;
-    uint32_t nextDHWSet;
-    uint32_t nextBoilerTemp[2];
+    bool discFlag {false};
+    uint32_t nextDHWSet {0};
+    uint32_t nextBoilerTemp[2] {0, 0};
     struct OTInterface {
         OTInterface(const uint8_t inPin, const uint8_t outPin, const bool isSlave);
         OpenTherm hal;
         uint32_t txCount;
         uint32_t rxCount;
         uint32_t timeoutCount;
+        uint32_t invalidCount;
         unsigned long lastRx; // millis
         unsigned long lastTx; // millis
         unsigned long lastTxMsg;
         void sendRequest(const char source, const unsigned long msg);
         void resetCounters();
         void onReceive(const char source, const unsigned long msg);
-        void sendResponse(const unsigned long msg);
+        void sendResponse(const unsigned long msg, const char source = 0);
     } master, slave;
 public:
     OTControl();

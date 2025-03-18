@@ -10,8 +10,8 @@
 #include "devconfig.h"
 #include "command.h"
 #include "sensors.h"
-#include <OneWire.h>
-#include <DallasTemperature.h>
+//#include <OneWire.h>
+//#include <DallasTemperature.h>
 
 #ifdef DEBUG
 #include <ArduinoOTA.h>
@@ -22,12 +22,12 @@ volatile uint16_t statusLedData = 0x8000;
 bool configMode = false;
 const char hostname[] PROGMEM = HOSTNAME;
 
-OneWire oneWire(4);
+//OneWire oneWire(4);
 
 void statusLedLoop() {
     static uint16_t mask = 0x8000;
 
-    digitalWrite(GPIO_STATUS_LED, (statusLedData & mask) == 0);
+    setLedStatus((statusLedData & mask) != 0);
     mask >>= 1;
     if (!mask)
         mask = 0x8000;
@@ -42,6 +42,7 @@ void wifiEvent(WiFiEvent_t event) {
         String hn(FPSTR(hostname));
         WiFi.setHostname(hn.c_str());
         MDNS.addService("http", "tcp", 80);
+        Serial.println(WiFi.localIP().toString());
         break;
     }
 
@@ -57,9 +58,10 @@ void setup() {
     pinMode(GPIO_STATUS_LED, OUTPUT);
     pinMode(GPIO_CONFIG_BUTTON, INPUT);
     digitalWrite(GPIO_BYPASS_RELAY, LOW);
-    digitalWrite(GPIO_OTGREEN_LED, LOW);
-    digitalWrite(GPIO_OTRED_LED, HIGH); // active low
-    digitalWrite(GPIO_STATUS_LED, HIGH); // active low
+    
+    setLedOTGreen(false);
+    setLedOTRed(false);
+    setLedStatus(false);
 
     statusLedTicker.attach(0.2, statusLedLoop);
 
@@ -73,9 +75,11 @@ void setup() {
         statusLedData = 0xA000;
 
     Serial.begin();
+    //Serial0.begin(460800);
     WiFi.onEvent(wifiEvent);
     WiFi.begin();
 
+    mqtt.begin();
     String hn(FPSTR(hostname));
     MDNS.begin(hn.c_str());
     devconfig.begin();
@@ -95,7 +99,7 @@ void loop() {
     if (digitalRead(GPIO_CONFIG_BUTTON) == 0) {
         if ((now - btnDown) > 10000) {
             statusLedTicker.detach();
-            digitalWrite(GPIO_STATUS_LED, false); // LED on
+            setLedStatus(true);
             devconfig.remove();
             WiFi.disconnect(true, true);
             while (digitalRead(GPIO_CONFIG_BUTTON) == 0)
@@ -118,6 +122,10 @@ void loop() {
     
     static uint32_t lastSensors = 0;
     if (now - lastSensors > 10000) {
+      /*  uint8_t addr[8];
+
+    if (now - lastSensors > 1000) {
+        return;
         uint8_t addr[8];
         if (!oneWire.search(addr)) {
             oneWire.reset_search();
@@ -138,6 +146,6 @@ void loop() {
             doc["temp"] = t;
             String topic = mqtt.getBaseTopic() + F("/1wire/") + adr;
             mqtt.publish(topic, doc, false);
-        }
+        }*/
     }
 }

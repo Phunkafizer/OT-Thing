@@ -1,5 +1,5 @@
 #include "sensors.h"
-#include <BLEDevice.h>
+//#include <BLEDevice.h>
 
 Sensor roomTemp[2];
 Sensor roomSetPoint[2];

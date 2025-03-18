@@ -54,6 +54,7 @@ void DevConfig::update() {
 }
 
 File DevConfig::getFile() {
+    Serial0.println("OpenFile");
     return LittleFS.open(FPSTR(CFG_FILENAME), "r");
 }
 

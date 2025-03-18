@@ -1,7 +1,9 @@
-#include "portal.h"
-#include <ESPAsyncWebServer.h>
+
 #include <Update.h>
 #include <ArduinoJson.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include "portal.h"
 #include "devstatus.h"
 #include "devconfig.h"
 #include "html.h"
@@ -24,8 +26,13 @@ void Portal::begin(bool configMode) {
         WiFi.persistent(false);
         WiFi.softAPConfig(apAddress, apAddress, apMask);
         WiFi.softAP(F(AP_SSID), F(AP_PASSWORD));
-        WiFi.mode(WIFI_AP_STA);
-        WiFi.setAutoReconnect(true);
+        
+        if (WiFi.SSID().isEmpty())
+            WiFi.mode(WIFI_AP);
+        else
+            WiFi.mode(WIFI_AP_STA);
+
+        WiFi.setAutoReconnect(false);
         WiFi.persistent(true);
     }
 
@@ -39,17 +46,14 @@ void Portal::begin(bool configMode) {
             return;
         }
         #endif
-        request->send_P(200, F("text/html"), html);
+        request->send(200, F("text/html"), (uint8_t*) html, strlen_P(html));
     });
 
     websrv.on("/config", HTTP_GET, [this] (AsyncWebServerRequest *request) {
-        File f = devconfig.getFile();
-        if (f) {
-            request->send(f, FPSTR(APP_JSON), f.size());
-            f.close();
-        }
+        if (LittleFS.exists(FPSTR(CFG_FILENAME)))
+            request->send(LittleFS, FPSTR(CFG_FILENAME), FPSTR(APP_JSON));
         else
-            request->send(200);
+            request->send(404);
     });
 
     websrv.on("/config", HTTP_POST, 
@@ -100,12 +104,13 @@ void Portal::begin(bool configMode) {
     websrv.on("/setwifi", HTTP_POST, [this] (AsyncWebServerRequest *request) {
         if (request->hasArg(F("ssid")) && request->hasArg(F("pass"))) {
             request->send(200);
+            delay(500);
 
             WiFi.disconnect();
             WiFi.persistent(true);
+            WiFi.setAutoReconnect(true);
             String ssid = request->arg(F("ssid"));
             WiFi.begin(ssid, request->arg(F("pass")));
-            WiFi.setAutoReconnect(true);
         }
         else
             request->send(400); // bad request
@@ -113,7 +118,10 @@ void Portal::begin(bool configMode) {
 
     websrv.on("/status", HTTP_GET, [this](AsyncWebServerRequest *request) {
         AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));
-        devstatus.getJson(*response);
+        devstatus.lock();
+        JsonDocument &doc = devstatus.buildDoc();
+        serializeJson(doc, *response);
+        devstatus.unlock();
         request->send(response);
     });
 

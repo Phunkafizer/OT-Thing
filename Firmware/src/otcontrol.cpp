@@ -19,28 +19,29 @@ const struct {
     uint16_t value;
 } loopbackTestData[] PROGMEM = {
     {OpenThermMessageID::Status,                    0x000E},
-    {OpenThermMessageID::Tboiler,                   floatToOT(48.5)},
-    {OpenThermMessageID::TflowCH2,                  floatToOT(48.6)},
-    {OpenThermMessageID::Texhaust,                  90},
+    {OpenThermMessageID::SConfigSMemberIDcode,      0x2501}, // DHW present, cooling present, CH2 present
+    {OpenThermMessageID::ASFflags,                  0x0000}, // no error flags, oem error code 0
+    {OpenThermMessageID::RBPflags,                  0x0101},
+    {OpenThermMessageID::TrOverride,                0},
+    {OpenThermMessageID::MaxCapacityMinModLevel,    20 << 8 | 5}, // 20 kW / 5 %
     {OpenThermMessageID::RelModLevel,               floatToOT(33.3)},
     {OpenThermMessageID::CHPressure,                floatToOT(1.25)},
     {OpenThermMessageID::DHWFlowRate,               floatToOT(2.4)},
-    {OpenThermMessageID::Tret,                      floatToOT(41.7)},
+    {OpenThermMessageID::Tboiler,                   floatToOT(48.5)},
     {OpenThermMessageID::Tdhw,                      floatToOT(37.5)},
-    {OpenThermMessageID::Tdhw2,                     floatToOT(37.6)},
     {OpenThermMessageID::Toutside,                  floatToOT(3.5)},
+    {OpenThermMessageID::Tret,                      floatToOT(41.7)},
+    {OpenThermMessageID::TflowCH2,                  floatToOT(48.6)},
+    {OpenThermMessageID::Tdhw2,                     floatToOT(37.6)},
+    {OpenThermMessageID::Texhaust,                  90},
+    {OpenThermMessageID::TdhwSetUBTdhwSetLB,        60<<8 | 40}, // 60 °C upper bound, 40 C° lower bound
+    {OpenThermMessageID::MaxTSetUBMaxTSetLB,        60<8 | 25},
     {OpenThermMessageID::SuccessfulBurnerStarts,    9999},
-    {OpenThermMessageID::BurnerOperationHours,      8888},
-    {OpenThermMessageID::SlaveVersion,              0x0404},
-    {OpenThermMessageID::SConfigSMemberIDcode,      0x0101},
-    {OpenThermMessageID::TdhwSetUBTdhwSetLB,        0x0540},
     {OpenThermMessageID::CHPumpStarts,              7777},
-    {OpenThermMessageID::RBPflags,                  0x0101},
-    {OpenThermMessageID::TrOverride,                0},
+    {OpenThermMessageID::BurnerOperationHours,      8888},
     {OpenThermMessageID::OpenThermVersionSlave,     0x0202},
-    {OpenThermMessageID::TdhwSetUBTdhwSetLB,        60<<8 | 40}
+    {OpenThermMessageID::SlaveVersion,              0x0404},
 };
-
 
 void IRAM_ATTR handleIrqMaster() {
     otcontrol.masterPinIrq();
@@ -48,14 +49,6 @@ void IRAM_ATTR handleIrqMaster() {
 
 void IRAM_ATTR handleIrqSlave() {
     otcontrol.slavePinIrq();
-}
-
-void IRAM_ATTR handleTimerIrqMaster() {
-    otcontrol.master.hal.handleTimerIrq();
-}
-
-void IRAM_ATTR handleTimerIrqSlave() {
-    otcontrol.slave.hal.handleTimerIrq();
 }
 
 //OpenTherm master callback
@@ -86,6 +79,7 @@ void OTControl::OTInterface::resetCounters() {
     txCount = 0;
     rxCount = 0;
     timeoutCount = 0;
+    invalidCount = 0;
 }
 
 void OTControl::OTInterface::onReceive(const char source, const unsigned long msg) {
@@ -95,7 +89,9 @@ void OTControl::OTInterface::onReceive(const char source, const unsigned long ms
     lastRx = millis();
 }
 
-void OTControl::OTInterface::sendResponse(const unsigned long msg) {
+void OTControl::OTInterface::sendResponse(const unsigned long msg, const char source) {
+    if (source)
+        command.sendOtEvent(source, msg);
     hal.sendResponse(msg);
     txCount++;
     lastTx = millis();
@@ -106,9 +102,6 @@ void OTControl::OTInterface::sendResponse(const unsigned long msg) {
 OTControl::OTControl():
         lastMillis(millis()),
         otMode(OTMODE_LOOPBACKTEST),
-        discFlag(false),
-        nextDHWSet(0),
-        nextBoilerTemp({}),
         master(GPIO_OTMASTER_IN, GPIO_OTMASTER_OUT, false),
         slave(GPIO_OTSLAVE_IN, GPIO_OTSLAVE_OUT, true) {
 }
@@ -120,8 +113,8 @@ void OTControl::begin() {
     // relay
     pinMode(GPIO_BYPASS_RELAY, OUTPUT);
 
-    master.hal.begin(handleIrqMaster, otCbMaster, 1, handleTimerIrqMaster);
-    slave.hal.begin(handleIrqSlave, otCbSlave, 0, handleTimerIrqSlave);
+    master.hal.begin(handleIrqMaster, otCbMaster);
+    slave.hal.begin(handleIrqSlave, otCbSlave);
 
     setOTMode(otMode);
 }
@@ -133,9 +126,9 @@ void OTControl::masterPinIrq() {
         digitalWrite(GPIO_OTSLAVE_OUT, !state); // repeat current from master to slave
 
     if (otMode == OTMODE_MASTER) // in master mode green LED is used for RX, red LED for TX
-        digitalWrite(GPIO_OTGREEN_LED, state);
+        setLedOTGreen(state);
     else
-        digitalWrite(GPIO_OTRED_LED, !state);
+        setLedOTRed(state);
     
     master.hal.handleInterrupt();
 }
@@ -145,7 +138,7 @@ void OTControl::slavePinIrq() {
     if (otMode == OTMODE_REPEATER)
         digitalWrite(GPIO_OTMASTER_OUT, !state); // repeat voltage from slave to master
 
-    digitalWrite(GPIO_OTGREEN_LED, state);
+    setLedOTGreen(state);
     slave.hal.handleInterrupt();
 }
 
@@ -164,7 +157,7 @@ void OTControl::setOTMode(const OTMode mode) {
     for (auto *valobj: thermostatValues)
         valobj->init(false);
 
-    master.hal.alwaysReceive = (mode == OTMODE_GATEWAY) || (mode == OTMODE_REPEATER);
+    master.hal.setAlwaysReceive((mode == OTMODE_GATEWAY) || (mode == OTMODE_REPEATER));
 
     resetDiscovery();
 }
@@ -252,7 +245,7 @@ void OTControl::loop() {
     if (otMode == OTMODE_MASTER) {
         // in OTMASTER mode use OT LEDs as master TX & RX
         if (millis() > master.lastTx + 50)
-            digitalWrite(GPIO_OTRED_LED, HIGH);
+            setLedOTRed(false);
     }
 
     if (!master.hal.isReady())
@@ -341,7 +334,7 @@ void OTControl::loop() {
             return;
         }
 
-        if (millis() > lastMillis + 1000) {
+        if (millis() > lastMillis + 800) {
             lastMillis = millis();
             unsigned long req = OpenTherm::buildSetBoilerStatusRequest(
                 heatingParams[0].chOn, 
@@ -351,7 +344,7 @@ void OTControl::loop() {
                 heatingParams[1].chOn);
             sendRequest('T', req);
             return;
-        }
+        }   
         break;
     }
 }
@@ -360,7 +353,7 @@ void OTControl::sendRequest(const char source, const unsigned long msg) {
     master.sendRequest(source, msg);
     if (otMode == OTMODE_MASTER) {
         setThermostatVal(msg);
-        digitalWrite(GPIO_OTRED_LED, LOW); // when we're OTMASTER use red LED as TX LED
+        setLedOTRed(true); // when we're OTMASTER use red LED as TX LED
     }
 }
 
@@ -390,10 +383,6 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
 
     switch (otMode) {
     case OTMODE_LOOPBACKTEST:
-        if (slave.lastTxMsg != msg) {
-            Serial.println(F("looperror slave->master !"));
-            portal.textAll(F("looperror slave->master !"));
-        }
         break;
 
     case OTMODE_GATEWAY:
@@ -415,7 +404,7 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
 
     if (newMsg == msg)
         master.onReceive('B', msg);
-    
+
     if (otval) {
         switch (mt) {
         case OpenThermMessageType::READ_ACK:
@@ -458,7 +447,8 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
 }
 
 void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus status) {
-    if (status != OpenThermResponseStatus::SUCCESS) {
+    if (status == OpenThermResponseStatus::INVALID) {
+        slave.invalidCount++;
         return;
     }
 
@@ -477,7 +467,16 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             break;
 
         case OpenThermMessageID::Status:
-            //newMsg = otmaster.buildRequest(OpenThermMessageType::READ_DATA, id, msg & 0xFFFF | 0x100<<3); // activate OTC
+            if (heatingParams[0].ctrlMode == CtrlMode::CTRLMODE_OFF)
+                newMsg &= ~(1<<0); // CH1 disable
+            if (heatingParams[0].ctrlMode == CtrlMode::CTRLMODE_ON)
+                newMsg |= 1<<0; // CH1 enable
+            if (heatingParams[1].ctrlMode == CtrlMode::CTRLMODE_OFF)
+                newMsg &= ~(1<<4); // CH2 disable
+            if (heatingParams[1].ctrlMode == CtrlMode::CTRLMODE_ON)
+                newMsg |= 1<<4; // CH2 enable
+            
+            newMsg = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, id, newMsg & 0xFFFF);
             break;
         }
         master.sendRequest(0, newMsg);
@@ -485,6 +484,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
     }
 
     case OTMODE_LOOPBACKTEST: {
+        slave.onReceive('S', msg);
         // we received a request from OT master
         switch (mt) {
         case OpenThermMessageType::WRITE_DATA: {
@@ -493,7 +493,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 slave.hal.process();
                 yield();
             }
-            slave.sendResponse(reply);
+            slave.sendResponse(reply, 'P');
             break;
         }
 
@@ -511,7 +511,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 slave.hal.process();
                 yield();
             }
-            slave.sendResponse(reply);
+            slave.sendResponse(reply, 'P');
             break;
         }
 
@@ -531,9 +531,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
         break;
     }
 
-    if (otMode == OTMODE_LOOPBACKTEST)
-        slave.onReceive(0, msg);
-    else
+    if (otMode != OTMODE_LOOPBACKTEST)
         slave.onReceive((msg == newMsg) ? 'T' : 'R', msg);
 
     if ( (mt == OpenThermMessageType::WRITE_DATA) || (id == OpenThermMessageID::Status) ) {
@@ -600,10 +598,25 @@ void OTControl::getJson(JsonObject &obj) {
     switch (otMode) {
     case OTMODE_GATEWAY:
     case OTMODE_LOOPBACKTEST:
-    case OTMODE_REPEATER:
+    case OTMODE_REPEATER: {
         thermostat[F("txCount")] = slave.txCount;
         thermostat[F("rxCount")] = slave.rxCount;
-        break;
+        thermostat[F("invalidCount")] = slave.invalidCount;
+
+        String sp;
+        switch (slave.hal.getSmartPowerState()) {
+        case OpenThermSmartPower::SMART_POWER_LOW:
+            sp = F("low");
+            break;
+        case OpenThermSmartPower::SMART_POWER_MEDIUM:
+            sp = F("medium");
+            break;
+        case OpenThermSmartPower::SMART_POWER_HIGH:
+            sp = F("high");
+            break;
+        }
+        thermostat[F("smartPower")] = sp;
+    }
 
     default:
         break;

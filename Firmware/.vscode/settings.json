@@ -20,6 +20,23 @@
         "istream": "cpp",
         "ostream": "cpp",
         "sstream": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "exception": "cpp",
+        "iosfwd": "cpp",
+        "new": "cpp",
+        "streambuf": "cpp",
+        "optional": "cpp",
+        "ratio": "cpp",
+        "system_error": "cpp",
+        "functional": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "unordered_set": "cpp",
+        "format": "cpp",
+        "span": "cpp",
+        "compare": "cpp",
+        "cstdint": "cpp",
+        "mutex": "cpp"
     }
 }

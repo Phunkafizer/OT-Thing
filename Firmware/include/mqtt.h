@@ -34,6 +34,7 @@ private:
     String baseTopic;
 public:
     Mqtt();
+    void begin();
     void loop();
     bool connected();
     void setConfig(const MqttConfig conf);

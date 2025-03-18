@@ -134,7 +134,6 @@
             padding: 3px;
         }
 
-        
         input[type=range] {
             -webkit-appearance: none;
             background: #fd975a;
@@ -316,7 +315,6 @@
 <body>
     <div id="stickydiv">
         <div id="nocon">No connection to device...</div>
-        <div id="confighint">Config mode!</div>
     </div>
 
     <div id="mainwrapper">
@@ -457,6 +455,10 @@
                         <span class="statusvalue" field="boiler.burner_starts"></span>    
                     </div>
                     <div class="statusfield">
+                        <h4>Cg pump start</h4>
+                        <span class="statusvalue" field="boiler.ch_pump_starts"></span>    
+                    </div>
+                    <div class="statusfield">
                         <h4>Pressure</h4>
                         <span class="statusvalue" field="boiler.ch_pressure" unit="bar"></span>
                     </div>
@@ -471,6 +473,18 @@
                     <div class="statusfield">
                         <h4>Member ID</h4>
                         <span class="statusvalue" field="boiler.memberId"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Max. capacity</h4>
+                        <span class="statusvalue" field="boiler.max_capacity" unit="kW"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Min. modulation level</h4>
+                        <span class="statusvalue" field="boiler.min_modulation" unit="%"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>OEM fault code</h4>
+                        <span class="statusvalue" field="boiler.oem_fault_code"></span>
                     </div>
                     <div class="statusfield">
                         <h4>Frames sent</h4>
@@ -535,12 +549,20 @@
                         <span class="statusvalue" field="thermostat.room_set_t2" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
+                        <h4>Max. rel. modulation</h4>
+                        <span class="statusvalue" field="thermostat.max_rel_mod" unit="%"></span>
+                    </div>
+                    <div class="statusfield">
                         <h4>Product version</h4>
                         <span class="statusvalue" field="thermostat.master_prod_version"></span>
                     </div>
                     <div class="statusfield">
                         <h4>OT version</h4>
                         <span class="statusvalue" field="thermostat.master_ot_version"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h4>Smart power</h4>
+                        <span class="statusvalue" field="thermostat.smartPower"></span>
                     </div>
                     <div class="statusfield">
                         <h4>Frames sent</h4>
@@ -1565,7 +1587,7 @@
                 drawCurve();
                 setTimeout(fetchStatus, 5000);
             };
-            xhrStatus.onerror = (ev) => {
+            xhrStatus.ontimeout = (ev) => {
                 _("#nocon").style.display = "block";
                 setTimeout(fetchStatus, 10000);
             };
@@ -1791,7 +1813,7 @@
             function drawFlowCurve(color, delta) {
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 3;
-                let ft = getFlowTemperature(otStart, roomset, flowmax, exponent, gradient, offset);
+                let ft = getFlowTemperature(otStart, roomset, flowmax, exponent, gradient, offset) + delta;
                 let p = getPoint(otStart, ft);
                 ctx.beginPath();
                 ctx.moveTo(p.x, p.y);

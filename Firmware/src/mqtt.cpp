@@ -40,6 +40,12 @@ Mqtt::Mqtt():
         lastConTry(0),
         lastStatus(0),
         configSet(false) {
+    cli.onConnect(mqttConnectCb);
+    cli.onDisconnect(mqttDisconnectCb);
+    cli.onMessage(mqttMessageReceived);
+}
+
+void Mqtt::begin() {
     String shortMac = WiFi.macAddress();
     shortMac.remove(0, 9);
     int idx;
@@ -47,9 +53,6 @@ Mqtt::Mqtt():
         shortMac.remove(idx, 1);
     baseTopic = F("otthing/");
     baseTopic += shortMac;
-    cli.onConnect(mqttConnectCb);
-    cli.onDisconnect(mqttDisconnectCb);
-    cli.onMessage(mqttMessageReceived);
 }
 
 void Mqtt::onConnect() {
@@ -100,7 +103,11 @@ void Mqtt::loop() {
     if (cli.connected()) {
         if ((millis() - lastStatus) > 5000) {
             lastStatus = millis();
-            cli.publish(haDisc.defaultStateTopic.c_str(), 0, false, devstatus.getJson().c_str());
+            String payload;
+            devstatus.lock();
+            devstatus.getJson(payload);
+            devstatus.unlock();
+            cli.publish(haDisc.defaultStateTopic.c_str(), 0, false, payload.c_str());
         }
     }
 }

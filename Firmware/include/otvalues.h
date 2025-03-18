@@ -138,6 +138,27 @@ public:
     OTValueSlaveConfigMember();
 };
 
+class OTValueFaultFlags: public OTValueFlags {
+private:
+    void getValue(JsonObject &obj) const;
+    const char *SRV_REQUEST PROGMEM = "service_request";
+    const char *LOCKOUT_RESET PROGMEM = "lockout_reset";
+    const char *LOW_WATER_PRESSURE PROGMEM = "low_water_pressure";
+    const char *GAS_FLAME_FAULT PROGMEM = "gas_flame_fault";
+    const char *AIR_PRESS_FAULT PROGMEM = "air_pressure_fault";
+    const char *WATER_OVER_TEMP PROGMEM = "water_over_temp";
+    const Flag flags[6] PROGMEM = {
+        {0, SRV_REQUEST},
+        {1, LOCKOUT_RESET},
+        {2, LOW_WATER_PRESSURE},
+        {3, GAS_FLAME_FAULT},
+        {4, AIR_PRESS_FAULT},
+        {5, WATER_OVER_TEMP}
+    };
+public:
+    OTValueFaultFlags(const int interval);
+};
+
 class OTValueProductVersion: public OTValue {
 private:
     void getValue(JsonObject &obj) const;
@@ -191,5 +212,5 @@ public:
     OTValueRemoteParameter();
 };
 
-extern OTValue *boilerValues[19];
+extern OTValue *boilerValues[20];
 extern OTValue *thermostatValues[13];

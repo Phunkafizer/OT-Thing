@@ -19,4 +19,6 @@ public:
     void loop();
 } devconfig;
 
+extern const char CFG_FILENAME[];
+
 #endif

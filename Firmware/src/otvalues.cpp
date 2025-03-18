@@ -35,16 +35,20 @@ const char ID_STR_MASTER_OT_VERSION[] PROGMEM = "master_ot_version";
 const char ID_STR_RPFLAGS[] PROGMEM = "rp_flags";
 const char ID_STR_TROVERRIDE[] PROGMEM = "tr_override";
 const char ID_STR_SLAVE_OT_VERSION[] PROGMEM = "slave_ot_version";
+const char ID_STR_FAULT_FLAGS[] PROGMEM = "fault_flags";
+const char ID_STR_MAX_CAP_MIN_MOD_LEVEL[] PROGMEM = "max_cap_min_mod";
 
 OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::Status,                    ID_STR_STATUS},
     {OpenThermMessageID::TSet,                      ID_STR_CH_SET_T},
     {OpenThermMessageID::MConfigMMemberIDcode,      ID_STR_MASTER_CONFIG_MEMBER},
     {OpenThermMessageID::SConfigSMemberIDcode,      ID_STR_SLAVE_CONFIG_MEMBER},
+    {OpenThermMessageID::ASFflags,                  ID_STR_FAULT_FLAGS},
     {OpenThermMessageID::RBPflags,                  ID_STR_RPFLAGS},
     {OpenThermMessageID::TsetCH2,                   ID_STR_CH_SET_T2},
     {OpenThermMessageID::TrOverride,                ID_STR_TROVERRIDE},
     {OpenThermMessageID::MaxRelModLevelSetting,     ID_STR_MAX_REL_MOD},
+    {OpenThermMessageID::MaxCapacityMinModLevel,    ID_STR_MAX_CAP_MIN_MOD_LEVEL},
     {OpenThermMessageID::TrSet,                     ID_STR_ROOM_SET_T},
     {OpenThermMessageID::RelModLevel,               ID_STR_REL_MOD},
     {OpenThermMessageID::CHPressure,                ID_STR_CH_PRESSURE},
@@ -69,9 +73,11 @@ OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::SlaveVersion,              ID_STR_SLAVE_PROD_VERSION},
 };
 
-OTValue *boilerValues[19] = { // reply data collected (read) from boiler
-    new OTValueStatus(),
+OTValue *boilerValues[20] = { // reply data collected (read) from boiler
     new OTValueSlaveConfigMember(),
+    new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionSlave,  0),
+    new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,           0),
+    new OTValueStatus(),
     new OTValueCapacityModulation(),
     new OTValueDHWBounds(),
     new OTValueFloat(           OpenThermMessageID::RelModLevel,            10),
@@ -87,12 +93,12 @@ OTValue *boilerValues[19] = { // reply data collected (read) from boiler
     new OTValueu16(             OpenThermMessageID::SuccessfulBurnerStarts, 30),
     new OTValueu16(             OpenThermMessageID::CHPumpStarts,           30),
     new OTValueu16(             OpenThermMessageID::BurnerOperationHours,   120),
-    new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,           0),
-    new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionSlave,  0)
+    new OTValueFaultFlags(                                                  30)
     //new OTValueFloat(           OpenThermMessageID::TdhwSet,                -1),
     //new OTValueFloat(           OpenThermMessageID::TSet,                   -1),
     //TODO 5, 6, 
 };
+
 
 OTValue *thermostatValues[13] = { // request data sent (written) from roomunit
     new OTValueFloat(           OpenThermMessageID::TSet,                   -1),
@@ -416,6 +422,16 @@ void OTValueSlaveConfigMember::getValue(JsonObject &obj) const {
     OTValueFlags::getValue(obj);
     obj[F("memberId")] = value & 0xFF;
 }
+
+OTValueFaultFlags::OTValueFaultFlags(const int interval):
+        OTValueFlags(OpenThermMessageID::ASFflags, interval, flags, sizeof(flags) / sizeof(flags[0])) {
+}
+
+void OTValueFaultFlags::getValue(JsonObject &obj) const {
+    OTValueFlags::getValue(obj);
+    obj[F("oem_fault_code")] = value & 0xFF;
+}
+
 
 OTValueProductVersion::OTValueProductVersion(const OpenThermMessageID id, const int interval):
         OTValue(id, interval) {
