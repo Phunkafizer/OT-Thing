@@ -968,7 +968,7 @@
         <div class="tab" id="setup">
             <h3>WiFi</h3>
             <div class="group">
-                <button id="scan">Scan</button><span id="scanHint">Scan läuft...</span>
+                <button id="scan">scan</button><span id="scanHint">Scan running...</span>
                 <div id="scanResults">
                     <table>
                         <thead>
@@ -1126,7 +1126,7 @@
             <div class="group">
                 <form id="form_upload" method='POST' enctype='multipart/form-data'>
                     <input id="inp_file" type='file' accept='.bin,.bin.gz' name='firmware'>
-                    <input id="btn_upload" type='submit' value='Upload'>
+                    <input id="btn_upload" type='submit' value='upload'>
                     <div id="progressDiv" class="progress">
                         <span class="progress-bar" id="progressBar" style="width: 0%"></span>
                         <span id="progressText"></span>
@@ -1144,12 +1144,8 @@
         </div>
 
         <div class="toolbar">
-            <button id="save">
-                speichern
-            </button>
-            <button id="reboot">
-                reboot
-            </button>
+            <button id="save">save</button>
+            <button id="reboot">reboot</button>
         </div>
 
         <div class="footer"><a href="http://www.seegel-systeme.de" target="_blank">www.seegel-systeme.de</a></div>
@@ -1254,7 +1250,6 @@
                     tls: _("#mqttTls").checked
                 };
 
-                
                 xhrSaveConfig.open("POST", "config");
                 xhrSaveConfig.setRequestHeader("Content-Type", "application/json");
                 xhrSaveConfig.send(JSON.stringify(config));
