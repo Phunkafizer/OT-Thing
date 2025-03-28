@@ -26,6 +26,8 @@ JsonDocument &DevStatus::buildDoc() {
     doc[F("resetInfo")] = rtc_get_reset_reason(0);
     doc[F("fw_version")] = F(BUILD_VERSION);
     doc[F("USB_connected")] = Serial.isConnected();
+    doc[F("reset_reason0")] = rtc_get_reset_reason(0);
+    doc[F("reset_reason1")] = rtc_get_reset_reason(1);
 
     JsonObject jwifi = doc[F("wifi")].to<JsonObject>();
     jwifi[F("status")] =  WiFi.status();

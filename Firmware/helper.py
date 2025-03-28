@@ -21,16 +21,6 @@ def post_build(source, target, env):
     print("project dir: " + env["PROJECT_DIR"])
     print("build: " + env["BUILD_DIR"])
 
-    '''
-    upload_port = env.get("UPLOAD_PORT", None)
-    if upload_port == None:
-        env.AutodetectUploadPort()
-        upload_port = env.get("UPLOAD_PORT", "none")
-    print("Upload port", upload_port)
-    with esptool.cmds.detect_chip(port=upload_port) as esp:
-        esp.hard_reset()
-    '''
-
 def after_upload(source, target, env):
     upload_port = env.get("UPLOAD_PORT", None)
     if upload_port == None:
