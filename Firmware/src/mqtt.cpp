@@ -53,15 +53,14 @@ void Mqtt::begin() {
         shortMac.remove(idx, 1);
     baseTopic = F("otthing/");
     baseTopic += shortMac;
+    statusTopic = baseTopic + F("/status");
 }
 
 void Mqtt::onConnect() {
     portal.textAll(F("MQTT connected"));
     Serial.println(F("MQTT connected"));
 
-    String statusTopic = baseTopic + F("/status");
-    cli.setWill(statusTopic.c_str(), 0, false, "offline");
-    cli.publish(statusTopic.c_str(), 0, false, "online");
+    cli.setWill(statusTopic.c_str(), 0, true, "offline");
 
     String topic = baseTopic + F("/+/set");
     cli.subscribe(topic.c_str(), 0);
@@ -108,6 +107,8 @@ void Mqtt::loop() {
             devstatus.getJson(payload);
             devstatus.unlock();
             cli.publish(haDisc.defaultStateTopic.c_str(), 0, false, payload.c_str());
+
+            cli.publish(statusTopic.c_str(), 0, false, "online");
         }
     }
 }

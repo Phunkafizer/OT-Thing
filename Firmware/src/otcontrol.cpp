@@ -107,11 +107,13 @@ OTControl::OTControl():
 }
 
 void OTControl::begin() {
-    // +24V enable for room unit (OT slave)
-    pinMode(GPIO_STEPUP_ENABLE, OUTPUT);
-
-    // relay
-    pinMode(GPIO_BYPASS_RELAY, OUTPUT);
+    pinMode(GPIO_OTRED_LED, OUTPUT);
+    pinMode(GPIO_OTGREEN_LED, OUTPUT);
+    pinMode(GPIO_STEPUP_ENABLE, OUTPUT); // +24V enable for room unit (OT slave)
+    pinMode(GPIO_BYPASS_RELAY, OUTPUT); // relay
+    
+    setLedOTGreen(false);
+    setLedOTRed(false);
 
     master.hal.begin(handleIrqMaster, otCbMaster);
     slave.hal.begin(handleIrqSlave, otCbSlave);
@@ -167,12 +169,12 @@ void OTControl::loop() {
         discFlag = true;
 
         // TODO add only when outside temp source is MQTT
-        haDisc.createNumber(F("Außentemperatur"), FPSTR(MQTTSETVAR_OUTSIDETEMP), mqtt.getVarSetTopic(MQTTSETVAR_OUTSIDETEMP));
+        haDisc.createNumber(F("Outside temperature"), FPSTR(MQTTSETVAR_OUTSIDETEMP), mqtt.getVarSetTopic(MQTTSETVAR_OUTSIDETEMP));
         haDisc.setValueTemplate(F("{{ value_json.outsideTemp }}"));
         haDisc.setMinMax(-20, 20, 0.1);
         discFlag &= haDisc.publish();
 
-        haDisc.createClima(F("Brauchwasser"), FPSTR(MQTTSETVAR_DHWSETTEMP), mqtt.getVarSetTopic(MQTTSETVAR_DHWSETTEMP));
+        haDisc.createClima(F("DHW"), FPSTR(MQTTSETVAR_DHWSETTEMP), mqtt.getVarSetTopic(MQTTSETVAR_DHWSETTEMP));
         haDisc.setMinMaxTemp(25, 70, 1);
         haDisc.setCurrentTemperatureTemplate(F("{{ value_json.boiler.dhw_t }}"));
         haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
@@ -184,7 +186,7 @@ void OTControl::loop() {
         haDisc.setRetain(true);
         discFlag &= haDisc.publish();
 
-        haDisc.createClima(F("Vorlaufsolltemperatur"), FPSTR(MQTTSETVAR_CHSETTEMP1), mqtt.getVarSetTopic(MQTTSETVAR_CHSETTEMP1));
+        haDisc.createClima(F("flow set temperature"), FPSTR(MQTTSETVAR_CHSETTEMP1), mqtt.getVarSetTopic(MQTTSETVAR_CHSETTEMP1));
         haDisc.setMinMaxTemp(25, 90, 0.5);
         haDisc.setCurrentTemperatureTemplate(F("{{ value_json.boiler.flow_t }}"));
         haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
@@ -197,7 +199,7 @@ void OTControl::loop() {
         haDisc.setRetain(true);
         discFlag &= haDisc.publish();
 
-        haDisc.createClima(F("Raumtemperatur 1"), F("clima_room1"), mqtt.getVarSetTopic(MQTTSETVAR_ROOMSETPOINT1));
+        haDisc.createClima(F("Room set temperature 1"), F("clima_room1"), mqtt.getVarSetTopic(MQTTSETVAR_ROOMSETPOINT1));
         haDisc.setMinMaxTemp(12, 27, 0.5);
         haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
         haDisc.setCurrentTemperatureTemplate(F("{{ value_json.heatercircuit[0].roomtemp }}"));
@@ -210,7 +212,7 @@ void OTControl::loop() {
             haDisc.clearDoc();
         discFlag &= haDisc.publish();
 
-        haDisc.createClima(F("Raumtemperatur 2"), F("clima_room2"), mqtt.getVarSetTopic(MQTTSETVAR_ROOMSETPOINT2));
+        haDisc.createClima(F("Room set temperature 2"), F("clima_room2"), mqtt.getVarSetTopic(MQTTSETVAR_ROOMSETPOINT2));
         haDisc.setMinMaxTemp(12, 27, 0.5);
         haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
         haDisc.setCurrentTemperatureTemplate(F("{{ value_json.heatercircuit[1].roomtemp }}"));
@@ -223,7 +225,7 @@ void OTControl::loop() {
             haDisc.clearDoc();
         discFlag &= haDisc.publish();
         
-        haDisc.createNumber(F("Raumtemperatur 1"), FPSTR(MQTTSETVAR_ROOMTEMP1), mqtt.getVarSetTopic(MQTTSETVAR_ROOMTEMP1));
+        haDisc.createNumber(F("Room temperature 1"), FPSTR(MQTTSETVAR_ROOMTEMP1), mqtt.getVarSetTopic(MQTTSETVAR_ROOMTEMP1));
         haDisc.setValueTemplate(F("{{ value_json.heatercircuit[0].roomtemp }}"));
         haDisc.setMinMax(5, 27, 0.1);
         if (!roomTemp[0].isMqttSource()) {
@@ -231,7 +233,7 @@ void OTControl::loop() {
         }
         discFlag &= haDisc.publish();
 
-        haDisc.createNumber(F("Raumtemperatur 2"), FPSTR(MQTTSETVAR_ROOMTEMP2), mqtt.getVarSetTopic(MQTTSETVAR_ROOMTEMP2));
+        haDisc.createNumber(F("room temperature 2"), FPSTR(MQTTSETVAR_ROOMTEMP2), mqtt.getVarSetTopic(MQTTSETVAR_ROOMTEMP2));
         haDisc.setValueTemplate(F("{{ value_json.heatercircuit[1].roomtemp }}"));
         haDisc.setMinMax(5, 27, 0.1);
         if (!roomTemp[1].isMqttSource())
@@ -248,8 +250,9 @@ void OTControl::loop() {
             setLedOTRed(false);
     }
 
-    if (!master.hal.isReady())
+    if (!master.hal.isReady()) {
         return;
+    }
 
     switch (otMode) {
     case OTMODE_LOOPBACKTEST: {

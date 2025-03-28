@@ -32,8 +32,6 @@ void OtGwCommand::onClientData(void* arg, AsyncClient* client, void *data, size_
     char *s = (char*) data;
     s[len - 1] = 0;
     Serial.println(s);
-
-    // socket://192.168.178.35:25238
 }
 
 void OtGwCommand::onClientDisconnect(void* arg, AsyncClient* client) {

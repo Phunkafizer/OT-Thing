@@ -339,6 +339,10 @@
                         <span class="statusvalue" id="runtime"></span>
                     </div>
                     <div class="statusfield">
+                        <h4>Firmware</h4>
+                        <span class="statusvalue" field="fw_version"></span>
+                    </div>
+                    <div class="statusfield">
                         <h4>MAC</h4>
                         <span class="statusvalue" field="wifi.mac"></span>
                     </div>
@@ -373,7 +377,7 @@
                 <div class="group">
                     <h4>Status</h4>
                     <span></span>
-                    <h4>Außentemperatur</h4>
+                    <h4>Outside temperature</h4>
                     <span class="statusvalue" field="outsideTemp"></span>
                     <span class="statusunit">&deg;C</span>
                 </div>
@@ -455,7 +459,7 @@
                         <span class="statusvalue" field="boiler.burner_starts"></span>    
                     </div>
                     <div class="statusfield">
-                        <h4>Cg pump start</h4>
+                        <h4>CH pump start</h4>
                         <span class="statusvalue" field="boiler.ch_pump_starts"></span>    
                     </div>
                     <div class="statusfield">
@@ -1120,8 +1124,6 @@
 
             <h3>Firmware</h3>
             <div class="group">
-                <h4>Installierte Firmware</h4>
-                <span class="statusvalue" field="fw_version"></span>
                 <form id="form_upload" method='POST' enctype='multipart/form-data'>
                     <input id="inp_file" type='file' accept='.bin,.bin.gz' name='firmware'>
                     <input id="btn_upload" type='submit' value='Upload'>
@@ -1226,6 +1228,7 @@
             });
             _("div.nav li.active").click();
 
+            let xhrSaveConfig = new XMLHttpRequest();
             //eventhandler for save button
             _("#save").onclick = () => {
                 config.otMode = (_('input[name="otMode"]:checked') !== undefined) ? parseInt(_('input[name="otMode"]:checked').value) : null,
@@ -1251,10 +1254,13 @@
                     tls: _("#mqttTls").checked
                 };
 
-                var xhr = new XMLHttpRequest();
-                xhr.open("POST", "config");
-                xhr.setRequestHeader("Content-Type", "application/json");
-                xhr.send(JSON.stringify(config));
+                
+                xhrSaveConfig.open("POST", "config");
+                xhrSaveConfig.setRequestHeader("Content-Type", "application/json");
+                xhrSaveConfig.send(JSON.stringify(config));
+                xhrSaveConfig.onload = (ev) => {
+                    alert("configuration saved successfully");
+                };
             };
 
             //eventhandler for save button

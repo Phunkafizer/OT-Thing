@@ -32,6 +32,7 @@ private:
     MqttConfig config;
     bool configSet;
     String baseTopic;
+    String statusTopic;
 public:
     Mqtt();
     void begin();

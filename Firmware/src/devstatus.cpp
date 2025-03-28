@@ -25,6 +25,7 @@ JsonDocument &DevStatus::buildDoc() {
     doc[F("freeHeap")] = ESP.getFreeHeap();
     doc[F("resetInfo")] = rtc_get_reset_reason(0);
     doc[F("fw_version")] = F(BUILD_VERSION);
+    doc[F("USB_connected")] = Serial.isConnected();
 
     JsonObject jwifi = doc[F("wifi")].to<JsonObject>();
     jwifi[F("status")] =  WiFi.status();

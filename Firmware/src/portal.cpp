@@ -16,6 +16,7 @@ static AsyncWebServer websrv(80);
 AsyncWebSocket ws("/ws");
 
 
+
 Portal::Portal():
     reboot(false),
     updateEnable(true) {
@@ -110,7 +111,8 @@ void Portal::begin(bool configMode) {
             WiFi.persistent(true);
             WiFi.setAutoReconnect(true);
             String ssid = request->arg(F("ssid"));
-            WiFi.begin(ssid, request->arg(F("pass")));
+            String pass = request->arg(F("pass"));
+            WiFi.begin(ssid, pass);
         }
         else
             request->send(400); // bad request

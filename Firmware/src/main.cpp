@@ -34,15 +34,11 @@ void statusLedLoop() {
 }
 
 void wifiEvent(WiFiEvent_t event) {
-    Serial.print("WiFi Event ");
-    Serial.println(event);
-
     switch (event) {
     case ARDUINO_EVENT_WIFI_STA_GOT_IP: {
         String hn(FPSTR(hostname));
         WiFi.setHostname(hn.c_str());
         MDNS.addService("http", "tcp", 80);
-        Serial.println(WiFi.localIP().toString());
         break;
     }
 
@@ -52,16 +48,12 @@ void wifiEvent(WiFiEvent_t event) {
 }
 
 void setup() {
-    pinMode(GPIO_BYPASS_RELAY, OUTPUT);
-    pinMode(GPIO_OTRED_LED, OUTPUT);
-    pinMode(GPIO_OTGREEN_LED, OUTPUT);
     pinMode(GPIO_STATUS_LED, OUTPUT);
     pinMode(GPIO_CONFIG_BUTTON, INPUT);
-    digitalWrite(GPIO_BYPASS_RELAY, LOW);
     
-    setLedOTGreen(false);
-    setLedOTRed(false);
     setLedStatus(false);
+
+    otcontrol.begin();
 
     statusLedTicker.attach(0.2, statusLedLoop);
 
@@ -75,7 +67,8 @@ void setup() {
         statusLedData = 0xA000;
 
     Serial.begin();
-    //Serial0.begin(460800);
+    Serial.setTxTimeoutMs(100);
+    
     WiFi.onEvent(wifiEvent);
     WiFi.begin();
 
@@ -85,8 +78,7 @@ void setup() {
     devconfig.begin();
     portal.begin(configMode);
     command.begin();
-    otcontrol.begin();
-
+    
 #ifdef DEBUG
     ArduinoOTA.begin();
 #endif
