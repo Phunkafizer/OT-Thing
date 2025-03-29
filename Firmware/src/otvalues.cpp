@@ -73,13 +73,14 @@ OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::SlaveVersion,              ID_STR_SLAVE_PROD_VERSION},
 };
 
-OTValue *boilerValues[20] = { // reply data collected (read) from boiler
+OTValue *boilerValues[21] = { // reply data collected (read) from boiler
     new OTValueSlaveConfigMember(),
     new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionSlave,  0),
     new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,           0),
     new OTValueStatus(),
     new OTValueCapacityModulation(),
     new OTValueDHWBounds(),
+    new OTValueFloat(           OpenThermMessageID::TrOverride,             10),
     new OTValueFloat(           OpenThermMessageID::RelModLevel,            10),
     new OTValueFloat(           OpenThermMessageID::CHPressure,             30),
     new OTValueFloat(           OpenThermMessageID::DHWFlowRate,            10),

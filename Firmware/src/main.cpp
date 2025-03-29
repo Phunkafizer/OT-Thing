@@ -93,6 +93,7 @@ void loop() {
             statusLedTicker.detach();
             setLedStatus(true);
             devconfig.remove();
+            WiFi.persistent(true);
             WiFi.disconnect(true, true);
             while (digitalRead(GPIO_CONFIG_BUTTON) == 0)
                 yield();

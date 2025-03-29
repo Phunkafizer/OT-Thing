@@ -212,5 +212,5 @@ public:
     OTValueRemoteParameter();
 };
 
-extern OTValue *boilerValues[20];
+extern OTValue *boilerValues[21];
 extern OTValue *thermostatValues[13];

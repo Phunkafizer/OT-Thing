@@ -187,6 +187,12 @@
             background-color: #4d7984;
         }
 
+        button.pressed {
+            border: 1px solid #fd975a;
+            background-color: black;
+            color: #fd975a;
+        }
+
         table {
             width: 100%;
             text-align: left;
@@ -308,6 +314,16 @@
         #console div {
             font-family: "Lucida Console", "Courier New", monospace;
             font-size: 12px;
+        }
+
+        #logstatus {
+            height: 0.5em;
+        }
+        #logstatus.connected {
+            background-color: green;
+        }
+        #logstatus.disconnected {
+            background-color: red;
         }
     </style>
 </head>
@@ -449,6 +465,10 @@
                     <div class="statusfield">
                         <h4>Return temperature</h4>
                         <span class="statusvalue" field="boiler.return_t" unit="&deg;C"></span>    
+                    </div>
+                    <div class="statusfield">
+                        <h4>Room override temp.</h4>
+                        <span class="statusvalue" field="boiler.tr_override" unit="&deg;C"></span>    
                     </div>
                     <div class="statusfield">
                         <h4>Operating hours burner</h4>
@@ -1138,8 +1158,10 @@
         <div class="tab" id="log">
             <div id="console">
             </div>
+            <div id="logstatus"></div>
             <div class="toolbar">
                 <button id="btnclearlog">clear log</button>
+                <button id="btnautoscroll">autoscroll</button>
             </div>
         </div>
 
@@ -1647,24 +1669,45 @@
                 }
             });
 
-            websocket = new WebSocket("ws");
-            websocket.onopen = (ev) => {
-            }
+            function connectWS() {
+                function logws(msg) {
+                    let e = _$("div");
+                    e.innerHTML = msg;
+                    let cons = _("#console");
+                    cons.append(e);
+                    if (!_("#btnautoscroll").classList.contains("pressed"))
+                        cons.scrollTop = cons.scrollHeight;
+                }
 
-            websocket.onclose = (ev) => {
+                var websocket = new WebSocket("ws");
+                websocket.onopen = (ev) => {
+                    _("#logstatus").classList.add('connected');
+                    _("#logstatus").classList.remove('disconnected');
+                }
+                websocket.onclose = (ev) => {
+                    _("#logstatus").classList.add('disconnected');
+                    _("#logstatus").classList.remove('connected');
+                    setTimeout(function() {
+                        connectWS();
+                    }, 1000);
+                }
+                websocket.onmessage = (ev) => {
+                    logws(ev.data);
+                }
+                websocket.onerror = (ev) => {
+                    logws("Error");
+                    websocket.close();
+                }
             }
-
-            websocket.onmessage = (ev) => {
-                let e = _$("div");
-                e.innerHTML = ev.data;
-                let cons = _("#console");
-                cons.append(e);
-                cons.scrollTop = cons.scrollHeight;
-            }
+            connectWS();
 
             _("#btnclearlog").onclick = (ev) => {
                 _("#console").innerHTML = "";
             };
+
+            _("#btnautoscroll").onclick = (ev) => {
+                ev.target.classList.toggle("pressed");
+            }
         };
 
         function getMinOutsideTemp(rs, mf, g) {
