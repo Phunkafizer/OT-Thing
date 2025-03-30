@@ -124,9 +124,6 @@ void OTControl::begin() {
 void OTControl::masterPinIrq() {
     bool state = digitalRead(GPIO_OTMASTER_IN);
 
-    if (otMode == OTMODE_REPEATER)
-        digitalWrite(GPIO_OTSLAVE_OUT, !state); // repeat current from master to slave
-
     if (otMode == OTMODE_MASTER) // in master mode green LED is used for RX, red LED for TX
         setLedOTGreen(state);
     else
@@ -137,9 +134,6 @@ void OTControl::masterPinIrq() {
 
 void OTControl::slavePinIrq() {
     const bool state = digitalRead(GPIO_OTSLAVE_IN);
-    if (otMode == OTMODE_REPEATER)
-        digitalWrite(GPIO_OTMASTER_OUT, !state); // repeat voltage from slave to master
-
     setLedOTGreen(state);
     slave.hal.handleInterrupt();
 }
@@ -151,7 +145,7 @@ void OTControl::setOTMode(const OTMode mode) {
     digitalWrite(GPIO_BYPASS_RELAY, mode != OTMODE_BYPASS);
 
     // set +24V stepup up
-    digitalWrite(GPIO_STEPUP_ENABLE, (mode == OTMODE_GATEWAY) || (mode == OTMODE_LOOPBACKTEST) || (mode == OTMODE_REPEATER));
+    digitalWrite(GPIO_STEPUP_ENABLE, (mode == OTMODE_GATEWAY) || (mode == OTMODE_LOOPBACKTEST));
 
     for (auto *valobj: boilerValues)
         valobj->init((mode == OTMODE_MASTER) || (mode == OTMODE_LOOPBACKTEST));
@@ -159,7 +153,7 @@ void OTControl::setOTMode(const OTMode mode) {
     for (auto *valobj: thermostatValues)
         valobj->init(false);
 
-    master.hal.setAlwaysReceive((mode == OTMODE_GATEWAY) || (mode == OTMODE_REPEATER));
+    master.hal.setAlwaysReceive(mode == OTMODE_GATEWAY);
 
     resetDiscovery();
 }
@@ -398,11 +392,6 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         }
         slave.sendResponse(newMsg);
         break;
-
-    case OTMODE_REPEATER:
-        // we implicitely have sent a frame on slave
-        slave.txCount++;
-        break;
     }
 
     if (newMsg == msg)
@@ -524,12 +513,6 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
         break;
     }
 
-    case OTMODE_REPEATER:
-        // we implicitly sent frame on master
-        master.txCount++;
-        master.lastTx = millis();
-        break;
-
     default:
         break;
     }
@@ -600,8 +583,7 @@ void OTControl::getJson(JsonObject &obj) {
 
     switch (otMode) {
     case OTMODE_GATEWAY:
-    case OTMODE_LOOPBACKTEST:
-    case OTMODE_REPEATER: {
+    case OTMODE_LOOPBACKTEST: {
         thermostat[F("txCount")] = slave.txCount;
         thermostat[F("rxCount")] = slave.rxCount;
         thermostat[F("invalidCount")] = slave.invalidCount;
@@ -642,6 +624,15 @@ void OTControl::setDhwTemp(double temp) {
 }
 
 void OTControl::setChCtrlConfig(JsonObject &config) {
+    while (!master.hal.isReady()) {
+        master.hal.process();
+        yield();
+    }
+    while (!slave.hal.isReady()) {
+        slave.hal.process();
+        yield();
+    }
+
     OTMode mode = OTMODE_BYPASS;
 
     if (config[F("otMode")].is<JsonInteger>())

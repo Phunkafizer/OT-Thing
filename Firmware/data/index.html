@@ -319,11 +319,21 @@
         #logstatus {
             height: 0.5em;
         }
+
         #logstatus.connected {
             background-color: green;
         }
+
         #logstatus.disconnected {
             background-color: red;
+        }
+
+        #progressDiv {
+            display: none;
+        }
+
+        #updprogress {
+            width: 100%;
         }
     </style>
 </head>
@@ -1026,10 +1036,6 @@
                         <input type="radio" name="otMode" value="2">
                         <label>Gateway</label>
                     </div>
-                    <div class="param">
-                        <input type="radio" name="otMode" value="3">
-                        <label>Repeater</label>
-                    </div>
                     <div class="param" style="display: block">
                         <input type="radio" name="otMode" value="4">
                         <label>Test</label>
@@ -1148,8 +1154,8 @@
                     <input id="inp_file" type='file' accept='.bin,.bin.gz' name='firmware'>
                     <input id="btn_upload" type='submit' value='upload'>
                     <div id="progressDiv" class="progress">
-                        <span class="progress-bar" id="progressBar" style="width: 0%"></span>
-                        <span id="progressText"></span>
+                        <div id="progressText"></div>
+                        <progress id="updprogress" max="100" value="0"></progress>
                     </div>
                 </form>
             </div>
@@ -1557,7 +1563,6 @@
                 }
 
                 _("#nocon").style.display = "none";
-                _("#progressDiv").style.display = "none";
 
                 let rtstr = "";
                 let runtime = statuscache.runtime;
@@ -1638,7 +1643,8 @@
                 
                 xhrUpl.upload.onprogress = (ev) => {
                     var perc = Math.round(ev.loaded / ev.total * 100);
-                    _("#progressBar").style.width = perc + '%';
+                    _("#updprogress").value = perc;
+                    _("#updprogress").innerText = perc + ' %';
                     _("#progressText").innerHTML = "Uploading...";
                 };
 

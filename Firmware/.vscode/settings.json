@@ -37,6 +37,7 @@
         "span": "cpp",
         "compare": "cpp",
         "cstdint": "cpp",
-        "mutex": "cpp"
+        "mutex": "cpp",
+        "chrono": "cpp"
     }
 }

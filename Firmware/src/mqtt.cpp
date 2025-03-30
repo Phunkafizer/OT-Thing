@@ -23,13 +23,10 @@ Mqtt mqtt;
 static WiFiClient espClient;
 
 void mqttConnectCb(bool sessionPresent) {
-    Serial.println("MQTT connect cb");
     mqtt.onConnect();
 }
 
 void mqttDisconnectCb(AsyncMqttClientDisconnectReason reason) {
-    Serial.print("MQTT Disc ");
-    Serial.println((int) reason);
 }
 
 static void mqttMessageReceived(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
@@ -58,7 +55,6 @@ void Mqtt::begin() {
 
 void Mqtt::onConnect() {
     portal.textAll(F("MQTT connected"));
-    Serial.println(F("MQTT connected"));
 
     cli.setWill(statusTopic.c_str(), 0, true, "offline");
 
@@ -93,7 +89,6 @@ String Mqtt::getBaseTopic() {
 
 void Mqtt::loop() {
     if (!cli.connected() && ((millis() - lastConTry) > 10000) && WiFi.isConnected() && configSet) {
-        Serial.println("Connecting MQTT...");
         lastConTry = millis();
         cli.connect();
         haDisc.defaultStateTopic = baseTopic + F("/state");
@@ -128,7 +123,6 @@ void Mqtt::onMessage(const char *topic, const char *payload, const size_t size) 
     String topicStr = topic;
     topicStr.remove(0, baseTopic.length() + 1);
     topicStr.remove(topicStr.length() - 4, 4);
-    Serial.println(topicStr);
 
     String log = F("MQTT: ");
     log += topic;
