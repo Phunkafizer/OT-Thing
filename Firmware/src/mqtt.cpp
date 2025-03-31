@@ -102,7 +102,6 @@ void Mqtt::loop() {
             devstatus.getJson(payload);
             devstatus.unlock();
             cli.publish(haDisc.defaultStateTopic.c_str(), 0, false, payload.c_str());
-
             cli.publish(statusTopic.c_str(), 0, false, "online");
         }
     }

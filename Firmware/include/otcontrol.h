@@ -28,7 +28,7 @@ private:
     enum OTMode: int8_t {
         OTMODE_BYPASS = 0,
         OTMODE_MASTER = 1,
-        OTMODE_GATEWAY = 2,
+        OTMODE_REPEATER = 2,
         OTMODE_LOOPBACKTEST = 4
     } otMode;
     struct HeatingParams {

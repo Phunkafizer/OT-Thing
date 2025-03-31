@@ -67,9 +67,11 @@ OTControl::OTInterface::OTInterface(const uint8_t inPin, const uint8_t outPin, c
 }
 
 void OTControl::OTInterface::sendRequest(const char source, const unsigned long msg) {
+    hal.sendRequestAsync(msg);
+    
     if (source)
         command.sendOtEvent(source, msg);
-    hal.sendRequestAsync(msg);
+    
     txCount++;
     lastTx = millis();
     lastTxMsg = msg;
@@ -90,12 +92,24 @@ void OTControl::OTInterface::onReceive(const char source, const unsigned long ms
 }
 
 void OTControl::OTInterface::sendResponse(const unsigned long msg, const char source) {
-    if (source)
-        command.sendOtEvent(source, msg);
-    hal.sendResponse(msg);
-    txCount++;
-    lastTx = millis();
-    lastTxMsg = msg;
+    uint32_t temp = millis();
+
+    while (true) {
+        if (hal.sendResponse(msg)) {
+            if (source)
+                command.sendOtEvent(source, msg);
+        
+            txCount++;
+            lastTx = millis();
+            lastTxMsg = msg;
+            break;
+        }
+        if (millis() - temp > 300)
+            break;
+
+        hal.process();
+        yield();
+    }
 }
 
 
@@ -145,7 +159,7 @@ void OTControl::setOTMode(const OTMode mode) {
     digitalWrite(GPIO_BYPASS_RELAY, mode != OTMODE_BYPASS);
 
     // set +24V stepup up
-    digitalWrite(GPIO_STEPUP_ENABLE, (mode == OTMODE_GATEWAY) || (mode == OTMODE_LOOPBACKTEST));
+    digitalWrite(GPIO_STEPUP_ENABLE, (mode == OTMODE_REPEATER) || (mode == OTMODE_LOOPBACKTEST));
 
     for (auto *valobj: boilerValues)
         valobj->init((mode == OTMODE_MASTER) || (mode == OTMODE_LOOPBACKTEST));
@@ -153,7 +167,7 @@ void OTControl::setOTMode(const OTMode mode) {
     for (auto *valobj: thermostatValues)
         valobj->init(false);
 
-    master.hal.setAlwaysReceive(mode == OTMODE_GATEWAY);
+    master.hal.setAlwaysReceive(mode == OTMODE_REPEATER);
 
     resetDiscovery();
 }
@@ -382,7 +396,7 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
     case OTMODE_LOOPBACKTEST:
         break;
 
-    case OTMODE_GATEWAY:
+    case OTMODE_REPEATER:
         // forward reply from boiler to room unit
         // TODO manipulate some frames, e. g. outsidetemp 
         switch (id) {
@@ -449,7 +463,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
     unsigned long newMsg = msg;
 
     switch (otMode) {
-    case OTMODE_GATEWAY: {
+    case OTMODE_REPEATER: {
         // we received a request from the room unit, forward it to boiler
         // TODO check for special commands, e. g. outside temp
 
@@ -481,10 +495,6 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
         switch (mt) {
         case OpenThermMessageType::WRITE_DATA: {
             uint32_t reply = OpenTherm::buildResponse(OpenThermMessageType::WRITE_ACK, id, msg & 0xFFFF);
-            while (!slave.hal.isReady()) {
-                slave.hal.process();
-                yield();
-            }
             slave.sendResponse(reply, 'P');
             break;
         }
@@ -499,10 +509,6 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 }
             }
 
-            while (!slave.hal.isReady()) {
-                slave.hal.process();
-                yield();
-            }
             slave.sendResponse(reply, 'P');
             break;
         }
@@ -582,7 +588,7 @@ void OTControl::getJson(JsonObject &obj) {
         valobj->getJson(thermostat);
 
     switch (otMode) {
-    case OTMODE_GATEWAY:
+    case OTMODE_REPEATER:
     case OTMODE_LOOPBACKTEST: {
         thermostat[F("txCount")] = slave.txCount;
         thermostat[F("rxCount")] = slave.rxCount;
