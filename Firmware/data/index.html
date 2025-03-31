@@ -1495,8 +1495,9 @@
             xhrConfig.open("GET", "config");
             xhrConfig.send();
             function configToUi() {
-                if (__('input[name="otMode"]')[config.otMode] !== undefined)
-                    __('input[name="otMode"]')[config.otMode].checked = true;
+                let otradio = _('input[name="otMode"][value="' + config.otMode + '"]');
+                if (otradio !== undefined)
+                    otradio.checked = true;
 
                 _("#selectOutsideTempSource").value = config.outsideTemp.source;
                 _("#selectOutsideTempSource").dispatchEvent(new Event('change'));
@@ -1651,6 +1652,9 @@
                 xhrUpl.onload = () => {
                     _("#inp_file").value = "";
                     _("#progressText").innerHTML = "Upload successful. Rebooting...";
+                    setTimeout(() => {
+                        location.reload();
+                    }), "5000";
                 };
 
                 xhrUpl.onloadstart = () => {

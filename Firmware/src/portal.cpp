@@ -39,7 +39,7 @@ void Portal::begin(bool configMode) {
     websrv.begin();
     websrv.addHandler(&ws);
 
-    websrv.on("/", HTTP_GET, [] (AsyncWebServerRequest *request) {
+    websrv.on("/", HTTP_ANY, [](AsyncWebServerRequest *request) {
         #ifdef DEBUG
         if (LittleFS.exists(F("/index.html"))) {
             request->send(LittleFS, F("/index.html"), F("text/html"));
@@ -169,6 +169,8 @@ void Portal::loop() {
         delay(500);
         ESP.restart();
     }
+
+    ws.cleanupClients();
 }
 
 
