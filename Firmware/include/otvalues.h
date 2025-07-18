@@ -204,7 +204,6 @@ private:
         {1, MAX_CH_SETPOINT_RW},
         {8, DHW_SETPOINT_TRANS},
         {9, MAX_CH_SETPOINT_TRANS}
-
     };
 protected:
     bool sendDiscovery();
@@ -212,5 +211,5 @@ public:
     OTValueRemoteParameter();
 };
 
-extern OTValue *boilerValues[21];
+extern OTValue *boilerValues[22];
 extern OTValue *thermostatValues[13];

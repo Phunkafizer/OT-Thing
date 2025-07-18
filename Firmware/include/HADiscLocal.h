@@ -4,6 +4,7 @@
 class OTThingHADiscovery: public HADiscovery {
 public:
     OTThingHADiscovery();
+    void begin();
     bool publish();
 };
 

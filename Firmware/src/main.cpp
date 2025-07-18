@@ -10,8 +10,10 @@
 #include "devconfig.h"
 #include "command.h"
 #include "sensors.h"
+#include "HADiscLocal.h"
 //#include <OneWire.h>
 //#include <DallasTemperature.h>
+//#include <NimBLEDevice.h>
 
 #ifdef DEBUG
 #include <ArduinoOTA.h>
@@ -46,7 +48,22 @@ void wifiEvent(WiFiEvent_t event) {
         break;
     }
 }
+/*
+class scanCallbacks : public NimBLEScanCallbacks {
+    void onDiscovered(const NimBLEAdvertisedDevice* advertisedDevice) override {
+        Serial.println("Discovered Device: %s\n", advertisedDevice->toString().c_str());
+    }
 
+    void onResult(const NimBLEAdvertisedDevice* advertisedDevice) override {
+        Serial.println("Device result: %s\n", advertisedDevice->toString().c_str());
+    }
+
+    void onScanEnd(const NimBLEScanResults& results, int reason) override {
+        Serial.println("Scan ended reason = %d; restarting scan\n", reason);
+        NimBLEDevice::getScan()->start(scanTimeMs, false, true);
+    }
+} scanCallbacks;
+*/
 void setup() {
     pinMode(GPIO_STATUS_LED, OUTPUT);
     pinMode(GPIO_CONFIG_BUTTON, INPUT);
@@ -71,14 +88,22 @@ void setup() {
     
     WiFi.onEvent(wifiEvent);
     WiFi.begin();
-
+    haDisc.begin();
     mqtt.begin();
     String hn(FPSTR(hostname));
     MDNS.begin(hn.c_str());
     devconfig.begin();
     portal.begin(configMode);
     command.begin();
-    
+
+/*
+    NimBLEDevice::init("");                         // Initialize the device, you can specify a device name if you want.
+    NimBLEScan* pBLEScan = NimBLEDevice::getScan(); // Create the scan object.
+    pBLEScan->setScanCallbacks(&scanCallbacks, false); // Set the callback for when devices are discovered, no duplicates.
+    pBLEScan->setActiveScan(true);          // Set active scanning, this will get more data from the advertiser.
+    pBLEScan->setMaxResults(0);             // Do not store the scan results, use callback only.
+    pBLEScan->start(30000UL, false, true); // duration, not a continuation of last scan, restart to get all devices again.
+  */  
 #ifdef DEBUG
     ArduinoOTA.begin();
 #endif

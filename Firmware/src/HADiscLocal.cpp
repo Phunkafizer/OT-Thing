@@ -10,7 +10,9 @@ const char *MANUFACTURER PROGMEM = "Seegel Systeme";
 OTThingHADiscovery::OTThingHADiscovery() {
     devName = DEVNAME;
     manufacturer = MANUFACTURER;
+}
 
+void OTThingHADiscovery::begin() {
     String shortMac = WiFi.macAddress();
     shortMac.remove(0, 9);
     int idx;

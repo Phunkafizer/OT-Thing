@@ -40,7 +40,7 @@ public:
     bool connected();
     void setConfig(const MqttConfig conf);
     bool publish(String topic, JsonDocument &payload, const bool retain);
-    void onMessage(const char *topic, const char *payload, const size_t size);
+    void onMessage(const char *topic, String &payload);
     String getVarSetTopic(const char *str);
     String getBaseTopic();
 };

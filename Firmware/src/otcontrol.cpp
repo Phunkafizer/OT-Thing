@@ -40,7 +40,7 @@ const struct {
     {OpenThermMessageID::CHPumpStarts,              7777},
     {OpenThermMessageID::BurnerOperationHours,      8888},
     {OpenThermMessageID::OpenThermVersionSlave,     0x0202},
-    {OpenThermMessageID::SlaveVersion,              0x0404},
+    {OpenThermMessageID::SlaveVersion,              0x0404}
 };
 
 void IRAM_ATTR handleIrqMaster() {
@@ -347,12 +347,29 @@ void OTControl::loop() {
 
         if (millis() > lastMillis + 800) {
             lastMillis = millis();
+            bool chOn[2] = {false, false};
+            for (int i=0; i<2; i++) {
+                switch (heatingParams[i].ctrlMode) {
+                case CtrlMode::CTRLMODE_OFF:
+                    chOn[i] = false;
+                    break;
+                case CtrlMode::CTRLMODE_ON:
+                    chOn[i] = true;
+                    break;
+                case CtrlMode::CTRLMODE_AUTO:
+                    chOn[i] = heatingParams[i].chOn;
+                    break;
+                default:
+                    break;
+                }       
+            }
+
             unsigned long req = OpenTherm::buildSetBoilerStatusRequest(
-                heatingParams[0].chOn, 
+                chOn[0], 
                 dhwOn, 
                 false, 
                 false, 
-                heatingParams[1].chOn);
+                chOn[1]);
             sendRequest('T', req);
             return;
         }   
@@ -375,8 +392,11 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         return;
 
     case OpenThermResponseStatus::INVALID:
-        master.onReceive('E', msg);
-        return;
+        if (otMode != OTMODE_REPEATER) {
+            master.onReceive('E', msg);
+            return;
+        }
+        break;
 
     case OpenThermResponseStatus::SUCCESS:
         break;

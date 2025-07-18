@@ -73,7 +73,7 @@ OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::SlaveVersion,              ID_STR_SLAVE_PROD_VERSION},
 };
 
-OTValue *boilerValues[21] = { // reply data collected (read) from boiler
+OTValue *boilerValues[22] = { // reply data collected (read) from boiler
     new OTValueSlaveConfigMember(),
     new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionSlave,  0),
     new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,           0),
@@ -94,10 +94,10 @@ OTValue *boilerValues[21] = { // reply data collected (read) from boiler
     new OTValueu16(             OpenThermMessageID::SuccessfulBurnerStarts, 30),
     new OTValueu16(             OpenThermMessageID::CHPumpStarts,           30),
     new OTValueu16(             OpenThermMessageID::BurnerOperationHours,   120),
-    new OTValueFaultFlags(                                                  30)
+    new OTValueFaultFlags(                                                  30),
+    new OTValueRemoteParameter()
     //new OTValueFloat(           OpenThermMessageID::TdhwSet,                -1),
     //new OTValueFloat(           OpenThermMessageID::TSet,                   -1),
-    //TODO 5, 6, 
 };
 
 
@@ -368,16 +368,16 @@ bool OTValueStatus::sendDiscovery() {
         return haDisc.publish();
     };
 
-    if (!send(F("Brenner"), STATUS_FLAME, HA_DEVICE_CLASS_RUNNING))
+    if (!send(F("Burner"), STATUS_FLAME, HA_DEVICE_CLASS_RUNNING))
         return false;
 
-    if (!send(F("Brauchwasserbereitung"), STATUS_DHW_MODE, HA_DEVICE_CLASS_RUNNING))
+    if (!send(F("DHW"), STATUS_DHW_MODE, HA_DEVICE_CLASS_RUNNING))
         return false;
 
-    if (!send(F("Heizung"), STATUS_CH_MODE, HA_DEVICE_CLASS_RUNNING))
+    if (!send(F("Heating"), STATUS_CH_MODE, HA_DEVICE_CLASS_RUNNING))
         return false;
 
-    if (!send(F("Fehler"), STATUS_FAULT, HA_DEVICE_CLASS_PROBLEM))
+    if (!send(F("Error"), STATUS_FAULT, HA_DEVICE_CLASS_PROBLEM))
         return false;
   
     return true;

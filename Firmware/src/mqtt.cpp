@@ -30,7 +30,8 @@ void mqttDisconnectCb(AsyncMqttClientDisconnectReason reason) {
 }
 
 static void mqttMessageReceived(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
-    mqtt.onMessage(topic, payload, total);
+    String payloadStr(payload, len);
+    mqtt.onMessage(topic, payloadStr);
 }
 
 Mqtt::Mqtt():
@@ -118,7 +119,7 @@ bool Mqtt::publish(String topic, JsonDocument &payload, const bool retain) {
     return true;
 }
 
-void Mqtt::onMessage(const char *topic, const char *payload, const size_t size) {
+void Mqtt::onMessage(const char *topic, String &payload) {
     String topicStr = topic;
     topicStr.remove(0, baseTopic.length() + 1);
     topicStr.remove(topicStr.length() - 4, 4);
@@ -131,21 +132,21 @@ void Mqtt::onMessage(const char *topic, const char *payload, const size_t size) 
 
     String tmp = FPSTR(MQTTSETVAR_OUTSIDETEMP);
     if (topicStr.compareTo(tmp) == 0) {
-        double d = String(payload).toFloat();
+        double d = payload.toFloat();
         outsideTemp.set(d, OutsideTemp::SOURCE_MQTT);
         return;
     }
 
     tmp = FPSTR(MQTTSETVAR_DHWSETTEMP);
     if (topicStr.compareTo(tmp) == 0) {
-        double d = String(payload).toFloat();
+        double d = payload.toFloat();
         otcontrol.setDhwTemp(d);
         return;
     }
 
     tmp = FPSTR(MQTTSETVAR_CHSETTEMP1);
     if (topicStr.compareTo(tmp) == 0) {
-        double d = String(payload).toFloat();
+        double d = payload.toFloat();
         otcontrol.setChTemp(d, 0);
         return;
     }
@@ -153,11 +154,11 @@ void Mqtt::onMessage(const char *topic, const char *payload, const size_t size) 
     tmp = FPSTR(MQTTSETVAR_CHMODE1);
     if (topicStr.compareTo(tmp) == 0) {
         OTControl::CtrlMode mode;
-        if (String(payload).compareTo("heat") == 0)
+        if (payload.compareTo("heat") == 0)
             mode = OTControl::CTRLMODE_ON;
-        else if (String(payload).compareTo("auto") == 0)
+        else if (payload.compareTo("auto") == 0)
             mode = OTControl::CTRLMODE_AUTO;
-        else if (String(payload).compareTo("off") == 0)
+        else if (payload.compareTo("off") == 0)
             mode = OTControl::CTRLMODE_OFF;
         else
             return;
@@ -168,28 +169,28 @@ void Mqtt::onMessage(const char *topic, const char *payload, const size_t size) 
 
     tmp = FPSTR(MQTTSETVAR_ROOMTEMP1);
     if (topicStr.compareTo(tmp) == 0) {
-        double d = String(payload).toFloat();
+        double d = payload.toFloat();
         roomTemp[0].set(d, Sensor::SOURCE_MQTT);
         return;
     }
 
     tmp = FPSTR(MQTTSETVAR_ROOMTEMP2);
     if (topicStr.compareTo(tmp) == 0) {
-        double d = String(payload).toFloat();
+        double d = payload.toFloat();
         roomTemp[1].set(d, Sensor::SOURCE_MQTT);
         return;
     }
 
     tmp = FPSTR(MQTTSETVAR_ROOMSETPOINT1);
     if (topicStr.compareTo(tmp) == 0) {
-        double d = String(payload).toFloat();
+        double d = payload.toFloat();
         roomSetPoint[0].set(d, Sensor::SOURCE_MQTT);
         return;
     }
 
     tmp = FPSTR(MQTTSETVAR_ROOMSETPOINT2);
     if (topicStr.compareTo(tmp) == 0) {
-        double d = String(payload).toFloat();
+        double d = payload.toFloat();
         roomSetPoint[1].set(d, Sensor::SOURCE_MQTT);
         return;
     }
