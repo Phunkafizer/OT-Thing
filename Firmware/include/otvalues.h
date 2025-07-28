@@ -148,12 +148,12 @@ private:
     const char *AIR_PRESS_FAULT PROGMEM = "air_pressure_fault";
     const char *WATER_OVER_TEMP PROGMEM = "water_over_temp";
     const Flag flags[6] PROGMEM = {
-        {0, SRV_REQUEST},
-        {1, LOCKOUT_RESET},
-        {2, LOW_WATER_PRESSURE},
-        {3, GAS_FLAME_FAULT},
-        {4, AIR_PRESS_FAULT},
-        {5, WATER_OVER_TEMP}
+        {8, SRV_REQUEST},
+        {9, LOCKOUT_RESET},
+        {10, LOW_WATER_PRESSURE},
+        {11, GAS_FLAME_FAULT},
+        {12, AIR_PRESS_FAULT},
+        {13, WATER_OVER_TEMP}
     };
 public:
     OTValueFaultFlags(const int interval);
