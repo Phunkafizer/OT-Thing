@@ -608,6 +608,12 @@
                     </div>
                 </div>
             </div>
+
+            <h3>1-wire</h3>
+            <div class="group">
+                <div class="flexline" id="oneWireSensors">
+                </div>
+            </div>
         </div>
 
         <div class="tab" id="heatingcurve1">
@@ -727,10 +733,14 @@
                     <div class="selopt">
                     </div>
                     <div class="selopt">
-                        address
+                        <h4>address</h4>
+                        <select id="bleRoomTempAdr1" class="bleAdr">
+                        </select>
                     </div>
                     <div class="selopt">
-                        address
+                        <h4>address</h4>
+                        <select id="oneWireRoomTempAdr1" class="oneWireAdr">
+                        </select>
                     </div>
                 </div>
             </div>
@@ -919,10 +929,14 @@
                     <div class="selopt">
                     </div>
                     <div class="selopt">
-                        address
+                        <h4>address</h4>
+                        <select id="bleRoomTempAdr2" class="bleAdr">
+                        </select>
                     </div>
                     <div class="selopt">
-                        address
+                        <h4>address</h4>
+                        <select id="oneWireRoomTempAdr2" class="oneWireAdr">
+                        </select>
                     </div>
                 </div>
             </div>
@@ -1016,7 +1030,7 @@
                     <input id="wifissid" type="text"/>
                     <h4>Passwort</h4>
                     <input id="wifipass" type="password"/>
-                    <div><button id="btnsavewifi">Save</button></div>
+                    <div><button id="btnsavewifi">connect</button></div>
                 </div>
             </div>
 
@@ -1194,8 +1208,7 @@
                         exponent: 1.3,
                         gradient: 1.4,
                         offset: 0,
-                        marker: [
-                        ],
+                        marker: [],
                         roomsetpoint: {
                             "source": 0
                         },
@@ -1212,7 +1225,13 @@
                         exponent: 1.3,
                         gradient: 1.4,
                         offset: 0,
-                        marker: []
+                        marker: [],
+                        roomsetpoint: {
+                            "source": 0
+                        },
+                        roomtemp: {
+                            "source": 1
+                        }
                     }
                 ]
             },
@@ -1232,8 +1251,11 @@
             return document.querySelectorAll(query);
         }
 
-        function _$(elename) {
-            return document.createElement(elename);
+        function _$(elename, props = {}, ...children) {
+            const result = document.createElement(elename);
+            Object.assign(result, props);
+            result.append(...children);
+            return result;
         }
 
         window.onload = () => {
@@ -1264,9 +1286,20 @@
                     interval: parseInt(_("#inpinterval").value),
                 };
 
-                config.boiler.heating[0].chOn = _("#chOn1").checked;
-                config.boiler.heating[1].chOn = _("#chOn2").checked;
-                
+                let heating0 = config.boiler.heating[0];
+                heating0.chOn = _("#chOn1").checked;
+                delete heating0.roomtemp["adr"];
+                if (heating0.roomtemp.source == 3) {
+                    heating0.roomtemp["adr"] = _("#oneWireRoomTempAdr1").value;
+                }
+
+                let heating1 = config.boiler.heating[1];
+                heating1.chOn = _("#chOn2").checked;
+                delete heating1.roomtemp["adr"];
+                if (heating1.roomtemp.source == 3) {
+                    heating1.roomtemp["adr"] = _("#oneWireRoomTempAdr2").value;
+                }
+                    
                 config.boiler.dhwOn = _("#dhwOn").checked;
                 config.boiler.coolOn = _("#coolOn").checked;
 
@@ -1344,29 +1377,21 @@
                 _("#scanHint").style.display = 'none';
 
                 scanObj.results.forEach(element => {
-                    let newrow = _$("tr");
-                    scanbody.appendChild(newrow);
-
-                    let td = _$("td");
-                    let inp = _$("input");
-                    inp.type = "radio";
-                    inp.name = "ssid";
-                    inp.value = element.ssid;
-                    inp.onclick = (ev) => {
-                        _("#wifissid").value = ev.target.value;
-                    };
-                    td.appendChild(inp);
-                    newrow.appendChild(td);
-
-                    td = _$("td");
-                    td.innerText = element.ssid;
-                    newrow.appendChild(td);
-                    td = _$("td");
-                    td.innerText = element.channel;
-                    newrow.appendChild(td);
-                    td = _$("td");
-                    td.innerText = element.rssi;
-                    newrow.appendChild(td);    
+                    _("#scanbody").append(
+                        _$("tr", {},
+                            _$("td", {},
+                                _$("input", {
+                                    type: "radio", 
+                                    name: "ssid", 
+                                    value: element.ssid, 
+                                    onclick: (ev) => {_("#wifissid").value = ev.target.value;}
+                                })
+                            ),
+                            _$("td", {textContent: element.ssid}),
+                            _$("td", {textContent: element.channel}),
+                            _$("td", {textContent: element.rssi})
+                        )
+                    );
                 });
             };
             // eventhandler for scan button
@@ -1412,38 +1437,29 @@
                     return;
                 }
                 _("#markerbody" + hk).innerHTML = "";
+                
                 var i = 0;
-
                 config.boiler.heating[hk - 1].marker.forEach(function (item) {
-                    let tr = _$("tr");
-                    let td = _$("td");
-                    td.innerText = item.comment;
-                    tr.appendChild(td);
+                    _(`#markerbody${hk}`).append(
+                        _$("tr", {}, 
+                            _$("td", {textContent: item.comment}),
+                            _$("td", {textContent: item.ot + " °C"}),
+                            _$("td", {textContent: item.ft + " °C"}),
+                            _$("td", {},
+                                _$("button", {
+                                    className: "rmmarker", 
+                                    textContent: "-",
+                                    onclick: (ev) => {
+                                        config.boiler.heating[hk - 1].marker.splice(ev.target.getAttribute("index"), 1);
+                                        drawMarkerTable(hk);
+                                        drawCurve(hk);
+                                    }
+                                })
+                            )
+                        )
+                    );
 
-                    td = _$("td");
-                    td.innerHTML = item.ot;
-                    tr.appendChild(td);
-
-                    td = _$("td");
-                    td.innerHTML = item.ft;
-                    tr.appendChild(td);
-
-                    td = _$("td");
-                    let btn = _$("button");
-                    btn.className = "rmmarker";
-                    btn.innerHTML = "-";
-                    btn.setAttribute("index", i);
-                    btn.onclick = (ev) => {
-                        config.boiler.heating[hk - 1].marker.splice(ev.target.getAttribute("index"), 1);
-                        drawMarkerTable(hk);
-                        drawCurve(hk);
-                    };
-                    td.appendChild(btn);
-
-                    tr.appendChild(td);
-                    _("#markerbody" + hk).appendChild(tr);
-
-                    i++;
+                    _(`#markerbody${hk} tr:last-child button`).setAttribute("index", i++);
                 });
             }
 
@@ -1527,6 +1543,7 @@
 
                 if ('roomtemp' in config.boiler.heating[0])
                     _("#selectRoomTempSource1").value = config.boiler.heating[0].roomtemp.source;
+
                 _("#selectRoomTempSource1").dispatchEvent(new Event('change'));
 
                 if ('roomsetpoint' in config.boiler.heating[0])
@@ -1613,6 +1630,35 @@
                     ele.innerHTML = statuscache.mqtt.basetopic;
                 });
 
+                if ("1wire" in statuscache) {
+                    __(".oneWireAdr").forEach((ele) => {
+                        if (ele.childElementCount == 0) {
+                            for (adr in statuscache["1wire"])
+                                ele.append(_$("option", {textContent: adr}));
+
+                            if ( (ele == _("#oneWireRoomTempAdr1")) && (config.boiler.heating[0].roomtemp.source == 3) )
+                                ele.value = config.boiler.heating[0].roomtemp.adr;
+
+                            if ( (ele == _("#oneWireRoomTempAdr2")) && (config.boiler.heating[1].roomtemp.source == 3) )
+                                ele.value = config.boiler.heating[1].roomtemp.adr;
+                        }
+                    });
+
+                    var i = 1;
+                    for (adr in statuscache["1wire"]) {
+                        if (_("#oneWireSensors").childElementCount < Object.keys(statuscache["1wire"]).length) {
+                            _("#oneWireSensors").append(
+                                _$("div", {className: "statusfield"},
+                                    _$("h4", {textContent: adr}),
+                                    _$("span", {className: "statusvalue"})
+                                )
+                            );
+                        }
+                        _("#oneWireSensors div:nth-child(" + i + ") span").innerText = statuscache["1wire"][adr] + " °C";
+                        i++;
+                    }
+                }
+                
                 drawCurve();
                 setTimeout(fetchStatus, 5000);
             };

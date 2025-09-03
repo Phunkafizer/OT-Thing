@@ -11,8 +11,6 @@
 #include "command.h"
 #include "sensors.h"
 #include "HADiscLocal.h"
-//#include <OneWire.h>
-//#include <DallasTemperature.h>
 //#include <NimBLEDevice.h>
 
 #ifdef DEBUG
@@ -23,8 +21,6 @@ Ticker statusLedTicker;
 volatile uint16_t statusLedData = 0x8000;
 bool configMode = false;
 const char hostname[] PROGMEM = HOSTNAME;
-
-//OneWire oneWire(4);
 
 void statusLedLoop() {
     static uint16_t mask = 0x8000;
@@ -92,6 +88,7 @@ void setup() {
     mqtt.begin();
     String hn(FPSTR(hostname));
     MDNS.begin(hn.c_str());
+    OneWireNode::begin();
     devconfig.begin();
     portal.begin(configMode);
     command.begin();
@@ -137,33 +134,5 @@ void loop() {
     otcontrol.loop();
     Sensor::loopAll();
     devconfig.loop();
-    
-    static uint32_t lastSensors = 0;
-    if (now - lastSensors > 10000) {
-      /*  uint8_t addr[8];
-
-    if (now - lastSensors > 1000) {
-        return;
-        uint8_t addr[8];
-        if (!oneWire.search(addr)) {
-            oneWire.reset_search();
-            lastSensors = now;
-        }
-        else {
-            String adr;
-            for (int i=0; i<8; i++) {
-                if (addr[i] < 0x10)
-                    adr += '0';
-                adr += String(addr[i], HEX);
-            }
-
-            DallasTemperature ds(&oneWire);
-            ds.requestTemperatures();
-            double t = ds.getTempC(addr);
-            JsonDocument doc;
-            doc["temp"] = t;
-            String topic = mqtt.getBaseTopic() + F("/1wire/") + adr;
-            mqtt.publish(topic, doc, false);
-        }*/
-    }
+    OneWireNode::loop();
 }

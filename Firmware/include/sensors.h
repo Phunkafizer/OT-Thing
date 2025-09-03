@@ -4,6 +4,19 @@
 #include <ArduinoJson.h>
 #include <AsyncTCP.h>
 
+class OneWireNode {
+private:
+    String getAdr() const;
+    OneWireNode *next;
+    uint8_t addr[8];
+    double temp;
+public:
+    OneWireNode(uint8_t *addr);
+    static void begin();
+    static void loop();
+    static void writeJson(JsonObject &status);
+    static OneWireNode* find(String adr);
+};
 
 class Sensor {
 public:
@@ -15,6 +28,7 @@ public:
         SOURCE_1WIRE = 3,
         SOURCE_OPENWEATHER = 4
     };
+    OneWireNode *own; // points to a OneWireNode if configured
     Sensor();
     void set(const double val, const Source src);
     bool get(double &val);
@@ -51,6 +65,7 @@ private:
     } httpState;
 };
 
+extern OneWireNode *oneWireNode;
 extern Sensor roomTemp[2];
 extern Sensor roomSetPoint[2];
 extern OutsideTemp outsideTemp;

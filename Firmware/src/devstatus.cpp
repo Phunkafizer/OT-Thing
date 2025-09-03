@@ -59,6 +59,11 @@ JsonDocument &DevStatus::buildDoc() {
             hc[F("roomtemp")] = d;
     }
 
+    if (oneWireNode) {
+        JsonObject jo = doc[F("1wire")].to<JsonObject>();
+        OneWireNode::writeJson(jo);
+    }
+
     return doc;
 }
 

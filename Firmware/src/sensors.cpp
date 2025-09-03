@@ -1,4 +1,6 @@
 #include "sensors.h"
+#include <OneWire.h>
+#include <DallasTemperature.h>
 //#include <BLEDevice.h>
 
 Sensor roomTemp[2];
@@ -6,6 +8,9 @@ Sensor roomSetPoint[2];
 OutsideTemp outsideTemp;
 
 Sensor *Sensor::lastSensor = nullptr;
+
+static OneWire oneWire(4);
+OneWireNode *oneWireNode = nullptr;
 
 Sensor::Sensor():
     src(SOURCE_NA) {
@@ -31,6 +36,12 @@ bool Sensor::get(double &val) {
 void Sensor::setConfig(JsonObject &obj) {
     src = (Source) (obj["source"] | (int) SOURCE_NA);
     setFlag = false;
+    own = nullptr;
+    if (src == SOURCE_1WIRE) {
+        Serial.print("1 wire node should be \r\n");
+        own = OneWireNode::find(String(obj["adr"]));
+        Serial.print((unsigned long) own);
+    }
 }
 
 bool Sensor::isMqttSource() {
@@ -131,6 +142,76 @@ void OutsideTemp::loop() {
     default:
         break;
     }
+}
+
+
+OneWireNode::OneWireNode(uint8_t *addr) {
+    next = oneWireNode;
+    oneWireNode = this;
+    memcpy(this->addr, addr, sizeof(this->addr));
+}
+
+void OneWireNode::begin() {
+    oneWire.reset_search();
+    uint8_t addr[8];
+    while (oneWire.search(addr)) {
+        new OneWireNode(addr);
+    }
+}
+
+void OneWireNode::loop() {
+    static uint32_t last = millis();
+    if (millis() - last > 5000) {
+        OneWireNode *node = oneWireNode;
+        DallasTemperature ds(&oneWire);
+        ds.requestTemperatures();
+        while (node) {
+            node->temp = ds.getTempC(node->addr);
+            if (node->temp != DEVICE_DISCONNECTED_C) {
+                for (int i=0; i<sizeof(roomTemp) / sizeof(roomTemp[0]); i++) {
+                    if (roomTemp[i].own == node)
+                        roomTemp[i].set(node->temp, Sensor::SOURCE_1WIRE);
+                }
+            }
+            node = node->next;
+        }
+        last = millis();
+    }
+}
+
+void OneWireNode::writeJson(JsonObject &status) {
+    OneWireNode *node = oneWireNode;
+
+    while (node) {
+        String adrStr = node->getAdr();
+
+        if (node->temp != DEVICE_DISCONNECTED_C)
+            status[adrStr] = node->temp;
+        else
+            status[adrStr] = nullptr;
+            
+        node = node->next;
+    }
+}
+
+String OneWireNode::getAdr() const {
+    String result;
+    for (uint8_t i=0; i<sizeof(addr); i++) {
+        if (addr[i] < 0x10)
+            result += '0';
+        result += String(addr[i], 16);
+    }
+    return result;
+}
+
+OneWireNode *OneWireNode::find(String adr) {
+    OneWireNode *node = oneWireNode;
+    while (node) {
+        if (node->getAdr() == adr)
+            return node;
+        node = node->next;
+    }
+    return nullptr;
 }
 
 
