@@ -16,6 +16,7 @@ public:
     static void loop();
     static void writeJson(JsonObject &status);
     static OneWireNode* find(String adr);
+    static bool sendDiscovery();
 };
 
 class Sensor {

@@ -61,7 +61,8 @@ void Mqtt::onConnect() {
 
     String topic = baseTopic + F("/+/set");
     cli.subscribe(topic.c_str(), 0);
-    otcontrol.resetDiscovery();
+
+    discFlag = false;
 }
 
 bool Mqtt::connected() {
@@ -96,6 +97,13 @@ void Mqtt::loop() {
     }
 
     if (cli.connected()) {
+        if (!discFlag) {
+            discFlag = true;
+
+            discFlag &= otcontrol.sendDiscovery();
+            discFlag &= OneWireNode::sendDiscovery();
+        }
+
         if ((millis() - lastStatus) > 5000) {
             lastStatus = millis();
             String payload;

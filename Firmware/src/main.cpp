@@ -84,11 +84,11 @@ void setup() {
     
     WiFi.onEvent(wifiEvent);
     WiFi.begin();
+    OneWireNode::begin();
     haDisc.begin();
     mqtt.begin();
     String hn(FPSTR(hostname));
     MDNS.begin(hn.c_str());
-    OneWireNode::begin();
     devconfig.begin();
     portal.begin(configMode);
     command.begin();

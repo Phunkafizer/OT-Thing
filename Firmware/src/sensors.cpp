@@ -1,6 +1,7 @@
 #include "sensors.h"
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include "HADiscLocal.h"
 //#include <BLEDevice.h>
 
 Sensor roomTemp[2];
@@ -214,4 +215,18 @@ OneWireNode *OneWireNode::find(String adr) {
     return nullptr;
 }
 
+bool OneWireNode::sendDiscovery() {
+    bool discFlag = true;
 
+    OneWireNode *node = oneWireNode;
+    while (node) {
+        haDisc.createTempSensor("1wire", node->getAdr());
+        String path = F("{{ value_json['1wire']['");
+        path += node->getAdr();
+        path += F("'] }}");
+        haDisc.setValueTemplate(path);
+        discFlag &= haDisc.publish();
+        node = node->next;
+    }
+    return discFlag;
+}

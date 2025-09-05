@@ -45,7 +45,7 @@ private:
     } heatingParams[2];
     double dhwTemp;
     bool dhwOn;
-    bool discFlag {false};
+    bool discFlag {true};
     uint32_t nextDHWSet {0};
     uint32_t nextBoilerTemp[2] {0, 0};
     struct OTInterface {
@@ -70,10 +70,10 @@ public:
     void loop();
     void getJson(JsonObject &obj);
     void setChCtrlConfig(JsonObject &config);
-    void resetDiscovery();
     void setDhwTemp(const double temp);
     void setChTemp(const double temp, const uint8_t channel);
     void setChCtrlMode(const CtrlMode mode, const uint8_t channel);
+    bool sendDiscovery();
 };
 
 extern OTControl otcontrol;

@@ -33,6 +33,7 @@ private:
     bool configSet;
     String baseTopic;
     String statusTopic;
+    bool discFlag {false}; // discovery flag; set after MQTT (re-) connect
 public:
     Mqtt();
     void begin();
