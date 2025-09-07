@@ -236,9 +236,21 @@ bool OTValue::sendDiscovery() {
             haDisc.createSensor(F("OT-Version Master"), FPSTR(name));
             break;
 
-        // TODO
+        case OpenThermMessageID::Toutside:
+            haDisc.createSensor(F("Außentemperatur"), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::OpenThermVersionSlave:
+            haDisc.createSensor(F("OT-Version Slave"), FPSTR(name));
+            break;
+
         case OpenThermMessageID::DHWFlowRate:
+            haDisc.createSensor(F("Volumenstrom"), FPSTR(name));
+            break;
+
+        // TODO
         case OpenThermMessageID::CHPumpStarts:
+        case OpenThermMessageID::TrOverride:
             return false;
 
         default:

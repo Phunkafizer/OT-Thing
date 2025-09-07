@@ -123,7 +123,6 @@ void OutsideTemp::loop() {
             acli.close();
 
         if (!acli.connected()) {
-            Serial.println(replyBuf);
             JsonDocument doc;
             deserializeJson(doc, replyBuf);
             replyBuf.clear();
