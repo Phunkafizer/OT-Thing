@@ -70,12 +70,7 @@ void setup() {
 
     statusLedTicker.attach(0.2, statusLedLoop);
 
-    unsigned long ts = millis();
-    while (millis() - ts < 1000)
-        if (digitalRead(GPIO_CONFIG_BUTTON) != 0)
-            break;
-
-    configMode |= millis() - ts >= 1000;
+    configMode = digitalRead(GPIO_CONFIG_BUTTON) == 0;
     if (configMode)
         statusLedData = 0xA000;
 

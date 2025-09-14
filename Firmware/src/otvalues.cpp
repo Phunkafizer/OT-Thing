@@ -4,73 +4,47 @@
 #include "HADiscLocal.h"
 #include "mqtt.h"
 
-const char ID_STR_STATUS[] PROGMEM = "status";
-const char ID_STR_SLAVE_CONFIG_MEMBER[] PROGMEM = "slave_config_member";
-const char ID_STR_MASTER_CONFIG_MEMBER[] PROGMEM = "master_config_member";
-const char ID_STR_REL_MOD[] PROGMEM = "rel_mod";
-const char ID_STR_CH_PRESSURE[] PROGMEM = "ch_pressure";
-const char ID_STR_FLOW_T[] PROGMEM = "flow_t";
-const char ID_STR_FLOW_T2[] PROGMEM = "flow_t2";
-const char ID_STR_DHW_T[] PROGMEM = "dhw_t";
-const char ID_STR_DHW_T2[] PROGMEM = "dhw_t2";
-const char ID_STR_ROOM_T[] PROGMEM = "room_t";
-const char ID_STR_ROOM_SET_T[] PROGMEM = "room_set_t";
-const char ID_STR_ROOM_T2[] PROGMEM = "room_t2";
-const char ID_STR_ROOM_SET_T2[] PROGMEM = "room_set_t2";
-const char ID_STR_DHW_FLOW_RATE[] PROGMEM = "dhw_flow_rate";
-const char ID_STR_EXHAUST_T[] PROGMEM = "exhaust_t";
-const char ID_STR_BURNER_STARTS[] PROGMEM = "burner_starts";
-const char ID_STR_BURNER_OP_HOURS[] PROGMEM = "burner_op_hours";
-const char ID_STR_RETURN_T[] PROGMEM = "return_t";
-const char ID_STR_CH_PUMP_STARTS[] PROGMEM = "ch_pump_starts";
-const char ID_STR_SLAVE_PROD_VERSION[] PROGMEM = "slave_prod_version";
-const char ID_STR_DHW_SET_T[] PROGMEM = "dhw_set_t";
-const char ID_STR_CH_SET_T[] PROGMEM = "ch_set_t";
-const char ID_STR_CH_SET_T2[] PROGMEM = "ch_set_t2";
-const char ID_STR_CAPACITY_MODULATION[] PROGMEM = "cap_mod";
-const char ID_STR_OUTSIDE_T[] PROGMEM = "outside_t";
-const char ID_STR_MASTER_PROD_VERSION[] PROGMEM = "master_prod_version";
-const char ID_STR_MAX_REL_MOD[] PROGMEM = "max_rel_mod";
-const char ID_STR_MASTER_OT_VERSION[] PROGMEM = "master_ot_version";
-const char ID_STR_RPFLAGS[] PROGMEM = "rp_flags";
-const char ID_STR_TROVERRIDE[] PROGMEM = "tr_override";
-const char ID_STR_SLAVE_OT_VERSION[] PROGMEM = "slave_ot_version";
-const char ID_STR_FAULT_FLAGS[] PROGMEM = "fault_flags";
-const char ID_STR_MAX_CAP_MIN_MOD_LEVEL[] PROGMEM = "max_cap_min_mod";
+struct OTItem {
+    OpenThermMessageID id;
+    const char* name;
+    const char* haName {nullptr};
+    static const char* getName(OpenThermMessageID id);
+};
 
-OTItem OTITEMS[] PROGMEM = {
-    {OpenThermMessageID::Status,                    ID_STR_STATUS},
-    {OpenThermMessageID::TSet,                      ID_STR_CH_SET_T},
-    {OpenThermMessageID::MConfigMMemberIDcode,      ID_STR_MASTER_CONFIG_MEMBER},
-    {OpenThermMessageID::SConfigSMemberIDcode,      ID_STR_SLAVE_CONFIG_MEMBER},
-    {OpenThermMessageID::ASFflags,                  ID_STR_FAULT_FLAGS},
-    {OpenThermMessageID::RBPflags,                  ID_STR_RPFLAGS},
-    {OpenThermMessageID::TsetCH2,                   ID_STR_CH_SET_T2},
-    {OpenThermMessageID::TrOverride,                ID_STR_TROVERRIDE},
-    {OpenThermMessageID::MaxRelModLevelSetting,     ID_STR_MAX_REL_MOD},
-    {OpenThermMessageID::MaxCapacityMinModLevel,    ID_STR_MAX_CAP_MIN_MOD_LEVEL},
-    {OpenThermMessageID::TrSet,                     ID_STR_ROOM_SET_T},
-    {OpenThermMessageID::RelModLevel,               ID_STR_REL_MOD},
-    {OpenThermMessageID::CHPressure,                ID_STR_CH_PRESSURE},
-    {OpenThermMessageID::DHWFlowRate,               ID_STR_DHW_FLOW_RATE},
-    {OpenThermMessageID::TrSetCH2,                  ID_STR_ROOM_SET_T2},
-    {OpenThermMessageID::Tr,                        ID_STR_ROOM_T},
-    {OpenThermMessageID::Tboiler,                   ID_STR_FLOW_T},
-    {OpenThermMessageID::Tdhw,                      ID_STR_DHW_T},
-    {OpenThermMessageID::Toutside,                  ID_STR_OUTSIDE_T},
-    {OpenThermMessageID::Tret,                      ID_STR_RETURN_T},
-    {OpenThermMessageID::TflowCH2,                  ID_STR_FLOW_T2},
-    {OpenThermMessageID::Tdhw2,                     ID_STR_DHW_T2},
-    {OpenThermMessageID::Texhaust,                  ID_STR_EXHAUST_T},
-    {OpenThermMessageID::TrCH2,                     ID_STR_ROOM_T2},
-    {OpenThermMessageID::TdhwSet,                   ID_STR_DHW_SET_T},
-    {OpenThermMessageID::SuccessfulBurnerStarts,    ID_STR_BURNER_STARTS},
-    {OpenThermMessageID::CHPumpStarts,              ID_STR_CH_PUMP_STARTS},
-    {OpenThermMessageID::BurnerOperationHours,      ID_STR_BURNER_OP_HOURS},
-    {OpenThermMessageID::OpenThermVersionMaster,    ID_STR_MASTER_OT_VERSION},
-    {OpenThermMessageID::OpenThermVersionSlave,     ID_STR_SLAVE_OT_VERSION},
-    {OpenThermMessageID::MasterVersion,             ID_STR_MASTER_PROD_VERSION},
-    {OpenThermMessageID::SlaveVersion,              ID_STR_SLAVE_PROD_VERSION},
+static const OTItem OTITEMS[] PROGMEM = {
+//  ID of message                                   string id for MQTT                  
+    {OpenThermMessageID::Status,                    PSTR("status")}, // ID_STR_STATUS},
+    {OpenThermMessageID::TSet,                      PSTR("ch_set_t")}, // ID_STR_CH_SET_T},
+    {OpenThermMessageID::MConfigMMemberIDcode,      PSTR("master_config_member")}, // ID_STR_MASTER_CONFIG_MEMBER},
+    {OpenThermMessageID::SConfigSMemberIDcode,      PSTR("slave_config_member")}, // ID_STR_SLAVE_CONFIG_MEMBER},
+    {OpenThermMessageID::ASFflags,                  PSTR("fault_flags")}, //ID_STR_FAULT_FLAGS},
+    {OpenThermMessageID::RBPflags,                  PSTR("rp_flags")}, // ID_STR_RPFLAGS},
+    {OpenThermMessageID::TsetCH2,                   PSTR("ch_set_t2")}, // ID_STR_CH_SET_T2},
+    {OpenThermMessageID::TrOverride,                PSTR("tr_override")},
+    {OpenThermMessageID::MaxRelModLevelSetting,     PSTR("max_rel_mod")}, // ID_STR_MAX_REL_MOD},
+    {OpenThermMessageID::MaxCapacityMinModLevel,    PSTR("max_cap_min_mod")}, // ID_STR_MAX_CAP_MIN_MOD_LEVEL},
+    {OpenThermMessageID::TrSet,                     PSTR("room_set_t")}, // ID_STR_ROOM_SET_T},
+    {OpenThermMessageID::RelModLevel,               PSTR("max_rel_mod")}, // ID_STR_REL_MOD},
+    {OpenThermMessageID::CHPressure,                PSTR("ch_pressure")}, // ID_STR_CH_PRESSURE},
+    {OpenThermMessageID::DHWFlowRate,               PSTR("dhw_flow_rate")}, // ID_STR_DHW_FLOW_RATE},
+    {OpenThermMessageID::TrSetCH2,                  PSTR("room_set_t2")}, // ID_STR_ROOM_SET_T2},
+    {OpenThermMessageID::Tr,                        PSTR("room_t")},
+    {OpenThermMessageID::Tboiler,                   PSTR("flow_t")},
+    {OpenThermMessageID::Tdhw,                      PSTR("dhw_t")},
+    {OpenThermMessageID::Toutside,                  PSTR("outside_t")},
+    {OpenThermMessageID::Tret,                      PSTR("return_t")},
+    {OpenThermMessageID::TflowCH2,                  PSTR("flow_t2")},
+    {OpenThermMessageID::Tdhw2,                     PSTR("dhw_t2")},
+    {OpenThermMessageID::Texhaust,                  PSTR("exhaust_t")},
+    {OpenThermMessageID::TrCH2,                     PSTR("room_t2")},
+    {OpenThermMessageID::TdhwSet,                   PSTR("dhw_set_t")},
+    {OpenThermMessageID::SuccessfulBurnerStarts,    PSTR("burner_starts")},
+    {OpenThermMessageID::CHPumpStarts,              PSTR("ch_pump_starts")},
+    {OpenThermMessageID::BurnerOperationHours,      PSTR("burner_op_hours")},
+    {OpenThermMessageID::OpenThermVersionMaster,    PSTR("master_ot_version")},
+    {OpenThermMessageID::OpenThermVersionSlave,     PSTR("slave_ot_version")},
+    {OpenThermMessageID::MasterVersion,             PSTR("master_prod_version")},
+    {OpenThermMessageID::SlaveVersion,              PSTR("slave_prod_version")}
 };
 
 OTValue *boilerValues[22] = { // reply data collected (read) from boiler
@@ -116,6 +90,10 @@ OTValue *thermostatValues[13] = { // request data sent (written) from roomunit
     new OTValueMasterStatus(),
     new OTValueFloat(           OpenThermMessageID::TrOverride,             -1),
 };
+
+const char* getOTname(OpenThermMessageID id) {
+    return OTItem::getName(id);
+}
 
 const char* OTItem::getName(OpenThermMessageID id) {
     for (int i=0; i<sizeof(OTITEMS) / sizeof(OTITEMS[0]); i++)
@@ -257,16 +235,13 @@ bool OTValue::sendDiscovery() {
             return false;
     }
 
-    String valTempl;
+    String valTempl = F("{{ value_json.thermostat.# }}");
     for (auto *valobj: boilerValues) {
         if (valobj == this) {
             valTempl = F("{{ value_json.boiler.# }}");
             break;
         }
     }
-    if (valTempl.isEmpty())
-        valTempl = F("{{ value_json.thermostat.# }}");
-        
     valTempl.replace("#", FPSTR(name));
     haDisc.setValueTemplate(valTempl);
         

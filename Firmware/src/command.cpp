@@ -92,7 +92,7 @@ void OtGwCommand::sendOtEvent(const char source, const uint32_t data) {
         break;
     }
 
-    const char *name = OTItem::getName(id);
+    const char *name = getOTname(id);
     line += ' ';
     if (name != nullptr)
         line += FPSTR(name);

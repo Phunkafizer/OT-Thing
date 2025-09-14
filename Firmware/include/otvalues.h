@@ -3,12 +3,6 @@
 #include <ArduinoJson.h>
 #include <OpenTherm.h>
 
-struct OTItem {
-    OpenThermMessageID id;
-    const char* name;
-    static const char* getName(OpenThermMessageID id);
-};
-
 class OTValue {
 private:
     const OpenThermMessageID id;
@@ -213,3 +207,4 @@ public:
 
 extern OTValue *boilerValues[22];
 extern OTValue *thermostatValues[13];
+extern const char* getOTname(OpenThermMessageID id);

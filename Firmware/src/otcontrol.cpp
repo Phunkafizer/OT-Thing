@@ -13,6 +13,10 @@ constexpr uint16_t floatToOT(double f) {
     return (((int) f) << 8) | (int) ((f - (int) f) * 256);
 }
 
+constexpr uint16_t nib(uint8_t hb, uint8_t lb) {
+    return (hb << 8) | lb;
+}
+
 // Testdata for OT slave, can be read by a connected master
 const struct {
     OpenThermMessageID id;
@@ -23,7 +27,7 @@ const struct {
     {OpenThermMessageID::ASFflags,                  0x0000}, // no error flags, oem error code 0
     {OpenThermMessageID::RBPflags,                  0x0101},
     {OpenThermMessageID::TrOverride,                0},
-    {OpenThermMessageID::MaxCapacityMinModLevel,    20 << 8 | 5}, // 20 kW / 5 %
+    {OpenThermMessageID::MaxCapacityMinModLevel,    nib(20, 5)}, // 20 kW / 5 %
     {OpenThermMessageID::RelModLevel,               floatToOT(33.3)},
     {OpenThermMessageID::CHPressure,                floatToOT(1.25)},
     {OpenThermMessageID::DHWFlowRate,               floatToOT(2.4)},
@@ -34,13 +38,13 @@ const struct {
     {OpenThermMessageID::TflowCH2,                  floatToOT(48.6)},
     {OpenThermMessageID::Tdhw2,                     floatToOT(37.6)},
     {OpenThermMessageID::Texhaust,                  90},
-    {OpenThermMessageID::TdhwSetUBTdhwSetLB,        60<<8 | 40}, // 60 °C upper bound, 40 C° lower bound
-    {OpenThermMessageID::MaxTSetUBMaxTSetLB,        60<8 | 25},
+    {OpenThermMessageID::TdhwSetUBTdhwSetLB,        nib(60, 40)}, // 60 °C upper bound, 40 C° lower bound
+    {OpenThermMessageID::MaxTSetUBMaxTSetLB,        nib(60, 25)},
     {OpenThermMessageID::SuccessfulBurnerStarts,    9999},
     {OpenThermMessageID::CHPumpStarts,              7777},
     {OpenThermMessageID::BurnerOperationHours,      8888},
-    {OpenThermMessageID::OpenThermVersionSlave,     0x0202},
-    {OpenThermMessageID::SlaveVersion,              0x0404}
+    {OpenThermMessageID::OpenThermVersionSlave,     nib(2, 2)},
+    {OpenThermMessageID::SlaveVersion,              nib(4, 4)}
 };
 
 void IRAM_ATTR handleIrqMaster() {
@@ -508,9 +512,8 @@ bool OTControl::setThermostatVal(const unsigned long msg) {
 
 void OTControl::getJson(JsonObject &obj) {
     JsonObject boiler = obj[F("boiler")].to<JsonObject>();
-    for (auto *valobj: boilerValues) {
+    for (auto *valobj: boilerValues)
         valobj->getJson(boiler);
-    }
 
     static bool slaveConnected = false;
     switch (master.hal.getLastResponseStatus()) {
