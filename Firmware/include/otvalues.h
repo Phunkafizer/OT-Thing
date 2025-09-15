@@ -205,6 +205,22 @@ public:
     OTValueRemoteParameter();
 };
 
-extern OTValue *boilerValues[22];
+
+class OTValueRemoteOverrideFunction: public OTValueFlags {
+private:
+    const char *MANUAL_CHANGE_PRIORITY PROGMEM = "manual_change_priority";
+    const char *PROGRAM_CHANGE_PRIORITY PROGMEM = "program_change_priority";
+    const Flag flags[2] PROGMEM = {
+        {0, MANUAL_CHANGE_PRIORITY},
+        {1, PROGRAM_CHANGE_PRIORITY}
+    };
+protected:
+    bool sendDiscovery();
+public:
+    OTValueRemoteOverrideFunction();
+};
+
+
+extern OTValue *boilerValues[24];
 extern OTValue *thermostatValues[13];
 extern const char* getOTname(OpenThermMessageID id);

@@ -37,6 +37,7 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::Tdhw2,                     PSTR("dhw_t2")},
     {OpenThermMessageID::Texhaust,                  PSTR("exhaust_t")},
     {OpenThermMessageID::TrCH2,                     PSTR("room_t2")},
+    {OpenThermMessageID::TrOverride2,               PSTR("tr_override2")},           
     {OpenThermMessageID::TdhwSet,                   PSTR("dhw_set_t")},
     {OpenThermMessageID::SuccessfulBurnerStarts,    PSTR("burner_starts")},
     {OpenThermMessageID::CHPumpStarts,              PSTR("ch_pump_starts")},
@@ -47,7 +48,7 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::SlaveVersion,              PSTR("slave_prod_version")}
 };
 
-OTValue *boilerValues[22] = { // reply data collected (read) from boiler
+OTValue *boilerValues[24] = { // reply data collected (read) from boiler
     new OTValueSlaveConfigMember(),
     new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionSlave,  0),
     new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,           0),
@@ -65,13 +66,13 @@ OTValue *boilerValues[22] = { // reply data collected (read) from boiler
     new OTValueFloat(           OpenThermMessageID::Toutside,               30),
     new OTValueFloat(           OpenThermMessageID::Tret,                   10),
     new OTValuei16(             OpenThermMessageID::Texhaust,               10),
+    new OTValueFloat(           OpenThermMessageID::TrOverride2,            10),
     new OTValueu16(             OpenThermMessageID::SuccessfulBurnerStarts, 30),
     new OTValueu16(             OpenThermMessageID::CHPumpStarts,           30),
     new OTValueu16(             OpenThermMessageID::BurnerOperationHours,   120),
     new OTValueFaultFlags(                                                  30),
-    new OTValueRemoteParameter()
-    //new OTValueFloat(           OpenThermMessageID::TdhwSet,                -1),
-    //new OTValueFloat(           OpenThermMessageID::TSet,                   -1),
+    new OTValueRemoteParameter(),
+    new OTValueRemoteOverrideFunction()
 };
 
 
@@ -477,5 +478,13 @@ OTValueRemoteParameter::OTValueRemoteParameter():
 }
 
 bool OTValueRemoteParameter::sendDiscovery() {
+    return true;
+}
+
+OTValueRemoteOverrideFunction::OTValueRemoteOverrideFunction():
+        OTValueFlags(OpenThermMessageID::RemoteOverrideFunction, 0, flags, sizeof(flags) / sizeof(flags[0])) {
+}
+
+bool OTValueRemoteOverrideFunction::sendDiscovery() {
     return true;
 }
