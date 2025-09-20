@@ -39,7 +39,7 @@ const struct {
     {OpenThermMessageID::Tdhw2,                     floatToOT(37.6)},
     {OpenThermMessageID::Texhaust,                  90},
     {OpenThermMessageID::TdhwSetUBTdhwSetLB,        nib(60, 40)}, // 60 °C upper bound, 40 C° lower bound
-    {OpenThermMessageID::MaxTSetUBMaxTSetLB,        nib(60, 25)},
+    {OpenThermMessageID::MaxTSetUBMaxTSetLB,        nib(60, 25)}, // 60 °C upper bound, 20 C° lower bound
     {OpenThermMessageID::SuccessfulBurnerStarts,    9999},
     {OpenThermMessageID::CHPumpStarts,              7777},
     {OpenThermMessageID::BurnerOperationHours,      8888},
@@ -175,6 +175,40 @@ void OTControl::setOTMode(const OTMode mode) {
     discFlag = false;
 }
 
+double OTControl::getFlow(const uint8_t channel) {
+    HeatingParams &hp = heatingParams[channel];
+    double flow = hp.flowDefault;
+
+    switch (hp.ctrlMode) {
+    case CTRLMODE_ON:
+        flow = hp.flow;
+        break;
+
+    case CTRLMODE_AUTO: {
+        double outTmp;
+        if ((hp.ctrlMode == CTRLMODE_AUTO) && outsideTemp.get(outTmp)) {
+            double roomSet = hp.roomSet; // default room set point
+            roomSetPoint[channel].get(roomSet);
+
+            double minOutside = roomSet - (hp.flowMax - roomSet) / hp.gradient;
+            double c1 = (hp.flowMax - roomSet) / pow(roomSet - minOutside, 1.0 / hp.exponent);
+            flow = roomSet + c1 * pow(roomSet - outTmp, 1.0 / hp.exponent) + hp.offset;
+            if (flow > hp.flowMax)
+                flow = hp.flowMax;
+        }
+        else
+            flow = heatingParams[channel].flow;
+        break;
+    }
+
+    case CTRLMODE_OFF:
+        flow = 0;
+        break;
+    }
+
+    return flow;
+}
+
 void OTControl::loop() {
     master.hal.process();
     slave.hal.process();
@@ -224,38 +258,7 @@ void OTControl::loop() {
                 continue;
 
             if (millis() > nextBoilerTemp[ch]) {
-                HeatingParams &hp = heatingParams[ch];
-                double flow = hp.flowDefault;
-
-                switch (heatingParams[ch].ctrlMode) {
-                case CTRLMODE_ON:
-                    flow = heatingParams[ch].flow;
-                    break;
-
-                case CTRLMODE_AUTO: {
-                    double outTmp;
-                    if ((hp.ctrlMode == CTRLMODE_AUTO) && outsideTemp.get(outTmp)) {
-                        double roomSet = hp.roomSet; // default room set point
-                        roomSetPoint[ch].get(roomSet);
-
-                        double minOutside = roomSet - (hp.flowMax - roomSet) / hp.gradient;
-                        double c1 = (hp.flowMax - roomSet) / pow(roomSet - minOutside, 1.0 / hp.exponent);
-                        flow = roomSet + c1 * pow(roomSet - outTmp, 1.0 / hp.exponent) + hp.offset;
-                        if (flow > hp.flowMax)
-                            flow = hp.flowMax;
-                    }
-                    else
-                        flow = heatingParams[ch].flow;
-                    break;
-                }
-
-                case CTRLMODE_OFF:
-                    flow = 0;
-                    break;
-                
-                default:
-                    break;
-                }
+                double flow = getFlow(ch);
 
                 if (flow > 0) {
                     uint32_t req = OpenTherm::buildRequest(OpenThermMessageType::WRITE_DATA, (ch == 0) ? OpenThermMessageID::TSet : OpenThermMessageID::TsetCH2, OpenTherm::temperatureToData(flow));
@@ -294,9 +297,21 @@ void OTControl::loop() {
                 }       
             }
 
+            bool tmpDhwOn = dhwOn;
+            switch (dhwCtrlMode) {
+            case CtrlMode::CTRLMODE_OFF:
+                tmpDhwOn = false;
+                break;
+            case CtrlMode::CTRLMODE_ON:
+                tmpDhwOn = true;
+                break;
+            default:
+                break;
+            }
+
             unsigned long req = OpenTherm::buildSetBoilerStatusRequest(
                 chOn[0], 
-                dhwOn, 
+                tmpDhwOn, 
                 false, 
                 false, 
                 chOn[1]);
@@ -356,10 +371,15 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
 
     case OTMODE_REPEATER:
         // forward reply from boiler to room unit
-        // TODO manipulate some frames, e. g. outsidetemp 
+        // READ replies can be modified here
         switch (id) {
-        case OpenThermMessageID::Toutside:
-            //newMsg = otmaster.buildRequest(OpenThermMessageType::READ_ACK, id, 0 << 8 | 127);
+        case OpenThermMessageID::Toutside: {
+            double ost;
+            if ( (mt == OpenThermMessageType::READ_ACK) && outsideTemp.isOtSource() && outsideTemp.get(ost))
+                newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(ost));
+            break;
+        }
+        default:
             break;
         }
         slave.sendResponse(newMsg);
@@ -423,22 +443,37 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
     switch (otMode) {
     case OTMODE_REPEATER: {
         // we received a request from the room unit, forward it to boiler
-        // TODO check for special commands, e. g. outside temp
+        // WRITE commands to boiler can be modified here
 
         switch (id) {
         case OpenThermMessageID::TSet:
-            //newMsg = otmaster.buildRequest(OpenThermMessageType::WRITE_DATA, id, 57 << 8);
+            if ( (heatingParams[0].ctrlMode == CTRLMODE_ON) && (mt == OpenThermMessageType::WRITE_DATA) )
+                newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(getFlow(0)));
+            break;
+
+        case OpenThermMessageID::TsetCH2:
+            if ( (heatingParams[1].ctrlMode == CTRLMODE_ON) && (mt == OpenThermMessageType::WRITE_DATA) )
+                newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(getFlow(1)));
+            break;
+
+        case OpenThermMessageID::Tdhw:
+            if ( (dhwCtrlMode == CTRLMODE_ON) && (mt == OpenThermMessageType::WRITE_DATA) )
+                newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(dhwTemp));
             break;
 
         case OpenThermMessageID::Status:
             if (heatingParams[0].ctrlMode == CtrlMode::CTRLMODE_OFF)
-                newMsg &= ~(1<<0); // CH1 disable
+                newMsg &= ~(1<<8); // CH1 disable
             if (heatingParams[0].ctrlMode == CtrlMode::CTRLMODE_ON)
-                newMsg |= 1<<0; // CH1 enable
+                newMsg |= 1<<8; // CH1 enable
             if (heatingParams[1].ctrlMode == CtrlMode::CTRLMODE_OFF)
-                newMsg &= ~(1<<4); // CH2 disable
+                newMsg &= ~(1<<12); // CH2 disable
             if (heatingParams[1].ctrlMode == CtrlMode::CTRLMODE_ON)
-                newMsg |= 1<<4; // CH2 enable
+                newMsg |= 1<<12; // CH2 enable
+            if (dhwCtrlMode == CtrlMode::CTRLMODE_OFF)
+                newMsg &= ~(9<<12); // DHW disable
+            if (dhwCtrlMode == CtrlMode::CTRLMODE_ON)
+                newMsg |= 9<<12; // DHW enable
             
             newMsg = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, id, newMsg & 0xFFFF);
             break;
@@ -593,11 +628,13 @@ bool OTControl::sendDiscovery() {
     haDisc.setCurrentTemperatureTemplate(F("{{ value_json.boiler.dhw_t }}"));
     haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
     haDisc.setInitial(45);
+    haDisc.setModeCommandTopic(mqtt.getVarSetTopic(MQTTSETVAR_DHWMODE));
     haDisc.setTemperatureStateTopic(haDisc.defaultStateTopic);
     haDisc.setTemperatureStateTemplate(F("{{ value_json.thermostat.dhw_set_t }}"));
     haDisc.setOptimistic(true);
     haDisc.setIcon(F("mdi:shower"));
     haDisc.setRetain(true);
+    haDisc.setModes((otMode == OTMODE_MASTER) ? 0x03 : 0x07);
     discFlag &= haDisc.publish();
 
     haDisc.createClima(F("flow set temperature"), FPSTR(MQTTSETVAR_CHSETTEMP1), mqtt.getVarSetTopic(MQTTSETVAR_CHSETTEMP1));
@@ -662,6 +699,11 @@ void OTControl::setDhwTemp(double temp) {
     nextDHWSet = 0;
 }
 
+void OTControl::setDhwCtrlMode(const CtrlMode mode) {
+    dhwCtrlMode = mode;
+    nextDHWSet = 0;
+}
+
 void OTControl::setChCtrlConfig(JsonObject &config) {
     while (!master.hal.isReady()) {
         master.hal.process();
@@ -695,6 +737,7 @@ void OTControl::setChCtrlConfig(JsonObject &config) {
 
     dhwOn = boiler[F("dhwOn")];
     dhwTemp = config[F("boiler")][F("dhwTemperature")] | 45;
+    dhwCtrlMode = CTRLMODE_AUTO;
 
     setOTMode(mode);
 

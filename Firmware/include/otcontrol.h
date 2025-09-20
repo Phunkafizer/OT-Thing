@@ -5,7 +5,8 @@
 
 class OTControl {
 public:
-    enum CtrlMode: uint8_t {
+    enum CtrlMode: int8_t {
+        CTRLMODE_UNKNOWN = -1,
         CTRLMODE_OFF = 0,
         CTRLMODE_ON = 1,
         CTRLMODE_AUTO = 2
@@ -24,6 +25,7 @@ private:
     void sendRequest(const char source, const unsigned long msg);
     void masterPinIrq();
     void slavePinIrq();
+    double getFlow(const uint8_t channel);
     unsigned long lastMillis;
     enum OTMode: int8_t {
         OTMODE_BYPASS = 0,
@@ -45,6 +47,7 @@ private:
     } heatingParams[2];
     double dhwTemp;
     bool dhwOn;
+    CtrlMode dhwCtrlMode;
     bool discFlag {true};
     uint32_t nextDHWSet {0};
     uint32_t nextBoilerTemp[2] {0, 0};
@@ -73,6 +76,7 @@ public:
     void setDhwTemp(const double temp);
     void setChTemp(const double temp, const uint8_t channel);
     void setChCtrlMode(const CtrlMode mode, const uint8_t channel);
+    void setDhwCtrlMode(const CtrlMode mode);
     bool sendDiscovery();
 };
 

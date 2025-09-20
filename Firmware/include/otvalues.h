@@ -178,6 +178,15 @@ public:
     OTValueDHWBounds();
 };
 
+class OTValueCHBounds: public OTValue {
+private:
+    void getValue(JsonObject &obj) const;
+protected:
+    bool sendDiscovery();
+public:    
+    OTValueCHBounds();
+};
+
 class OTValueMasterConfig: public OTValueFlags {
 private:
     void getValue(JsonObject &obj) const;
@@ -221,6 +230,25 @@ public:
 };
 
 
-extern OTValue *boilerValues[27];
-extern OTValue *thermostatValues[13];
+class OTValueDayTime: public OTValue {
+private:
+    void getValue(JsonObject &obj) const;
+protected:
+    bool sendDiscovery();
+public:    
+    OTValueDayTime();
+};
+
+class OTValueDate: public OTValue {
+private:
+    void getValue(JsonObject &obj) const;
+protected:
+    bool sendDiscovery();
+public:    
+    OTValueDate();
+};
+
+
+extern OTValue *boilerValues[28];
+extern OTValue *thermostatValues[16];
 extern const char* getOTname(OpenThermMessageID id);

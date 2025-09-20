@@ -24,9 +24,12 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::MaxRelModLevelSetting,     PSTR("max_rel_mod")},
     {OpenThermMessageID::MaxCapacityMinModLevel,    PSTR("max_cap_min_mod")},
     {OpenThermMessageID::TrSet,                     PSTR("room_set_t")},
-    {OpenThermMessageID::RelModLevel,               PSTR("max_rel_mod")},
+    {OpenThermMessageID::RelModLevel,               PSTR("rel_mod")},
     {OpenThermMessageID::CHPressure,                PSTR("ch_pressure")},
     {OpenThermMessageID::DHWFlowRate,               PSTR("dhw_flow_rate")},
+    {OpenThermMessageID::DayTime,                   PSTR("day_time")},
+    {OpenThermMessageID::Date,                      PSTR("date")},
+    {OpenThermMessageID::Year,                      PSTR("year")},
     {OpenThermMessageID::TrSetCH2,                  PSTR("room_set_t2")},
     {OpenThermMessageID::Tr,                        PSTR("room_t")},
     {OpenThermMessageID::Tboiler,                   PSTR("flow_t")},
@@ -38,6 +41,8 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::Texhaust,                  PSTR("exhaust_t")},
     {OpenThermMessageID::TrCH2,                     PSTR("room_t2")},
     {OpenThermMessageID::TrOverride2,               PSTR("tr_override2")},           
+    {OpenThermMessageID::TdhwSetUBTdhwSetLB,        PSTR("dhw_bounds")},
+    {OpenThermMessageID::MaxTSetUBMaxTSetLB,        PSTR("ch_bounds")},
     {OpenThermMessageID::TdhwSet,                   PSTR("dhw_set_t")},
     {OpenThermMessageID::RemoteOverrideFunction,    PSTR("remote_override_function")},
     {OpenThermMessageID::UnsuccessfulBurnerStarts,  PSTR("unsuccessful_burner_starts")},
@@ -52,13 +57,14 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::SlaveVersion,              PSTR("slave_prod_version")}
 };
 
-OTValue *boilerValues[27] = { // reply data collected (read) from boiler
+OTValue *boilerValues[28] = { // reply data collected (read) from boiler
     new OTValueSlaveConfigMember(),
     new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionSlave,      0),
     new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,               0),
     new OTValueStatus(),
     new OTValueCapacityModulation(),
     new OTValueDHWBounds(),
+    new OTValueCHBounds(),
     new OTValueFloat(           OpenThermMessageID::TrOverride,                 10),
     new OTValueFloat(           OpenThermMessageID::RelModLevel,                10),
     new OTValueFloat(           OpenThermMessageID::CHPressure,                 30),
@@ -83,7 +89,7 @@ OTValue *boilerValues[27] = { // reply data collected (read) from boiler
 };
 
 
-OTValue *thermostatValues[13] = { // request data sent (written) from roomunit
+OTValue *thermostatValues[16] = { // request data sent (written) from roomunit
     new OTValueFloat(           OpenThermMessageID::TSet,                   -1),
     new OTValueFloat(           OpenThermMessageID::TsetCH2,                -1),
     new OTValueFloat(           OpenThermMessageID::Tr,                     -1),
@@ -97,6 +103,9 @@ OTValue *thermostatValues[13] = { // request data sent (written) from roomunit
     new OTValueFloat(           OpenThermMessageID::TdhwSet,                -1),
     new OTValueMasterStatus(),
     new OTValueFloat(           OpenThermMessageID::TrOverride,             -1),
+    new OTValueDayTime(),
+    new OTValueDate(),
+    new OTValueu16(             OpenThermMessageID::Year,                   0),
 };
 
 const char* getOTname(OpenThermMessageID id) {
@@ -478,6 +487,19 @@ bool OTValueDHWBounds::sendDiscovery() {
     return true;
 }
 
+OTValueCHBounds::OTValueCHBounds():
+        OTValue(OpenThermMessageID::MaxTSetUBMaxTSetLB, 0) {
+}
+
+void OTValueCHBounds::getValue(JsonObject &obj) const {
+    obj[F("chMax")] = value >> 8;
+    obj[F("chMin")] = value & 0xFF;
+}
+
+bool OTValueCHBounds::sendDiscovery() {
+    return true;
+}
+
 
 OTValueMasterConfig::OTValueMasterConfig():
         OTValueFlags(OpenThermMessageID::MConfigMMemberIDcode, -1, nullptr, 0) {
@@ -505,5 +527,33 @@ OTValueRemoteOverrideFunction::OTValueRemoteOverrideFunction():
 }
 
 bool OTValueRemoteOverrideFunction::sendDiscovery() {
+    return true;
+}
+
+OTValueDayTime::OTValueDayTime():
+        OTValue(OpenThermMessageID::DayTime, 0) {
+}
+
+void OTValueDayTime::getValue(JsonObject &obj) const {
+    obj[F("dayOfWeek")] = (value >> 13) & 0x07;
+    obj[F("hour")] = (value >> 8) & 0x1F;
+    obj[F("minute")] = value & 0xFF;
+}
+
+bool OTValueDayTime::sendDiscovery() {
+    return true;
+}
+
+
+OTValueDate::OTValueDate():
+        OTValue(OpenThermMessageID::Date, 0) {
+}
+
+void OTValueDate::getValue(JsonObject &obj) const {
+    obj[F("month")] = (value >> 8);
+    obj[F("day")] = value & 0xFF;
+}
+
+bool OTValueDate::sendDiscovery() {
     return true;
 }

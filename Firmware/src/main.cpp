@@ -11,6 +11,7 @@
 #include "command.h"
 #include "sensors.h"
 #include "HADiscLocal.h"
+#include <time.h>
 //#include <NimBLEDevice.h>
 
 #ifdef DEBUG
@@ -37,6 +38,10 @@ void wifiEvent(WiFiEvent_t event) {
         String hn(FPSTR(hostname));
         WiFi.setHostname(hn.c_str());
         MDNS.addService("http", "tcp", 80);
+
+        const char* tz = "CET-1CEST,M3.5.0,M10.5.0/3";
+
+        configTzTime(tz, "pool.ntp.org");
         break;
     }
 
@@ -87,6 +92,7 @@ void setup() {
     devconfig.begin();
     portal.begin(configMode);
     command.begin();
+
 
 /*
     NimBLEDevice::init("");                         // Initialize the device, you can specify a device name if you want.

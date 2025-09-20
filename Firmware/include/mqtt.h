@@ -2,11 +2,13 @@
 
 #include <AsyncMqttClient.h>
 #include <ArduinoJson.h>
+#include "otcontrol.h"
 
 extern const char *MQTTSETVAR_OUTSIDETEMP PROGMEM;
 extern const char *MQTTSETVAR_DHWSETTEMP PROGMEM;
 extern const char *MQTTSETVAR_CHSETTEMP1 PROGMEM;
 extern const char *MQTTSETVAR_CHSETTEMP2 PROGMEM;
+extern const char *MQTTSETVAR_DHWMODE PROGMEM;
 extern const char *MQTTSETVAR_CHMODE1 PROGMEM;
 extern const char *MQTTSETVAR_CHMODE2 PROGMEM;
 extern const char *MQTTSETVAR_ROOMTEMP1 PROGMEM;
@@ -34,6 +36,7 @@ private:
     String baseTopic;
     String statusTopic;
     bool discFlag {false}; // discovery flag; set after MQTT (re-) connect
+    OTControl::CtrlMode strToCtrlMode(String &str);
 public:
     Mqtt();
     void begin();

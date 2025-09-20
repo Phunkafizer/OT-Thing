@@ -2,7 +2,6 @@
 #include <WiFi.h>
 #include <devstatus.h>
 #include "HADiscLocal.h"
-#include "otcontrol.h"
 #include "portal.h"
 #include "sensors.h"
 #include "HADiscLocal.h"
@@ -12,6 +11,7 @@ const char *MQTTSETVAR_OUTSIDETEMP PROGMEM = "outsideTemp";
 const char *MQTTSETVAR_DHWSETTEMP PROGMEM = "dwhSetTemp";
 const char *MQTTSETVAR_CHSETTEMP1 PROGMEM = "chSetTemp1";
 const char *MQTTSETVAR_CHSETTEMP2 PROGMEM = "chSetTemp2";
+const char *MQTTSETVAR_DHWMODE PROGMEM = "dhwMode";
 const char *MQTTSETVAR_CHMODE1 PROGMEM = "chMode1";
 const char *MQTTSETVAR_CHMODE2 PROGMEM = "chMode2";
 const char *MQTTSETVAR_ROOMTEMP1 PROGMEM = "roomTemp1";
@@ -99,7 +99,6 @@ void Mqtt::loop() {
     if (cli.connected()) {
         if (!discFlag) {
             discFlag = true;
-
             discFlag &= otcontrol.sendDiscovery();
             discFlag &= OneWireNode::sendDiscovery();
         }
@@ -114,6 +113,16 @@ void Mqtt::loop() {
             cli.publish(statusTopic.c_str(), 0, false, "online");
         }
     }
+}
+
+OTControl::CtrlMode Mqtt::strToCtrlMode(String &str) {
+    if (str.compareTo("heat") == 0)
+        return OTControl::CTRLMODE_ON;
+    if (str.compareTo("auto") == 0)
+        return OTControl::CTRLMODE_AUTO;
+    if (str.compareTo("off") == 0)
+        return OTControl::CTRLMODE_OFF;
+    return OTControl::CTRLMODE_UNKNOWN;
 }
 
 bool Mqtt::publish(String topic, JsonDocument &payload, const bool retain) {
@@ -152,6 +161,14 @@ void Mqtt::onMessage(const char *topic, String &payload) {
         return;
     }
 
+    tmp = FPSTR(MQTTSETVAR_DHWMODE);
+    if (topicStr.compareTo(tmp) == 0) {
+        OTControl::CtrlMode mode = strToCtrlMode(payload);
+        if (mode != OTControl::CtrlMode::CTRLMODE_UNKNOWN)
+            otcontrol.setDhwCtrlMode(mode);
+        return;
+    }
+
     tmp = FPSTR(MQTTSETVAR_CHSETTEMP1);
     if (topicStr.compareTo(tmp) == 0) {
         double d = payload.toFloat();
@@ -161,17 +178,9 @@ void Mqtt::onMessage(const char *topic, String &payload) {
 
     tmp = FPSTR(MQTTSETVAR_CHMODE1);
     if (topicStr.compareTo(tmp) == 0) {
-        OTControl::CtrlMode mode;
-        if (payload.compareTo("heat") == 0)
-            mode = OTControl::CTRLMODE_ON;
-        else if (payload.compareTo("auto") == 0)
-            mode = OTControl::CTRLMODE_AUTO;
-        else if (payload.compareTo("off") == 0)
-            mode = OTControl::CTRLMODE_OFF;
-        else
-            return;
-
-        otcontrol.setChCtrlMode(mode, 0);
+        OTControl::CtrlMode mode = strToCtrlMode(payload);
+        if (mode != OTControl::CTRLMODE_UNKNOWN)
+            otcontrol.setChCtrlMode(mode, 0);
         return;
     }
 

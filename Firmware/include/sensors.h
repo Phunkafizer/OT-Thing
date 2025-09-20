@@ -35,6 +35,7 @@ public:
     bool get(double &val);
     virtual void setConfig(JsonObject &obj);
     bool isMqttSource();
+    bool isOtSource();
     static void loopAll();
 protected:
     Source src;

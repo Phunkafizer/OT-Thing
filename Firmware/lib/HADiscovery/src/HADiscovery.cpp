@@ -126,7 +126,18 @@ void HADiscovery::setRetain(const bool retain) {
 
 void HADiscovery::setIcon(String icon) {
     doc[FPSTR(HA_ICON)] = icon;
+}
 
+void HADiscovery::setModes(const uint8_t modes) {
+    JsonArray jModes = doc[F("modes")].to<JsonArray>();
+    jModes.clear();
+
+    if ( (modes & (1<<0)) != 0)
+        jModes.add(F("off"));
+    if ( (modes & (1<<1)) != 0)
+        jModes.add(F("heat"));
+    if ( (modes & (1<<2)) != 0)
+        jModes.add(F("auto"));
 }
 
 void HADiscovery::createSensor(String name, String id) {
@@ -174,9 +185,5 @@ void HADiscovery::createNumber(String name, String id, String cmdTopic) {
 void HADiscovery::createClima(String name, String id, String tmpCmdTopic) {
     init(name, id, F("climate"));
     doc[FPSTR(HA_TEMPERATURE_COMMAND_TOPIC)] = tmpCmdTopic;
-    
-    JsonArray modes = doc[F("modes")].to<JsonArray>();
-    modes.add(F("off"));
-    modes.add(F("heat"));
-    modes.add(F("auto"));
+    setModes(0x07); // off, heat, auto
 }

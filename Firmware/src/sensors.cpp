@@ -49,6 +49,10 @@ bool Sensor::isMqttSource() {
     return (src == SOURCE_MQTT);
 }
 
+bool Sensor::isOtSource() {
+    return (src == SOURCE_OT);
+}
+
 void Sensor::loopAll() {
     Sensor *item = lastSensor;
     while (item) {
