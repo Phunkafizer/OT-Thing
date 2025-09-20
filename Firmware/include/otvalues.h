@@ -221,6 +221,6 @@ public:
 };
 
 
-extern OTValue *boilerValues[24];
+extern OTValue *boilerValues[27];
 extern OTValue *thermostatValues[13];
 extern const char* getOTname(OpenThermMessageID id);

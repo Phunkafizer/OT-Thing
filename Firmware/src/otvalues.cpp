@@ -13,21 +13,21 @@ struct OTItem {
 
 static const OTItem OTITEMS[] PROGMEM = {
 //  ID of message                                   string id for MQTT                  
-    {OpenThermMessageID::Status,                    PSTR("status")}, // ID_STR_STATUS},
-    {OpenThermMessageID::TSet,                      PSTR("ch_set_t")}, // ID_STR_CH_SET_T},
-    {OpenThermMessageID::MConfigMMemberIDcode,      PSTR("master_config_member")}, // ID_STR_MASTER_CONFIG_MEMBER},
-    {OpenThermMessageID::SConfigSMemberIDcode,      PSTR("slave_config_member")}, // ID_STR_SLAVE_CONFIG_MEMBER},
-    {OpenThermMessageID::ASFflags,                  PSTR("fault_flags")}, //ID_STR_FAULT_FLAGS},
-    {OpenThermMessageID::RBPflags,                  PSTR("rp_flags")}, // ID_STR_RPFLAGS},
-    {OpenThermMessageID::TsetCH2,                   PSTR("ch_set_t2")}, // ID_STR_CH_SET_T2},
+    {OpenThermMessageID::Status,                    PSTR("status")},
+    {OpenThermMessageID::TSet,                      PSTR("ch_set_t")},
+    {OpenThermMessageID::MConfigMMemberIDcode,      PSTR("master_config_member")},
+    {OpenThermMessageID::SConfigSMemberIDcode,      PSTR("slave_config_member")},
+    {OpenThermMessageID::ASFflags,                  PSTR("fault_flags")},
+    {OpenThermMessageID::RBPflags,                  PSTR("rp_flags")},
+    {OpenThermMessageID::TsetCH2,                   PSTR("ch_set_t2")},
     {OpenThermMessageID::TrOverride,                PSTR("tr_override")},
-    {OpenThermMessageID::MaxRelModLevelSetting,     PSTR("max_rel_mod")}, // ID_STR_MAX_REL_MOD},
-    {OpenThermMessageID::MaxCapacityMinModLevel,    PSTR("max_cap_min_mod")}, // ID_STR_MAX_CAP_MIN_MOD_LEVEL},
-    {OpenThermMessageID::TrSet,                     PSTR("room_set_t")}, // ID_STR_ROOM_SET_T},
-    {OpenThermMessageID::RelModLevel,               PSTR("max_rel_mod")}, // ID_STR_REL_MOD},
-    {OpenThermMessageID::CHPressure,                PSTR("ch_pressure")}, // ID_STR_CH_PRESSURE},
-    {OpenThermMessageID::DHWFlowRate,               PSTR("dhw_flow_rate")}, // ID_STR_DHW_FLOW_RATE},
-    {OpenThermMessageID::TrSetCH2,                  PSTR("room_set_t2")}, // ID_STR_ROOM_SET_T2},
+    {OpenThermMessageID::MaxRelModLevelSetting,     PSTR("max_rel_mod")},
+    {OpenThermMessageID::MaxCapacityMinModLevel,    PSTR("max_cap_min_mod")},
+    {OpenThermMessageID::TrSet,                     PSTR("room_set_t")},
+    {OpenThermMessageID::RelModLevel,               PSTR("max_rel_mod")},
+    {OpenThermMessageID::CHPressure,                PSTR("ch_pressure")},
+    {OpenThermMessageID::DHWFlowRate,               PSTR("dhw_flow_rate")},
+    {OpenThermMessageID::TrSetCH2,                  PSTR("room_set_t2")},
     {OpenThermMessageID::Tr,                        PSTR("room_t")},
     {OpenThermMessageID::Tboiler,                   PSTR("flow_t")},
     {OpenThermMessageID::Tdhw,                      PSTR("dhw_t")},
@@ -39,38 +39,45 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::TrCH2,                     PSTR("room_t2")},
     {OpenThermMessageID::TrOverride2,               PSTR("tr_override2")},           
     {OpenThermMessageID::TdhwSet,                   PSTR("dhw_set_t")},
+    {OpenThermMessageID::RemoteOverrideFunction,    PSTR("remote_override_function")},
+    {OpenThermMessageID::UnsuccessfulBurnerStarts,  PSTR("unsuccessful_burner_starts")},
+    {OpenThermMessageID::FlameSignalTooLowNumber,   PSTR("num_flame_signal_low")},
     {OpenThermMessageID::SuccessfulBurnerStarts,    PSTR("burner_starts")},
     {OpenThermMessageID::CHPumpStarts,              PSTR("ch_pump_starts")},
     {OpenThermMessageID::BurnerOperationHours,      PSTR("burner_op_hours")},
+    {OpenThermMessageID::DHWBurnerOperationHours,   PSTR("dhw_burner_op_hours")},
     {OpenThermMessageID::OpenThermVersionMaster,    PSTR("master_ot_version")},
     {OpenThermMessageID::OpenThermVersionSlave,     PSTR("slave_ot_version")},
     {OpenThermMessageID::MasterVersion,             PSTR("master_prod_version")},
     {OpenThermMessageID::SlaveVersion,              PSTR("slave_prod_version")}
 };
 
-OTValue *boilerValues[24] = { // reply data collected (read) from boiler
+OTValue *boilerValues[27] = { // reply data collected (read) from boiler
     new OTValueSlaveConfigMember(),
-    new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionSlave,  0),
-    new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,           0),
+    new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionSlave,      0),
+    new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,               0),
     new OTValueStatus(),
     new OTValueCapacityModulation(),
     new OTValueDHWBounds(),
-    new OTValueFloat(           OpenThermMessageID::TrOverride,             10),
-    new OTValueFloat(           OpenThermMessageID::RelModLevel,            10),
-    new OTValueFloat(           OpenThermMessageID::CHPressure,             30),
-    new OTValueFloat(           OpenThermMessageID::DHWFlowRate,            10),
-    new OTValueFloat(           OpenThermMessageID::Tboiler,                10),
-    new OTValueFloat(           OpenThermMessageID::TflowCH2,               10),
-    new OTValueFloat(           OpenThermMessageID::Tdhw,                   10),
-    new OTValueFloat(           OpenThermMessageID::Tdhw2,                  10),
-    new OTValueFloat(           OpenThermMessageID::Toutside,               30),
-    new OTValueFloat(           OpenThermMessageID::Tret,                   10),
-    new OTValuei16(             OpenThermMessageID::Texhaust,               10),
-    new OTValueFloat(           OpenThermMessageID::TrOverride2,            10),
-    new OTValueu16(             OpenThermMessageID::SuccessfulBurnerStarts, 30),
-    new OTValueu16(             OpenThermMessageID::CHPumpStarts,           30),
-    new OTValueu16(             OpenThermMessageID::BurnerOperationHours,   120),
-    new OTValueFaultFlags(                                                  30),
+    new OTValueFloat(           OpenThermMessageID::TrOverride,                 10),
+    new OTValueFloat(           OpenThermMessageID::RelModLevel,                10),
+    new OTValueFloat(           OpenThermMessageID::CHPressure,                 30),
+    new OTValueFloat(           OpenThermMessageID::DHWFlowRate,                10),
+    new OTValueFloat(           OpenThermMessageID::Tboiler,                    10),
+    new OTValueFloat(           OpenThermMessageID::TflowCH2,                   10),
+    new OTValueFloat(           OpenThermMessageID::Tdhw,                       10),
+    new OTValueFloat(           OpenThermMessageID::Tdhw2,                      10),
+    new OTValueFloat(           OpenThermMessageID::Toutside,                   30),
+    new OTValueFloat(           OpenThermMessageID::Tret,                       10),
+    new OTValuei16(             OpenThermMessageID::Texhaust,                   10),
+    new OTValueFloat(           OpenThermMessageID::TrOverride2,                10),
+    new OTValueu16(             OpenThermMessageID::UnsuccessfulBurnerStarts,   30),
+    new OTValueu16(             OpenThermMessageID::FlameSignalTooLowNumber,    30),
+    new OTValueu16(             OpenThermMessageID::SuccessfulBurnerStarts,     30),
+    new OTValueu16(             OpenThermMessageID::CHPumpStarts,               30),
+    new OTValueu16(             OpenThermMessageID::BurnerOperationHours,       120),
+    new OTValueu16(             OpenThermMessageID::DHWBurnerOperationHours,    120),
+    new OTValueFaultFlags(                                                      30),
     new OTValueRemoteParameter(),
     new OTValueRemoteOverrideFunction()
 };
@@ -191,8 +198,16 @@ bool OTValue::sendDiscovery() {
             haDisc.createHourDuration(F("Betriebsstunden"), FPSTR(name));
             break;
 
+        case OpenThermMessageID::DHWBurnerOperationHours:
+            haDisc.createHourDuration(F("Betriebsstunden DHW"), FPSTR(name));
+            break;
+
         case OpenThermMessageID::SuccessfulBurnerStarts:
             haDisc.createSensor(F("Brennerstarts"), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::UnsuccessfulBurnerStarts:
+            haDisc.createSensor(F("Fehlgeschl. Brennerstarts"), FPSTR(name));
             break;
 
         case OpenThermMessageID::TSet:
@@ -225,6 +240,10 @@ bool OTValue::sendDiscovery() {
 
         case OpenThermMessageID::DHWFlowRate:
             haDisc.createSensor(F("Volumenstrom"), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::FlameSignalTooLowNumber:
+            haDisc.createSensor(F("Flame sig low"), FPSTR(name));
             break;
 
         // TODO

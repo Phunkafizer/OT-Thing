@@ -485,12 +485,24 @@
                         <span class="statusvalue" field="boiler.burner_op_hours" unit="h"></span>
                     </div>
                     <div class="statusfield">
+                        <h4>Operating hours burner DHW</h4>
+                        <span class="statusvalue" field="boiler.dhw_burner_op_hours" unit="h"></span>
+                    </div>
+                    <div class="statusfield">
                         <h4>Burner starts</h4>
                         <span class="statusvalue" field="boiler.burner_starts"></span>    
                     </div>
                     <div class="statusfield">
+                        <h4>Unsuccessful burner starts</h4>
+                        <span class="statusvalue" field="boiler.unsuccessful_burner_starts"></span>    
+                    </div>
+                    <div class="statusfield">
                         <h4>CH pump start</h4>
                         <span class="statusvalue" field="boiler.ch_pump_starts"></span>    
+                    </div>
+                    <div class="statusfield">
+                        <h4>Number flame signal low</h4>
+                        <span class="statusvalue" field="boiler.num_flame_signal_low"></span>    
                     </div>
                     <div class="statusfield">
                         <h4>Pressure</h4>
@@ -744,6 +756,24 @@
                     </div>
                 </div>
             </div>
+
+            <h3>Scheduler</h3>
+            <div class="group">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="days">days</th>
+                            <th class="time">time</th>
+                            <th class="ft">room set temperature</th>
+                            <th class="rem"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedulerbody1">
+                    </tbody>
+                </table>
+                <button id="addscheduler1" channel="1">+</button>
+            </div>
+
 
             <h3>Heating curve</h3>
             <div class="group">
@@ -1365,6 +1395,23 @@
                 addMarker(2);
             };
 
+            function addScheduler(channel) {
+                hcfg = config.boiler.heating[channel -1];
+                if (!("scheduler" in hcfg))
+                    hcfg["scheduler"] = [];
+                hcfg.scheduler.push({
+                    "days": [],
+                    "time": "8:00",
+                    "temp": 21
+                });
+
+                drawSchedulerTable(channel);
+            }
+
+            _("#addscheduler1").onclick = (ev) => {
+                addScheduler(1);
+            };
+
             let xhrWiFiScan = new XMLHttpRequest();
             xhrWiFiScan.onload = (e) => {
                 let scanObj = JSON.parse(e.target.responseText);
@@ -1460,6 +1507,38 @@
                     );
 
                     _(`#markerbody${hk} tr:last-child button`).setAttribute("index", i++);
+                });
+            }
+
+            function drawSchedulerTable(channel) {
+                if (channel === undefined) {
+                    drawSchedulerTable(1);
+                    drawSchedulerTable(2);
+                    return;
+                }
+                _("#schedulerbody" + channel).innerHTML = "";
+                
+                var i = 0;
+                config.boiler.heating[channel - 1].scheduler.forEach(function (item) {
+                    _(`#schedulerbody${channel}`).append(
+                        _$("tr", {}, 
+                            _$("td", {}),
+                            _$("td", {textContent: item.time}),
+                            _$("td", {textContent: item.temp + " °C"}),
+                            _$("td", {},
+                                _$("button", {
+                                    className: "rmscheduler", 
+                                    textContent: "-",
+                                    onclick: (ev) => {
+                                        config.boiler.heating[channel - 1].scheduler.splice(ev.target.getAttribute("index"), 1);
+                                        drawSchedulerTable(channel);
+                                    }
+                                })
+                            )
+                        )
+                    );
+
+                    _(`#schedulerbody${channel} tr:last-child button`).setAttribute("index", i++);
                 });
             }
 

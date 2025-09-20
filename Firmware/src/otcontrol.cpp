@@ -302,7 +302,15 @@ void OTControl::loop() {
                 chOn[1]);
             sendRequest('T', req);
             return;
-        }   
+        }
+
+        static uint8_t testId = 0; // set >=1 to test all IDs
+        if (testId) {
+            unsigned long req = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, (OpenThermMessageID) testId, 0);
+            sendRequest('T', req);
+            testId++;
+        }
+
         break;
     }
 }
