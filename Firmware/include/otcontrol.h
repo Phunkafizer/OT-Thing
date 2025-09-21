@@ -3,7 +3,36 @@
 #include <OpenTherm.h>
 #include "ArduinoJson.h"
 
+class OTWriteRequest {
+private:
+    uint32_t nextMillis {0};
+    uint16_t interval;
+protected:
+    OpenThermMessageID id;
+public:
+    OTWriteRequest(OpenThermMessageID id, uint16_t intervalS);
+    void send(const uint16_t data);
+    void force();
+    operator bool();
+};
+
+class OTWRSetDhw: public OTWriteRequest {
+public:
+    OTWRSetDhw();
+};
+
+class OTWRSetBoilerTemp: public OTWriteRequest {
+public:
+    OTWRSetBoilerTemp(const uint8_t ch);
+};
+
+class OTWRMasterConfigMember: public OTWriteRequest {
+public:
+    OTWRMasterConfigMember();
+};
+
 class OTControl {
+friend OTWriteRequest;
 public:
     enum CtrlMode: int8_t {
         CTRLMODE_UNKNOWN = -1,
@@ -42,15 +71,17 @@ private:
         double offset;
         double flow;
         double flowDefault;
-        bool override;
+        bool overrideFlow;
         CtrlMode ctrlMode;
     } heatingParams[2];
     double dhwTemp;
     bool dhwOn;
-    CtrlMode dhwCtrlMode;
+    bool overrideDhw;
     bool discFlag {true};
-    uint32_t nextDHWSet {0};
-    uint32_t nextBoilerTemp[2] {0, 0};
+    OTWRSetDhw setDhwRequest;
+    OTWRSetBoilerTemp setBoilerRequest[2];
+    OTWRMasterConfigMember setMasterConfigMember;
+    uint8_t masterMemberId;
     struct OTInterface {
         OTInterface(const uint8_t inPin, const uint8_t outPin, const bool isSlave);
         OpenTherm hal;
@@ -72,12 +103,13 @@ public:
     void begin();
     void loop();
     void getJson(JsonObject &obj);
-    void setChCtrlConfig(JsonObject &config);
+    void setConfig(JsonObject &config);
     void setDhwTemp(const double temp);
     void setChTemp(const double temp, const uint8_t channel);
     void setChCtrlMode(const CtrlMode mode, const uint8_t channel);
     void setDhwCtrlMode(const CtrlMode mode);
     bool sendDiscovery();
 };
+
 
 extern OTControl otcontrol;

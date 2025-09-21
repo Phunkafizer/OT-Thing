@@ -121,7 +121,8 @@ OTControl::OTControl():
         lastMillis(millis()),
         otMode(OTMODE_LOOPBACKTEST),
         master(GPIO_OTMASTER_IN, GPIO_OTMASTER_OUT, false),
-        slave(GPIO_OTSLAVE_IN, GPIO_OTSLAVE_OUT, true) {
+        slave(GPIO_OTSLAVE_IN, GPIO_OTSLAVE_OUT, true),
+        setBoilerRequest{OTWRSetBoilerTemp(0), OTWRSetBoilerTemp(1)} {
 }
 
 void OTControl::begin() {
@@ -186,7 +187,7 @@ double OTControl::getFlow(const uint8_t channel) {
 
     case CTRLMODE_AUTO: {
         double outTmp;
-        if ((hp.ctrlMode == CTRLMODE_AUTO) && outsideTemp.get(outTmp)) {
+        if (outsideTemp.get(outTmp)) {
             double roomSet = hp.roomSet; // default room set point
             roomSetPoint[channel].get(roomSet);
 
@@ -254,27 +255,23 @@ void OTControl::loop() {
         }
 
         for (int ch=0; ch<2; ch++) {
-            if (!heatingParams[ch].chOn)
-                continue;
-
-            if (millis() > nextBoilerTemp[ch]) {
+            if (heatingParams[ch].chOn && setBoilerRequest[ch]) {
                 double flow = getFlow(ch);
 
                 if (flow > 0) {
-                    uint32_t req = OpenTherm::buildRequest(OpenThermMessageType::WRITE_DATA, (ch == 0) ? OpenThermMessageID::TSet : OpenThermMessageID::TsetCH2, OpenTherm::temperatureToData(flow));
-                    sendRequest('T', req);
+                    setBoilerRequest[ch].send(OpenTherm::temperatureToData(flow));
+                    return;
                 }
-
-                nextBoilerTemp[ch] = millis() + 10000;
-                return;
             }
         }
 
-        if (millis() > nextDHWSet) {
-            nextDHWSet = millis() + 30000;
-            uint16_t data = OpenTherm::temperatureToData(dhwTemp);
-            unsigned long req = OpenTherm::buildRequest(OpenThermMessageType::WRITE_DATA, OpenThermMessageID::TdhwSet, data);
-            sendRequest('T', req);
+        if (setDhwRequest) {
+            setDhwRequest.send(OpenTherm::temperatureToData(dhwTemp));
+            return;
+        }
+
+        if (setMasterConfigMember) {
+            setMasterConfigMember.send((1<<8) | masterMemberId);
             return;
         }
 
@@ -297,21 +294,9 @@ void OTControl::loop() {
                 }       
             }
 
-            bool tmpDhwOn = dhwOn;
-            switch (dhwCtrlMode) {
-            case CtrlMode::CTRLMODE_OFF:
-                tmpDhwOn = false;
-                break;
-            case CtrlMode::CTRLMODE_ON:
-                tmpDhwOn = true;
-                break;
-            default:
-                break;
-            }
-
             unsigned long req = OpenTherm::buildSetBoilerStatusRequest(
                 chOn[0], 
-                tmpDhwOn, 
+                dhwOn, 
                 false, 
                 false, 
                 chOn[1]);
@@ -375,8 +360,16 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         switch (id) {
         case OpenThermMessageID::Toutside: {
             double ost;
-            if ( (mt == OpenThermMessageType::READ_ACK) && outsideTemp.isOtSource() && outsideTemp.get(ost))
-                newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(ost));
+            if ( !outsideTemp.isOtSource() && outsideTemp.get(ost))
+                newMsg = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, OpenTherm::temperatureToData(ost));
+            break;
+        }
+        case OpenThermMessageID::TdhwSet: {
+            if (overrideDhw) {
+                if (mt == OpenThermMessageType::READ_ACK)
+                    // roomunit tried to read dhw set temp. Catch it in order to force writing DHW setpoint by roomunit.
+                    newMsg = OpenTherm::buildResponse(OpenThermMessageType::DATA_INVALID, id, 0x0000);
+            }
             break;
         }
         default:
@@ -447,33 +440,39 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
 
         switch (id) {
         case OpenThermMessageID::TSet:
-            if ( (heatingParams[0].ctrlMode == CTRLMODE_ON) && (mt == OpenThermMessageType::WRITE_DATA) )
+            if ( (heatingParams[0].overrideFlow) && (mt == OpenThermMessageType::WRITE_DATA) )
                 newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(getFlow(0)));
             break;
 
         case OpenThermMessageID::TsetCH2:
-            if ( (heatingParams[1].ctrlMode == CTRLMODE_ON) && (mt == OpenThermMessageType::WRITE_DATA) )
+            if ( (heatingParams[1].overrideFlow) && (mt == OpenThermMessageType::WRITE_DATA) )
                 newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(getFlow(1)));
             break;
 
-        case OpenThermMessageID::Tdhw:
-            if ( (dhwCtrlMode == CTRLMODE_ON) && (mt == OpenThermMessageType::WRITE_DATA) )
+        case OpenThermMessageID::TdhwSet:
+            if ( overrideDhw && (mt == OpenThermMessageType::WRITE_DATA) )
                 newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(dhwTemp));
             break;
 
         case OpenThermMessageID::Status:
-            if (heatingParams[0].ctrlMode == CtrlMode::CTRLMODE_OFF)
-                newMsg &= ~(1<<8); // CH1 disable
-            if (heatingParams[0].ctrlMode == CtrlMode::CTRLMODE_ON)
-                newMsg |= 1<<8; // CH1 enable
-            if (heatingParams[1].ctrlMode == CtrlMode::CTRLMODE_OFF)
-                newMsg &= ~(1<<12); // CH2 disable
-            if (heatingParams[1].ctrlMode == CtrlMode::CTRLMODE_ON)
-                newMsg |= 1<<12; // CH2 enable
-            if (dhwCtrlMode == CtrlMode::CTRLMODE_OFF)
-                newMsg &= ~(9<<12); // DHW disable
-            if (dhwCtrlMode == CtrlMode::CTRLMODE_ON)
-                newMsg |= 9<<12; // DHW enable
+            if (heatingParams[0].overrideFlow) {
+                if (heatingParams[0].ctrlMode == CtrlMode::CTRLMODE_OFF)
+                    newMsg &= ~(1<<8); // CH1 disable
+                else
+                    newMsg |= 1<<8; // CH1 enable
+            }
+            if (heatingParams[1].overrideFlow) {
+                if (heatingParams[1].ctrlMode == CtrlMode::CTRLMODE_OFF)
+                    newMsg &= ~(1<<12); // CH2 disable
+                else
+                    newMsg |= 1<<12; // CH2 enable
+            }
+            if (overrideDhw) {
+                if (dhwOn)
+                    newMsg |= 1<<9; // DHW enable
+                else
+                    newMsg &= ~(1<<9); // DHW disable
+            }                            
             
             newMsg = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, id, newMsg & 0xFFFF);
             break;
@@ -542,7 +541,6 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
 
 bool OTControl::setThermostatVal(const unsigned long msg) {
     auto id = OpenTherm::getDataID(msg);
-    //auto mt = OpenTherm::getMessageType(msg);
 
     for (auto *valobj: thermostatValues) {
         if (valobj->getId() == id) {
@@ -634,7 +632,7 @@ bool OTControl::sendDiscovery() {
     haDisc.setOptimistic(true);
     haDisc.setIcon(F("mdi:shower"));
     haDisc.setRetain(true);
-    haDisc.setModes((otMode == OTMODE_MASTER) ? 0x03 : 0x07);
+    haDisc.setModes(0x03);
     discFlag &= haDisc.publish();
 
     haDisc.createClima(F("flow set temperature"), FPSTR(MQTTSETVAR_CHSETTEMP1), mqtt.getVarSetTopic(MQTTSETVAR_CHSETTEMP1));
@@ -696,15 +694,15 @@ bool OTControl::sendDiscovery() {
 
 void OTControl::setDhwTemp(double temp) {
     dhwTemp = temp;
-    nextDHWSet = 0;
+    setDhwRequest.force();
 }
 
 void OTControl::setDhwCtrlMode(const CtrlMode mode) {
-    dhwCtrlMode = mode;
-    nextDHWSet = 0;
+    dhwOn = (mode != CtrlMode::CTRLMODE_OFF);
+    setDhwRequest.force();
 }
 
-void OTControl::setChCtrlConfig(JsonObject &config) {
+void OTControl::setConfig(JsonObject &config) {
     while (!master.hal.isReady()) {
         master.hal.process();
         yield();
@@ -730,28 +728,31 @@ void OTControl::setChCtrlConfig(JsonObject &config) {
         heatingParams[i].gradient = hpObj[F("gradient")] | 1.0;
         heatingParams[i].offset = hpObj[F("offset")] | 0;
         heatingParams[i].flowDefault = hpObj[F("flow")] | 35;
+        heatingParams[i].overrideFlow = hpObj[F("overrideFlow")] | false;
         heatingParams[i].flow = heatingParams[i].flowDefault;
-        heatingParams[i].override = false;
         heatingParams[i].ctrlMode = CTRLMODE_AUTO;
     }
 
     dhwOn = boiler[F("dhwOn")];
-    dhwTemp = config[F("boiler")][F("dhwTemperature")] | 45;
-    dhwCtrlMode = CTRLMODE_AUTO;
+    dhwTemp = boiler[F("dhwTemperature")] | 45;
+    overrideDhw = boiler[F("overrideDhw")] | false;
+
+    masterMemberId = config[F("masterMemberId")] | 22;
 
     setOTMode(mode);
 
-    nextDHWSet = 0;
-    nextBoilerTemp[0] = 0;
-    nextBoilerTemp[1] = 0;
+    setDhwRequest.force();
+    setBoilerRequest[0].force();
+    setBoilerRequest[1].force();
 
     master.resetCounters();
     slave.resetCounters();
 }
 
 void OTControl::setChCtrlMode(const CtrlMode mode, const uint8_t channel) {
+    heatingParams[channel].chOn = (mode != CtrlMode::CTRLMODE_OFF);
     heatingParams[channel].ctrlMode = mode;
-    nextBoilerTemp[channel] = 0;
+    setBoilerRequest[channel].force();
 }
 
 void OTControl::setChTemp(const double temp, const uint8_t channel) {
@@ -759,6 +760,41 @@ void OTControl::setChTemp(const double temp, const uint8_t channel) {
         heatingParams[channel].ctrlMode = CTRLMODE_AUTO;
     else
         heatingParams[channel].flow = temp;
-    nextBoilerTemp[channel] = 0;
+    setBoilerRequest[channel].force();
 }
 
+
+OTWriteRequest::OTWriteRequest(OpenThermMessageID id, uint16_t intervalS):
+        id(id),
+        interval(intervalS) {
+}
+
+void OTWriteRequest::send(const uint16_t data) {
+    nextMillis = millis() + interval * 1000;
+
+    unsigned long req = OpenTherm::buildRequest(OpenThermMessageType::WRITE_DATA, id, data);
+    otcontrol.sendRequest('T', req);
+}
+
+void OTWriteRequest::force() {
+    nextMillis = 0;
+}
+
+OTWriteRequest::operator bool() {
+    return (millis() > nextMillis);
+}
+
+
+OTWRSetDhw::OTWRSetDhw():
+        OTWriteRequest(OpenThermMessageID::TdhwSet, 30) {
+}
+
+OTWRSetBoilerTemp::OTWRSetBoilerTemp(const uint8_t ch):
+        OTWriteRequest(OpenThermMessageID::TSet, 10) {
+    if (ch == 1)
+        id = OpenThermMessageID::TsetCH2;
+}
+
+OTWRMasterConfigMember::OTWRMasterConfigMember():
+        OTWriteRequest(OpenThermMessageID::MConfigMMemberIDcode, 60) {
+}

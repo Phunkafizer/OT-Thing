@@ -34,7 +34,7 @@ void DevConfig::update() {
         }
 
         JsonObject cfg = doc.as<JsonObject>();
-        otcontrol.setChCtrlConfig(cfg);
+        otcontrol.setConfig(cfg);
 
         if (doc[F("outsideTemp")].is<JsonObject>()) {
             JsonObject obj = doc[F("outsideTemp")];
