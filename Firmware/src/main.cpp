@@ -40,7 +40,6 @@ void wifiEvent(WiFiEvent_t event) {
         MDNS.addService("http", "tcp", 80);
 
         const char* tz = "CET-1CEST,M3.5.0,M10.5.0/3";
-
         configTzTime(tz, "pool.ntp.org");
         break;
     }
