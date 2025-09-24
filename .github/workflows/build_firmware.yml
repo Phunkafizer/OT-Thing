@@ -22,10 +22,6 @@ jobs:
       - name: Install PlatformIO
         run: pip install platformio
 
-      - name: Run helper.py (generate index.h)
-        working-directory: ./Firmware
-        run: python helper.py
-
       - name: Build firmware
         working-directory: ./Firmware
         run: pio run --environment release
