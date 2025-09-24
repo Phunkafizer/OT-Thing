@@ -3,7 +3,7 @@ name: Build ESP32 Firmware (PlatformIO)
 on:
   push:
     branches:
-      - test       # später ggf. auf main/master ändern
+      - test
   pull_request:
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
 
       - name: Build firmware
         working-directory: ./Firmware
-        run: pio run
+        run: pio run --environment release
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
