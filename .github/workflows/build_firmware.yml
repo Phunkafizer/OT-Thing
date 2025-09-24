@@ -3,8 +3,7 @@ name: Build ESP32 Firmware (PlatformIO)
 on:
   push:
     branches:
-      - main
-      - master
+      - test
   pull_request:
 
 jobs:
