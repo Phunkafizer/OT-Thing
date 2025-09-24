@@ -502,7 +502,7 @@ bool OTValueCHBounds::sendDiscovery() {
 
 
 OTValueMasterConfig::OTValueMasterConfig():
-        OTValueFlags(OpenThermMessageID::MConfigMMemberIDcode, -1, nullptr, 0) {
+        OTValueFlags(OpenThermMessageID::MConfigMMemberIDcode, -1, flags, sizeof(flags) / sizeof(flags[0])) {
 }
 
 void OTValueMasterConfig::getValue(JsonObject &obj) const {

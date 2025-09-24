@@ -722,7 +722,7 @@ void OTControl::setConfig(JsonObject &config) {
     for (int i=0; i<sizeof(heatingParams) / sizeof(heatingParams[0]); i++) {
         JsonObject hpObj = boiler[F("heating")][i];
         heatingParams[i].chOn = hpObj[F("chOn")];
-        heatingParams[i].roomSet = hpObj[F("roomSet")] | 21.0; // default room set point
+        heatingParams[i].roomSet = hpObj[F("roomsetpoint")][F("temp")] | 21.0; // default room set point
         heatingParams[i].flowMax = hpObj[F("flowMax")] | 40;
         heatingParams[i].exponent = hpObj[F("exponent")] | 1.0;
         heatingParams[i].gradient = hpObj[F("gradient")] | 1.0;
@@ -760,6 +760,10 @@ void OTControl::setChTemp(const double temp, const uint8_t channel) {
         heatingParams[channel].ctrlMode = CTRLMODE_AUTO;
     else
         heatingParams[channel].flow = temp;
+    setBoilerRequest[channel].force();
+}
+
+void OTControl::forceFlowCalc(const uint8_t channel) {
     setBoilerRequest[channel].force();
 }
 

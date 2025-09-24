@@ -38,6 +38,14 @@
         "compare": "cpp",
         "cstdint": "cpp",
         "mutex": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "*.inc": "cpp",
+        "bit": "cpp",
+        "bitset": "cpp",
+        "set": "cpp",
+        "limits": "cpp",
+        "stop_token": "cpp",
+        "variant": "cpp",
+        "xlocale": "cpp"
     }
 }

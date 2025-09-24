@@ -109,6 +109,7 @@ public:
     void setChCtrlMode(const CtrlMode mode, const uint8_t channel);
     void setDhwCtrlMode(const CtrlMode mode);
     bool sendDiscovery();
+    void forceFlowCalc(const uint8_t channel);
 };
 
 

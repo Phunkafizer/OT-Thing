@@ -93,17 +93,12 @@ public:
 
 class OTValueMasterStatus: public OTValueFlags {
 private:
-    const char *STATUS_CH_ENABLE PROGMEM = "ch_enable";
-    const char *STATUS_DHW_ENABLE PROGMEM = "dhw_enable";
-    const char *STATUS_COOLING_ENABLE PROGMEM = "cooling_enable";
-    const char *STATUS_OTC_ACTIVE PROGMEM = "otc_active";
-    const char *STATUS_CH2_ENABLE PROGMEM = "ch2_enable";
     const Flag flags[5] PROGMEM = {
-        {8, STATUS_CH_ENABLE},
-        {9, STATUS_DHW_ENABLE},
-        {10, STATUS_COOLING_ENABLE},
-        {11, STATUS_OTC_ACTIVE},
-        {12, STATUS_CH2_ENABLE}
+        {8, "ch_enable"},
+        {9, "dhw_enable"},
+        {10, "cooling_enable"},
+        {11, "otc_active"},
+        {12, "ch2_enable"}
     };
 protected:
     bool sendDiscovery();
@@ -114,19 +109,13 @@ public:
 class OTValueSlaveConfigMember: public OTValueFlags {
 private:
     void getValue(JsonObject &obj) const;
-    const char *DHW_PRESENT PROGMEM = "dhw_present";
-    const char *CTRL_TYPE PROGMEM = "ctrl_type";
-    const char *COOLONG_CFG PROGMEM = "cooling_config";
-    const char *DHW_CONFIG PROGMEM = "dhw_config";
-    const char *MASTER_LOW_PUMP PROGMEM = "master_lowoff_pumpctrl";
-    const char *CH2_PRESENT PROGMEM = "ch2_present";
     const Flag flags[6] PROGMEM = {
-        {8, DHW_PRESENT},
-        {9, CTRL_TYPE},
-        {10, COOLONG_CFG},
-        {11, DHW_CONFIG},
-        {12, MASTER_LOW_PUMP},
-        {13, CH2_PRESENT}
+        {8, "dhw_present"},
+        {9, "ctrl_type"},
+        {10, "cooling_config"},
+        {11, "dhw_config"},
+        {12, "master_lowoff_pumpctrl"},
+        {13, "ch2_present"}
     };
 public:    
     OTValueSlaveConfigMember();
@@ -135,19 +124,13 @@ public:
 class OTValueFaultFlags: public OTValueFlags {
 private:
     void getValue(JsonObject &obj) const;
-    const char *SRV_REQUEST PROGMEM = "service_request";
-    const char *LOCKOUT_RESET PROGMEM = "lockout_reset";
-    const char *LOW_WATER_PRESSURE PROGMEM = "low_water_pressure";
-    const char *GAS_FLAME_FAULT PROGMEM = "gas_flame_fault";
-    const char *AIR_PRESS_FAULT PROGMEM = "air_pressure_fault";
-    const char *WATER_OVER_TEMP PROGMEM = "water_over_temp";
     const Flag flags[6] PROGMEM = {
-        {8, SRV_REQUEST},
-        {9, LOCKOUT_RESET},
-        {10, LOW_WATER_PRESSURE},
-        {11, GAS_FLAME_FAULT},
-        {12, AIR_PRESS_FAULT},
-        {13, WATER_OVER_TEMP}
+        {8, "service_request"},
+        {9, "lockout_reset"},
+        {10, "low_water_pressure"},
+        {11, "gas_flame_fault"},
+        {12, "air_pressure_fault"},
+        {13, "water_over_temp"}
     };
 public:
     OTValueFaultFlags(const int interval);
@@ -189,6 +172,9 @@ public:
 
 class OTValueMasterConfig: public OTValueFlags {
 private:
+    const Flag flags[1] PROGMEM = {
+        {0, "smartPowerImplemented"},
+    };
     void getValue(JsonObject &obj) const;
 protected:
     bool sendDiscovery();
@@ -198,15 +184,11 @@ public:
 
 class OTValueRemoteParameter: public OTValueFlags {
 private:
-    const char *DHW_SETPOINT_RW PROGMEM = "dhw_setpoint_rw";
-    const char *MAX_CH_SETPOINT_RW PROGMEM = "max_ch_setpoint_rw";
-    const char *DHW_SETPOINT_TRANS PROGMEM = "dhw_setpoint_trans";
-    const char *MAX_CH_SETPOINT_TRANS PROGMEM = "max_ch_setpoint_trans";
     const Flag flags[4] PROGMEM = {
-        {0, DHW_SETPOINT_RW},
-        {1, MAX_CH_SETPOINT_RW},
-        {8, DHW_SETPOINT_TRANS},
-        {9, MAX_CH_SETPOINT_TRANS}
+        {0, "dhw_setpoint_rw"},
+        {1, "max_ch_setpoint_rw"},
+        {8, "dhw_setpoint_trans"},
+        {9, "max_ch_setpoint_trans"}
     };
 protected:
     bool sendDiscovery();
@@ -217,11 +199,9 @@ public:
 
 class OTValueRemoteOverrideFunction: public OTValueFlags {
 private:
-    const char *MANUAL_CHANGE_PRIORITY PROGMEM = "manual_change_priority";
-    const char *PROGRAM_CHANGE_PRIORITY PROGMEM = "program_change_priority";
     const Flag flags[2] PROGMEM = {
-        {0, MANUAL_CHANGE_PRIORITY},
-        {1, PROGRAM_CHANGE_PRIORITY}
+        {0, "manual_change_priority"},
+        {1, "program_change_priority"}
     };
 protected:
     bool sendDiscovery();
