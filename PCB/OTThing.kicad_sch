@@ -4535,6 +4535,12 @@
 		(uuid "9dbe5204-5f93-406b-ba74-667d5f3b6b8d")
 	)
 	(junction
+		(at 64.77 72.39)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a2f6745f-b6f3-42eb-aa93-ef39e104b5ce")
+	)
+	(junction
 		(at 181.61 120.65)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4599,6 +4605,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "d2d96837-f3ff-44e5-8bfd-070f1b1b0ba1")
+	)
+	(junction
+		(at 62.23 74.93)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "d39ab0ac-5d1f-4f84-92ee-f4bad98b7ec7")
 	)
 	(junction
 		(at 248.92 132.08)
@@ -6086,6 +6098,16 @@
 	)
 	(wire
 		(pts
+			(xy 62.23 74.93) (xy 62.23 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "be85e852-17f0-4688-9389-2d6bcf42c2c0")
+	)
+	(wire
+		(pts
 			(xy 74.93 36.83) (xy 74.93 38.1)
 		)
 		(stroke
@@ -6533,6 +6555,16 @@
 			(type default)
 		)
 		(uuid "f0865015-e237-4061-8461-23b80651bec1")
+	)
+	(wire
+		(pts
+			(xy 64.77 72.39) (xy 64.77 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f0c13699-7c61-4cf8-af98-a5eee49e9c7d")
 	)
 	(wire
 		(pts
@@ -7135,7 +7167,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C965847"
+		(property "LCSC" "C965815"
 			(at 137.16 129.54 0)
 			(effects
 				(font
@@ -9011,6 +9043,72 @@
 			(project "OTThing"
 				(path "/cb61f12f-ab02-48e5-a06c-10aea7e452c9"
 					(reference "TP8")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:TestPoint")
+		(at 62.23 78.74 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(dnp no)
+		(uuid "3e19f100-cedd-4473-b643-926855ce6538")
+		(property "Reference" "TP15"
+			(at 62.23 83.566 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "~"
+			(at 59.69 80.7721 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "TestPoint:TestPoint_THTPad_D1.5mm_Drill0.7mm"
+			(at 57.15 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 57.15 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "test point"
+			(at 62.23 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "84c77a7b-d46d-46f9-a494-3dd3d4be899d")
+		)
+		(instances
+			(project "OTThing"
+				(path "/cb61f12f-ab02-48e5-a06c-10aea7e452c9"
+					(reference "TP15")
 					(unit 1)
 				)
 			)
@@ -11436,6 +11534,72 @@
 		)
 	)
 	(symbol
+		(lib_id "Connector:TestPoint")
+		(at 64.77 78.74 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(dnp no)
+		(uuid "9fc41836-1e5f-4d9a-877d-8363ca24bf03")
+		(property "Reference" "TP16"
+			(at 64.77 83.566 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "~"
+			(at 62.23 80.7721 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "TestPoint:TestPoint_THTPad_D1.5mm_Drill0.7mm"
+			(at 59.69 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 59.69 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "test point"
+			(at 64.77 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e2a4cdee-2db0-410f-b021-d20f7a06a165")
+		)
+		(instances
+			(project "OTThing"
+				(path "/cb61f12f-ab02-48e5-a06c-10aea7e452c9"
+					(reference "TP16")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Connector:USB_C_Receptacle_USB2.0")
 		(at 34.29 44.45 0)
 		(unit 1)
@@ -12657,7 +12821,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C965847"
+		(property "LCSC" "C965815"
 			(at 140.97 99.06 0)
 			(effects
 				(font
