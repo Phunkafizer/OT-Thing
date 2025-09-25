@@ -1281,7 +1281,6 @@
                 heating: [
                     {
                         flow: 45,
-                        roomSet: 21,
                         roomtempcomp: 0,
                         chOn: true,
                         flowMax: 60,
@@ -1290,7 +1289,8 @@
                         offset: 0,
                         marker: [],
                         roomsetpoint: {
-                            "source": 0
+                            "source": 0,
+                            "temp": 21
                         },
                         roomtemp: {
                             "source": 1
@@ -1299,7 +1299,6 @@
                     },
                     {
                         flow: 30,
-                        roomSet: 21,
                         roomtempcomp: 0,
                         chOn: true,
                         flowMax: 60,
@@ -1308,7 +1307,8 @@
                         offset: 0,
                         marker: [],
                         roomsetpoint: {
-                            "source": 0
+                            "source": 0,
+                            "temp": 21
                         },
                         roomtemp: {
                             "source": 1
@@ -1325,7 +1325,8 @@
             },
             masterMemberId: 8
         },
-        statuscache = {};
+        statuscache = {},
+        roomsetpoint = [21, 21]; // used for drawing curve
 
         function _(query) {
             return document.querySelector(query);
@@ -1677,8 +1678,12 @@
 
                 _("#chOn1").checked = config.boiler.heating[0].chOn;
                 _("#overrideFlow1").checked = config.boiler.heating[0].overrideFlow || false;
+                _("#roomset1").addEventListener("input", (ev) => {
+                    roomsetpoint[0] = parseFloat(ev.target.value);
+                });
+
                 initRangeParam("chset1", "boiler.heating.0.flow");
-                initRangeParam("roomset1", "boiler.heating.0.roomSet");
+                initRangeParam("roomset1", "boiler.heating.0.roomsetpoint.temp");
                 initRangeParam("flowmax1", "boiler.heating.0.flowMax");
                 initRangeParam("exponent1", "boiler.heating.0.exponent");
                 initRangeParam("gradient1", "boiler.heating.0.gradient");
@@ -1696,8 +1701,12 @@
 
                 _("#chOn2").checked = config.boiler.heating[1].chOn;
                 _("#overrideFlow2").checked = config.boiler.heating[1].overrideFlow || false;
+                _("#roomset2").addEventListener("input", (ev) => {
+                    roomsetpoint[1] = parseFloat(ev.target.value);
+                });
+
                 initRangeParam("chset2", "boiler.heating.1.flow");
-                initRangeParam("roomset2", "boiler.heating.1.roomSet");
+                initRangeParam("roomset2", "boiler.heating.1.roomsetpoint.temp");
                 initRangeParam("flowmax2", "boiler.heating.1.flowMax");
                 initRangeParam("exponent2", "boiler.heating.1.exponent");
                 initRangeParam("gradient2", "boiler.heating.1.gradient");
@@ -1802,6 +1811,12 @@
                         _("#oneWireSensors div:nth-child(" + i + ") span").innerText = statuscache["1wire"][adr] + " °C";
                         i++;
                     }
+                }
+
+                if ("heatercircuit" in statuscache) {
+                    for (let i=0; i<2; i++)
+                        if ("roomsetpoint" in statuscache.heatercircuit[i])
+                            roomsetpoint[i] = statuscache.heatercircuit[i].roomsetpoint;
                 }
                 
                 drawCurve();
@@ -2040,15 +2055,12 @@
             ctx.fillText("flow / °C", -80, 30);
             ctx.restore();
 
-            let roomset = parseFloat(_("#roomset" + hk + " input").value);
+            let roomset = roomsetpoint[hk - 1];
             let roomdelta = 0;
             if ("heatercircuit" in statuscache) {
                 hc = statuscache.heatercircuit[hk - 1];
-                if ("roomsetpoint" in hc) {
-                    roomset = hc.roomsetpoint;
-                    if ("roomtemp" in hc)
-                        roomdelta = config.boiler.heating[hk-1].roomtempcomp * (roomset - hc.roomtemp);
-                }
+                if ("roomtemp" in hc)
+                    roomdelta = config.boiler.heating[hk-1].roomtempcomp * (roomset - hc.roomtemp);
             }
                 
             let flowmax = parseFloat(_("#flowmax" + hk + " input").value);

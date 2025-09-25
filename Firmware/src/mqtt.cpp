@@ -188,6 +188,7 @@ void Mqtt::onMessage(const char *topic, String &payload) {
     if (topicStr.compareTo(tmp) == 0) {
         double d = payload.toFloat();
         roomTemp[0].set(d, Sensor::SOURCE_MQTT);
+        otcontrol.forceFlowCalc(0);
         return;
     }
 
@@ -195,6 +196,7 @@ void Mqtt::onMessage(const char *topic, String &payload) {
     if (topicStr.compareTo(tmp) == 0) {
         double d = payload.toFloat();
         roomTemp[1].set(d, Sensor::SOURCE_MQTT);
+        otcontrol.forceFlowCalc(1);
         return;
     }
 
@@ -202,6 +204,7 @@ void Mqtt::onMessage(const char *topic, String &payload) {
     if (topicStr.compareTo(tmp) == 0) {
         double d = payload.toFloat();
         roomSetPoint[0].set(d, Sensor::SOURCE_MQTT);
+        otcontrol.forceFlowCalc(0);
         return;
     }
 
@@ -209,6 +212,7 @@ void Mqtt::onMessage(const char *topic, String &payload) {
     if (topicStr.compareTo(tmp) == 0) {
         double d = payload.toFloat();
         roomSetPoint[1].set(d, Sensor::SOURCE_MQTT);
+        otcontrol.forceFlowCalc(1);
         return;
     }
 }
