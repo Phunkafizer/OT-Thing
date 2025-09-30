@@ -15,6 +15,7 @@ extern const char *MQTTSETVAR_ROOMTEMP1 PROGMEM;
 extern const char *MQTTSETVAR_ROOMTEMP2 PROGMEM;
 extern const char *MQTTSETVAR_ROOMSETPOINT1 PROGMEM;
 extern const char *MQTTSETVAR_ROOMSETPOINT2 PROGMEM;
+extern const char *MQTTSETVAR_VENTSETPOINT PROGMEM;
 
 struct MqttConfig {
     String host;

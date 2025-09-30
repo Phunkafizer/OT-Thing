@@ -18,6 +18,7 @@ const char *MQTTSETVAR_ROOMTEMP1 PROGMEM = "roomTemp1";
 const char *MQTTSETVAR_ROOMTEMP2 PROGMEM = "roomTemp2";
 const char *MQTTSETVAR_ROOMSETPOINT1 PROGMEM = "roomSetpoint1";
 const char *MQTTSETVAR_ROOMSETPOINT2 PROGMEM = "roomSetpoint2";
+const char *MQTTSETVAR_VENTSETPOINT PROGMEM = "ventSetpoint";
 
 Mqtt mqtt;
 static WiFiClient espClient;
@@ -213,6 +214,13 @@ void Mqtt::onMessage(const char *topic, String &payload) {
         double d = payload.toFloat();
         roomSetPoint[1].set(d, Sensor::SOURCE_MQTT);
         otcontrol.forceFlowCalc(1);
+        return;
+    }
+
+    tmp = FPSTR(MQTTSETVAR_VENTSETPOINT);
+    if (topicStr.compareTo(tmp) == 0) {
+        uint8_t val = payload.toInt();
+        otcontrol.setVentSetpoint(val);
         return;
     }
 }

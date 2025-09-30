@@ -2,6 +2,7 @@
 
 #include <ArduinoJson.h>
 #include <OpenTherm.h>
+#include "HADiscLocal.h"
 
 class OTValue {
 private:
@@ -25,7 +26,7 @@ public:
     void disable();
     void init(const bool enabled);
     void setTimeout();
-    static OTValue* getBoilerValue(const OpenThermMessageID id);
+    static OTValue* getSlaveValue(const OpenThermMessageID id);
     static OTValue* getThermostatValue(const OpenThermMessageID id);
     bool discFlag;
 };
@@ -59,34 +60,28 @@ protected:
     struct Flag {
         uint8_t bit;
         const char *name;
+        const char *discName;
+        const char *haDevClass;
     };
-    OTValueFlags(const OpenThermMessageID id, const int interval, const Flag *flagtable, const uint8_t numFlags);
-    void getValue(JsonObject &obj) const;
-private:
     uint8_t numFlags;
     const Flag *flagTable;
+    OTValueFlags(const OpenThermMessageID id, const int interval, const Flag *flagtable, const uint8_t numFlags);
+    void getValue(JsonObject &obj) const;
+    bool sendDiscFlag(String name, const char *field, const char *devClass);
+    bool sendDiscovery();
 };
 
 class OTValueStatus: public OTValueFlags {
 private:
-    const char *STATUS_FLAME PROGMEM = "flame";
-    const char *STATUS_DHW_MODE PROGMEM = "dhw_mode";
-    const char *STATUS_CH_MODE PROGMEM = "ch_mode";
-    const char *STATUS_FAULT PROGMEM = "fault";
-    const char *STATUS_COOLING PROGMEM = "cooling";
-    const char *STATUS_CH_MODE2 PROGMEM = "ch2_mode";
-    const char *STATUS_DIAGNOSTIC PROGMEM = "diagnostic";
     const Flag flags[7] PROGMEM = {
-        {0, STATUS_FAULT},
-        {1, STATUS_CH_MODE},
-        {2, STATUS_DHW_MODE},
-        {3, STATUS_FLAME},
-        {4, STATUS_COOLING},
-        {5, STATUS_CH_MODE2},
-        {6, STATUS_DIAGNOSTIC}
+        {0, "fault",        "fault",        HA_DEVICE_CLASS_PROBLEM},
+        {1, "ch_mode",      "heating",      HA_DEVICE_CLASS_RUNNING},
+        {2, "dhw_mode",     "DHW",          HA_DEVICE_CLASS_RUNNING},
+        {3, "flame",        "flame",        HA_DEVICE_CLASS_RUNNING},
+        {4, "cooling",      "cooling",      HA_DEVICE_CLASS_RUNNING},
+        {5, "ch2_mode",     "heating 2",    HA_DEVICE_CLASS_RUNNING},
+        {6, "diagnostic",   "diagnostic",   HA_DEVICE_CLASS_PROBLEM}
     };
-protected:
-    bool sendDiscovery();
 public:    
     OTValueStatus();
 };
@@ -106,6 +101,34 @@ public:
     OTValueMasterStatus();
 };
 
+class OTValueVentStatus: public OTValueFlags {
+private:
+    const Flag flags[6] PROGMEM = {
+        {0, "fault",        "fault",                HA_DEVICE_CLASS_PROBLEM},
+        {1, "vent_active",  "Ventilation active",   HA_DEVICE_CLASS_RUNNING },
+        {2, "bypass_open",  "Bypass open",          HA_DEVICE_CLASS_RUNNING},
+        {3, "bypass_auto",  "Bypass auto",          HA_DEVICE_CLASS_RUNNING},
+        {4, "free_vent",    "free ventilation",     HA_DEVICE_CLASS_RUNNING},
+        {6, "diagnostic",   "diagnostic",           HA_DEVICE_CLASS_PROBLEM}
+    };
+public:    
+    OTValueVentStatus();
+};
+
+class OTValueVentMasterStatus: public OTValueFlags {
+private:
+    const Flag flags[4] PROGMEM = {
+        {8, "vent_enable"},
+        {9, "open_bypass"},
+        {10, "auto_bypass"},
+        {11, "free_vent_enable"}
+    };
+protected:
+    bool sendDiscovery();
+public:    
+    OTValueVentMasterStatus();
+};
+
 class OTValueSlaveConfigMember: public OTValueFlags {
 private:
     void getValue(JsonObject &obj) const;
@@ -121,19 +144,34 @@ public:
     OTValueSlaveConfigMember();
 };
 
+
 class OTValueFaultFlags: public OTValueFlags {
 private:
     void getValue(JsonObject &obj) const;
     const Flag flags[6] PROGMEM = {
-        {8, "service_request"},
-        {9, "lockout_reset"},
-        {10, "low_water_pressure"},
-        {11, "gas_flame_fault"},
-        {12, "air_pressure_fault"},
-        {13, "water_over_temp"}
+        {8, "service_request",      "service request",      HA_DEVICE_CLASS_PROBLEM},
+        {9, "lockout_reset",        "lockout reset",        HA_DEVICE_CLASS_PROBLEM},
+        {10, "low_water_pressure",  "low pressure",         HA_DEVICE_CLASS_PROBLEM},
+        {11, "gas_flame_fault",     "flame fault",          HA_DEVICE_CLASS_PROBLEM},
+        {12, "air_pressure_fault",  "air pressure fault",   HA_DEVICE_CLASS_PROBLEM},
+        {13, "water_over_temp",     "water over temp",      HA_DEVICE_CLASS_PROBLEM}
     };
 public:
     OTValueFaultFlags(const int interval);
+};
+
+
+class OTValueVentFaultFlags: public OTValueFlags {
+private:
+    void getValue(JsonObject &obj) const;
+    const Flag flags[4] PROGMEM = {
+        {8, "service_request",      "vent. service request",    HA_DEVICE_CLASS_PROBLEM},
+        {9, "exhaust_fan_fault",    "exhaust fan fault",        HA_DEVICE_CLASS_PROBLEM},
+        {10, "inlet_fan_fault",     "inlet fan fault",          HA_DEVICE_CLASS_PROBLEM},
+        {11, "frost_protection",    "frost protection",         HA_DEVICE_CLASS_PROBLEM}
+    };
+public:
+    OTValueVentFaultFlags(const int interval);
 };
 
 class OTValueProductVersion: public OTValue {
@@ -229,6 +267,6 @@ public:
 };
 
 
-extern OTValue *boilerValues[28];
-extern OTValue *thermostatValues[16];
+extern OTValue *slaveValues[39];
+extern OTValue *thermostatValues[18];
 extern const char* getOTname(OpenThermMessageID id);

@@ -42,10 +42,10 @@ void DevConfig::update() {
         }
 
         for (int i=0; i<2; i++) {
-            JsonObject obj = doc[F("boiler")][F("heating")][i][F("roomtemp")];
+            JsonObject obj = doc[F("heating")][i][F("roomtemp")];
             roomTemp[i].setConfig(obj);
 
-            JsonObject obj2 = doc[F("boiler")][F("heating")][i][F("roomsetpoint")];
+            JsonObject obj2 = doc[F("heating")][i][F("roomsetpoint")];
             roomSetPoint[i].setConfig(obj2);
         }
 

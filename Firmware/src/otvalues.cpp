@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include "otvalues.h"
 #include "otcontrol.h"
-#include "HADiscLocal.h"
 #include "mqtt.h"
 
 struct OTItem {
@@ -44,6 +43,18 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::TdhwSetUBTdhwSetLB,        PSTR("dhw_bounds")},
     {OpenThermMessageID::MaxTSetUBMaxTSetLB,        PSTR("ch_bounds")},
     {OpenThermMessageID::TdhwSet,                   PSTR("dhw_set_t")},
+    {OpenThermMessageID::StatusVentilationHeatRecovery, PSTR("vent_status")},
+    {OpenThermMessageID::Vset,                      PSTR("rel_vent_set")},
+    {OpenThermMessageID::ASFflagsOEMfaultCodeVentilationHeatRecovery, PSTR("vent_fault_flags")},
+    {OpenThermMessageID::RelVentLevel,              PSTR("rel_vent")},
+    {OpenThermMessageID::RHexhaust,                 PSTR("rel_hum_exhaust")},
+    {OpenThermMessageID::CO2exhaust,                PSTR("co2_exhaust")},
+    {OpenThermMessageID::Tsi,                       PSTR("supply_inlet_t")},
+    {OpenThermMessageID::Tso,                       PSTR("supply_outlet_t")},
+    {OpenThermMessageID::Tei,                       PSTR("exhaust_inlet_t")},
+    {OpenThermMessageID::Teo,                       PSTR("exhaust_outlet_t")},
+    {OpenThermMessageID::RPMexhaust,                PSTR("exhaust_fan_speed")},
+    {OpenThermMessageID::RPMsupply,                 PSTR("inlet_fan_speed")},
     {OpenThermMessageID::RemoteOverrideFunction,    PSTR("remote_override_function")},
     {OpenThermMessageID::UnsuccessfulBurnerStarts,  PSTR("unsuccessful_burner_starts")},
     {OpenThermMessageID::FlameSignalTooLowNumber,   PSTR("num_flame_signal_low")},
@@ -57,11 +68,12 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::SlaveVersion,              PSTR("slave_prod_version")}
 };
 
-OTValue *boilerValues[28] = { // reply data collected (read) from boiler
+OTValue *slaveValues[39] = { // reply data collected (read) from slave (boiler / ventilation / solar)
     new OTValueSlaveConfigMember(),
     new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionSlave,      0),
     new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,               0),
     new OTValueStatus(),
+    new OTValueVentStatus(),
     new OTValueCapacityModulation(),
     new OTValueDHWBounds(),
     new OTValueCHBounds(),
@@ -77,6 +89,15 @@ OTValue *boilerValues[28] = { // reply data collected (read) from boiler
     new OTValueFloat(           OpenThermMessageID::Tret,                       10),
     new OTValuei16(             OpenThermMessageID::Texhaust,                   10),
     new OTValueFloat(           OpenThermMessageID::TrOverride2,                10),
+    new OTValueu16(             OpenThermMessageID::RelVentLevel,               10),
+    new OTValueu16(             OpenThermMessageID::RHexhaust,                  10),
+    new OTValueu16(             OpenThermMessageID::CO2exhaust,                 10),
+    new OTValueFloat(           OpenThermMessageID::Tsi,                        10),
+    new OTValueFloat(           OpenThermMessageID::Tso,                        10),
+    new OTValueFloat(           OpenThermMessageID::Tei,                        10),
+    new OTValueFloat(           OpenThermMessageID::Teo,                        10),
+    new OTValueu16(             OpenThermMessageID::RPMexhaust,                 10),
+    new OTValueu16(             OpenThermMessageID::RPMsupply,                  10),
     new OTValueu16(             OpenThermMessageID::UnsuccessfulBurnerStarts,   30),
     new OTValueu16(             OpenThermMessageID::FlameSignalTooLowNumber,    30),
     new OTValueu16(             OpenThermMessageID::SuccessfulBurnerStarts,     30),
@@ -85,11 +106,12 @@ OTValue *boilerValues[28] = { // reply data collected (read) from boiler
     new OTValueu16(             OpenThermMessageID::DHWBurnerOperationHours,    120),
     new OTValueFaultFlags(                                                      30),
     new OTValueRemoteParameter(),
-    new OTValueRemoteOverrideFunction()
+    new OTValueRemoteOverrideFunction(),
+    new OTValueVentFaultFlags(                                                  30),
 };
 
 
-OTValue *thermostatValues[16] = { // request data sent (written) from roomunit
+OTValue *thermostatValues[18] = { // request data sent (written) from roomunit
     new OTValueFloat(           OpenThermMessageID::TSet,                   -1),
     new OTValueFloat(           OpenThermMessageID::TsetCH2,                -1),
     new OTValueFloat(           OpenThermMessageID::Tr,                     -1),
@@ -102,10 +124,12 @@ OTValue *thermostatValues[16] = { // request data sent (written) from roomunit
     new OTValueMasterConfig(),
     new OTValueFloat(           OpenThermMessageID::TdhwSet,                -1),
     new OTValueMasterStatus(),
+    new OTValueVentMasterStatus(),
     new OTValueFloat(           OpenThermMessageID::TrOverride,             -1),
     new OTValueDayTime(),
     new OTValueDate(),
-    new OTValueu16(             OpenThermMessageID::Year,                   0),
+    new OTValueu16(             OpenThermMessageID::Year,                   -1),
+    new OTValueu16(             OpenThermMessageID::Vset,                   -1),
 };
 
 const char* getOTname(OpenThermMessageID id) {
@@ -131,8 +155,8 @@ OTValue::OTValue(const OpenThermMessageID id, const int interval):
         discFlag(false) {
 }
 
-OTValue* OTValue::getBoilerValue(const OpenThermMessageID id) {
-    for (auto *val: boilerValues) {
+OTValue* OTValue::getSlaveValue(const OpenThermMessageID id) {
+    for (auto *val: slaveValues) {
         if (val->id == id) {
             return val;
         }
@@ -176,15 +200,15 @@ bool OTValue::sendDiscovery() {
 
     switch (id) {
         case OpenThermMessageID::Tboiler:
-            haDisc.createTempSensor(F("Vorlauftemperatur"), FPSTR(name));
+            haDisc.createTempSensor(F("flow temp."), FPSTR(name));
             break;
 
         case OpenThermMessageID::TflowCH2:
-            haDisc.createTempSensor(F("Vorlauftemperatur 2"), FPSTR(name));
+            haDisc.createTempSensor(F("flow temp. 2"), FPSTR(name));
             break;
 
         case OpenThermMessageID::Tret:
-            haDisc.createTempSensor(F("Rücklauftemperatur"), FPSTR(name));
+            haDisc.createTempSensor(F("return temp."), FPSTR(name));
             break;
 
         case OpenThermMessageID::RelModLevel:
@@ -192,23 +216,55 @@ bool OTValue::sendDiscovery() {
             break;
 
         case OpenThermMessageID::Tdhw:
-            haDisc.createTempSensor(F("Brauchwasser"), FPSTR(name));
+            haDisc.createTempSensor(F("DHW temp."), FPSTR(name));
             break;
 
         case OpenThermMessageID::Tdhw2:
-            haDisc.createTempSensor(F("Brauchwasser 2"), FPSTR(name));
+            haDisc.createTempSensor(F("DHW temp. 2"), FPSTR(name));
             break;
 
         case OpenThermMessageID::CHPressure:
-            haDisc.createPressureSensor(F("Druck Heizkreis"), FPSTR(name));
+            haDisc.createPressureSensor(F("CH pressure"), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::RelVentLevel:
+            haDisc.createSensor(F("Rel. ventilation"), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::RHexhaust:
+            haDisc.createSensor(F("humidity exhaust"), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::Tsi:
+            haDisc.createTempSensor(F("supply inlet temp."), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::Tso:
+            haDisc.createTempSensor(F("supply outlet temp."), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::Tei:
+            haDisc.createTempSensor(F("exhaust inlet temp."), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::Teo:
+            haDisc.createTempSensor(F("exhaust outlet temp."), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::RPMexhaust:
+            haDisc.createSensor(F("exhaust fan speed"), FPSTR(name));
+            break;
+
+        case OpenThermMessageID::RPMsupply:
+            haDisc.createSensor(F("supply fan speed"), FPSTR(name));
             break;
 
         case OpenThermMessageID::BurnerOperationHours:
-            haDisc.createHourDuration(F("Betriebsstunden"), FPSTR(name));
+            haDisc.createHourDuration(F("Operating hours"), FPSTR(name));
             break;
 
         case OpenThermMessageID::DHWBurnerOperationHours:
-            haDisc.createHourDuration(F("Betriebsstunden DHW"), FPSTR(name));
+            haDisc.createHourDuration(F("Operating hours DHW"), FPSTR(name));
             break;
 
         case OpenThermMessageID::SuccessfulBurnerStarts:
@@ -220,35 +276,35 @@ bool OTValue::sendDiscovery() {
             break;
 
         case OpenThermMessageID::TSet:
-            haDisc.createTempSensor(F("Vorlaufsolltemperatur"), FPSTR(name));
+            haDisc.createTempSensor(F("Flow set temp."), FPSTR(name));
             break;
 
         case OpenThermMessageID::Texhaust:
-            haDisc.createTempSensor(F("Abgastemperatur"), FPSTR(name));
+            haDisc.createTempSensor(F("Exhaust temp."), FPSTR(name));
             break;
 
         case OpenThermMessageID::SlaveVersion:
-            haDisc.createSensor(F("Produktversion Slave"), FPSTR(name));
+            haDisc.createSensor(F("Productversion slave"), FPSTR(name));
             break;
 
         case OpenThermMessageID::MasterVersion:
-            haDisc.createSensor(F("Produktversion Master"), FPSTR(name));
+            haDisc.createSensor(F("Productversion master"), FPSTR(name));
             break;
 
         case OpenThermMessageID::OpenThermVersionMaster:
-            haDisc.createSensor(F("OT-Version Master"), FPSTR(name));
+            haDisc.createSensor(F("OT-Version master"), FPSTR(name));
             break;
 
         case OpenThermMessageID::Toutside:
-            haDisc.createSensor(F("Außentemperatur"), FPSTR(name));
+            haDisc.createSensor(F("Outside temp."), FPSTR(name));
             break;
 
         case OpenThermMessageID::OpenThermVersionSlave:
-            haDisc.createSensor(F("OT-Version Slave"), FPSTR(name));
+            haDisc.createSensor(F("OT-Version slave"), FPSTR(name));
             break;
 
         case OpenThermMessageID::DHWFlowRate:
-            haDisc.createSensor(F("Volumenstrom"), FPSTR(name));
+            haDisc.createSensor(F("flow rate"), FPSTR(name));
             break;
 
         case OpenThermMessageID::FlameSignalTooLowNumber:
@@ -265,9 +321,9 @@ bool OTValue::sendDiscovery() {
     }
 
     String valTempl = F("{{ value_json.thermostat.# }}");
-    for (auto *valobj: boilerValues) {
+    for (auto *valobj: slaveValues) {
         if (valobj == this) {
-            valTempl = F("{{ value_json.boiler.# }}");
+            valTempl = F("{{ value_json.slave.# }}");
             break;
         }
     }
@@ -370,33 +426,31 @@ void OTValueFlags::getValue(JsonObject &obj) const {
     }
 }
 
+bool OTValueFlags::sendDiscFlag(String name, const char *field, const char *devClass)  {
+    haDisc.createBinarySensor(name, FPSTR(field), FPSTR(devClass));
+    String valTmpl = F("{{ 'ON' if value_json.slave.#1.#2 else 'OFF' }}");
+    valTmpl.replace("#1", getName());
+    valTmpl.replace("#2", FPSTR(field));
+    haDisc.setValueTemplate(valTmpl);
+    return haDisc.publish();
+};
+
+bool OTValueFlags::sendDiscovery() {
+    for (uint8_t i=0; i<numFlags; i++) {
+        if (flagTable[i].discName == nullptr)
+            continue;
+        const char *str = flagTable[i].name;
+        const char *discName = flagTable[i].discName;
+        const char *haDevClass = flagTable[i].haDevClass;
+        if (!sendDiscFlag(FPSTR(discName), str, haDevClass))
+            return false;
+    }
+    return true;
+}
+
 
 OTValueStatus::OTValueStatus():
         OTValueFlags(OpenThermMessageID::Status, -1, flags, sizeof(flags) / sizeof(flags[0])) {
-}
-
-bool OTValueStatus::sendDiscovery() {
-    auto send = [](String name, const char *field, const char *devClass)  {
-        haDisc.createBinarySensor(name, FPSTR(field), FPSTR(devClass));
-        String valTmpl = F("{{ 'ON' if value_json.boiler.status.# else 'OFF' }}");
-        valTmpl.replace("#", FPSTR(field));
-        haDisc.setValueTemplate(valTmpl);
-        return haDisc.publish();
-    };
-
-    if (!send(F("Burner"), STATUS_FLAME, HA_DEVICE_CLASS_RUNNING))
-        return false;
-
-    if (!send(F("DHW"), STATUS_DHW_MODE, HA_DEVICE_CLASS_RUNNING))
-        return false;
-
-    if (!send(F("Heating"), STATUS_CH_MODE, HA_DEVICE_CLASS_RUNNING))
-        return false;
-
-    if (!send(F("Error"), STATUS_FAULT, HA_DEVICE_CLASS_PROBLEM))
-        return false;
-  
-    return true;
 }
 
 
@@ -405,31 +459,22 @@ OTValueMasterStatus::OTValueMasterStatus():
 }
 
 bool OTValueMasterStatus::sendDiscovery() {
-    /*
-    auto send = [](String name, const char *field, const char *devClass)  {
-        haDisc.createBinarySensor(name, FPSTR(field), FPSTR(devClass));
-        String valTmpl = F("{{ 'ON' if value_json.boiler.status.# else 'OFF' }}");
-        valTmpl.replace("#", FPSTR(field));
-        haDisc.setValueTemplate(valTmpl);
-        return mqtt.publish(haDisc.topic, haDisc.doc);;
-    };
-
-    if (!send(F("Brenner"), STATUS_FLAME, HA_DEVICE_CLASS_RUNNING))
-        return false;
-
-    if (!send(F("Brauchwasserbereitung"), STATUS_DHW_MODE, HA_DEVICE_CLASS_RUNNING))
-        return false;
-
-    if (!send(F("Heizung"), STATUS_CH_MODE, HA_DEVICE_CLASS_RUNNING))
-        return false;
-
-    if (!send(F("Fehler"), STATUS_FAULT, HA_DEVICE_CLASS_PROBLEM))
-        return false;
-  */
     return true;
 }
 
 
+OTValueVentStatus::OTValueVentStatus():
+        OTValueFlags(OpenThermMessageID::StatusVentilationHeatRecovery, -1, flags, sizeof(flags) / sizeof(flags[0])) {
+}
+
+
+OTValueVentMasterStatus::OTValueVentMasterStatus():
+        OTValueFlags(OpenThermMessageID::StatusVentilationHeatRecovery, -1, flags, sizeof(flags) / sizeof(flags[0])) {
+}
+
+bool OTValueVentMasterStatus::sendDiscovery() {
+    return true;
+}
 
 OTValueSlaveConfigMember::OTValueSlaveConfigMember():
         OTValueFlags(OpenThermMessageID::SConfigSMemberIDcode, 0, flags, sizeof(flags) / sizeof(flags[0])) {
@@ -440,6 +485,7 @@ void OTValueSlaveConfigMember::getValue(JsonObject &obj) const {
     obj[F("memberId")] = value & 0xFF;
 }
 
+
 OTValueFaultFlags::OTValueFaultFlags(const int interval):
         OTValueFlags(OpenThermMessageID::ASFflags, interval, flags, sizeof(flags) / sizeof(flags[0])) {
 }
@@ -447,6 +493,16 @@ OTValueFaultFlags::OTValueFaultFlags(const int interval):
 void OTValueFaultFlags::getValue(JsonObject &obj) const {
     OTValueFlags::getValue(obj);
     obj[F("oem_fault_code")] = value & 0xFF;
+}
+
+
+OTValueVentFaultFlags::OTValueVentFaultFlags(const int interval):
+        OTValueFlags(OpenThermMessageID::ASFflagsOEMfaultCodeVentilationHeatRecovery, interval, flags, sizeof(flags) / sizeof(flags[0])) {
+}
+
+void OTValueVentFaultFlags::getValue(JsonObject &obj) const {
+    OTValueFlags::getValue(obj);
+    obj[F("oem_vent_fault_code")] = value & 0xFF;
 }
 
 

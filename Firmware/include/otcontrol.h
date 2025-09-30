@@ -31,6 +31,11 @@ public:
     OTWRMasterConfigMember();
 };
 
+class OTWRSetVentSetpoint: public OTWriteRequest {
+public:
+    OTWRSetVentSetpoint();
+};
+
 class OTControl {
 friend OTWriteRequest;
 public:
@@ -55,25 +60,39 @@ private:
     void masterPinIrq();
     void slavePinIrq();
     double getFlow(const uint8_t channel);
-    unsigned long lastMillis;
+    unsigned long lastBoilerStatus;
+    unsigned long lastVentStatus;
     enum OTMode: int8_t {
         OTMODE_BYPASS = 0,
         OTMODE_MASTER = 1,
         OTMODE_REPEATER = 2,
         OTMODE_LOOPBACKTEST = 4
     } otMode;
-    struct HeatingParams {
+    enum SlaveApplication: uint8_t {
+        SLAVEAPP_HEATCOOL = 0,
+        SLAVEAPP_VENT = 1,
+        SLAVEAPP_SOLAR = 2
+    } slaveApp;
+    struct HeatingConfig {
         bool chOn;
         double roomSet; // default room set point
         double flowMax;
         double exponent;
         double gradient;
         double offset;
-        double flow;
-        double flowDefault;
+        double flow; // default flow temperature
         bool overrideFlow;
-        CtrlMode ctrlMode;
-    } heatingParams[2];
+    } heatingConfig[2];
+    struct VentConfig {
+        bool ventEnable;
+        bool openBypass;
+        bool autoBypass;
+        bool freeVentEnable;
+        uint8_t setpoint;
+    } vent;
+    bool chOn[2];
+    double flowTemp[2];
+    CtrlMode heatingCtrlMode[2];
     double dhwTemp;
     bool dhwOn;
     bool overrideDhw;
@@ -81,6 +100,7 @@ private:
     OTWRSetDhw setDhwRequest;
     OTWRSetBoilerTemp setBoilerRequest[2];
     OTWRMasterConfigMember setMasterConfigMember;
+    OTWRSetVentSetpoint setVentSetpointRequest;
     uint8_t masterMemberId;
     struct OTInterface {
         OTInterface(const uint8_t inPin, const uint8_t outPin, const bool isSlave);
@@ -110,6 +130,7 @@ public:
     void setDhwCtrlMode(const CtrlMode mode);
     bool sendDiscovery();
     void forceFlowCalc(const uint8_t channel);
+    void setVentSetpoint(const uint8_t v);
 };
 
 
