@@ -2,6 +2,7 @@
 
 #include <OpenTherm.h>
 #include "ArduinoJson.h"
+#include "freertos/FreeRTOS.h"
 
 class OTWriteRequest {
 private:
@@ -34,6 +35,16 @@ public:
 class OTWRSetVentSetpoint: public OTWriteRequest {
 public:
     OTWRSetVentSetpoint();
+};
+
+class OTWRSetRoomTemp: public OTWriteRequest {
+public:
+    OTWRSetRoomTemp(const uint8_t ch);
+};
+
+class OTWRSetRoomSetPoint: public OTWriteRequest {
+public:
+    OTWRSetRoomSetPoint(const uint8_t ch);
 };
 
 class OTControl {
@@ -101,6 +112,8 @@ private:
     OTWRSetBoilerTemp setBoilerRequest[2];
     OTWRMasterConfigMember setMasterConfigMember;
     OTWRSetVentSetpoint setVentSetpointRequest;
+    OTWRSetRoomTemp setRoomTemp[2];
+    OTWRSetRoomSetPoint setRoomSetPoint[2];
     uint8_t masterMemberId;
     struct OTInterface {
         OTInterface(const uint8_t inPin, const uint8_t outPin, const bool isSlave);
@@ -112,6 +125,7 @@ private:
         unsigned long lastRx; // millis
         unsigned long lastTx; // millis
         unsigned long lastTxMsg;
+        SemaphoreHandle_t mutex;
         void sendRequest(const char source, const unsigned long msg);
         void resetCounters();
         void onReceive(const char source, const unsigned long msg);
@@ -131,6 +145,7 @@ public:
     bool sendDiscovery();
     void forceFlowCalc(const uint8_t channel);
     void setVentSetpoint(const uint8_t v);
+    unsigned long slaveRequest(OpenThermMessageID id, OpenThermMessageType ty, uint16_t data);
 };
 
 

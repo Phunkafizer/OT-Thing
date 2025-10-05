@@ -38,6 +38,7 @@ const struct {
     {OpenThermMessageID::TflowCH2,                  floatToOT(48.6)},
     {OpenThermMessageID::Tdhw2,                     floatToOT(37.6)},
     {OpenThermMessageID::Texhaust,                  90},
+    {OpenThermMessageID::TrOverride2,               0},
     {OpenThermMessageID::TdhwSetUBTdhwSetLB,        nib(60, 40)}, // 60 °C upper bound, 40 C° lower bound
     {OpenThermMessageID::MaxTSetUBMaxTSetLB,        nib(60, 25)}, // 60 °C upper bound, 20 C° lower bound
     {OpenThermMessageID::SuccessfulBurnerStarts,    9999},
@@ -56,6 +57,12 @@ const struct {
     {OpenThermMessageID::RPMexhaust,                2300},
     {OpenThermMessageID::RPMsupply,                 2400},
     {OpenThermMessageID::ASFflagsOEMfaultCodeVentilationHeatRecovery,   0x0F33},
+    {OpenThermMessageID::OpenThermVersionVentilationHeatRecovery,       0x0105},
+    {OpenThermMessageID::VentilationHeatRecoveryVersion,                0x0107},
+    {OpenThermMessageID::RemoteOverrideFunction,    0x0000},
+    {OpenThermMessageID::UnsuccessfulBurnerStarts,  19},
+    {OpenThermMessageID::FlameSignalTooLowNumber,   4},
+    {OpenThermMessageID::DHWBurnerOperationHours,   196},
 };
 
 void IRAM_ATTR handleIrqMaster() {
@@ -79,6 +86,7 @@ void otCbSlave(unsigned long response, OpenThermResponseStatus status) {
 OTControl::OTInterface::OTInterface(const uint8_t inPin, const uint8_t outPin, const bool isSlave):
         hal(inPin, outPin, isSlave) {
     resetCounters();
+    mutex = xSemaphoreCreateMutex();
 }
 
 void OTControl::OTInterface::sendRequest(const char source, const unsigned long msg) {
@@ -135,6 +143,8 @@ OTControl::OTControl():
         master(GPIO_OTMASTER_IN, GPIO_OTMASTER_OUT, false),
         slave(GPIO_OTSLAVE_IN, GPIO_OTSLAVE_OUT, true),
         setBoilerRequest{OTWRSetBoilerTemp(0), OTWRSetBoilerTemp(1)},
+        setRoomTemp{OTWRSetRoomTemp(0), OTWRSetRoomTemp(1)},
+        setRoomSetPoint{OTWRSetRoomSetPoint(0), OTWRSetRoomSetPoint(1)},
         heatingCtrlMode{CTRLMODE_AUTO, CTRLMODE_AUTO},
         slaveApp(SLAVEAPP_HEATCOOL) {
 }
@@ -241,33 +251,48 @@ void OTControl::loop() {
         return;
     }
 
+    if (xSemaphoreTake(master.mutex, (TickType_t) 50 / portTICK_PERIOD_MS) != pdTRUE)
+        return;
+
     switch (otMode) {
     case OTMODE_LOOPBACKTEST: {
-        static uint32_t nextRoomTemps[2] = {0, 0};
-        static uint32_t nextRoomSetPoints[2] = {0, 0};
-        for (int i=0; i<2; i++) {
-            if (millis() > nextRoomTemps[i]) {
-                uint32_t req = OpenTherm::buildRequest(OpenThermMessageType::WRITE_DATA, (i == 0) ? OpenThermMessageID::Tr : OpenThermMessageID::TrCH2, 19<<8 | (26 + i * 26));
-                sendRequest('T', req);
-                nextRoomTemps[i] = millis() + 10000;
+        for (int ch=0; ch<2; ch++) {
+            if (setRoomTemp[ch]) {
+                setRoomTemp[ch].send(OpenTherm::temperatureToData(21.5));
+                xSemaphoreGive(master.mutex);
                 return;
             }
-            if (millis() > nextRoomSetPoints[i]) {
-                uint32_t req = OpenTherm::buildRequest(OpenThermMessageType::WRITE_DATA, (i == 0) ? OpenThermMessageID::TrSet : OpenThermMessageID::TrSetCH2, 20<<8 | (26 + i * 26));
-                sendRequest('T', req);
-                nextRoomSetPoints[i] = millis() + 10000;
+            if (setRoomSetPoint[ch]) {
+                setRoomSetPoint[ch].send(OpenTherm::temperatureToData(21.3));
+                xSemaphoreGive(master.mutex);
                 return;
             }
         }
         // no break!!
+
     }
 
     case OTMODE_MASTER:
         for (auto *valobj: slaveValues) {
-            if (valobj->process())
+            if (valobj->process()) {
+                xSemaphoreGive(master.mutex);
                 return;
+            }
         }
 
+        for (int ch=0; ch<2; ch++) {
+            double temp;
+            if (setRoomTemp[ch] && roomTemp[ch].get(temp)) {
+                setRoomTemp[ch].send(OpenTherm::temperatureToData(temp));
+                xSemaphoreGive(master.mutex);
+                return;
+            }
+            if (setRoomSetPoint[ch] && roomSetPoint[ch].get(temp)) {
+                setRoomSetPoint[ch].send(OpenTherm::temperatureToData(temp));
+                xSemaphoreGive(master.mutex);
+                return;
+            }
+        }
 
         switch (slaveApp) {
         case SLAVEAPP_HEATCOOL:
@@ -277,6 +302,7 @@ void OTControl::loop() {
 
                     if (flow > 0) {
                         setBoilerRequest[ch].send(OpenTherm::temperatureToData(flow));
+                        xSemaphoreGive(master.mutex);
                         return;
                     }
                 }
@@ -284,6 +310,7 @@ void OTControl::loop() {
 
             if (setDhwRequest) {
                 setDhwRequest.send(OpenTherm::temperatureToData(dhwTemp));
+                xSemaphoreGive(master.mutex);
                 return;
             }
 
@@ -297,6 +324,7 @@ void OTControl::loop() {
                     false, 
                     chOn[1]);
                 sendRequest('T', req);
+                xSemaphoreGive(master.mutex);
                 return;
             }    
             break;
@@ -304,6 +332,7 @@ void OTControl::loop() {
         case SLAVEAPP_VENT:
             if (setVentSetpointRequest) {
                 setVentSetpointRequest.send(vent.setpoint);
+                xSemaphoreGive(master.mutex);
                 return;
             }
 
@@ -320,6 +349,7 @@ void OTControl::loop() {
                     hb |= 1<<3;
                 unsigned long req = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, OpenThermMessageID::StatusVentilationHeatRecovery, hb << 8);
                 sendRequest('T', req);
+                xSemaphoreGive(master.mutex);
                 return;
             }
             break;
@@ -329,18 +359,12 @@ void OTControl::loop() {
 
         if (setMasterConfigMember) {
             setMasterConfigMember.send((1<<8) | masterMemberId);
+            xSemaphoreGive(master.mutex);
             return;
         }
-
-        static uint8_t testId = 0; // set >=1 to test all IDs
-        if (testId) {
-            unsigned long req = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, (OpenThermMessageID) testId, 0);
-            sendRequest('T', req);
-            testId++;
-        }
-
         break;
     }
+    xSemaphoreGive(master.mutex);
 }
 
 void OTControl::sendRequest(const char source, const unsigned long msg) {
@@ -563,7 +587,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             break;
         }
         if (!setThermostatVal(newMsg))
-            portal.textAll(F("no otval!"));
+            portal.textAll(F("T no otval!"));
     }
 }
 
@@ -838,6 +862,27 @@ void OTControl::setVentSetpoint(const uint8_t v) {
     setVentSetpointRequest.force();
 }
 
+unsigned long OTControl::slaveRequest(OpenThermMessageID id, OpenThermMessageType ty, uint16_t data) {
+    unsigned long res = 0;
+
+    if (xSemaphoreTake(master.mutex, (TickType_t)100 / portTICK_PERIOD_MS) == pdTRUE) {
+        while (!master.hal.isReady()) {
+            master.hal.process();
+            yield();
+        }
+        unsigned long req = OpenTherm::buildRequest(ty, id, data);
+        sendRequest('T', req);
+        while (!master.hal.isReady()) {
+            master.hal.process();
+            slave.hal.process(); // in loopback mode slave objekt has to process our request!
+            yield();
+        }
+        res = master.hal.getLastResponse();
+        xSemaphoreGive(master.mutex);
+    }
+    return res;
+}
+
 
 OTWriteRequest::OTWriteRequest(OpenThermMessageID id, uint16_t intervalS):
         id(id),
@@ -876,4 +921,12 @@ OTWRMasterConfigMember::OTWRMasterConfigMember():
 
 OTWRSetVentSetpoint::OTWRSetVentSetpoint():
         OTWriteRequest(OpenThermMessageID::Vset, 60) {
+}
+
+OTWRSetRoomTemp::OTWRSetRoomTemp(const uint8_t ch):
+        OTWriteRequest((ch == 0) ? OpenThermMessageID::Tr : OpenThermMessageID::TrCH2, 60) {
+}
+
+OTWRSetRoomSetPoint::OTWRSetRoomSetPoint(const uint8_t ch):
+        OTWriteRequest((ch == 0) ? OpenThermMessageID::TrSet : OpenThermMessageID::TrSetCH2, 60) {
 }

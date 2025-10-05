@@ -46,6 +46,8 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::StatusVentilationHeatRecovery, PSTR("vent_status")},
     {OpenThermMessageID::Vset,                      PSTR("rel_vent_set")},
     {OpenThermMessageID::ASFflagsOEMfaultCodeVentilationHeatRecovery, PSTR("vent_fault_flags")},
+    {OpenThermMessageID::OpenThermVersionVentilationHeatRecovery,   PSTR("vent_ot_version")},
+    {OpenThermMessageID::VentilationHeatRecoveryVersion,    PSTR("vent_prod_version")},
     {OpenThermMessageID::RelVentLevel,              PSTR("rel_vent")},
     {OpenThermMessageID::RHexhaust,                 PSTR("rel_hum_exhaust")},
     {OpenThermMessageID::CO2exhaust,                PSTR("co2_exhaust")},
@@ -68,7 +70,7 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::SlaveVersion,              PSTR("slave_prod_version")}
 };
 
-OTValue *slaveValues[39] = { // reply data collected (read) from slave (boiler / ventilation / solar)
+OTValue *slaveValues[41] = { // reply data collected (read) from slave (boiler / ventilation / solar)
     new OTValueSlaveConfigMember(),
     new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionSlave,      0),
     new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,               0),
@@ -89,6 +91,8 @@ OTValue *slaveValues[39] = { // reply data collected (read) from slave (boiler /
     new OTValueFloat(           OpenThermMessageID::Tret,                       10),
     new OTValuei16(             OpenThermMessageID::Texhaust,                   10),
     new OTValueFloat(           OpenThermMessageID::TrOverride2,                10),
+    new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionVentilationHeatRecovery,    0),
+    new OTValueProductVersion(  OpenThermMessageID::VentilationHeatRecoveryVersion,             0),
     new OTValueu16(             OpenThermMessageID::RelVentLevel,               10),
     new OTValueu16(             OpenThermMessageID::RHexhaust,                  10),
     new OTValueu16(             OpenThermMessageID::CO2exhaust,                 10),
@@ -111,7 +115,7 @@ OTValue *slaveValues[39] = { // reply data collected (read) from slave (boiler /
 };
 
 
-OTValue *thermostatValues[18] = { // request data sent (written) from roomunit
+OTValue *thermostatValues[17] = { // request data sent (written) from roomunit
     new OTValueFloat(           OpenThermMessageID::TSet,                   -1),
     new OTValueFloat(           OpenThermMessageID::TsetCH2,                -1),
     new OTValueFloat(           OpenThermMessageID::Tr,                     -1),
@@ -125,7 +129,6 @@ OTValue *thermostatValues[18] = { // request data sent (written) from roomunit
     new OTValueFloat(           OpenThermMessageID::TdhwSet,                -1),
     new OTValueMasterStatus(),
     new OTValueVentMasterStatus(),
-    new OTValueFloat(           OpenThermMessageID::TrOverride,             -1),
     new OTValueDayTime(),
     new OTValueDate(),
     new OTValueu16(             OpenThermMessageID::Year,                   -1),

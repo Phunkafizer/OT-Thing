@@ -602,6 +602,14 @@
                         <span class="statusvalue" field="slave.supply_fan_speed" unit="rpm"></span>
                     </div>
                     <div class="statusfield">
+                        <h5>Vent. product version</h5>
+                        <span class="statusvalue" field="slave.vent_prod_version"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>vent. OT version</h5>
+                        <span class="statusvalue" field="slave.vent_ot_version"></span>
+                    </div>
+                    <div class="statusfield">
                         <h5>Frames sent</h5>
                         <span class="statusvalue" field="slave.txCount"></span>
                     </div>
@@ -1572,13 +1580,15 @@
                 let heatCfg = config.heating[hk - 1];
                 let ft = getFlowTemperature(
                     statuscache.outsideTemp, 
-                    heatCfg.roomSet, 
+                    heatCfg.roomsetpoint.temp, 
                     heatCfg.flowMax, 
                     heatCfg.exponent, 
                     heatCfg.gradient, 
                     heatCfg.offset
                 );
                 let comment = _("#comment" + hk).value;
+                if (heatCfg.marker === undefined)
+                    heatCfg.marker = [];
                 heatCfg.marker.push({
                     comment: comment,
                     ot: statuscache.outsideTemp,

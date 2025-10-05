@@ -7,6 +7,7 @@
 #include "devstatus.h"
 #include "devconfig.h"
 #include "html.h"
+#include "otcontrol.h"
 
 static const char APP_JSON[] PROGMEM = "application/json";
 static const IPAddress apAddress(4, 3, 2, 1);
@@ -163,6 +164,39 @@ void Portal::begin(bool configMode) {
             }
         }
     );
+
+    websrv.on("/slaverequest", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        if (!request->hasParam("id")) {
+            request->send(503);
+            return;
+        }
+        OpenThermMessageID id = (OpenThermMessageID) request->getParam("id")->value().toInt();
+
+        if (!request->hasParam("rw")) {
+            request->send(503);
+            return;
+        }
+        OpenThermMessageType ty = (request->getParam("rw")->value().toInt() != 0) ? OpenThermMessageType::READ_DATA : OpenThermMessageType::WRITE_DATA;
+
+        if (!request->hasParam("data")) {
+            request->send(503);
+            return;
+        }
+        String hexData = request->getParam("data")->value();
+        uint16_t data = strtol(hexData.c_str(), nullptr, 16);
+
+        unsigned long rep = otcontrol.slaveRequest(id, ty, data);
+        JsonDocument doc;
+        JsonObject jobj = doc.to<JsonObject>();
+        
+        jobj["type"] = (int) OpenTherm::getMessageType(rep);
+        jobj["id"] = (int) id;
+        jobj["data"] = String(OpenTherm::getUInt(rep), 16);
+
+        AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));
+        serializeJson(doc, *response);
+        request->send(response);
+    });
 }
 
 void Portal::loop() {
