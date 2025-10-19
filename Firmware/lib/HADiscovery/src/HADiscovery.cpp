@@ -187,3 +187,8 @@ void HADiscovery::createClima(String name, String id, String tmpCmdTopic) {
     doc[FPSTR(HA_TEMPERATURE_COMMAND_TOPIC)] = tmpCmdTopic;
     setModes(0x07); // off, heat, auto
 }
+
+void HADiscovery::createSwitch(String name, String id, String cmdTopic) {
+    init(name, id, F("switch"));
+    doc[FPSTR(HA_COMMAND_TOPIC)] = cmdTopic;
+}

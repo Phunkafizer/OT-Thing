@@ -41,4 +41,5 @@ public:
     void createBinarySensor(String name, String id, String deviceClass);
     void createNumber(String name, String id, String cmdTopic);
     void createClima(String name, String id, String tmpCmdTopic);
+    void createSwitch(String name, String id, String cmdTopic);
 };

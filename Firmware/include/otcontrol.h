@@ -92,18 +92,21 @@ private:
         double gradient;
         double offset;
         double flow; // default flow temperature
-        bool overrideFlow;
+        double roomTempComp;
     } heatingConfig[2];
-    struct VentConfig {
+    struct HeatingControl {
+        bool chOn;
+        double flowTemp;
+        CtrlMode mode {CTRLMODE_AUTO};
+        bool overrideFlow;
+    } heatingCtrl[2];
+    struct {
         bool ventEnable;
         bool openBypass;
         bool autoBypass;
         bool freeVentEnable;
         uint8_t setpoint;
-    } vent;
-    bool chOn[2];
-    double flowTemp[2];
-    CtrlMode heatingCtrlMode[2];
+    } ventCtrl;
     double dhwTemp;
     bool dhwOn;
     bool overrideDhw;
@@ -133,9 +136,10 @@ private:
     } master, slave;
 public:
     OTControl();
-    void setOTMode(const OTMode mode);
     void begin();
     void loop();
+    void setOTMode(const OTMode mode);
+    unsigned long slaveRequest(OpenThermMessageID id, OpenThermMessageType ty, uint16_t data);
     void getJson(JsonObject &obj);
     void setConfig(JsonObject &config);
     void setDhwTemp(const double temp);
@@ -145,7 +149,10 @@ public:
     bool sendDiscovery();
     void forceFlowCalc(const uint8_t channel);
     void setVentSetpoint(const uint8_t v);
-    unsigned long slaveRequest(OpenThermMessageID id, OpenThermMessageType ty, uint16_t data);
+    void setVentEnable(const bool en);
+    void setOverrideCh(const bool ovrd, const uint8_t channel);
+    void setOverrideDhw(const bool ovrd);
+    
 };
 
 

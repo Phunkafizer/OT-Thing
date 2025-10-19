@@ -7,18 +7,30 @@
 #include "HADiscLocal.h"
 #include "hwdef.h"
 
-const char *MQTTSETVAR_OUTSIDETEMP PROGMEM = "outsideTemp";
-const char *MQTTSETVAR_DHWSETTEMP PROGMEM = "dwhSetTemp";
-const char *MQTTSETVAR_CHSETTEMP1 PROGMEM = "chSetTemp1";
-const char *MQTTSETVAR_CHSETTEMP2 PROGMEM = "chSetTemp2";
-const char *MQTTSETVAR_DHWMODE PROGMEM = "dhwMode";
-const char *MQTTSETVAR_CHMODE1 PROGMEM = "chMode1";
-const char *MQTTSETVAR_CHMODE2 PROGMEM = "chMode2";
-const char *MQTTSETVAR_ROOMTEMP1 PROGMEM = "roomTemp1";
-const char *MQTTSETVAR_ROOMTEMP2 PROGMEM = "roomTemp2";
-const char *MQTTSETVAR_ROOMSETPOINT1 PROGMEM = "roomSetpoint1";
-const char *MQTTSETVAR_ROOMSETPOINT2 PROGMEM = "roomSetpoint2";
-const char *MQTTSETVAR_VENTSETPOINT PROGMEM = "ventSetpoint";
+static struct {
+    Mqtt::MqttTopic topic;
+    const char *str;
+} topicList[] PROGMEM = {
+    {Mqtt::TOPIC_OUTSIDETEMP, "outsideTemp"},
+    {Mqtt::TOPIC_DHWSETTEMP, "dwhSetTemp"},
+    {Mqtt::TOPIC_CHSETTEMP1, "chSetTemp1"},
+    {Mqtt::TOPIC_CHSETTEMP2, "chSetTemp2"},
+    {Mqtt::TOPIC_DHWMODE, "dhwMode"},
+    {Mqtt::TOPIC_CHMODE1, "chMode1"},
+    {Mqtt::TOPIC_CHMODE2, "chMode2"},
+    {Mqtt::TOPIC_ROOMTEMP1, "roomTemp1"},
+    {Mqtt::TOPIC_ROOMTEMP2, "roomTemp2"},
+    {Mqtt::TOPIC_ROOMSETPOINT1, "roomSetpoint1"},
+    {Mqtt::TOPIC_ROOMSETPOINT2, "roomSetpoint2"},
+    {Mqtt::TOPIC_OVERRIDECH1, "overrideCh1"},
+    {Mqtt::TOPIC_OVERRIDECH2, "overrideCh2"},
+    {Mqtt::TOPIC_OVERRIDEDHW, "overrideDhw"},
+    {Mqtt::TOPIC_VENTSETPOINT, "ventSetpoint"},
+    {Mqtt::TOPIC_VENTENABLE, "ventEnable"},
+    {Mqtt::TOPIC_OPENBYPASS, "openBypass"},
+    {Mqtt::TOPIC_AUTOBYPASS, "autoBypass"},
+    {Mqtt::TOPIC_FREEVENTENABLE, "freeVentEnable"}
+};
 
 Mqtt mqtt;
 static WiFiClient espClient;
@@ -79,9 +91,9 @@ void Mqtt::setConfig(const MqttConfig conf) {
     configSet = !config.host.isEmpty();
 }
 
-String Mqtt::getVarSetTopic(const char *str) {
+String Mqtt::getCmdTopic(const MqttTopic topic) {
     String result = baseTopic + '/';
-    result += FPSTR(str);
+    result += getTopicString(topic);
     result += "/set";
     return result;
 }
@@ -148,79 +160,106 @@ void Mqtt::onMessage(const char *topic, String &payload) {
     log += payload;
     portal.textAll(log);
 
-    String tmp = FPSTR(MQTTSETVAR_OUTSIDETEMP);
-    if (topicStr.compareTo(tmp) == 0) {
+    enum MqttTopic etop = TOPIC_UNKNOWN;
+    for (int i=0; i<sizeof(topicList) / sizeof(topicList[0]); i++)
+        if (topicStr.compareTo(FPSTR(topicList[i].str)) == 0) {
+            etop = topicList[i].topic;
+            break;
+        }
+
+    switch (etop) {
+    case TOPIC_OUTSIDETEMP: {
         double d = payload.toFloat();
         outsideTemp.set(d, Sensor::SOURCE_MQTT);
-        return;
+        break;
     }
 
-    tmp = FPSTR(MQTTSETVAR_DHWSETTEMP);
-    if (topicStr.compareTo(tmp) == 0) {
+    case TOPIC_DHWSETTEMP: {
         double d = payload.toFloat();
         otcontrol.setDhwTemp(d);
-        return;
+        break;
     }
 
-    tmp = FPSTR(MQTTSETVAR_DHWMODE);
-    if (topicStr.compareTo(tmp) == 0) {
-        OTControl::CtrlMode mode = strToCtrlMode(payload);
-        if (mode != OTControl::CtrlMode::CTRLMODE_UNKNOWN)
-            otcontrol.setDhwCtrlMode(mode);
-        return;
-    }
-
-    tmp = FPSTR(MQTTSETVAR_CHSETTEMP1);
-    if (topicStr.compareTo(tmp) == 0) {
+    case TOPIC_CHSETTEMP1: {
         double d = payload.toFloat();
         otcontrol.setChTemp(d, 0);
-        return;
+        break;
     }
 
-    tmp = FPSTR(MQTTSETVAR_CHMODE1);
-    if (topicStr.compareTo(tmp) == 0) {
+    case TOPIC_CHMODE1: {
         OTControl::CtrlMode mode = strToCtrlMode(payload);
         if (mode != OTControl::CTRLMODE_UNKNOWN)
             otcontrol.setChCtrlMode(mode, 0);
-        return;
+        break;
     }
 
-    tmp = FPSTR(MQTTSETVAR_ROOMTEMP1);
-    if (topicStr.compareTo(tmp) == 0) {
+    case TOPIC_ROOMTEMP1: {
         double d = payload.toFloat();
         roomTemp[0].set(d, Sensor::SOURCE_MQTT);
         otcontrol.forceFlowCalc(0);
-        return;
+        break;
     }
 
-    tmp = FPSTR(MQTTSETVAR_ROOMTEMP2);
-    if (topicStr.compareTo(tmp) == 0) {
+    case TOPIC_ROOMTEMP2: {
         double d = payload.toFloat();
         roomTemp[1].set(d, Sensor::SOURCE_MQTT);
         otcontrol.forceFlowCalc(1);
-        return;
+        break;
     }
 
-    tmp = FPSTR(MQTTSETVAR_ROOMSETPOINT1);
-    if (topicStr.compareTo(tmp) == 0) {
+    case TOPIC_ROOMSETPOINT1: {
         double d = payload.toFloat();
         roomSetPoint[0].set(d, Sensor::SOURCE_MQTT);
         otcontrol.forceFlowCalc(0);
-        return;
+        break;
     }
 
-    tmp = FPSTR(MQTTSETVAR_ROOMSETPOINT2);
-    if (topicStr.compareTo(tmp) == 0) {
+    case TOPIC_ROOMSETPOINT2: {
         double d = payload.toFloat();
         roomSetPoint[1].set(d, Sensor::SOURCE_MQTT);
         otcontrol.forceFlowCalc(1);
-        return;
+        break;
     }
 
-    tmp = FPSTR(MQTTSETVAR_VENTSETPOINT);
-    if (topicStr.compareTo(tmp) == 0) {
+    case TOPIC_OVERRIDECH1:
+        otcontrol.setOverrideCh(payload == F("ON"), 0);
+        break;
+
+    case TOPIC_OVERRIDECH2:
+        otcontrol.setOverrideCh(payload == F("ON"), 1);
+        break;
+
+    case TOPIC_OVERRIDEDHW:
+        otcontrol.setOverrideDhw(payload == F("ON"));
+        break;
+
+    case TOPIC_VENTSETPOINT: {
         uint8_t val = payload.toInt();
         otcontrol.setVentSetpoint(val);
-        return;
+        break;
     }
+
+    case TOPIC_VENTENABLE:
+        otcontrol.setVentEnable(payload == F("ON"));
+        break;
+
+    case TOPIC_OPENBYPASS:
+        break;
+
+    case TOPIC_AUTOBYPASS:
+        break;
+
+    case TOPIC_FREEVENTENABLE:
+        break;
+
+    default:
+        break;
+    }
+}
+
+String Mqtt::getTopicString(const MqttTopic topic) {
+    for (int i=0; i<sizeof(topicList) / sizeof(topicList[0]); i++)
+        if (topicList[i].topic == topic)
+            return FPSTR(topicList[i].str);
+    return "";
 }

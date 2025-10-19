@@ -22,6 +22,14 @@ void OTThingHADiscovery::begin() {
     devPrefix += shortMac;
 }
 
-bool OTThingHADiscovery::publish() {
+void OTThingHADiscovery::createSwitch(String name, Mqtt::MqttTopic topic) {
+    HADiscovery::createSwitch(name, Mqtt::getTopicString(topic), mqtt.getCmdTopic(topic));
+    haDisc.setOptimistic(true);
+    haDisc.setRetain(true);
+}
+
+bool OTThingHADiscovery::publish(const bool avail) {
+    if (!avail)
+        haDisc.clearDoc();
     return mqtt.publish(topic, doc, true);
 }

@@ -4,19 +4,6 @@
 #include <ArduinoJson.h>
 #include "otcontrol.h"
 
-extern const char *MQTTSETVAR_OUTSIDETEMP PROGMEM;
-extern const char *MQTTSETVAR_DHWSETTEMP PROGMEM;
-extern const char *MQTTSETVAR_CHSETTEMP1 PROGMEM;
-extern const char *MQTTSETVAR_CHSETTEMP2 PROGMEM;
-extern const char *MQTTSETVAR_DHWMODE PROGMEM;
-extern const char *MQTTSETVAR_CHMODE1 PROGMEM;
-extern const char *MQTTSETVAR_CHMODE2 PROGMEM;
-extern const char *MQTTSETVAR_ROOMTEMP1 PROGMEM;
-extern const char *MQTTSETVAR_ROOMTEMP2 PROGMEM;
-extern const char *MQTTSETVAR_ROOMSETPOINT1 PROGMEM;
-extern const char *MQTTSETVAR_ROOMSETPOINT2 PROGMEM;
-extern const char *MQTTSETVAR_VENTSETPOINT PROGMEM;
-
 struct MqttConfig {
     String host;
     uint16_t port;
@@ -39,6 +26,28 @@ private:
     bool discFlag {false}; // discovery flag; set after MQTT (re-) connect
     OTControl::CtrlMode strToCtrlMode(String &str);
 public:
+    enum MqttTopic {
+        TOPIC_UNKNOWN = -1,
+        TOPIC_OUTSIDETEMP,
+        TOPIC_DHWSETTEMP,
+        TOPIC_CHSETTEMP1,
+        TOPIC_CHSETTEMP2,
+        TOPIC_DHWMODE,
+        TOPIC_CHMODE1,
+        TOPIC_CHMODE2,
+        TOPIC_ROOMTEMP1,
+        TOPIC_ROOMTEMP2,
+        TOPIC_ROOMSETPOINT1,
+        TOPIC_ROOMSETPOINT2,
+        TOPIC_OVERRIDECH1,
+        TOPIC_OVERRIDECH2,
+        TOPIC_OVERRIDEDHW,
+        TOPIC_VENTSETPOINT,
+        TOPIC_VENTENABLE,
+        TOPIC_OPENBYPASS,
+        TOPIC_AUTOBYPASS,
+        TOPIC_FREEVENTENABLE
+    };
     Mqtt();
     void begin();
     void loop();
@@ -46,8 +55,9 @@ public:
     void setConfig(const MqttConfig conf);
     bool publish(String topic, JsonDocument &payload, const bool retain);
     void onMessage(const char *topic, String &payload);
-    String getVarSetTopic(const char *str);
     String getBaseTopic();
+    static String getTopicString(const MqttTopic topic);
+    String getCmdTopic(const MqttTopic topic);
 };
 
 extern Mqtt mqtt;
