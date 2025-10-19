@@ -215,15 +215,15 @@ bool OTValue::sendDiscovery() {
             break;
 
         case OpenThermMessageID::RelModLevel:
-            haDisc.createPowerFactorSensor(F("Rel. Modulation"), FPSTR(name));
+            haDisc.createPowerFactorSensor(F("rel. modulation"), FPSTR(name));
             break;
 
         case OpenThermMessageID::Tdhw:
-            haDisc.createTempSensor(F("DHW temp."), FPSTR(name));
+            haDisc.createTempSensor(F("DHW temperature"), FPSTR(name));
             break;
 
         case OpenThermMessageID::Tdhw2:
-            haDisc.createTempSensor(F("DHW temp. 2"), FPSTR(name));
+            haDisc.createTempSensor(F("DHW temperature 2"), FPSTR(name));
             break;
 
         case OpenThermMessageID::CHPressure:
@@ -231,7 +231,7 @@ bool OTValue::sendDiscovery() {
             break;
 
         case OpenThermMessageID::RelVentLevel:
-            haDisc.createSensor(F("Rel. ventilation"), FPSTR(name));
+            haDisc.createSensor(F("rel. ventilation"), FPSTR(name));
             break;
 
         case OpenThermMessageID::RHexhaust:
@@ -263,47 +263,47 @@ bool OTValue::sendDiscovery() {
             break;
 
         case OpenThermMessageID::BurnerOperationHours:
-            haDisc.createHourDuration(F("Operating hours"), FPSTR(name));
+            haDisc.createHourDuration(F("operating hours"), FPSTR(name));
             break;
 
         case OpenThermMessageID::DHWBurnerOperationHours:
-            haDisc.createHourDuration(F("Operating hours DHW"), FPSTR(name));
+            haDisc.createHourDuration(F("operating hours DHW"), FPSTR(name));
             break;
 
         case OpenThermMessageID::SuccessfulBurnerStarts:
-            haDisc.createSensor(F("Brennerstarts"), FPSTR(name));
+            haDisc.createSensor(F("burnerstarts"), FPSTR(name));
             break;
 
         case OpenThermMessageID::UnsuccessfulBurnerStarts:
-            haDisc.createSensor(F("Fehlgeschl. Brennerstarts"), FPSTR(name));
+            haDisc.createSensor(F("failed burnerstarts"), FPSTR(name));
             break;
 
         case OpenThermMessageID::TSet:
-            haDisc.createTempSensor(F("Flow set temp."), FPSTR(name));
+            haDisc.createTempSensor(F("flow set temp."), FPSTR(name));
             break;
 
         case OpenThermMessageID::Texhaust:
-            haDisc.createTempSensor(F("Exhaust temp."), FPSTR(name));
+            haDisc.createTempSensor(F("exhaust temp."), FPSTR(name));
             break;
 
         case OpenThermMessageID::SlaveVersion:
-            haDisc.createSensor(F("Productversion slave"), FPSTR(name));
+            haDisc.createSensor(F("productversion slave"), FPSTR(name));
             break;
 
         case OpenThermMessageID::MasterVersion:
-            haDisc.createSensor(F("Productversion master"), FPSTR(name));
+            haDisc.createSensor(F("productversion master"), FPSTR(name));
             break;
 
         case OpenThermMessageID::OpenThermVersionMaster:
-            haDisc.createSensor(F("OT-Version master"), FPSTR(name));
+            haDisc.createSensor(F("OT-version master"), FPSTR(name));
             break;
 
         case OpenThermMessageID::Toutside:
-            haDisc.createSensor(F("Outside temp."), FPSTR(name));
+            haDisc.createSensor(F("outside temp."), FPSTR(name));
             break;
 
         case OpenThermMessageID::OpenThermVersionSlave:
-            haDisc.createSensor(F("OT-Version slave"), FPSTR(name));
+            haDisc.createSensor(F("OT-version slave"), FPSTR(name));
             break;
 
         case OpenThermMessageID::DHWFlowRate:
