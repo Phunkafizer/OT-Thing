@@ -78,6 +78,12 @@ void Mqtt::onConnect() {
     discFlag = false;
 }
 
+void Mqtt::onDisconnect(AsyncMqttClientDisconnectReason reason) {
+    String msg = F("MQTT connected");
+    msg += String((int) reason);
+    portal.textAll(msg);
+}
+
 bool Mqtt::connected() {
     return cli.connected();
 }

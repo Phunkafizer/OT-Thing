@@ -15,7 +15,9 @@ struct MqttConfig {
 class Mqtt {
 private:
     void onConnect();
+    void onDisconnect(AsyncMqttClientDisconnectReason reason);
     friend void mqttConnectCb(bool sessionPresent);
+    friend void mqttDisconnectCb(AsyncMqttClientDisconnectReason reason);
     AsyncMqttClient cli;
     uint32_t lastConTry;
     uint32_t lastStatus;
