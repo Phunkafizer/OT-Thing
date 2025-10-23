@@ -39,6 +39,49 @@
 		(55 "User.9" user)
 	)
 	(setup
+		(stackup
+			(layer "F.SilkS"
+				(type "Top Silk Screen")
+				(color "White")
+			)
+			(layer "F.Paste"
+				(type "Top Solder Paste")
+			)
+			(layer "F.Mask"
+				(type "Top Solder Mask")
+				(color "Purple")
+				(thickness 0.01)
+			)
+			(layer "F.Cu"
+				(type "copper")
+				(thickness 0.035)
+			)
+			(layer "dielectric 1"
+				(type "core")
+				(thickness 1.51)
+				(material "FR4")
+				(epsilon_r 4.5)
+				(loss_tangent 0.02)
+			)
+			(layer "B.Cu"
+				(type "copper")
+				(thickness 0.035)
+			)
+			(layer "B.Mask"
+				(type "Bottom Solder Mask")
+				(color "Purple")
+				(thickness 0.01)
+			)
+			(layer "B.Paste"
+				(type "Bottom Solder Paste")
+			)
+			(layer "B.SilkS"
+				(type "Bottom Silk Screen")
+				(color "White")
+			)
+			(copper_finish "None")
+			(dielectric_constraints no)
+		)
 		(pad_to_mask_clearance 0)
 		(allow_soldermask_bridges_in_footprints no)
 		(tenting front back)
@@ -9563,7 +9606,7 @@
 			)
 		)
 		(property "Value" "1k"
-			(at 2.5 2.06 270)
+			(at 2.5 2.06 90)
 			(layer "F.Fab")
 			(uuid "c313623d-81be-4968-89d6-4fbc1afb37c7")
 			(effects
@@ -9574,7 +9617,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 0 0 270)
+			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "4efcbb02-a269-48fb-81d7-04f29df5b157")
@@ -9586,7 +9629,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 0 0 270)
+			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "d252e914-793c-46b7-91d0-b3c439887658")
@@ -9713,15 +9756,15 @@
 			(uuid "f0d540c3-bd5d-4c09-bd4d-330a9fa2963f")
 		)
 		(embedded_fonts no)
-		(model "${KICAD9_3DMODEL_DIR}/Potentiometer_THT.3dshapes/Potentiometer_Piher_PT-6-V_Vertical.step"
+		(model "${KICAD9_3RD_PARTY}/packages3d/PT6KV.STEP"
 			(offset
-				(xyz 0 0 0)
+				(xyz 2.5 2.5 3)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 0)
+				(xyz -180 -0 -90)
 			)
 		)
 	)
@@ -12456,7 +12499,7 @@
 			)
 		)
 		(property "Value" "1k"
-			(at 2.5 2.06 270)
+			(at 2.5 2.06 90)
 			(layer "F.Fab")
 			(uuid "5792631c-a8a3-4436-b3f1-de3d4d192892")
 			(effects
@@ -12467,7 +12510,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 0 0 270)
+			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "4d4461bb-5df2-43d7-aa5d-50f7299fe26d")
@@ -12479,7 +12522,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 0 0 270)
+			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "ccb041a1-e2ce-4f50-8d6c-d723af2a3831")
@@ -12606,15 +12649,15 @@
 			(uuid "2abfe410-d9d4-407a-ac63-c17757f798a5")
 		)
 		(embedded_fonts no)
-		(model "${KICAD9_3DMODEL_DIR}/Potentiometer_THT.3dshapes/Potentiometer_Piher_PT-6-V_Vertical.step"
+		(model "${KICAD9_3RD_PARTY}/packages3d/PT6KV.STEP"
 			(offset
-				(xyz 0 0 0)
+				(xyz 2.5 2.5 3)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 0)
+				(xyz 180 -0 -90)
 			)
 		)
 	)
