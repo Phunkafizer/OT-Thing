@@ -349,6 +349,10 @@ void OTValue::setValue(uint16_t val) {
         discFlag = sendDiscovery();
 }
 
+uint16_t OTValue::getValue() {
+    return value;
+}
+
 void OTValue::disable() {
     enabled = false;
     isSet = false;

@@ -79,6 +79,7 @@ private:
         OTMODE_REPEATER = 2,
         OTMODE_LOOPBACKTEST = 4
     } otMode;
+    void setOTMode(const OTMode mode, const bool enableSlave = false);
     enum SlaveApplication: uint8_t {
         SLAVEAPP_HEATCOOL = 0,
         SLAVEAPP_VENT = 1,
@@ -134,11 +135,11 @@ private:
         void onReceive(const char source, const unsigned long msg);
         void sendResponse(const unsigned long msg, const char source = 0);
     } master, slave;
+    bool slaveEnabled {false};
 public:
     OTControl();
     void begin();
     void loop();
-    void setOTMode(const OTMode mode);
     unsigned long slaveRequest(OpenThermMessageID id, OpenThermMessageType ty, uint16_t data);
     void getJson(JsonObject &obj);
     void setConfig(JsonObject &config);

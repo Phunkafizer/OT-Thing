@@ -180,14 +180,15 @@ void OTControl::slavePinIrq() {
     slave.hal.handleInterrupt();
 }
 
-void OTControl::setOTMode(const OTMode mode) {
+void OTControl::setOTMode(const OTMode mode, const bool enableSlave) {
     otMode = mode;
 
     // set bypass relay
     digitalWrite(GPIO_BYPASS_RELAY, mode != OTMODE_BYPASS);
 
     // set +24V stepup up
-    digitalWrite(GPIO_STEPUP_ENABLE, (mode == OTMODE_REPEATER) || (mode == OTMODE_LOOPBACKTEST));
+    slaveEnabled = (mode == OTMODE_REPEATER) || (mode == OTMODE_LOOPBACKTEST) || slaveEnabled;
+    digitalWrite(GPIO_STEPUP_ENABLE, slaveEnabled);
 
     for (auto *valobj: slaveValues)
         valobj->init((mode == OTMODE_MASTER) || (mode == OTMODE_LOOPBACKTEST));
@@ -205,6 +206,7 @@ double OTControl::getFlow(const uint8_t channel) {
 
     switch (heatingCtrl[channel].mode) {
     case CTRLMODE_ON:
+        flow = heatingCtrl[channel].flowTemp;
         break;
 
     case CTRLMODE_AUTO: {
@@ -488,9 +490,54 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
     auto mt = OpenTherm::getMessageType(msg);
     unsigned long newMsg = msg;
 
+    // we received a request from the room unit
     switch (otMode) {
+    case OTMODE_MASTER: {
+        unsigned long resp = OpenTherm::buildResponse(OpenThermMessageType::UNKNOWN_DATA_ID, id, 0x0000);
+        slave.onReceive('T', msg);
+        switch (mt) {
+        case OpenThermMessageType::READ_DATA: {
+            OTValue *otval = OTValue::getSlaveValue(id);
+            switch (id) {
+            case OpenThermMessageID::Toutside: {
+                double t;
+                if (outsideTemp.get(t))
+                    resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, OpenTherm::temperatureToData(t));
+                break;
+            }
+
+            default:
+                if ((otval != nullptr) && otval->isSet)
+                    resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, otval->getValue());
+            }
+
+            slave.sendResponse(resp, 'P');
+            break;
+        }
+        case OpenThermMessageType::WRITE_DATA: {
+            resp = OpenTherm::buildResponse(OpenThermMessageType::WRITE_ACK, id, 0x0000);
+            slave.sendResponse(resp, 'P');
+
+            switch (id) {
+            case OpenThermMessageID::TSet:
+                if (heatingCtrl[0].overrideFlow) {
+                    heatingCtrl[0].mode = CTRLMODE_ON;
+                    heatingCtrl[0].flowTemp = OpenTherm::getFloat(msg);
+                    setBoilerRequest[0].force();
+                }
+                break;
+            default:
+                break;
+            }
+        }
+        default:
+            break;
+        }
+        break;
+    }
+
     case OTMODE_REPEATER: {
-        // we received a request from the room unit, forward it to boiler
+        // forward received request to boiler
         // WRITE commands to boiler can be modified here
 
         switch (id) {
@@ -533,6 +580,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             break;
         }
         master.sendRequest(0, newMsg);
+        slave.onReceive((msg == newMsg) ? 'T' : 'R', msg);
         break;
     }
 
@@ -568,10 +616,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
 
     default:
         break;
-    }
-
-    if (otMode != OTMODE_LOOPBACKTEST)
-        slave.onReceive((msg == newMsg) ? 'T' : 'R', msg);
+    }   
 
     if ( (mt == OpenThermMessageType::WRITE_DATA) || (id == OpenThermMessageID::Status) || (id == OpenThermMessageID::StatusVentilationHeatRecovery) ) {
         double d = OpenTherm::getFloat(newMsg);
@@ -589,8 +634,9 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             roomSetPoint[1].set(d, Sensor::SOURCE_OT);
             break;
         }
-        if (!setThermostatVal(newMsg))
-            portal.textAll(F("T no otval!"));
+        if (otMode != OTMODE_MASTER)
+            if (!setThermostatVal(newMsg))
+                portal.textAll(F("T no otval!"));
     }
 }
 
@@ -632,9 +678,7 @@ void OTControl::getJson(JsonObject &obj) {
     for (auto *valobj: thermostatValues)
         valobj->getJson(thermostat);
 
-    switch (otMode) {
-    case OTMODE_REPEATER:
-    case OTMODE_LOOPBACKTEST: {
+    if (slaveEnabled) {
         thermostat[F("txCount")] = slave.txCount;
         thermostat[F("rxCount")] = slave.rxCount;
         thermostat[F("invalidCount")] = slave.invalidCount;
@@ -652,10 +696,6 @@ void OTControl::getJson(JsonObject &obj) {
             break;
         }
         thermostat[F("smartPower")] = sp;
-    }
-
-    default:
-        break;
     }
 }
 
@@ -849,7 +889,7 @@ void OTControl::setConfig(JsonObject &config) {
 
     slaveApp = (SlaveApplication) ((int) config[F("slaveApp")] | 0);
 
-    setOTMode(mode);
+    setOTMode(mode, config[F("enableSlave")] | false);
 
     setDhwRequest.force();
     setBoilerRequest[0].force();

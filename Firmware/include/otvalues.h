@@ -143,7 +143,6 @@ private:
 protected:
     uint16_t value;
     bool enabled;
-    bool isSet;
     virtual bool sendDiscovery();
     const char* getName() const;
 public:
@@ -151,6 +150,7 @@ public:
     bool process();
     OpenThermMessageID getId() const;
     void setValue(uint16_t val);
+    uint16_t getValue();
     void setStatus(const OpenThermMessageType mt);
     void getJson(JsonObject &obj) const;
     void disable();
@@ -159,6 +159,7 @@ public:
     static OTValue* getSlaveValue(const OpenThermMessageID id);
     static OTValue* getThermostatValue(const OpenThermMessageID id);
     bool discFlag;
+    bool isSet;
 };
 
 class OTValueu16: public OTValue {

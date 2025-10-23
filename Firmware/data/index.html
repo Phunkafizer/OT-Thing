@@ -355,8 +355,8 @@
             <ul>
                 <li tab="status" class="active">Status</li>
                 <li tab="setup">Setup</li>
-                <li tab="heatingcurve1">Heating circuit 1</li>
-                <li tab="heatingcurve2">Heating circuit 2</li>
+                <li tab="heatingcurve1" class="app-heat">Heating circuit 1</li>
+                <li tab="heatingcurve2" class="app-heat">Heating circuit 2</li>
                 <li tab="log">Log</li>
             </ul>
         </div>
@@ -1185,6 +1185,13 @@
                         <label>Test</label>
                     </div>
                 </div>
+                <div class="param otmode-master">
+                    <h5>Enable slave interface</h5>
+                    <label class="switch">
+                        <input id="enableslave" type="checkbox" />
+                        <span class="slider"></span>
+                    </label>
+                </div>
                 <div class="param">
                     <h5>Slave application</h5>
                     <select id="slaveapp">
@@ -1192,99 +1199,101 @@
                         <option value="1">ventilation</option>
                     </select>
                 </div>
-                <h4>heat/cool</h4>
-                <div class="flexline">
-                    <div class="param">
-                        <h5>Circuit 1</h5>
-                        <label class="switch">
-                            <input id="chOn1" type="checkbox" />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="param">
-                        <h5>Circuit 2</h5>
-                        <label class="switch">
-                            <input id="chOn2" type="checkbox" />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="param">
-                        <h5>Cooling</h5>
-                        <label class="switch">
-                            <input id="coolOn" type="checkbox" />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="param">
-                        <h5>DHW</h5>
-                        <label class="switch">
-                            <input id="dhwOn" type="checkbox" />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-                <div id="dhwtemp" class="param">
-                    <h5>DHW set temperature</h5>
+
+                <div class="app-heat">
+                    <h4>heat/cool</h4>
                     <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">&deg;C</span>
+                        <div class="param">
+                            <h5>Circuit 1</h5>
+                            <label class="switch">
+                                <input id="chOn1" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
                         </div>
-                        <input type="range" min="30" max="70" step="1" />
+                        <div class="param">
+                            <h5>Circuit 2</h5>
+                            <label class="switch">
+                                <input id="chOn2" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="param">
+                            <h5>Cooling</h5>
+                            <label class="switch">
+                                <input id="coolOn" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="param">
+                            <h5>DHW</h5>
+                            <label class="switch">
+                                <input id="dhwOn" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="dhwtemp" class="param">
+                        <h5>DHW set temperature</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">&deg;C</span>
+                            </div>
+                            <input type="range" min="30" max="70" step="1" />
+                        </div>
                     </div>
                 </div>
 
-                <h4>ventilation</h4>
-                <div class="flexline">
-                    <div class="param">
-                        <h5>vent. enable</h5>
-                        <label class="switch">
-                            <input id="ventEnable" type="checkbox" />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="param">
-                        <h5>open bypass</h5>
-                        <label class="switch">
-                            <input id="openBypass" type="checkbox" />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="param">
-                        <h5>auto bypass</h5>
-                        <label class="switch">
-                            <input id="autoBypass" type="checkbox" />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="param">
-                        <h5>free vent. enable</h5>
-                        <label class="switch">
-                            <input id="freeVentEnable" type="checkbox" />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-                <div id="ventsetpoint" class="param">
-                    <h5>ventilation set point</h5>
+                <div class="app-vent">
+                    <h4>ventilation</h4>
                     <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">%</span>
+                        <div class="param">
+                            <h5>vent. enable</h5>
+                            <label class="switch">
+                                <input id="ventEnable" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
                         </div>
-                        <input type="range" min="0" max="100" step="1" />
+                        <div class="param">
+                            <h5>open bypass</h5>
+                            <label class="switch">
+                                <input id="openBypass" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="param">
+                            <h5>auto bypass</h5>
+                            <label class="switch">
+                                <input id="autoBypass" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="param">
+                            <h5>free vent. enable</h5>
+                            <label class="switch">
+                                <input id="freeVentEnable" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="ventsetpoint" class="param">
+                        <h5>ventilation set point</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">%</span>
+                            </div>
+                            <input type="range" min="0" max="100" step="1" />
+                        </div>
                     </div>
                 </div>
-                
-
-                <div class="otmode-master">
+                <div>
                     <div class="param">
                         <h5>Member ID</h5>
                         <input id="masterMemberId" type="text" />
                     </div>
                 </div>
-
-                <div class="otmode-repeater">
+                <div>
                     <h4>override values</h4>
                     <div class="flexline">
                         <div class="param">
@@ -1388,7 +1397,6 @@
                 </form>
             </div>
         </div>
-
         <div class="tab" id="log">
             <div id="console">
             </div>
@@ -1398,18 +1406,17 @@
                 <button id="btnautoscroll">autoscroll</button>
             </div>
         </div>
-
         <div class="toolbar">
             <button id="save">save</button>
             <button id="reboot">reboot</button>
         </div>
-
         <div class="footer"><a href="http://www.seegel-systeme.de" target="_blank">www.seegel-systeme.de</a></div>
     </div>
     <script>
         var config = {
             slaveApp: 0, // 0 = heat/cool, 1 = ventilation, 2 = solar storage
             otMode: 4,
+            enableSlave: false,
             boiler: {
                 dhwOn: true,
                 dhwTemperature: 50,
@@ -1506,6 +1513,7 @@
             //eventhandler for save button
             _("#save").onclick = () => {
                 config.slaveApp = parseInt(_("#slaveapp").value);
+                config.enableSlave = _("#enableslave").checked;
                 config.otMode = (_('input[name="otMode"]:checked') !== undefined) ? parseInt(_('input[name="otMode"]:checked').value) : null,
                 config.outsideTemp = {
                     source: parseInt(_('#selectOutsideTempSource').value),
@@ -1681,14 +1689,22 @@
                     }
                     val[f[i]] = parseInt(ev.target.value);
                     ev.target.parentElement.querySelectorAll("div.selopt").forEach((ele, index) => {
-                        ele.style.display = (index == ev.target.selectedIndex) ? "block": "none";
+                        ele.style.display = (index == ev.target.selectedIndex) ? "": "none";
                     });
                 }
             });
 
             _("#selectOutsideTempSource").addEventListener("change", (ev) => {
-                _("#owdiv").style.display = (ev.target.value == 4) ? "block" : "none";
+                _("#owdiv").style.display = (ev.target.value == 4) ? "" : "none";
             });
+
+            _("#slaveapp").onchange = (ev) => {
+                let app = parseInt(ev.target.value);
+                for (const ele of __(".app-heat"))
+                    ele.style.display = (app == 0) ? "" : "none";
+                for (const ele of __(".app-vent"))
+                    ele.style.display = (app == 1) ? "" : "none";
+            }
 
             function drawMarkerTable(hk) {
                 if (hk === undefined) {
@@ -1815,6 +1831,8 @@
                 }
 
                 _("#slaveapp").value = config.slaveApp || 0;
+                _("#slaveapp").dispatchEvent(new Event('change'));
+                _("#enableslave").checked = config.enableSlave || false;
 
                 _("#masterMemberId").value = config.masterMemberId || 8;
 
