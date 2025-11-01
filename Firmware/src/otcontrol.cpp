@@ -187,7 +187,7 @@ void OTControl::setOTMode(const OTMode mode, const bool enableSlave) {
     digitalWrite(GPIO_BYPASS_RELAY, mode != OTMODE_BYPASS);
 
     // set +24V stepup up
-    slaveEnabled = (mode == OTMODE_REPEATER) || (mode == OTMODE_LOOPBACKTEST) || slaveEnabled;
+    slaveEnabled = (mode == OTMODE_REPEATER) || (mode == OTMODE_LOOPBACKTEST) || enableSlave;
     digitalWrite(GPIO_STEPUP_ENABLE, slaveEnabled);
 
     for (auto *valobj: slaveValues)
