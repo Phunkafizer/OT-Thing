@@ -27,11 +27,12 @@ public:
         SOURCE_OT = 1,
         SOURCE_BLE = 2,
         SOURCE_1WIRE = 3,
-        SOURCE_OPENWEATHER = 4
+        SOURCE_OPENWEATHER = 4,
+        SOURCE_AUTO = 5 // has to be last item in this list!
     };
     OneWireNode *own; // points to a OneWireNode if configured
     Sensor();
-    void set(const double val, const Source src);
+    virtual void set(const double val, const Source src);
     bool get(double &val);
     virtual void setConfig(JsonObject &obj);
     bool isMqttSource();
@@ -45,6 +46,14 @@ protected:
 private:
     static Sensor *lastSensor;
     Sensor *prevSensor;
+};
+
+class AutoSensor: public Sensor {
+public:
+    AutoSensor();
+    void set(const double val, const Source src);
+private:
+    double values[SOURCE_AUTO + 1];
 };
 
 class OutsideTemp: public Sensor {
@@ -69,6 +78,6 @@ private:
 
 extern OneWireNode *oneWireNode;
 extern Sensor roomTemp[2];
-extern Sensor roomSetPoint[2];
+extern AutoSensor roomSetPoint[2];
 extern OutsideTemp outsideTemp;
 

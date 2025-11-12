@@ -126,11 +126,10 @@ def after_upload(source, target, env):
         print("Press enter to send default config to target")
         input("")
         print(requests.post("http://4.3.2.1/config", json=CONFIG))
+        time.sleep(1)
         r = requests.get('http://4.3.2.1/config', timeout=3)
         conf = r.json()
-        print(conf['otMode'])
-
-
+        print("OT mode:", conf['otMode'])
 
 
 env.AddPreAction("$BUILD_DIR/src/portal.cpp.o", copy_html)

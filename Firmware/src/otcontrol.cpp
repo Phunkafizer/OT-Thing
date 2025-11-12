@@ -314,7 +314,7 @@ void OTControl::loop() {
             }
 
             if (setDhwRequest) {
-                setDhwRequest.send(OpenTherm::temperatureToData(dhwTemp));
+                setDhwRequest.send(OpenTherm::temperatureToData(boilerCtrl.dhwTemp));
                 xSemaphoreGive(master.mutex);
                 return;
             }
@@ -324,10 +324,13 @@ void OTControl::loop() {
 
                 unsigned long req = OpenTherm::buildSetBoilerStatusRequest(
                     heatingCtrl[0].chOn, 
-                    dhwOn, 
-                    false, 
-                    false, 
-                    heatingCtrl[1].chOn);
+                    boilerCtrl.dhwOn,
+                    boilerConfig.coolOn,
+                    boilerConfig.otc, 
+                    heatingCtrl[1].chOn,
+                    boilerConfig.summerMode,
+                    boilerConfig.dhwBlocking);
+                req |= statusReqOvl;
                 sendRequest('T', req);
                 xSemaphoreGive(master.mutex);
                 return;
@@ -422,7 +425,7 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
             break;
         }
         case OpenThermMessageID::TdhwSet: {
-            if (overrideDhw) {
+            if (boilerCtrl.overrideDhw) {
                 if (mt == OpenThermMessageType::READ_ACK)
                     // roomunit tried to read dhw set temp. Catch it in order to force writing DHW setpoint by roomunit.
                     newMsg = OpenTherm::buildResponse(OpenThermMessageType::DATA_INVALID, id, 0x0000);
@@ -436,8 +439,7 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         break;
     }
 
-    if (newMsg == msg)
-        master.onReceive('B', msg);
+    master.onReceive((newMsg == msg) ? 'B' : 'A', msg);
 
     if (otval) {
         switch (mt) {
@@ -473,9 +475,6 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         }
     }
 
-    if (msg != newMsg)
-        master.onReceive('A', newMsg);
-
     if (!otval && (mt == OpenThermMessageType::READ_ACK))
         portal.textAll(F("no otval!"));
 }
@@ -494,7 +493,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
     switch (otMode) {
     case OTMODE_MASTER: {
         unsigned long resp = OpenTherm::buildResponse(OpenThermMessageType::UNKNOWN_DATA_ID, id, 0x0000);
-        slave.onReceive('T', msg);
+        slave.onReceive('S', msg);
         switch (mt) {
         case OpenThermMessageType::READ_DATA: {
             OTValue *otval = OTValue::getSlaveValue(id);
@@ -552,8 +551,8 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             break;
 
         case OpenThermMessageID::TdhwSet:
-            if ( overrideDhw && (mt == OpenThermMessageType::WRITE_DATA) )
-                newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(dhwTemp));
+            if ( boilerCtrl.overrideDhw && (mt == OpenThermMessageType::WRITE_DATA) )
+                newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(boilerCtrl.dhwTemp));
             break;
 
         case OpenThermMessageID::Status:
@@ -569,8 +568,8 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 else
                     newMsg |= 1<<12; // CH2 enable
             }
-            if (overrideDhw) {
-                if (dhwOn)
+            if (boilerCtrl.overrideDhw) {
+                if (boilerCtrl.dhwOn)
                     newMsg |= 1<<9; // DHW enable
                 else
                     newMsg &= ~(1<<9); // DHW disable
@@ -832,12 +831,12 @@ bool OTControl::sendDiscovery() {
 }
 
 void OTControl::setDhwTemp(double temp) {
-    dhwTemp = temp;
+    boilerCtrl.dhwTemp = temp;
     setDhwRequest.force();
 }
 
 void OTControl::setDhwCtrlMode(const CtrlMode mode) {
-    dhwOn = (mode != CtrlMode::CTRLMODE_OFF);
+    boilerCtrl.dhwOn = (mode != CtrlMode::CTRLMODE_OFF);
     setDhwRequest.force();
 }
 
@@ -881,9 +880,13 @@ void OTControl::setConfig(JsonObject &config) {
     ventCtrl.setpoint = ventObj["setpoint"] | 0;
 
     JsonObject boiler = config[F("boiler")];
-    dhwOn = boiler[F("dhwOn")];
-    dhwTemp = boiler[F("dhwTemperature")] | 45;
-    overrideDhw = boiler[F("overrideDhw")] | false;
+    boilerCtrl.dhwOn = boiler[F("dhwOn")];
+    boilerCtrl.dhwTemp = boiler[F("dhwTemperature")] | 45;
+    boilerCtrl.overrideDhw = boiler[F("overrideDhw")] | false;
+    statusReqOvl = boiler[F("statusReq")] | 0x0000;
+    boilerConfig.otc = boiler[F("otc")] | false;
+    boilerConfig.summerMode = boiler[F("summerMode")] | false;
+    boilerConfig.dhwBlocking = boiler[F("dhwBlocking")] | false;
 
     masterMemberId = config[F("masterMemberId")] | 22;
 
@@ -920,7 +923,7 @@ void OTControl::setOverrideCh(const bool ovrd, const uint8_t channel) {
 }
 
 void OTControl::setOverrideDhw(const bool ovrd) {
-    overrideDhw = ovrd;
+    boilerCtrl.overrideDhw = ovrd;
     setDhwRequest.force();
 }
 

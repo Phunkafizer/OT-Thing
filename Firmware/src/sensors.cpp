@@ -5,7 +5,7 @@
 //#include <BLEDevice.h>
 
 Sensor roomTemp[2];
-Sensor roomSetPoint[2];
+AutoSensor roomSetPoint[2];
 OutsideTemp outsideTemp;
 
 Sensor *Sensor::lastSensor = nullptr;
@@ -21,7 +21,7 @@ Sensor::Sensor():
 
 void Sensor::set(const double val, const Source src) {
     if (src == this->src) {
-        this->value = val;
+        this->value = round(val * 10) / 10;
         setFlag = true;
     }
 }
@@ -39,14 +39,12 @@ void Sensor::setConfig(JsonObject &obj) {
     setFlag = false;
     own = nullptr;
     if (src == SOURCE_1WIRE) {
-        Serial.print("1 wire node should be \r\n");
         own = OneWireNode::find(String(obj["adr"]));
-        Serial.print((unsigned long) own);
     }
 }
 
 bool Sensor::isMqttSource() {
-    return (src == SOURCE_MQTT);
+    return (src == SOURCE_MQTT) || (src == SOURCE_AUTO);
 }
 
 bool Sensor::isOtSource() {
@@ -59,6 +57,21 @@ void Sensor::loopAll() {
         item->loop();
         item = item->prevSensor;
     }
+}
+
+AutoSensor::AutoSensor() {
+    memset(values, 0, sizeof(values));
+}
+
+void AutoSensor::set(const double val, const Source src) {
+    if (this->src == SOURCE_AUTO) {
+        if (val != values[src]) {
+            Sensor::set(val, this->src);
+            values[src] = val;
+        }
+    }
+    else
+        Sensor::set(val, src);
 }
 
 OutsideTemp::OutsideTemp():
@@ -149,8 +162,9 @@ void OutsideTemp::loop() {
 }
 
 
-OneWireNode::OneWireNode(uint8_t *addr) {
-    next = oneWireNode;
+OneWireNode::OneWireNode(uint8_t *addr):
+        next(oneWireNode),
+        temp(DEVICE_DISCONNECTED_C) {
     oneWireNode = this;
     memcpy(this->addr, addr, sizeof(this->addr));
 }
@@ -170,7 +184,7 @@ void OneWireNode::loop() {
         DallasTemperature ds(&oneWire);
         ds.requestTemperatures();
         while (node) {
-            node->temp = ds.getTempC(node->addr);
+            node->temp = round(ds.getTempC(node->addr) * 10) / 10;
             if (node->temp != DEVICE_DISCONNECTED_C) {
                 for (int i=0; i<sizeof(roomTemp) / sizeof(roomTemp[0]); i++) {
                     if (roomTemp[i].own == node)

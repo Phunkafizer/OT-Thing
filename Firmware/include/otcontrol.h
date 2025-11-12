@@ -108,9 +108,17 @@ private:
         bool freeVentEnable;
         uint8_t setpoint;
     } ventCtrl;
-    double dhwTemp;
-    bool dhwOn;
-    bool overrideDhw;
+    struct {
+        bool coolOn;
+        bool otc;
+        bool summerMode;
+        bool dhwBlocking;
+    } boilerConfig;
+    struct {
+        bool dhwOn;
+        double dhwTemp;
+        bool overrideDhw;
+    } boilerCtrl;
     bool discFlag {true};
     OTWRSetDhw setDhwRequest;
     OTWRSetBoilerTemp setBoilerRequest[2];
@@ -136,6 +144,7 @@ private:
         void sendResponse(const unsigned long msg, const char source = 0);
     } master, slave;
     bool slaveEnabled {false};
+    uint16_t statusReqOvl {0}; // will be or'ed to status request as this is needed by some boilers
 public:
     OTControl();
     void begin();
@@ -153,7 +162,6 @@ public:
     void setVentEnable(const bool en);
     void setOverrideCh(const bool ovrd, const uint8_t channel);
     void setOverrideDhw(const bool ovrd);
-    
 };
 
 

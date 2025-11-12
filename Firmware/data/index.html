@@ -3,7 +3,7 @@
 <html>
 
 <head>
-    <title>OT-Thing OpenTherm controller</title>
+    <title>OTthing OpenTherm controller</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
@@ -349,7 +349,7 @@
     </div>
 
     <div id="mainwrapper">
-        <h2>OT Thing</h2>
+        <h2>OTthing</h2>
 
         <div class="nav">
             <ul>
@@ -807,6 +807,7 @@
                     <select id="selectRoomSetpointSource1" field="heating.0.roomsetpoint.source">
                         <option value="0">MQTT</option>
                         <option value="1">OT roomunit</option>
+                        <option value="5">auto</option>
                     </select>
                     <div class="selopt">
                         <h5>Topic</h5>
@@ -858,7 +859,7 @@
                 </div>
             </div>
 
-            <h3>Scheduler</h3>
+            <h3 style="display: none">Scheduler</h3>
             <div class="group" style="display: none">
                 <table>
                     <thead>
@@ -1231,6 +1232,27 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
+                        <div class="param">
+                            <h5>OTC</h5>
+                            <label class="switch">
+                                <input id="otc" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="param">
+                            <h5>summer mode</h5>
+                            <label class="switch">
+                                <input id="summerMode" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="param">
+                            <h5>DHW blocking</h5>
+                            <label class="switch">
+                                <input id="dhwBlocking" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
                     <div id="dhwtemp" class="param">
                         <h5>DHW set temperature</h5>
@@ -1421,7 +1443,10 @@
                 dhwOn: true,
                 dhwTemperature: 50,
                 overrideDhw: false,
-                coolOn: false
+                coolOn: false,
+                otc: false,
+                summerMode: false,
+                dhwBlocking: false
             },
             heating: [
                 {
@@ -1542,6 +1567,9 @@
                 config.boiler.dhwOn = _("#dhwOn").checked;
                 config.boiler.coolOn = _("#coolOn").checked;
                 config.boiler.overrideDhw = _("#overrideDhw").checked;
+                config.boiler.otc = _("#otc").checked;
+                config.boiler.summerMode = _("#summerMode").checked;
+                config.boiler.dhwBlocking = _("#dhwBlocking").checked;
 
                 if (config.vent === undefined)
                     config.vent = {};

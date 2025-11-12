@@ -208,7 +208,6 @@ void Portal::loop() {
     ws.cleanupClients();
 }
 
-
 void Portal::textAll(String text) {
     ws.textAll(text);
 }
