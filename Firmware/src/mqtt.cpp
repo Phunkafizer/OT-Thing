@@ -33,6 +33,7 @@ static struct {
 };
 
 Mqtt mqtt;
+static uint32_t numDisc = 0;
 static WiFiClient espClient;
 
 void mqttConnectCb(bool sessionPresent) {
@@ -40,6 +41,7 @@ void mqttConnectCb(bool sessionPresent) {
 }
 
 void mqttDisconnectCb(AsyncMqttClientDisconnectReason reason) {
+    mqtt.onDisconnect(reason);
 }
 
 static void mqttMessageReceived(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
@@ -79,7 +81,7 @@ void Mqtt::onConnect() {
 }
 
 void Mqtt::onDisconnect(AsyncMqttClientDisconnectReason reason) {
-    String msg = F("MQTT connected");
+    String msg = F("MQTT disconnected ");
     msg += String((int) reason);
     portal.textAll(msg);
 }
@@ -89,12 +91,18 @@ bool Mqtt::connected() {
 }
 
 void Mqtt::setConfig(const MqttConfig conf) {
-    config = conf;
     lastConTry = millis() - 8000;
     cli.disconnect(false);
-    cli.setServer(config.host.c_str(), config.port);
+    config = conf;
+    cli.setServer(config.host.c_str(), conf.port);
+    cli.setKeepAlive(config.keepAlive);
     cli.setCredentials(config.user.c_str(), config.pass.c_str());
-    configSet = !config.host.isEmpty();
+    configSet = !conf.host.isEmpty();
+    numDisc = 0;
+}
+
+uint32_t Mqtt::getNumDisc() const {
+    return numDisc;
 }
 
 String Mqtt::getCmdTopic(const MqttTopic topic) {

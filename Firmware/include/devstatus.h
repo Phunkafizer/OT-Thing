@@ -16,6 +16,7 @@ public:
     void unlock();
     JsonDocument &buildDoc();
     void getJson(String &str);
+    uint32_t numWifiDiscon;
 } devstatus;
 
 #endif
