@@ -10,6 +10,7 @@ struct MqttConfig {
     bool tls;
     String user;
     String pass;
+    uint16_t keepAlive;
 };
 
 class Mqtt {
@@ -21,7 +22,7 @@ private:
     AsyncMqttClient cli;
     uint32_t lastConTry;
     uint32_t lastStatus;
-    MqttConfig config;
+    //MqttConfig config;
     bool configSet;
     String baseTopic;
     String statusTopic;
@@ -60,6 +61,7 @@ public:
     String getBaseTopic();
     static String getTopicString(const MqttTopic topic);
     String getCmdTopic(const MqttTopic topic);
+    uint32_t getNumDisc() const;
 };
 
 extern Mqtt mqtt;

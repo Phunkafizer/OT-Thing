@@ -7,7 +7,8 @@
 
 DevStatus devstatus;
 
-DevStatus::DevStatus() {
+DevStatus::DevStatus():
+        numWifiDiscon(0) {
 }
 
 void DevStatus::lock() {
@@ -28,6 +29,7 @@ JsonDocument &DevStatus::buildDoc() {
     doc[F("USB_connected")] = Serial.isConnected();
     doc[F("reset_reason0")] = rtc_get_reset_reason(0);
     doc[F("reset_reason1")] = rtc_get_reset_reason(1);
+    doc[F("numWifiDisc")] = numWifiDiscon;
     /*struct tm timeinfo;
     if (getLocalTime(&timeinfo)) {
         char buffer[64];
@@ -47,6 +49,7 @@ JsonDocument &DevStatus::buildDoc() {
     JsonObject jmqtt = doc[F("mqtt")].to<JsonObject>();
     jmqtt[F("connected")] = mqtt.connected();
     jmqtt[F("basetopic")] = mqtt.getBaseTopic();
+    jmqtt[F("numDisc")] = mqtt.getNumDisc();
 
     JsonObject jot = doc.as<JsonObject>();
     otcontrol.getJson(jot);

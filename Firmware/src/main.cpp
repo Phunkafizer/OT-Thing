@@ -21,7 +21,6 @@
 Ticker statusLedTicker;
 volatile uint16_t statusLedData = 0x8000;
 bool configMode = false;
-const char hostname[] PROGMEM = HOSTNAME;
 
 void statusLedLoop() {
     static uint16_t mask = 0x8000;
@@ -35,14 +34,19 @@ void statusLedLoop() {
 void wifiEvent(WiFiEvent_t event) {
     switch (event) {
     case ARDUINO_EVENT_WIFI_STA_GOT_IP: {
-        String hn(FPSTR(hostname));
+        String hn = devconfig.getHostname();
         WiFi.setHostname(hn.c_str());
+        MDNS.begin(hn.c_str());
         MDNS.addService("http", "tcp", 80);
 
         const char* tz = "CET-1CEST,M3.5.0,M10.5.0/3";
         configTzTime(tz, "pool.ntp.org");
         break;
     }
+
+    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+        devstatus.numWifiDiscon++;
+        break;
 
     default:
         break;
@@ -86,9 +90,8 @@ void setup() {
     OneWireNode::begin();
     haDisc.begin();
     mqtt.begin();
-    String hn(FPSTR(hostname));
-    MDNS.begin(hn.c_str());
     devconfig.begin();
+
     portal.begin(configMode);
     command.begin();
 

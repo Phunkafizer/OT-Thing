@@ -1,3 +1,5 @@
+#include <WiFi.h>
+#include <ESPmDNS.h>
 #include "devconfig.h"
 #include "mqtt.h"
 #include "otcontrol.h"
@@ -22,6 +24,15 @@ void DevConfig::update() {
         JsonDocument doc;
         deserializeJson(doc, f);
 
+        hostname = doc[F("hostname")].as<String>();
+        if (hostname.isEmpty())
+            hostname = F(HOSTNAME);
+
+        if (WiFi.isConnected()) {
+            WiFi.setHostname(hostname.c_str());
+            MDNS.begin(hostname);
+        }
+
         if (doc[F("mqtt")].is<JsonObject>()) {
             MqttConfig mc;
             const JsonObject &jobj = doc["mqtt"].as<JsonObject>();
@@ -30,6 +41,7 @@ void DevConfig::update() {
             mc.tls = jobj["tls"].as<bool>();
             mc.user = jobj["user"].as<String>();
             mc.pass = jobj["pass"].as<String>();
+            mc.keepAlive = jobj["keepAlive"] | 15;
             mqtt.setConfig(mc);
         }
 
@@ -54,7 +66,6 @@ void DevConfig::update() {
 }
 
 File DevConfig::getFile() {
-    Serial0.println("OpenFile");
     return LittleFS.open(FPSTR(CFG_FILENAME), "r");
 }
 
@@ -75,4 +86,8 @@ void DevConfig::loop() {
         f.close();
         update();
     }
+}
+
+String DevConfig::getHostname() const {
+    return hostname;
 }
