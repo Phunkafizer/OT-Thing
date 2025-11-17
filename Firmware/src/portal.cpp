@@ -17,7 +17,6 @@ static AsyncWebServer websrv(80);
 AsyncWebSocket ws("/ws");
 
 
-
 Portal::Portal():
     reboot(false),
     updateEnable(true) {

@@ -1382,6 +1382,10 @@
                             </label>
                         </div>
                     </div>
+                    <div class="param">
+                        <h5>HA disc. prefix</h5>
+                        <input id="haPrefix" type="text" />
+                    </div>
                 </div>
                 <div class="flexline">
                     <div class="param">
@@ -1560,6 +1564,7 @@
             //eventhandler for save button
             _("#save").onclick = () => {
                 config.hostname = _("#hostname").value;
+                config.haPrefix = _("#haPrefix").value;
                 config.slaveApp = parseInt(_("#slaveapp").value);
                 config.enableSlave = _("#enableslave").checked;
                 config.otMode = (_('input[name="otMode"]:checked') !== undefined) ? parseInt(_('input[name="otMode"]:checked').value) : null,
@@ -1877,6 +1882,7 @@
             xhrConfig.send();
             function configToUi() {
                 _("#hostname").value = config.hostname || "otthing";
+                _("#haPrefix").value = config.haPrefix || "homeassistant";
                 let otradio = _('input[name="otMode"][value="' + config.otMode + '"]');
                 if (otradio !== undefined) {
                     otradio.checked = true;

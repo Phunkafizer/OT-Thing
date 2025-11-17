@@ -4,6 +4,7 @@
 #include "mqtt.h"
 #include "otcontrol.h"
 #include "sensors.h"
+#include <HADiscovery.h>
 
 const char CFG_FILENAME[] PROGMEM = "/config.json";
 
@@ -26,6 +27,9 @@ void DevConfig::update() {
 
         if (doc[F("hostname")].is<String>())
             hostname = doc[F("hostname")].as<String>();
+
+        if (doc[F("haPrefix")].is<String>())
+            HADiscovery::setHAPrefix(doc[F("haPrefix")].as<String>());
             
         if (hostname.isEmpty())
             hostname = F(HOSTNAME);

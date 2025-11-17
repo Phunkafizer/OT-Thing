@@ -7,6 +7,7 @@ extern const char *HA_DEVICE_CLASS_PROBLEM PROGMEM;
 class HADiscovery {
 private:
     void init(String &name, String &id, String component);
+    static String ha_prefix;
 protected:
     JsonDocument doc;
     String topic;
@@ -16,6 +17,7 @@ public:
     const char *manufacturer;
     String devPrefix;
     String defaultStateTopic;
+    static void setHAPrefix(String prefix);
     virtual bool publish() {return false;}
     void clearDoc();
     void setValueTemplate(String valueTemplate);

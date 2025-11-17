@@ -42,12 +42,15 @@ const char HA_MODE_COMMAND_TOPIC[]              PROGMEM = "mode_cmd_t";
 const char HA_OPTIMISTIC[]                      PROGMEM = "optimistic";
 const char HA_RETAIN[]                          PROGMEM = "retain";
 
-
-const char *ha_prefix = "homeassistant";
+String HADiscovery::ha_prefix = F("homeassistant");
 
 HADiscovery::HADiscovery():
         devName(nullptr),
         manufacturer(nullptr) {
+}
+
+void HADiscovery::setHAPrefix(String prefix) {
+    ha_prefix = prefix;
 }
 
 void HADiscovery::init(String &name, String &id, String component) {
@@ -62,7 +65,7 @@ void HADiscovery::init(String &name, String &id, String component) {
     doc[FPSTR(HA_UNIQUE_ID)] = devPrefix + "_" + id;
     doc[FPSTR(HA_OBJECT_ID)] = doc[FPSTR(HA_UNIQUE_ID)];
 
-    topic = FPSTR(ha_prefix);
+    topic = ha_prefix;
     topic += '/' + component + '/' + devPrefix + '/' + id + "/config";
 
     setStateTopic(defaultStateTopic);
