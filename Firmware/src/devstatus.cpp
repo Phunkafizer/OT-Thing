@@ -58,16 +58,6 @@ JsonDocument &DevStatus::buildDoc() {
     if (outsideTemp.get(outT))
         doc[F("outsideTemp")] = outT;
 
-    JsonArray heatercircuit = doc[F("heatercircuit")].to<JsonArray>();
-    for (int i=0; i<2; i++) {
-        JsonObject hc = heatercircuit.add<JsonObject>();
-        double d;
-        if (roomSetPoint[i].get(d))
-            hc[F("roomsetpoint")] = d;
-        if (roomTemp[i].get(d))
-            hc[F("roomtemp")] = d;
-    }
-
     if (oneWireNode) {
         JsonObject jo = doc[F("1wire")].to<JsonObject>();
         OneWireNode::writeJson(jo);

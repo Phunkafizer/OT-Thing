@@ -678,6 +678,20 @@ void OTControl::getJson(JsonObject &obj) {
     for (auto *valobj: thermostatValues)
         valobj->getJson(thermostat);
 
+    
+    JsonArray hcarr = obj[F("heatercircuit")].to<JsonArray>();
+    for (int i=0; i<2; i++) {
+        JsonObject hc = hcarr.add<JsonObject>();
+        double d;
+        if (roomSetPoint[i].get(d))
+            hc[F("roomsetpoint")] = d;
+        if (roomTemp[i].get(d))
+            hc[F("roomtemp")] = d;
+
+        hc[F("ovrdFlow")] = heatingCtrl[i].overrideFlow;
+        hc[F("mode")] = (int) heatingCtrl[i].mode;
+    }
+
     if (slaveEnabled) {
         thermostat[F("txCount")] = slave.txCount;
         thermostat[F("rxCount")] = slave.rxCount;
@@ -819,14 +833,15 @@ bool OTControl::sendDiscovery() {
     haDisc.setValueTemplate(F("{{ value_json.slave.vent_status.free_vent }}"));
     discFlag &= haDisc.publish(slaveApp == SLAVEAPP_VENT);
 
+    bool ovr = (otMode == OTMODE_REPEATER) || ( (otMode == OTMODE_MASTER) && slaveEnabled );
     haDisc.createSwitch(F("override CH1"), Mqtt::TOPIC_OVERRIDECH1);
-    discFlag &= haDisc.publish(otMode == OTMODE_REPEATER);
+    discFlag &= haDisc.publish(ovr);
 
     haDisc.createSwitch(F("override CH2"), Mqtt::TOPIC_OVERRIDECH2);
-    discFlag &= haDisc.publish(otMode == OTMODE_REPEATER);
+    discFlag &= haDisc.publish(ovr);
 
     haDisc.createSwitch(F("override DHW"), Mqtt::TOPIC_OVERRIDEDHW);
-    discFlag &= haDisc.publish(otMode == OTMODE_REPEATER);
+    discFlag &= haDisc.publish(ovr);
 
     return discFlag;
 }
