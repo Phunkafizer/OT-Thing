@@ -2,6 +2,7 @@
 
 const char *HA_DEVICE_CLASS_RUNNING PROGMEM = "running";
 const char *HA_DEVICE_CLASS_PROBLEM PROGMEM = "problem";
+const char *HA_DEVICE_CLASS_OPEN PROGMEM = "open";
 
 const char HA_AVAILABILITY[]                    PROGMEM = "availability";
 const char HA_TOPIC[]                           PROGMEM = "t";
@@ -59,7 +60,7 @@ void HADiscovery::init(String &name, String &id, String component) {
     dev[FPSTR(HA_IDENTIFIERS)][0] = devPrefix;
     dev[FPSTR(HA_SW_VERSION)] = BUILD_VERSION;
     dev[FPSTR(HA_NAME)] = FPSTR(devName);
-    dev[FPSTR(HA_MANUFACTURER)] = F("Seegel Systeme");
+    dev[FPSTR(HA_MANUFACTURER)] = manufacturer;
 
     doc[FPSTR(HA_NAME)] = name;
     doc[FPSTR(HA_UNIQUE_ID)] = devPrefix + "_" + id;
@@ -146,7 +147,6 @@ void HADiscovery::setModes(const uint8_t modes) {
 void HADiscovery::createSensor(String name, String id) {
     init(name, id, F("sensor"));
     doc[FPSTR(HA_STATE_CLASS)] = F("measurement");
-    //doc[FPSTR(HA_ICON)] = F("mdi:counter");
 }
 
 void HADiscovery::createTempSensor(String name, String id) {
@@ -176,7 +176,8 @@ void HADiscovery::createHourDuration(String name, String id) {
 
 void HADiscovery::createBinarySensor(String name, String id, String deviceClass) {
     init(name, id, F("binary_sensor"));
-    doc[FPSTR(HA_DEVICE_CLASS)] = deviceClass;
+    if (!deviceClass.isEmpty())
+        doc[FPSTR(HA_DEVICE_CLASS)] = deviceClass;
 }
 
 void HADiscovery::createNumber(String name, String id, String cmdTopic) {

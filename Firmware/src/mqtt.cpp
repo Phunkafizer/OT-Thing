@@ -52,7 +52,8 @@ static void mqttMessageReceived(char* topic, char* payload, AsyncMqttClientMessa
 Mqtt::Mqtt():
         lastConTry(0),
         lastStatus(0),
-        configSet(false) {
+        configSet(false),
+        conFlag(false) {
     cli.onConnect(mqttConnectCb);
     cli.onDisconnect(mqttDisconnectCb);
     cli.onMessage(mqttMessageReceived);
@@ -78,12 +79,17 @@ void Mqtt::onConnect() {
     cli.subscribe(topic.c_str(), 0);
 
     discFlag = false;
+    conFlag = true;
 }
 
 void Mqtt::onDisconnect(AsyncMqttClientDisconnectReason reason) {
-    String msg = F("MQTT disconnected ");
-    msg += String((int) reason);
-    portal.textAll(msg);
+    if (conFlag) {
+        String msg = F("MQTT disconnected ");
+        msg += String((int) reason);
+        portal.textAll(msg);
+        conFlag = false;
+        numDisc++;
+    }
 }
 
 bool Mqtt::connected() {

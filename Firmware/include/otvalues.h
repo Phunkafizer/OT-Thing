@@ -145,6 +145,7 @@ protected:
     bool enabled;
     virtual bool sendDiscovery();
     const char* getName() const;
+    bool discFlag;
 public:
     OTValue(const OpenThermMessageID id, const int interval);
     bool process();
@@ -158,7 +159,8 @@ public:
     void setTimeout();
     static OTValue* getSlaveValue(const OpenThermMessageID id);
     static OTValue* getThermostatValue(const OpenThermMessageID id);
-    bool discFlag;
+    void refreshDisc();
+    
     bool isSet;
 };
 
@@ -196,7 +198,8 @@ protected:
     };
     uint8_t numFlags;
     const Flag *flagTable;
-    OTValueFlags(const OpenThermMessageID id, const int interval, const Flag *flagtable, const uint8_t numFlags);
+    bool slave;
+    OTValueFlags(const OpenThermMessageID id, const int interval, const Flag *flagtable, const uint8_t numFlags, const bool slave);
     void getValue(JsonObject &obj) const;
     bool sendDiscFlag(String name, const char *field, const char *devClass);
     bool sendDiscovery();
@@ -220,14 +223,12 @@ public:
 class OTValueMasterStatus: public OTValueFlags {
 private:
     const Flag flags[5] PROGMEM = {
-        {8, "ch_enable"},
-        {9, "dhw_enable"},
-        {10, "cooling_enable"},
-        {11, "otc_active"},
-        {12, "ch2_enable"}
+        {8, "ch_enable",    "CH enable",    nullptr},
+        {9, "dhw_enable",   "DHW enable",   nullptr},
+        {10, "cooling_enable", "cooling enable", nullptr},
+        {11, "otc_active",  "OTC active",   nullptr},
+        {12, "ch2_enable",  "CH2 enable",   nullptr}
     };
-protected:
-    bool sendDiscovery();
 public:    
     OTValueMasterStatus();
 };
@@ -237,7 +238,7 @@ private:
     const Flag flags[6] PROGMEM = {
         {0, "fault",        "fault",                HA_DEVICE_CLASS_PROBLEM},
         {1, "vent_active",  "Ventilation active",   HA_DEVICE_CLASS_RUNNING },
-        {2, "bypass_open",  "Bypass open",          HA_DEVICE_CLASS_RUNNING},
+        {2, "bypass_open",  "Bypass open",          HA_DEVICE_CLASS_OPEN},
         {3, "bypass_auto",  "Bypass auto",          HA_DEVICE_CLASS_RUNNING},
         {4, "free_vent",    "free ventilation",     HA_DEVICE_CLASS_RUNNING},
         {6, "diagnostic",   "diagnostic",           HA_DEVICE_CLASS_PROBLEM}
@@ -264,12 +265,12 @@ class OTValueSlaveConfigMember: public OTValueFlags {
 private:
     void getValue(JsonObject &obj) const;
     const Flag flags[6] PROGMEM = {
-        {8, "dhw_present"},
-        {9, "ctrl_type"},
-        {10, "cooling_config"},
-        {11, "dhw_config"},
-        {12, "master_lowoff_pumpctrl"},
-        {13, "ch2_present"}
+        {8, "dhw_present",              "DHW presemt",          nullptr},
+        {9, "ctrl_type",                "Control type on/off",  nullptr},
+        {10, "cooling_config",          "Coling supported",     nullptr},
+        {11, "dhw_config",              "DHW storage",          nullptr},
+        {12, "master_lowoff_pumpctrl",  "Master pump ctrl allowed", nullptr},
+        {13, "ch2_present",             "CH2 present",          nullptr}
     };
 public:    
     OTValueSlaveConfigMember();
@@ -354,13 +355,11 @@ public:
 class OTValueRemoteParameter: public OTValueFlags {
 private:
     const Flag flags[4] PROGMEM = {
-        {0, "dhw_setpoint_rw"},
-        {1, "max_ch_setpoint_rw"},
-        {8, "dhw_setpoint_trans"},
-        {9, "max_ch_setpoint_trans"}
+        {0, "dhw_setpoint_rw", "DHW setpoint write", nullptr},
+        {1, "max_ch_setpoint_rw", "Max. CH setpoint write", nullptr},
+        {8, "dhw_setpoint_trans", "DHW setpoint transfer", nullptr},
+        {9, "max_ch_setpoint_trans", "Max. CH setpoint transfer", nullptr}
     };
-protected:
-    bool sendDiscovery();
 public:    
     OTValueRemoteParameter();
 };
@@ -398,6 +397,6 @@ public:
 };
 
 
-extern OTValue *slaveValues[41];
+extern OTValue *slaveValues[42];
 extern OTValue *thermostatValues[17];
 extern const char* getOTname(OpenThermMessageID id);

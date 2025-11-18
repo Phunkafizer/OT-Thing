@@ -27,6 +27,7 @@ private:
     String baseTopic;
     String statusTopic;
     bool discFlag {false}; // discovery flag; set after MQTT (re-) connect
+    bool conFlag;
     OTControl::CtrlMode strToCtrlMode(String &str);
 public:
     enum MqttTopic {

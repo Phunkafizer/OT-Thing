@@ -62,6 +62,7 @@ const struct {
     {OpenThermMessageID::RemoteOverrideFunction,    0x0000},
     {OpenThermMessageID::UnsuccessfulBurnerStarts,  19},
     {OpenThermMessageID::FlameSignalTooLowNumber,   4},
+    {OpenThermMessageID::OEMDiagnosticCode,         123},
     {OpenThermMessageID::DHWBurnerOperationHours,   196},
 };
 
@@ -700,10 +701,10 @@ void OTControl::getJson(JsonObject &obj) {
 
 bool OTControl::sendDiscovery() {
     for (auto *valobj: slaveValues)
-        valobj->discFlag = false;
+        valobj->refreshDisc();
 
     for (auto *valobj: thermostatValues)
-        valobj->discFlag = false;
+        valobj->refreshDisc();
 
     bool discFlag = true;
 

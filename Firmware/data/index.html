@@ -409,7 +409,10 @@
                         <h5>MQTT disconnections</h5>
                         <span class="statusvalue" field="mqtt.numDisc"></span>
                     </div>
-
+                    <div class="statusfield">
+                        <h5>USB connected</h5>
+                        <span class="statusvalue" field="USB_connected"></span>
+                    </div>
                 </div>
             </div>
             <div id="owdiv">
@@ -553,6 +556,10 @@
                     <div class="statusfield">
                         <h5>OEM fault code</h5>
                         <span class="statusvalue" field="slave.oem_fault_code"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>OEM diagnostic code</h5>
+                        <span class="statusvalue" field="slave.oem_diag_code"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Vent. fault</h5>
@@ -1374,6 +1381,10 @@
                         <input id="mqttKeepAlive" type="text" value="15"/>
                     </div>
                     <div class="param">
+                        <h5>HA disc. prefix</h5>
+                        <input id="haPrefix" type="text" />
+                    </div>
+                    <div class="param">
                         <h5>TLS</h5>
                         <div>
                             <label class="switch">
@@ -1381,10 +1392,6 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
-                    </div>
-                    <div class="param">
-                        <h5>HA disc. prefix</h5>
-                        <input id="haPrefix" type="text" />
                     </div>
                 </div>
                 <div class="flexline">

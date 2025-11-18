@@ -4,7 +4,7 @@
 
 OTThingHADiscovery haDisc;
 
-const char *DEVNAME PROGMEM = "OT Thing";
+const char *DEVNAME PROGMEM = "OTthing";
 const char *MANUFACTURER PROGMEM = "Seegel Systeme";
 
 OTThingHADiscovery::OTThingHADiscovery() {
