@@ -144,6 +144,10 @@ void HADiscovery::setModes(const uint8_t modes) {
         jModes.add(F("auto"));
 }
 
+void HADiscovery::setUnit(const String unit) {
+    doc[FPSTR(HA_UNIT_OF_MEASUREMENT)] = unit;
+}
+
 void HADiscovery::createSensor(String name, String id) {
     init(name, id, F("sensor"));
     doc[FPSTR(HA_STATE_CLASS)] = F("measurement");

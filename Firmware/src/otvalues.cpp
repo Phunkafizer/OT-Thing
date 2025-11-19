@@ -203,6 +203,21 @@ bool OTValue::sendDiscovery() {
     if (name == nullptr)
         return false;
 
+/* missing discoveries: 
+    new OTValueCapacityModulation(),
+    new OTValueDHWBounds(),
+    new OTValueCHBounds(),
+    new OTValueFloat(           OpenThermMessageID::TrOverride,                 10),
+    new OTValueFloat(           OpenThermMessageID::DHWFlowRate,                10),
+    new OTValueFloat(           OpenThermMessageID::TrOverride2,                10),
+    new OTValueu16(             OpenThermMessageID::CO2exhaust,                 10),
+
+
+    new OTValueu16(             OpenThermMessageID::CHPumpStarts,               30),
+    new OTValueRemoteParameter(),
+    new OTValueRemoteOverrideFunction(),
+*/
+
     switch (id) {
         case OpenThermMessageID::Tboiler:
             haDisc.createTempSensor(F("flow temp."), FPSTR(name));
@@ -339,6 +354,27 @@ bool OTValue::sendDiscovery() {
     valTempl.replace("#", FPSTR(name));
     haDisc.setValueTemplate(valTempl);
         
+    return haDisc.publish();
+}
+
+bool OTValue::sendDiscovery(String field) {
+    bool inSlave = false;
+    for (auto *valobj: slaveValues) {
+        if (valobj == this) {
+            inSlave = true;
+            break;
+        }
+    }
+
+    String valTempl = F("{{ value_json");
+    valTempl += inSlave ? F(".slave.") : F(".thermostat.");
+    if (field.isEmpty()) 
+        valTempl += FPSTR(getName());
+    else
+        valTempl += field;
+    valTempl += F(" }}");
+
+    haDisc.setValueTemplate(valTempl);
     return haDisc.publish();
 }
 
@@ -537,17 +573,24 @@ void OTValueProductVersion::getValue(JsonObject &obj) const {
     obj[FPSTR(getName())] = v;
 }
 
+
 OTValueCapacityModulation::OTValueCapacityModulation():
         OTValue(OpenThermMessageID::MaxCapacityMinModLevel, 0) {
 }
 
 bool OTValueCapacityModulation::sendDiscovery() {
-    return true;
+    haDisc.createSensor(F("Max. capacity"), FPSTR(MAX_CAPACITY));
+    haDisc.setUnit(F("kW"));
+    if (!OTValue::sendDiscovery(FPSTR(MAX_CAPACITY)))
+        return false;
+    haDisc.createSensor(F("Min. modulation"), FPSTR(MIN_MODULATION));
+    haDisc.setUnit(F("%"));
+    return OTValue::sendDiscovery(FPSTR(MIN_MODULATION));
 }
 
 void OTValueCapacityModulation::getValue(JsonObject &obj) const {
-    obj[F("max_capacity")] = value >> 8;
-    obj[F("min_modulation")] = value & 0xFF;
+    obj[PSTR(MAX_CAPACITY)] = value >> 8;
+    obj[PSTR(MIN_MODULATION)] = value & 0xFF;
 }
 
 OTValueDHWBounds::OTValueDHWBounds():
@@ -555,12 +598,17 @@ OTValueDHWBounds::OTValueDHWBounds():
 }
 
 void OTValueDHWBounds::getValue(JsonObject &obj) const {
-    obj[F("dhwMax")] = value >> 8;
-    obj[F("dhwMin")] = value & 0xFF;
+    obj[PSTR(DHW_MAX)] = value >> 8;
+    obj[PSTR(DHW_MIN)] = value & 0xFF;
 }
 
 bool OTValueDHWBounds::sendDiscovery() {
-    return true;
+    haDisc.createTempSensor(F("DHW max. temp."), FPSTR(DHW_MAX));
+    if (!OTValue::sendDiscovery(FPSTR(DHW_MAX)))
+        return false;
+    
+    haDisc.createTempSensor(F("DHW min. temp."), FPSTR(DHW_MIN));
+    return OTValue::sendDiscovery(FPSTR(DHW_MIN));
 }
 
 OTValueCHBounds::OTValueCHBounds():
@@ -568,12 +616,17 @@ OTValueCHBounds::OTValueCHBounds():
 }
 
 void OTValueCHBounds::getValue(JsonObject &obj) const {
-    obj[F("chMax")] = value >> 8;
-    obj[F("chMin")] = value & 0xFF;
+    obj[PSTR(CH_MAX)] = value >> 8;
+    obj[PSTR(CH_MIN)] = value & 0xFF;
 }
 
 bool OTValueCHBounds::sendDiscovery() {
-    return true;
+    haDisc.createTempSensor(F("CH max. temp."), FPSTR(CH_MAX));
+    if (!OTValue::sendDiscovery(FPSTR(CH_MAX)))
+        return false;
+    
+    haDisc.createTempSensor(F("CH min. temp."), FPSTR(CH_MIN));
+    return OTValue::sendDiscovery(FPSTR(CH_MIN));
 }
 
 

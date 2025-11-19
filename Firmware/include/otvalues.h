@@ -144,6 +144,7 @@ protected:
     uint16_t value;
     bool enabled;
     virtual bool sendDiscovery();
+    bool sendDiscovery(String field);
     const char* getName() const;
     bool discFlag;
 public:
@@ -265,12 +266,12 @@ class OTValueSlaveConfigMember: public OTValueFlags {
 private:
     void getValue(JsonObject &obj) const;
     const Flag flags[6] PROGMEM = {
-        {8, "dhw_present",              "DHW presemt",          nullptr},
-        {9, "ctrl_type",                "Control type on/off",  nullptr},
-        {10, "cooling_config",          "Coling supported",     nullptr},
-        {11, "dhw_config",              "DHW storage",          nullptr},
+        {8, "dhw_present",              "DHW presemt",              nullptr},
+        {9, "ctrl_type",                "Control type on/off",      nullptr},
+        {10, "cooling_config",          "Cooling supported",        nullptr},
+        {11, "dhw_config",              "DHW storage",              nullptr},
         {12, "master_lowoff_pumpctrl",  "Master pump ctrl allowed", nullptr},
-        {13, "ch2_present",             "CH2 present",          nullptr}
+        {13, "ch2_present",             "CH2 present",              nullptr}
     };
 public:    
     OTValueSlaveConfigMember();
@@ -316,6 +317,8 @@ public:
 class OTValueCapacityModulation: public OTValue {
 private:
     void getValue(JsonObject &obj) const;
+    const char *MAX_CAPACITY = "max_capacity" PROGMEM;
+    const char *MIN_MODULATION = "min_modulation" PROGMEM;
 protected:
     bool sendDiscovery();
 public:    
@@ -325,6 +328,8 @@ public:
 class OTValueDHWBounds: public OTValue {
 private:
     void getValue(JsonObject &obj) const;
+    const char *DHW_MAX = "dhwMax" PROGMEM;
+    const char *DHW_MIN = "dhwMin" PROGMEM;
 protected:
     bool sendDiscovery();
 public:    
@@ -334,6 +339,8 @@ public:
 class OTValueCHBounds: public OTValue {
 private:
     void getValue(JsonObject &obj) const;
+    const char *CH_MAX = "chMax" PROGMEM;
+    const char *CH_MIN = "chMin" PROGMEM;
 protected:
     bool sendDiscovery();
 public:    

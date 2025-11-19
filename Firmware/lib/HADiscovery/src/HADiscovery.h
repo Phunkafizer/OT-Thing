@@ -36,6 +36,7 @@ public:
     void setRetain(const bool retain);
     void setIcon(String icon);
     void setModes(const uint8_t modes);
+    void setUnit(const String unit);
 
     void createTempSensor(String name, String id);
     void createPowerFactorSensor(String name, String id);
