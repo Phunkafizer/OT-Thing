@@ -1921,6 +1921,10 @@
                 _("#overrideDhw").checked = config.boiler.overrideDhw;
                 initRangeParam("dhwtemp", "boiler.dhwTemperature");
 
+                _("#otc").checked = config.boiler.otc;
+                _("#summerMode").checked = config.boiler.summerMode;
+                _("#dhwBlocking").checked = config.boiler.dhwBlocking;
+
                 if (config.heating === undefined)
                     config.heating = [{}, {}];
 
