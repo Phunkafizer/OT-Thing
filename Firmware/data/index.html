@@ -1413,6 +1413,7 @@
                     <option value="0">MQTT</option>
                     <option value="1">OT boiler</option>
                     <option value="2">Bluetooth</option>
+                    <option value="3">1wire</option>
                     <option value="4">OpenWeather</option>
                 </select>
                 <div class="selopt">
@@ -1426,6 +1427,11 @@
                 <div class="selopt">
                     <h5>Address</h5>
                     <input id="inpbluetoothaddress" type="text" />
+                </div>
+                <div class="selopt">
+                    <h5>address</h5>
+                    <select id="oneWireOutsideTempAdr" class="oneWireAdr">
+                    </select>
                 </div>
                 <div class="selopt">
                     <h5>API-Key</h5>
@@ -1581,6 +1587,7 @@
                     lat: parseFloat(_("#inplat").value),
                     lon: parseFloat(_("#inplon").value),
                     interval: parseInt(_("#inpinterval").value),
+                    adr: _("#oneWireOutsideTempAdr").value
                 };
 
                 let heating0 = config.heating[0];
@@ -1908,6 +1915,7 @@
                 _("#inplat").value = config.outsideTemp.lat || null;
                 _("#inplon").value = config.outsideTemp.lon || null;
                 _("#inpinterval").value = config.outsideTemp.interval || null;
+                _("#oneWireOutsideTempAdr").value = config.outsideTemp.adr || "";
 
                 _("#mqttHost").value = config.mqtt.host || null;
                 _("#mqttPort").value = config.mqtt.port || 1883;
@@ -2051,10 +2059,13 @@
                                 ele.append(_$("option", {textContent: adr}));
 
                             if ( (ele == _("#oneWireRoomTempAdr1")) && (config.heating[0].roomtemp.source == 3) )
-                                ele.value = config.boiler.heating[0].roomtemp.adr;
+                                ele.value = config.heating[0].roomtemp.adr;
 
-                            if ( (ele == _("#oneWireRoomTempAdr2")) && (config.heating[1].roomtemp.source == 3) )
+                            else if ( (ele == _("#oneWireRoomTempAdr2")) && (config.heating[1].roomtemp.source == 3) )
                                 ele.value = config.heating[1].roomtemp.adr;
+
+                            else if ( (ele == _("#oneWireOutsideTempAdr")) && (config.outsideTemp.source == 3) )
+                                ele.value = config.outsideTemp.adr;
                         }
                     });
 

@@ -190,6 +190,8 @@ void OneWireNode::loop() {
                     if (roomTemp[i].own == node)
                         roomTemp[i].set(node->temp, Sensor::SOURCE_1WIRE);
                 }
+                if (outsideTemp.own == node)
+                    outsideTemp.set(node->temp, Sensor::SOURCE_1WIRE);
             }
             node = node->next;
         }
