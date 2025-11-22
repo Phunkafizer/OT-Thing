@@ -13,6 +13,7 @@ protected:
 public:
     OTWriteRequest(OpenThermMessageID id, uint16_t intervalS);
     void send(const uint16_t data);
+    void sendTemp(const double temp);
     void force();
     operator bool();
 };
@@ -47,6 +48,11 @@ public:
     OTWRSetRoomSetPoint(const uint8_t ch);
 };
 
+class OTWRSetOutsideTemp: public OTWriteRequest {
+public:
+    OTWRSetOutsideTemp();
+};
+
 class OTControl {
 friend OTWriteRequest;
 public:
@@ -71,6 +77,7 @@ private:
     void masterPinIrq();
     void slavePinIrq();
     double getFlow(const uint8_t channel);
+    uint16_t tmpToData(const double tmpf);
     unsigned long lastBoilerStatus;
     unsigned long lastVentStatus;
     enum OTMode: int8_t {
@@ -126,6 +133,7 @@ private:
     OTWRSetVentSetpoint setVentSetpointRequest;
     OTWRSetRoomTemp setRoomTemp[2];
     OTWRSetRoomSetPoint setRoomSetPoint[2];
+    OTWRSetOutsideTemp setOutsideTemp;
     uint8_t masterMemberId;
     struct OTInterface {
         OTInterface(const uint8_t inPin, const uint8_t outPin, const bool isSlave);

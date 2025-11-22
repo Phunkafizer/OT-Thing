@@ -181,6 +181,15 @@ void OTControl::slavePinIrq() {
     slave.hal.handleInterrupt();
 }
 
+uint16_t OTControl::tmpToData(const double tmpf) {
+    if (tmpf > 100)
+        return 100<<8;
+    if (tmpf < -100)
+        return - (int) (100<<8);
+    
+    return (int16_t) (tmpf * 256);
+}
+
 void OTControl::setOTMode(const OTMode mode, const bool enableSlave) {
     otMode = mode;
 
@@ -264,18 +273,17 @@ void OTControl::loop() {
     case OTMODE_LOOPBACKTEST: {
         for (int ch=0; ch<2; ch++) {
             if (setRoomTemp[ch]) {
-                setRoomTemp[ch].send(OpenTherm::temperatureToData(21.5));
+                setRoomTemp[ch].sendTemp(21.5);
                 xSemaphoreGive(master.mutex);
                 return;
             }
             if (setRoomSetPoint[ch]) {
-                setRoomSetPoint[ch].send(OpenTherm::temperatureToData(21.3));
+                setRoomSetPoint[ch].sendTemp(21.3);
                 xSemaphoreGive(master.mutex);
                 return;
             }
         }
         // no break!!
-
     }
 
     case OTMODE_MASTER:
@@ -289,12 +297,12 @@ void OTControl::loop() {
         for (int ch=0; ch<2; ch++) {
             double temp;
             if (setRoomTemp[ch] && roomTemp[ch].get(temp)) {
-                setRoomTemp[ch].send(OpenTherm::temperatureToData(temp));
+                setRoomTemp[ch].sendTemp(temp);
                 xSemaphoreGive(master.mutex);
                 return;
             }
             if (setRoomSetPoint[ch] && roomSetPoint[ch].get(temp)) {
-                setRoomSetPoint[ch].send(OpenTherm::temperatureToData(temp));
+                setRoomSetPoint[ch].sendTemp(temp);
                 xSemaphoreGive(master.mutex);
                 return;
             }
@@ -307,7 +315,7 @@ void OTControl::loop() {
                     double flow = getFlow(ch);
 
                     if (flow > 0) {
-                        setBoilerRequest[ch].send(OpenTherm::temperatureToData(flow));
+                        setBoilerRequest[ch].sendTemp(flow);
                         xSemaphoreGive(master.mutex);
                         return;
                     }
@@ -315,9 +323,18 @@ void OTControl::loop() {
             }
 
             if (setDhwRequest) {
-                setDhwRequest.send(OpenTherm::temperatureToData(boilerCtrl.dhwTemp));
+                setDhwRequest.sendTemp(boilerCtrl.dhwTemp);
                 xSemaphoreGive(master.mutex);
                 return;
+            }
+
+            if (!outsideTemp.isOtSource() && setOutsideTemp) {
+                double t;
+                if (outsideTemp.get(t)) {
+                    setOutsideTemp.sendTemp(t);
+                    xSemaphoreGive(master.mutex);
+                    return;
+                }
             }
 
             if (millis() > lastBoilerStatus + 800) {
@@ -422,7 +439,7 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         case OpenThermMessageID::Toutside: {
             double ost;
             if ( !outsideTemp.isOtSource() && outsideTemp.get(ost))
-                newMsg = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, OpenTherm::temperatureToData(ost));
+                newMsg = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, tmpToData(ost));
             break;
         }
         case OpenThermMessageID::TdhwSet: {
@@ -502,7 +519,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             case OpenThermMessageID::Toutside: {
                 double t;
                 if (outsideTemp.get(t))
-                    resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, OpenTherm::temperatureToData(t));
+                    resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, tmpToData(t));
                 break;
             }
 
@@ -998,6 +1015,18 @@ void OTWriteRequest::send(const uint16_t data) {
     otcontrol.sendRequest('T', req);
 }
 
+void OTWriteRequest::sendTemp(const double temp) {
+    int16_t td;
+    if (temp > 100)
+        td = 100 << 8;
+    else if (temp < -100)
+        td = - (int) (100 << 8);
+    else
+        td = (int) (temp * 256);
+
+    send(td);
+}
+
 void OTWriteRequest::force() {
     nextMillis = 0;
 }
@@ -1031,4 +1060,8 @@ OTWRSetRoomTemp::OTWRSetRoomTemp(const uint8_t ch):
 
 OTWRSetRoomSetPoint::OTWRSetRoomSetPoint(const uint8_t ch):
         OTWriteRequest((ch == 0) ? OpenThermMessageID::TrSet : OpenThermMessageID::TrSetCH2, 60) {
+}
+
+OTWRSetOutsideTemp::OTWRSetOutsideTemp():
+        OTWriteRequest(OpenThermMessageID::Toutside, 60) {
 }
