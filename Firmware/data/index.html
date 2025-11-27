@@ -208,8 +208,7 @@
             font-size: 0.9em;
         }
 
-        table th.ot,
-        table th.ft {
+        table th.ot, table th.ft, table th.rs {
             width: 15%;
         }
 
@@ -947,6 +946,7 @@
                     <thead>
                         <tr>
                             <th class="comment">comment</th>
+                            <th class="rs">roomset</th>
                             <th class="ot">outside</th>
                             <th class="ft">flow</th>
                             <th class="rem"></th>
@@ -1659,7 +1659,7 @@
                 let heatCfg = config.heating[hk - 1];
                 let ft = getFlowTemperature(
                     statuscache.outsideTemp, 
-                    heatCfg.roomsetpoint.temp, 
+                    roomsetpoint[hk - 1], 
                     heatCfg.flowMax, 
                     heatCfg.exponent, 
                     heatCfg.gradient, 
@@ -1671,7 +1671,8 @@
                 heatCfg.marker.push({
                     comment: comment,
                     ot: statuscache.outsideTemp,
-                    ft: Math.round(ft * 10) / 10
+                    ft: Math.round(ft * 10) / 10,
+                    rs: roomsetpoint[hk - 1]
                 });
                 _("#comment" + hk).value = "";
                 drawMarkerTable(hk);
@@ -1790,6 +1791,7 @@
                     _(`#markerbody${hk}`).append(
                         _$("tr", {}, 
                             _$("td", {textContent: item.comment}),
+                            _$("td", {textContent: (item.rs || "-") + " °C"}),
                             _$("td", {textContent: item.ot + " °C"}),
                             _$("td", {textContent: item.ft + " °C"}),
                             _$("td", {},
@@ -1911,7 +1913,7 @@
 
                 _("#selectOutsideTempSource").value = config.outsideTemp.source;
                 _("#selectOutsideTempSource").dispatchEvent(new Event('change'));
-                _("#inpapikey").value = config.outsideTemp.apikey;
+                _("#inpapikey").value = config.outsideTemp.apikey || null;
                 _("#inplat").value = config.outsideTemp.lat || null;
                 _("#inplon").value = config.outsideTemp.lon || null;
                 _("#inpinterval").value = config.outsideTemp.interval || null;
