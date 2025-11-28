@@ -58,6 +58,9 @@ JsonDocument &DevStatus::buildDoc() {
     if (outsideTemp.get(outT))
         doc[F("outsideTemp")] = outT;
 
+    if (!outsideTemp.owResult.isEmpty())
+        doc[F("owResult")] = outsideTemp.owResult;
+
     if (oneWireNode) {
         JsonObject jo = doc[F("1wire")].to<JsonObject>();
         OneWireNode::writeJson(jo);

@@ -60,6 +60,7 @@ class OutsideTemp: public Sensor {
 public:
     void setConfig(JsonObject &obj);
     OutsideTemp();
+    String owResult;
 protected:
     void loop();
 private:

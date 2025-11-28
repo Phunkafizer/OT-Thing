@@ -99,6 +99,8 @@ void OutsideTemp::setConfig(JsonObject &obj) {
     interval = (uint16_t) obj[F("interval")] * 1000;
     if (interval == 0)
         interval = 30000;
+    owResult.clear();
+    nextMillis = 0;
 }
 
 void OutsideTemp::loop() {
@@ -141,15 +143,20 @@ void OutsideTemp::loop() {
 
         if (!acli.connected()) {
             JsonDocument doc;
-            deserializeJson(doc, replyBuf);
-            replyBuf.clear();
-
-            if (doc[F("main")][F("temp")].is<JsonFloat>()) {
-                value = doc[F("main")][F("temp")];
-                setFlag = true;
+            owResult.clear();
+            
+            if (deserializeJson(doc, replyBuf) == DeserializationError::Ok) {
+                if (doc[F("main")][F("temp")].is<JsonFloat>()) {
+                    value = doc[F("main")][F("temp")];
+                    setFlag = true;
+                    owResult = F("Ok");
+                }
+                else
+                    setFlag = false;
             }
-            else
-                setFlag = false;
+            if (owResult.isEmpty())
+                owResult = replyBuf;
+            replyBuf.clear();
 
             nextMillis = millis() + interval;
             httpState = HTTP_IDLE;
