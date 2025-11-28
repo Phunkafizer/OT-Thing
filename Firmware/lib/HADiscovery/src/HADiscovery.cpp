@@ -64,7 +64,6 @@ void HADiscovery::init(String &name, String &id, String component) {
 
     doc[FPSTR(HA_NAME)] = name;
     doc[FPSTR(HA_UNIQUE_ID)] = devPrefix + "_" + id;
-    doc[FPSTR(HA_OBJECT_ID)] = doc[FPSTR(HA_UNIQUE_ID)];
 
     topic = ha_prefix;
     topic += '/' + component + '/' + devPrefix + '/' + id + "/config";
