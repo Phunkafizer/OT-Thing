@@ -1,0 +1,67 @@
+OT-Thing – OpenTherm WiFi Interface
+Copyright (c) 2025 Seegel Systeme
+
+This repository contains multiple components (hardware, firmware, documentation)
+which are licensed under different open-source licenses.
+
+Please review the LICENSE file inside each main directory for the exact terms.
+
+---
+
+1. HARDWARE
+
+---
+
+All hardware design files, including but not limited to:
+
+* schematics
+* PCB layout files
+* manufacturing data
+* enclosure / CAD files
+* hardware documentation
+
+located in the folder:
+
+/PCB
+/Tester PCB
+
+are licensed under the:
+
+CERN Open Hardware Licence Version 2 – Strongly Reciprocal (CERN-OHL-S v2)
+
+You can find the full license text in:
+
+/PCB/LICENSE
+/Tester PCB/LICENSE
+
+---
+
+2. FIRMWARE
+
+---
+
+All firmware and software source code located in the folder:
+
+/firmware
+
+is licensed under the:
+
+GNU General Public License version 3 (GPLv3)
+
+You can find the full license text in:
+
+/firmware/LICENSE
+
+---
+
+
+## IMPORTANT
+
+Use, modification and redistribution are permitted under the conditions
+defined by the respective licenses. All derivative works must remain
+under the same license terms for each respective component.
+
+This project is intended to remain free and open in perpetuity.
+
+For details see:
+[https://www.seegel-systeme.de](https://www.seegel-systeme.de)
