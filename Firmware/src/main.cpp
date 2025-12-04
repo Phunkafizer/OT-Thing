@@ -46,6 +46,7 @@ void wifiEvent(WiFiEvent_t event) {
 
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
         devstatus.numWifiDiscon++;
+        WiFi.reconnect();
         break;
 
     default:
@@ -86,6 +87,7 @@ void setup() {
     Serial.setTxTimeoutMs(100);
     
     WiFi.onEvent(wifiEvent);
+    WiFi.setSleep(false);
     WiFi.begin();
     OneWireNode::begin();
     haDisc.begin();
