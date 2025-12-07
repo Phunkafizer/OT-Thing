@@ -62,9 +62,9 @@ ID	Msg	Name
 31	R-	*   -   *   Flow temperature CH2
 32  R-  *   -   *   DHW2 temperature
 33  R-  *   -   *   Exhaust temperature
-34\tR-\tBoiler heat exchanger temperature
-35\tR-\tBoiler fan speed (setpoint/actual)
-36\tR-\tFlame current
+34  R-  *   -   *   Boiler heat exchanger temperature
+35  R-  *   -   *   Boiler fan speed (setpoint/actual)
+36  R-  *   -   *   Flame current
 37  -W  -   *   -   TrCH2 (room temp CH2)
 38\tRW\tRelative Humidity
 77  R-  *   -   *   Relative ventilation
@@ -144,7 +144,7 @@ protected:
     uint16_t value;
     bool enabled;
     virtual bool sendDiscovery();
-    bool sendDiscovery(String field);
+    bool sendDiscovery(String field, const bool addBaseName = false);
     const char* getName() const;
     bool discFlag;
 public:
@@ -187,6 +187,15 @@ private:
 public:
     OTValueFloat(const OpenThermMessageID id, const int interval);
     double getValue() const;
+};
+
+
+class OTValueFloatTemp: public OTValueFloat {
+private:
+    bool sendDiscovery();
+    const char *haName;
+public:
+    OTValueFloatTemp(const OpenThermMessageID id, const char *haName);
 };
 
 class OTValueFlags: public OTValue {
@@ -310,8 +319,10 @@ public:
 class OTValueProductVersion: public OTValue {
 private:
     void getValue(JsonObject &obj) const;
+    bool sendDiscovery();
+    const char *haName;
 public:    
-    OTValueProductVersion(const OpenThermMessageID id, const int interval);
+    OTValueProductVersion(const OpenThermMessageID id, const int interval, const char *haName);
 };
 
 class OTValueCapacityModulation: public OTValue {
@@ -404,6 +415,34 @@ public:
 };
 
 
-extern OTValue *slaveValues[42];
+class OTValueHeatExchangerTemp: public OTValueFloat {
+protected:
+    bool sendDiscovery();
+public:
+    OTValueHeatExchangerTemp();
+};
+
+
+class OTValueBoilerFanSpeed: public OTValue {
+private:
+    void getValue(JsonObject &obj) const;
+    const char *SETPOINT = "setpoint" PROGMEM;
+    const char *ACTUAL = "actual" PROGMEM;
+protected:
+    bool sendDiscovery();
+public:
+    OTValueBoilerFanSpeed();
+};
+
+
+class OTValueFlameCurrent: public OTValueFloat {
+protected:
+    bool sendDiscovery();
+public:
+    OTValueFlameCurrent();
+};
+
+
+extern OTValue *slaveValues[45];
 extern OTValue *thermostatValues[17];
 extern const char* getOTname(OpenThermMessageID id);

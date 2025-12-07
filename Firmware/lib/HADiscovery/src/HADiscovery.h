@@ -37,6 +37,8 @@ public:
     void setIcon(String icon);
     void setModes(const uint8_t modes);
     void setUnit(const String unit);
+    void setDeviceClass(const String dc);
+    void setStateClass(const String sc);
 
     void createTempSensor(String name, String id);
     void createPowerFactorSensor(String name, String id);

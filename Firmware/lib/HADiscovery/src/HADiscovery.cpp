@@ -147,6 +147,17 @@ void HADiscovery::setUnit(const String unit) {
     doc[FPSTR(HA_UNIT_OF_MEASUREMENT)] = unit;
 }
 
+void HADiscovery::setDeviceClass(const String dc) {
+    doc[FPSTR(HA_DEVICE_CLASS)] = dc;
+}
+
+void HADiscovery::setStateClass(const String sc) {
+    if (sc.isEmpty())
+        doc.remove(FPSTR(HA_STATE_CLASS));
+    else
+        doc[FPSTR(HA_STATE_CLASS)] = sc;
+}
+
 void HADiscovery::createSensor(String name, String id) {
     init(name, id, F("sensor"));
     doc[FPSTR(HA_STATE_CLASS)] = F("measurement");
@@ -154,8 +165,8 @@ void HADiscovery::createSensor(String name, String id) {
 
 void HADiscovery::createTempSensor(String name, String id) {
     createSensor(name, id);
-    doc[FPSTR(HA_DEVICE_CLASS)] = F("temperature");
-    doc[FPSTR(HA_UNIT_OF_MEASUREMENT)] = F("°C"); 
+    setDeviceClass(F("temperature"));
+    setUnit(F("°C"));
 }
 
 void HADiscovery::createPowerFactorSensor(String name, String id) {

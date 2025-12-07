@@ -64,6 +64,9 @@ const struct {
     {OpenThermMessageID::FlameSignalTooLowNumber,   4},
     {OpenThermMessageID::OEMDiagnosticCode,         123},
     {OpenThermMessageID::DHWBurnerOperationHours,   196},
+    {OpenThermMessageID::TboilerHeatExchanger,      floatToOT(48.5)},
+    {OpenThermMessageID::BoilerFanSpeedSetpointAndActual, nib(20, 21)},
+    {OpenThermMessageID::FlameCurrent,              floatToOT(96.8)},
 };
 
 void IRAM_ATTR handleIrqMaster() {
@@ -308,8 +311,7 @@ void OTControl::loop() {
             }
         }
 
-        switch (slaveApp) {
-        case SLAVEAPP_HEATCOOL:
+        if ( (slaveApp == SLAVEAPP_HEATCOOL) || (otMode == OTMODE_LOOPBACKTEST) ) {
             for (int ch=0; ch<2; ch++) {
                 if (heatingCtrl[ch].chOn && setBoilerRequest[ch]) {
                     double flow = getFlow(ch);
@@ -352,10 +354,10 @@ void OTControl::loop() {
                 sendRequest('T', req);
                 xSemaphoreGive(master.mutex);
                 return;
-            }    
-            break;
+            }  
+        }
 
-        case SLAVEAPP_VENT:
+        if ( (slaveApp == SLAVEAPP_VENT) || (otMode == OTMODE_LOOPBACKTEST) ) {
             if (setVentSetpointRequest) {
                 setVentSetpointRequest.send(ventCtrl.setpoint);
                 xSemaphoreGive(master.mutex);
@@ -378,9 +380,6 @@ void OTControl::loop() {
                 xSemaphoreGive(master.mutex);
                 return;
             }
-            break;
-        default:
-            break;
         }
 
         if (setMasterConfigMember) {
