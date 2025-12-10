@@ -11,24 +11,27 @@
 		(company "Seegel Systeme")
 	)
 	(lib_symbols
-		(symbol "Device:D_Zener_Dual_CommonAnode_KKA_Parallel"
+		(symbol "Device:D_TVS"
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
-				(offset 0.762)
+				(offset 1.016)
 				(hide yes)
 			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
 			(property "Reference" "D"
-				(at 0 5.08 0)
+				(at 0 2.54 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
 				)
 			)
-			(property "Value" "D_Zener_Dual_CommonAnode_KKA_Parallel"
-				(at 0 -5.08 0)
+			(property "Value" "D_TVS"
+				(at 0 -2.54 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -36,7 +39,7 @@
 				)
 			)
 			(property "Footprint" ""
-				(at -1.27 0 0)
+				(at 0 0 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -45,7 +48,7 @@
 				)
 			)
 			(property "Datasheet" "~"
-				(at -1.27 0 0)
+				(at 0 0 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -53,7 +56,157 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "Dual Zener diode, common anode on pin 1"
+			(property "Description" "Bidirectional transient-voltage-suppression diode"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "diode TVS thyrector"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "TO-???* *_Diode_* *SingleDiode* D_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "D_TVS_0_1"
+				(polyline
+					(pts
+						(xy -2.54 1.27) (xy -2.54 -1.27) (xy 2.54 1.27) (xy 2.54 -1.27) (xy -2.54 1.27)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.508 1.27) (xy 0 1.27) (xy 0 -1.27) (xy -0.508 -1.27)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 0) (xy -1.27 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "D_TVS_1_1"
+				(pin passive line
+					(at -3.81 0 0)
+					(length 2.54)
+					(name "A1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 0 180)
+					(length 2.54)
+					(name "A2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Device:D_Zener"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "D"
+				(at 0 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "D_Zener"
+				(at 0 -2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Zener diode"
 				(at 0 0 0)
 				(effects
 					(font
@@ -71,10 +224,19 @@
 					(hide yes)
 				)
 			)
-			(symbol "D_Zener_Dual_CommonAnode_KKA_Parallel_0_0"
+			(property "ki_fp_filters" "TO-???* *_Diode_* *SingleDiode* D_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "D_Zener_0_1"
 				(polyline
 					(pts
-						(xy 2.032 1.27) (xy 2.54 1.27) (xy 2.54 3.81)
+						(xy -1.27 -1.27) (xy -1.27 1.27) (xy -0.762 1.27)
 					)
 					(stroke
 						(width 0.254)
@@ -86,7 +248,19 @@
 				)
 				(polyline
 					(pts
-						(xy 2.54 -1.27) (xy 2.54 -3.81) (xy 2.032 -3.81)
+						(xy 1.27 0) (xy -1.27 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 -1.27) (xy 1.27 1.27) (xy -1.27 0) (xy 1.27 -1.27)
 					)
 					(stroke
 						(width 0.254)
@@ -97,86 +271,9 @@
 					)
 				)
 			)
-			(symbol "D_Zener_Dual_CommonAnode_KKA_Parallel_0_1"
-				(circle
-					(center -1.27 0)
-					(radius 0.254)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 0) (xy -2.54 0)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 3.81) (xy 2.54 2.54) (xy 0 1.27) (xy 0 3.81) (xy 0 3.81) (xy 0 3.81)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 -1.27) (xy 2.54 -2.54) (xy 0 -3.81) (xy 0 -1.27) (xy 0 -1.27) (xy 0 -1.27)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 2.54) (xy -1.27 2.54) (xy -1.27 -2.54) (xy 2.54 -2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
+			(symbol "D_Zener_1_1"
 				(pin passive line
-					(at -5.08 0 0)
-					(length 2.54)
-					(name "A"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 2.54 180)
+					(at -3.81 0 0)
 					(length 2.54)
 					(name "K"
 						(effects
@@ -194,9 +291,9 @@
 					)
 				)
 				(pin passive line
-					(at 5.08 -2.54 180)
+					(at 3.81 0 180)
 					(length 2.54)
-					(name "K"
+					(name "A"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2282,16 +2379,16 @@
 		(uuid "9ce9bb54-e0bb-45e7-a13f-15d6a98fa0a1")
 	)
 	(junction
+		(at 213.36 116.84)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a7b19a9e-cb9c-44eb-9731-901702431b04")
+	)
+	(junction
 		(at 104.14 73.66)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "ad0cfea3-a8ba-4861-b1ca-7506464ce32a")
-	)
-	(junction
-		(at 220.98 116.84)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "afaecb14-2db4-4f8d-94c6-6f7f7082599f")
 	)
 	(junction
 		(at 48.26 133.35)
@@ -2318,10 +2415,10 @@
 		(uuid "caa0727c-8606-4281-9752-67213bad01f7")
 	)
 	(junction
-		(at 215.9 120.65)
+		(at 213.36 129.54)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "ceb879c4-52af-4f78-8ef7-9434517bf032")
+		(uuid "dadbafba-43f7-4e0e-a42e-66b9cd9c5d24")
 	)
 	(junction
 		(at 220.98 88.9)
@@ -2409,16 +2506,6 @@
 	)
 	(wire
 		(pts
-			(xy 220.98 116.84) (xy 226.06 116.84)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1dafc92a-e8b9-48b4-82d4-45cfa9323ab4")
-	)
-	(wire
-		(pts
 			(xy 69.85 66.04) (xy 69.85 68.58)
 		)
 		(stroke
@@ -2456,6 +2543,16 @@
 			(type default)
 		)
 		(uuid "28420a45-3b6f-4a4b-ae2c-e72122d3df5d")
+	)
+	(wire
+		(pts
+			(xy 213.36 129.54) (xy 209.55 129.54)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2849589f-2d40-4ae4-aa57-92f737b71b5d")
 	)
 	(wire
 		(pts
@@ -2599,6 +2696,16 @@
 	)
 	(wire
 		(pts
+			(xy 213.36 116.84) (xy 213.36 119.38)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4a70de39-f07c-4b22-8570-fc63e1dd1d32")
+	)
+	(wire
+		(pts
 			(xy 115.57 59.69) (xy 115.57 60.96)
 		)
 		(stroke
@@ -2699,7 +2806,7 @@
 	)
 	(wire
 		(pts
-			(xy 231.14 125.73) (xy 234.95 125.73)
+			(xy 231.14 129.54) (xy 234.95 129.54)
 		)
 		(stroke
 			(width 0)
@@ -2826,16 +2933,6 @@
 			(type default)
 		)
 		(uuid "726d829d-4242-4a00-b086-cc379ee6dab6")
-	)
-	(wire
-		(pts
-			(xy 220.98 116.84) (xy 220.98 129.54)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "74833955-9541-4821-af42-d6d432095691")
 	)
 	(wire
 		(pts
@@ -3059,7 +3156,17 @@
 	)
 	(wire
 		(pts
-			(xy 199.39 120.65) (xy 215.9 120.65)
+			(xy 213.36 127) (xy 213.36 129.54)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b04d66a2-31b1-40de-941a-37b78429876f")
+	)
+	(wire
+		(pts
+			(xy 199.39 120.65) (xy 209.55 120.65)
 		)
 		(stroke
 			(width 0)
@@ -3069,7 +3176,7 @@
 	)
 	(wire
 		(pts
-			(xy 187.96 116.84) (xy 220.98 116.84)
+			(xy 187.96 116.84) (xy 213.36 116.84)
 		)
 		(stroke
 			(width 0)
@@ -3259,16 +3366,6 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 139.7) (xy 218.44 142.24)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d1a17b9d-bc7a-4f52-a441-251958e52b0b")
-	)
-	(wire
-		(pts
 			(xy 85.09 153.67) (xy 113.03 153.67)
 		)
 		(stroke
@@ -3286,16 +3383,6 @@
 			(type default)
 		)
 		(uuid "d5c95197-e5d9-4995-8d18-95702016c210")
-	)
-	(wire
-		(pts
-			(xy 215.9 120.65) (xy 215.9 129.54)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d9e3b8f9-d80a-4a1e-83dd-a76c62c1b24b")
 	)
 	(wire
 		(pts
@@ -3349,7 +3436,7 @@
 	)
 	(wire
 		(pts
-			(xy 218.44 102.87) (xy 218.44 105.41)
+			(xy 220.98 100.33) (xy 220.98 102.87)
 		)
 		(stroke
 			(width 0)
@@ -3399,7 +3486,7 @@
 	)
 	(wire
 		(pts
-			(xy 226.06 125.73) (xy 223.52 125.73)
+			(xy 226.06 129.54) (xy 213.36 129.54)
 		)
 		(stroke
 			(width 0)
@@ -3489,16 +3576,6 @@
 	)
 	(wire
 		(pts
-			(xy 215.9 120.65) (xy 223.52 120.65)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f57ff6f0-3f80-4edd-9b2e-4ac80dc8b61f")
-	)
-	(wire
-		(pts
 			(xy 49.53 88.9) (xy 49.53 96.52)
 		)
 		(stroke
@@ -3509,7 +3586,7 @@
 	)
 	(wire
 		(pts
-			(xy 223.52 120.65) (xy 223.52 125.73)
+			(xy 209.55 120.65) (xy 209.55 129.54)
 		)
 		(stroke
 			(width 0)
@@ -3536,6 +3613,16 @@
 			(type default)
 		)
 		(uuid "f9eca70f-cb6a-48e0-bb12-fdd2f92821f5")
+	)
+	(wire
+		(pts
+			(xy 213.36 116.84) (xy 226.06 116.84)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fa75863f-bda5-4587-aaba-513db6b59b69")
 	)
 	(wire
 		(pts
@@ -3613,7 +3700,7 @@
 	)
 	(hierarchical_label "OTMASTER_B"
 		(shape bidirectional)
-		(at 234.95 125.73 0)
+		(at 234.95 129.54 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3864,6 +3951,76 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:D_TVS")
+		(at 213.36 123.19 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "07cd9618-2467-4d80-9c92-b0f3623b1f74")
+		(property "Reference" "D15"
+			(at 215.9 121.9199 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "D_TVS"
+			(at 215.9 124.4599 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "Diode_SMD:D_SOD-123"
+			(at 213.36 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 213.36 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Bidirectional transient-voltage-suppression diode"
+			(at 213.36 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "f7adbf36-5fad-4481-8f46-714aa1def836")
+		)
+		(pin "2"
+			(uuid "a3259cce-6fb7-4a8c-ae01-9d9ead144b15")
+		)
+		(instances
+			(project ""
+				(path "/cb61f12f-ab02-48e5-a06c-10aea7e452c9/a574d69d-1f3b-4c57-80b8-ab8b11fede3f"
+					(reference "D15")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:R")
 		(at 62.23 139.7 90)
 		(mirror x)
@@ -3944,7 +4101,7 @@
 	)
 	(symbol
 		(lib_id "Device:FerriteBead_Small")
-		(at 228.6 125.73 90)
+		(at 228.6 129.54 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3953,7 +4110,7 @@
 		(fields_autoplaced yes)
 		(uuid "0895f70e-2e39-488b-a3f4-fdaf3f812bee")
 		(property "Reference" "FB4"
-			(at 228.5619 119.38 90)
+			(at 228.5619 123.19 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3961,7 +4118,7 @@
 			)
 		)
 		(property "Value" "FerriteBead_Small"
-			(at 228.5619 121.92 90)
+			(at 228.5619 125.73 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3969,7 +4126,7 @@
 			)
 		)
 		(property "Footprint" "Inductor_SMD:L_0603_1608Metric"
-			(at 228.6 127.508 90)
+			(at 228.6 131.318 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3978,7 +4135,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 228.6 125.73 0)
+			(at 228.6 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3987,7 +4144,7 @@
 			)
 		)
 		(property "Description" "Ferrite bead, small symbol"
-			(at 228.6 125.73 0)
+			(at 228.6 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3996,7 +4153,7 @@
 			)
 		)
 		(property "LCSC" "C1002"
-			(at 228.6 125.73 0)
+			(at 228.6 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4037,7 +4194,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "LL4148"
+		(property "Value" "1N4148W"
 			(at 164.084 127.254 0)
 			(effects
 				(font
@@ -4046,7 +4203,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Diode_SMD:D_MiniMELF"
+		(property "Footprint" "Diode_SMD:D_SOD-123"
 			(at 167.64 128.905 0)
 			(effects
 				(font
@@ -4073,7 +4230,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C435829"
+		(property "LCSC" ""
 			(at 167.64 124.46 0)
 			(effects
 				(font
@@ -4411,17 +4568,35 @@
 		)
 	)
 	(symbol
-		(lib_id "power:GND")
-		(at 218.44 142.24 0)
-		(mirror y)
+		(lib_id "Device:D_Zener")
+		(at 220.98 96.52 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(uuid "1ce018e6-f4c0-4ce1-b9e4-ee2e6a60fff4")
-		(property "Reference" "#PWR060"
-			(at 218.44 148.59 0)
+		(fields_autoplaced yes)
+		(uuid "1af20f56-1f26-4737-899d-1258c7b587b6")
+		(property "Reference" "D16"
+			(at 223.52 95.2499 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "D_Schottky"
+			(at 223.52 97.7899 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Diode_SMD:D_SOD-123"
+			(at 220.98 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4429,16 +4604,8 @@
 				(hide yes)
 			)
 		)
-		(property "Value" "GND"
-			(at 218.186 146.812 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 218.44 142.24 0)
+		(property "Datasheet" "~"
+			(at 220.98 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4446,8 +4613,8 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" ""
-			(at 218.44 142.24 0)
+		(property "Description" "Zener diode"
+			(at 220.98 96.52 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4455,22 +4622,16 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
-			(at 218.44 142.24 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
+		(pin "2"
+			(uuid "49d9a335-c081-412d-bf90-a03e9522c3f7")
 		)
 		(pin "1"
-			(uuid "d9c768c9-55ea-4b03-86d4-19203b997809")
+			(uuid "dedc6b33-2db3-4231-b482-9746758c6edf")
 		)
 		(instances
-			(project "OTThing"
+			(project ""
 				(path "/cb61f12f-ab02-48e5-a06c-10aea7e452c9/a574d69d-1f3b-4c57-80b8-ab8b11fede3f"
-					(reference "#PWR060")
+					(reference "D16")
 					(unit 1)
 				)
 			)
@@ -4559,7 +4720,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "LL4148"
+		(property "Value" "1N4148W"
 			(at 189.992 111.633 90)
 			(effects
 				(font
@@ -4568,7 +4729,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Diode_SMD:D_MiniMELF"
+		(property "Footprint" "Diode_SMD:D_SOD-123"
 			(at 183.515 110.49 0)
 			(effects
 				(font
@@ -4595,7 +4756,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C435829"
+		(property "LCSC" ""
 			(at 187.96 110.49 0)
 			(effects
 				(font
@@ -4812,7 +4973,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "LL4148"
+		(property "Value" "1N4148W"
 			(at 201.422 128.143 90)
 			(effects
 				(font
@@ -4821,7 +4982,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Diode_SMD:D_MiniMELF"
+		(property "Footprint" "Diode_SMD:D_SOD-123"
 			(at 194.945 127 0)
 			(effects
 				(font
@@ -4848,7 +5009,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C435829"
+		(property "LCSC" ""
 			(at 199.39 127 0)
 			(effects
 				(font
@@ -5950,7 +6111,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "LL4148"
+		(property "Value" "1N4148W"
 			(at 189.992 128.143 90)
 			(effects
 				(font
@@ -5959,7 +6120,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Diode_SMD:D_MiniMELF"
+		(property "Footprint" "Diode_SMD:D_SOD-123"
 			(at 183.515 127 0)
 			(effects
 				(font
@@ -5986,7 +6147,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C435829"
+		(property "LCSC" ""
 			(at 187.96 127 0)
 			(effects
 				(font
@@ -7030,88 +7191,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:D_Zener_Dual_CommonAnode_KKA_Parallel")
-		(at 218.44 97.79 90)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "b2d26472-9357-4c96-8ffc-d1d39df46a4a")
-		(property "Reference" "D3"
-			(at 223.52 96.4564 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "D_Zener_Dual_CommonAnode_KKA_Parallel"
-			(at 223.52 98.9964 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
-			(at 218.44 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "BZB84-C24,215"
-			(at 218.44 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Dual Zener diode, common anode on pin 1"
-			(at 218.44 97.79 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C550124"
-			(at 218.44 97.79 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "7b02aa1c-a267-46d3-9bad-78084b5ae898")
-		)
-		(pin "3"
-			(uuid "df6f407e-c824-4e8b-8246-68add8ef35b4")
-		)
-		(pin "2"
-			(uuid "3dfd8401-6a51-402b-874c-e122e7b943e5")
-		)
-		(instances
-			(project ""
-				(path "/cb61f12f-ab02-48e5-a06c-10aea7e452c9/a574d69d-1f3b-4c57-80b8-ab8b11fede3f"
-					(reference "D3")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:R")
 		(at 52.07 52.07 270)
 		(mirror x)
@@ -7506,88 +7585,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:D_Zener_Dual_CommonAnode_KKA_Parallel")
-		(at 218.44 134.62 90)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "c8f3300d-148b-4da0-b432-6188eed50682")
-		(property "Reference" "D17"
-			(at 223.52 133.2864 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "D_Zener_Dual_CommonAnode_KKA_Parallel"
-			(at 223.52 135.8264 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
-			(at 218.44 135.89 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "BZB84-C24,215"
-			(at 218.44 135.89 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Dual Zener diode, common anode on pin 1"
-			(at 218.44 134.62 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C550124"
-			(at 218.44 134.62 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "1e7482c1-01ac-4ca5-8123-715863969afb")
-		)
-		(pin "3"
-			(uuid "ca1a3287-751e-4097-a1ad-e2ec0fe46976")
-		)
-		(pin "2"
-			(uuid "4d912697-f81d-444b-a6d0-9eb24924ec4d")
-		)
-		(instances
-			(project "OTThing"
-				(path "/cb61f12f-ab02-48e5-a06c-10aea7e452c9/a574d69d-1f3b-4c57-80b8-ab8b11fede3f"
-					(reference "D17")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:R")
 		(at 49.53 72.39 0)
 		(mirror x)
@@ -7894,7 +7891,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "LL4148"
+		(property "Value" "1N4148W"
 			(at 201.422 111.633 90)
 			(effects
 				(font
@@ -7903,7 +7900,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Diode_SMD:D_MiniMELF"
+		(property "Footprint" "Diode_SMD:D_SOD-123"
 			(at 194.945 110.49 0)
 			(effects
 				(font
@@ -7930,7 +7927,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C435829"
+		(property "LCSC" ""
 			(at 199.39 110.49 0)
 			(effects
 				(font
@@ -8641,7 +8638,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 218.44 105.41 0)
+		(at 220.98 102.87 0)
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
@@ -8650,7 +8647,7 @@
 		(dnp no)
 		(uuid "f7b5f4cf-f574-451c-9c85-e352f9898f04")
 		(property "Reference" "#PWR059"
-			(at 218.44 111.76 0)
+			(at 220.98 109.22 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8659,7 +8656,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 218.186 109.982 0)
+			(at 220.726 107.442 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8667,7 +8664,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 218.44 105.41 0)
+			(at 220.98 102.87 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8676,7 +8673,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 218.44 105.41 0)
+			(at 220.98 102.87 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8685,7 +8682,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 218.44 105.41 0)
+			(at 220.98 102.87 0)
 			(effects
 				(font
 					(size 1.27 1.27)
