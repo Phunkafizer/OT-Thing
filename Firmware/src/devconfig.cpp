@@ -30,6 +30,9 @@ void DevConfig::update() {
 
         if (doc[F("haPrefix")].is<String>())
             HADiscovery::setHAPrefix(doc[F("haPrefix")].as<String>());
+
+        if (doc[F("haName")].is<String>())
+            HADiscovery::devName = doc[F("haName")].as<String>();
             
         if (hostname.isEmpty())
             hostname = F(HOSTNAME);

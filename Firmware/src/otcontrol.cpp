@@ -747,39 +747,31 @@ bool OTControl::sendDiscovery() {
     discFlag &= haDisc.publish();
 
     haDisc.createClima(F("DHW"), Mqtt::getTopicString(Mqtt::TOPIC_DHWSETTEMP), mqtt.getCmdTopic(Mqtt::TOPIC_DHWSETTEMP));
-    if (slaveApp == SLAVEAPP_HEATCOOL) {
-        haDisc.setMinMaxTemp(25, 70, 1);
-        haDisc.setCurrentTemperatureTemplate(F("{{ value_json.slave.dhw_t }}"));
-        haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
-        haDisc.setInitial(45);
-        haDisc.setModeCommandTopic(mqtt.getCmdTopic(Mqtt::TOPIC_DHWMODE));
-        haDisc.setTemperatureStateTopic(haDisc.defaultStateTopic);
-        haDisc.setTemperatureStateTemplate(F("{{ value_json.thermostat.dhw_set_t }}"));
-        haDisc.setOptimistic(true);
-        haDisc.setIcon(F("mdi:shower"));
-        haDisc.setRetain(true);
-        haDisc.setModes(0x03);
-    }
-    else
-        haDisc.clearDoc();
-    discFlag &= haDisc.publish();
+    haDisc.setMinMaxTemp(30, 65, 1);
+    haDisc.setCurrentTemperatureTemplate(F("{{ value_json.slave.dhw_t }}"));
+    haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
+    haDisc.setInitial(45);
+    haDisc.setModeCommandTopic(mqtt.getCmdTopic(Mqtt::TOPIC_DHWMODE));
+    haDisc.setTemperatureStateTopic(haDisc.defaultStateTopic);
+    haDisc.setTemperatureStateTemplate(F("{{ value_json.thermostat.dhw_set_t }}"));
+    haDisc.setOptimistic(true);
+    haDisc.setIcon(F("mdi:water-heater"));
+    haDisc.setRetain(true);
+    haDisc.setModes(0x03);
+    discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
 
     haDisc.createClima(F("flow set temperature"), Mqtt::getTopicString(Mqtt::TOPIC_CHSETTEMP1), mqtt.getCmdTopic(Mqtt::TOPIC_CHSETTEMP1));
-    if (slaveApp == SLAVEAPP_HEATCOOL) {
-        haDisc.setMinMaxTemp(25, 90, 0.5);
-        haDisc.setCurrentTemperatureTemplate(F("{{ value_json.slave.flow_t }}"));
-        haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
-        haDisc.setInitial(35);
-        haDisc.setModeCommandTopic(mqtt.getCmdTopic(Mqtt::TOPIC_CHMODE1));
-        haDisc.setTemperatureStateTopic(haDisc.defaultStateTopic);
-        haDisc.setTemperatureStateTemplate(F("{{ value_json.thermostat.ch_set_t }}"));
-        haDisc.setOptimistic(true);
-        haDisc.setIcon(F("mdi:heating-coil"));
-        haDisc.setRetain(true);
-    }
-    else
-        haDisc.clearDoc();
-    discFlag &= haDisc.publish();
+    haDisc.setMinMaxTemp(25, 90, 0.5);
+    haDisc.setCurrentTemperatureTemplate(F("{{ value_json.slave.flow_t }}"));
+    haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
+    haDisc.setInitial(35);
+    haDisc.setModeCommandTopic(mqtt.getCmdTopic(Mqtt::TOPIC_CHMODE1));
+    haDisc.setTemperatureStateTopic(haDisc.defaultStateTopic);
+    haDisc.setTemperatureStateTemplate(F("{{ value_json.thermostat.ch_set_t }}"));
+    haDisc.setOptimistic(true);
+    haDisc.setIcon(F("mdi:heating-coil"));
+    haDisc.setRetain(true);
+    discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
 
     haDisc.createClima(F("Room set temperature 1"), F("clima_room1"), mqtt.getCmdTopic(Mqtt::TOPIC_ROOMSETPOINT1));
     haDisc.setMinMaxTemp(12, 27, 0.5);

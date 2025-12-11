@@ -15,7 +15,7 @@ protected:
     String topic;
 public:
     HADiscovery();
-    const char *devName;
+    static String devName;
     const char *manufacturer;
     String devPrefix;
     String defaultStateTopic;
@@ -25,7 +25,7 @@ public:
     void setValueTemplate(String valueTemplate);
     void setStateTopic(String &stateTopic);
     void setMinMax(double min, double max, double step);
-    void setMinMaxTemp(double min, double max, double step);
+    void setMinMaxTemp(double min, double max, double step = 0);
     void setTemperatureStateTopic(String topic);
     void setTemperatureStateTemplate(String stateTemplate);
     void setCurrentTemperatureTopic(String topic);
@@ -49,4 +49,5 @@ public:
     void createNumber(String name, String id, String cmdTopic);
     void createClima(String name, String id, String tmpCmdTopic);
     void createSwitch(String name, String id, String cmdTopic);
+    void createrWaterHeater(String name, String id, String tmpCmdTopic);
 };

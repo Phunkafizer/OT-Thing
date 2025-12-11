@@ -44,9 +44,9 @@ const char HA_OPTIMISTIC[]                      PROGMEM = "optimistic";
 const char HA_RETAIN[]                          PROGMEM = "retain";
 
 String HADiscovery::ha_prefix = F("homeassistant");
+String HADiscovery::devName;
 
 HADiscovery::HADiscovery():
-        devName(nullptr),
         manufacturer(nullptr) {
 }
 
@@ -59,7 +59,7 @@ void HADiscovery::init(String &name, String &id, String component) {
     JsonObject dev = doc[FPSTR(HA_DEVICE)].to<JsonObject>();
     dev[FPSTR(HA_IDENTIFIERS)][0] = devPrefix;
     dev[FPSTR(HA_SW_VERSION)] = BUILD_VERSION;
-    dev[FPSTR(HA_NAME)] = FPSTR(devName);
+    dev[FPSTR(HA_NAME)] = devName;
     dev[FPSTR(HA_MANUFACTURER)] = manufacturer;
 
     doc[FPSTR(HA_NAME)] = name;
@@ -108,7 +108,8 @@ void HADiscovery::setMinMax(double min, double max, double step) {
 void HADiscovery::setMinMaxTemp(double min, double max, double step) {
     doc[FPSTR(HA_MIN_TEMP)] = min;
     doc[FPSTR(HA_MAX_TEMP)] = max;
-    doc[FPSTR(HA_TEMP_STEP)] = step;
+    if (step > 0)
+        doc[FPSTR(HA_TEMP_STEP)] = step;
 }
 
 void HADiscovery::setInitial(double initial) {
@@ -204,6 +205,17 @@ void HADiscovery::createClima(String name, String id, String tmpCmdTopic) {
     init(name, id, F("climate"));
     doc[FPSTR(HA_TEMPERATURE_COMMAND_TOPIC)] = tmpCmdTopic;
     setModes(0x07); // off, heat, auto
+}
+
+void HADiscovery::createrWaterHeater(String name, String id, String tmpCmdTopic) {
+    init(name, id, F("water_heater"));
+
+    JsonArray jModes = doc[F("modes")].to<JsonArray>();
+    jModes.clear();
+    jModes.add(F("off"));
+    jModes.add(F("gas"));
+
+    doc[FPSTR(HA_TEMPERATURE_COMMAND_TOPIC)] = tmpCmdTopic;
 }
 
 void HADiscovery::createSwitch(String name, String id, String cmdTopic) {
