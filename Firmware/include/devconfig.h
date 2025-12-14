@@ -11,6 +11,7 @@ private:
     bool writeBufFlag;
     String writeBuf;
     String hostname;
+    int timezone;
 public:
     DevConfig();
     void begin();
@@ -19,6 +20,7 @@ public:
     void remove();
     void loop();
     String getHostname() const;
+    int getTimezone() const;
 } devconfig;
 
 extern const char CFG_FILENAME[];

@@ -522,6 +522,33 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 break;
             }
 
+            case OpenThermMessageID::DayTime: {
+                struct tm timeinfo;
+                if (getLocalTime(&timeinfo, 0)) {
+                    const uint16_t tmp = ((((timeinfo.tm_wday + 1) % 7) + 1) << 13) | (timeinfo.tm_hour << 8) | timeinfo.tm_min;
+                    resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, tmp);
+                }
+                break;
+            }
+
+            case OpenThermMessageID::Date: {
+                struct tm timeinfo;
+                if (getLocalTime(&timeinfo, 0)) {
+                    const uint16_t tmp = ((timeinfo.tm_mon + 1) << 8) | timeinfo.tm_mday;
+                    resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, tmp);
+                }
+                break;
+            }
+
+            case OpenThermMessageID::Year: {
+                struct tm timeinfo;
+                if (getLocalTime(&timeinfo, 0)) {
+                    const uint16_t tmp = timeinfo.tm_year + 1900;
+                    resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, tmp);
+                }
+                break;
+            }
+
             default:
                 if ((otval != nullptr) && otval->isSet)
                     resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, otval->getValue());

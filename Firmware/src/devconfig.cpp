@@ -33,6 +33,8 @@ void DevConfig::update() {
 
         if (doc[F("haName")].is<String>())
             HADiscovery::devName = doc[F("haName")].as<String>();
+
+        timezone = doc[F("timezone")] | 3600;
             
         if (hostname.isEmpty())
             hostname = F(HOSTNAME);
@@ -99,4 +101,8 @@ void DevConfig::loop() {
 
 String DevConfig::getHostname() const {
     return hostname;
+}
+
+int DevConfig::getTimezone() const {
+    return timezone;
 }

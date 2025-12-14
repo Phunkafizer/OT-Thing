@@ -30,12 +30,13 @@ JsonDocument &DevStatus::buildDoc() {
     doc[F("reset_reason0")] = rtc_get_reset_reason(0);
     doc[F("reset_reason1")] = rtc_get_reset_reason(1);
     doc[F("numWifiDisc")] = numWifiDiscon;
-    /*struct tm timeinfo;
-    if (getLocalTime(&timeinfo)) {
+
+    struct tm timeinfo;
+    if (getLocalTime(&timeinfo, 0)) {
         char buffer[64];
         strftime(buffer, sizeof(buffer), "%d.%m.%Y %H:%M:%S", &timeinfo);
         doc[F("dateTime")] = buffer;
-    }*/
+    }
 
     JsonObject jwifi = doc[F("wifi")].to<JsonObject>();
     jwifi[F("status")] =  WiFi.status();

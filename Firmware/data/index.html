@@ -1462,8 +1462,16 @@
                 </div>
             </div>
 
-            <h3>Firmware</h3>
+            <h3>System</h3>
             <div class="group">
+                <h4>Timezone</h4>
+                <select id="selTimezone" field="timezone">
+                    <option value="0">UTC</option>
+                    <option value="3600">UTC + 1</option>
+                    <option value="7200">UTC + 2</option>
+                </select>
+                
+                <h4>Firmware</h4>
                 <form id="form_upload" method='POST' enctype='multipart/form-data'>
                     <input id="inp_file" type='file' accept='.bin,.bin.gz' name='firmware'>
                     <input id="btn_upload" type='submit' value='upload'>
@@ -1593,6 +1601,7 @@
             let xhrSaveConfig = new XMLHttpRequest();
             //eventhandler for save button
             _("#save").onclick = () => {
+                config.timezone = parseInt(_("#selTimezone").value);
                 config.hostname = _("#hostname").value;
                 config.haPrefix = _("#haPrefix").value;
                 config.haName = _("#haName").value;

@@ -11,7 +11,7 @@
 #include "command.h"
 #include "sensors.h"
 #include "HADiscLocal.h"
-#include <time.h>
+#include "time.h"
 //#include <NimBLEDevice.h>
 
 #ifdef DEBUG
@@ -38,9 +38,6 @@ void wifiEvent(WiFiEvent_t event) {
         WiFi.setHostname(hn.c_str());
         MDNS.begin(hn.c_str());
         MDNS.addService("http", "tcp", 80);
-
-        const char* tz = "CET-1CEST,M3.5.0,M10.5.0/3";
-        configTzTime(tz, "pool.ntp.org");
         break;
     }
 
@@ -89,15 +86,15 @@ void setup() {
     WiFi.onEvent(wifiEvent);
     WiFi.setSleep(false);
     WiFi.begin();
+    
     OneWireNode::begin();
     haDisc.begin();
     mqtt.begin();
     devconfig.begin();
+    configTime(devconfig.getTimezone(), 3600, PSTR("pool.ntp.org"));
 
     portal.begin(configMode);
     command.begin();
-
-
 /*
     NimBLEDevice::init("");                         // Initialize the device, you can specify a device name if you want.
     NimBLEScan* pBLEScan = NimBLEDevice::getScan(); // Create the scan object.

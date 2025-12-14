@@ -322,7 +322,7 @@ bool OTValue::sendDiscovery(String field, const bool addBaseName) {
     }
 
     String valTempl = F("{{ value_json");
-    valTempl += inSlave ? F(".slave.") : F(".thermostat");
+    valTempl += inSlave ? F(".slave") : F(".thermostat");
     if (field.isEmpty() || addBaseName) {
         valTempl += '.';
         valTempl += FPSTR(getName());
