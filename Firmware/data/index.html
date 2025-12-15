@@ -198,6 +198,14 @@
             color: #fd975a;
         }
 
+        button:disabled {
+            background-color: #f0c9b0;
+            color: #666666;
+            cursor: not-allowed;
+            opacity: 0.6;
+            box-shadow: none;
+        }
+
         table {
             width: 100%;
             text-align: left;
@@ -1480,6 +1488,10 @@
                         <progress id="updprogress" max="100" value="0"></progress>
                     </div>
                 </form>
+                <div>
+                    <button id="checkbtn">Check for update</button>
+                    <button id="installbtn" disabled>-</button>
+                </div>
             </div>
         </div>
         <div class="tab" id="log">
@@ -1926,6 +1938,7 @@
             function configToUi() {
                 _("#hostname").value = config.hostname || "otthing";
                 _("#haPrefix").value = config.haPrefix || "homeassistant";
+                _("#selTimezone").value = config.timezone || 3600;
                 _("#haName").value = config.haName || "OTthing";
                 let otradio = _('input[name="otMode"][value="' + config.otMode + '"]');
                 if (otradio !== undefined) {
@@ -2049,6 +2062,18 @@
                     }
                 }
                 _("#runtime").innerText = rtstr;
+
+                if ('new_fw' in statuscache) {
+                    if (statuscache['new_fw'] == "") {
+                        _("#installbtn").disabled = true;
+                        _("#installbtn").innerText = "no update";
+                        _("#checkbtn").disabled = false;
+                    }
+                    else {
+                        _("#installbtn").disabled = false;
+                        _("#installbtn").innerText = "install " + statuscache['new_fw'];
+                    }
+                }
 
                 __(".statusvalue").forEach((ele) => {
                     var val = null;
@@ -2178,6 +2203,22 @@
                 xhrUpl.setRequestHeader('Access-Control-Allow-Headers', '*');
                 xhrUpl.setRequestHeader('Access-Control-Allow-Origin', '*');
                 xhrUpl.send(formdata);
+            };
+
+            _("#checkbtn").onclick = (ev) => {
+                let xhrCheck = new XMLHttpRequest;
+                xhrCheck.open('post', '/checkupdate');
+                _("#checkbtn").disabled = true;
+                _("#installbtn").innerText = "checking...";
+                _("#installbtn").disabled = true;
+                xhrCheck.send('');
+            };
+
+            _("#installbtn").onclick = (ev) => {
+                let xhrInstall = new XMLHttpRequest;
+                _("#installbtn").disabled = true;
+                xhrInstall.open('post', '/install');
+                xhrInstall.send('');
             };
 
             let otModeItems = __('input[name="otMode"]');

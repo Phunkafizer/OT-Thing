@@ -8,6 +8,8 @@ private:
     String confBuf;
     bool reboot;
     bool updateEnable;
+    bool checkUpdate {false};
+    bool doUpdate {false};
 public:
     Portal();
     void begin(bool configMode);

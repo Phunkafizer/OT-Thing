@@ -8,6 +8,7 @@
 #include "devconfig.h"
 #include "html.h"
 #include "otcontrol.h"
+#include "httpUpdate.h"
 
 static const char APP_JSON[] PROGMEM = "application/json";
 static const IPAddress apAddress(4, 3, 2, 1);
@@ -15,7 +16,6 @@ static const IPAddress apMask(255, 255, 255, 0);
 Portal portal;
 static AsyncWebServer websrv(80);
 AsyncWebSocket ws("/ws");
-
 
 
 Portal::Portal():
@@ -197,12 +197,32 @@ void Portal::begin(bool configMode) {
         serializeJson(doc, *response);
         request->send(response);
     });
+
+    websrv.on("/checkupdate", HTTP_POST, [this](AsyncWebServerRequest *request) {
+        this->checkUpdate = true;
+        request->send(200);
+    });
+
+    websrv.on("/install", HTTP_POST, [this](AsyncWebServerRequest *request) {
+        this->doUpdate = true;
+        request->send(200);
+    });
 }
 
 void Portal::loop() {
     if (reboot) {
         delay(500);
         ESP.restart();
+    }
+
+    if (checkUpdate) {
+        checkUpdate = false;
+        httpupdate.checkUpdate();
+    }
+
+    if (doUpdate) {
+        doUpdate = false;
+        httpupdate.update();
     }
 
     ws.cleanupClients();

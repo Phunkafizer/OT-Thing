@@ -182,11 +182,12 @@ void OneWireNode::begin() {
     while (oneWire.search(addr)) {
         new OneWireNode(addr);
     }
+    loop();
 }
 
 void OneWireNode::loop() {
-    static uint32_t last = millis();
-    if (millis() - last > 5000) {
+    static uint32_t next = 0;
+    if (millis() > next) {
         OneWireNode *node = oneWireNode;
         DallasTemperature ds(&oneWire);
         ds.requestTemperatures();
@@ -202,7 +203,7 @@ void OneWireNode::loop() {
             }
             node = node->next;
         }
-        last = millis();
+        next = millis() + 5000;
     }
 }
 
