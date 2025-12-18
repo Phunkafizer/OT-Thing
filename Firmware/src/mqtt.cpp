@@ -187,6 +187,7 @@ void Mqtt::onMessage(const char *topic, String &payload) {
             break;
         }
 
+
     switch (etop) {
     case TOPIC_OUTSIDETEMP: {
         double d = payload.toFloat();
@@ -198,6 +199,13 @@ void Mqtt::onMessage(const char *topic, String &payload) {
         double d = payload.toFloat();
         otcontrol.setDhwTemp(d);
         break;
+    }   
+
+    case TOPIC_DHWMODE: {
+        OTControl::CtrlMode mode = strToCtrlMode(payload);
+        if (mode != OTControl::CTRLMODE_UNKNOWN)
+            otcontrol.setDhwCtrlMode(mode);
+        break;
     }
 
     case TOPIC_CHSETTEMP1: {
@@ -206,10 +214,23 @@ void Mqtt::onMessage(const char *topic, String &payload) {
         break;
     }
 
+    case TOPIC_CHSETTEMP2: {
+        double d = payload.toFloat();
+        otcontrol.setChTemp(d, 1);
+        break;
+    }
+
     case TOPIC_CHMODE1: {
         OTControl::CtrlMode mode = strToCtrlMode(payload);
         if (mode != OTControl::CTRLMODE_UNKNOWN)
             otcontrol.setChCtrlMode(mode, 0);
+        break;
+    }
+
+    case TOPIC_CHMODE2: {
+        OTControl::CtrlMode mode = strToCtrlMode(payload);
+        if (mode != OTControl::CTRLMODE_UNKNOWN)
+            otcontrol.setChCtrlMode(mode, 1);
         break;
     }
 
