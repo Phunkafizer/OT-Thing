@@ -3,20 +3,63 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <AsyncTCP.h>
+#include <NimBLEDevice.h>
 
-class OneWireNode {
+class AddressableSensor {
+friend class Sensor;
 private:
+    uint8_t adrLen;
+    static SemaphoreHandle_t mutex;
+protected:
+    AddressableSensor(const uint8_t *adr, const uint8_t adrLen, AddressableSensor **prev);
     String getAdr() const;
-    OneWireNode *next;
-    uint8_t addr[8];
+    static AddressableSensor* find(String adr, AddressableSensor *last);
+    static void writeJsonAll(JsonObject &status, AddressableSensor *last);
+    virtual void writeJson(JsonVariant val) = 0;
+    static bool sendDiscoveryAll(AddressableSensor *last);
+    virtual bool sendDiscovery() = 0;
+    uint8_t adr[8];
+    AddressableSensor *next;
     double temp;
+public:
+    static void begin();
+    static void lock();
+    static void unlock();
+};
+
+class BLESensor: public AddressableSensor {
+private:
+    void parse(std::string &data);
+    static BLESensor *last;
+    uint8_t rh;
+    uint8_t bat;
+    int8_t rssi;
+protected:
+    void writeJson(JsonVariant val) override;
+    bool sendDiscovery() override;
+public:
+    BLESensor(const uint8_t *adr);
+    static void begin();
+    static void onDiscovery(const NimBLEAdvertisedDevice* dev);
+    static void writeJsonAll(JsonObject &status);
+    static BLESensor* find(const uint8_t *adr);
+    static bool sendDiscoveryAll();
+
+};
+
+class OneWireNode: public AddressableSensor {
+private:
+    static OneWireNode *last;
+protected:
+    void writeJson(JsonVariant val) override;
+    bool sendDiscovery() override;
 public:
     OneWireNode(uint8_t *addr);
     static void begin();
-    static void loop();
-    static void writeJson(JsonObject &status);
     static OneWireNode* find(String adr);
-    static bool sendDiscovery();
+    static void loop();
+    static void writeJsonAll(JsonObject &status);
+    static bool sendDiscoveryAll();
 };
 
 class Sensor {
@@ -38,6 +81,7 @@ public:
     bool isMqttSource();
     bool isOtSource();
     static void loopAll();
+    explicit operator bool() const;
 protected:
     Source src;
     double value;
@@ -46,6 +90,7 @@ protected:
 private:
     static Sensor *lastSensor;
     Sensor *prevSensor;
+    uint8_t adr[6];
 };
 
 class AutoSensor: public Sensor {
@@ -77,7 +122,6 @@ private:
     } httpState;
 };
 
-extern OneWireNode *oneWireNode;
 extern Sensor roomTemp[2];
 extern AutoSensor roomSetPoint[2];
 extern OutsideTemp outsideTemp;

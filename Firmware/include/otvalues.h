@@ -227,7 +227,7 @@ private:
     };
 public:    
     OTValueStatus();
-    bool getMode(const uint8_t channel);
+    bool getChActive(const uint8_t channel);
 };
 
 class OTValueMasterStatus: public OTValueFlags {
@@ -282,6 +282,8 @@ private:
         {12, "master_lowoff_pumpctrl",  "Master pump ctrl allowed", nullptr},
         {13, "ch2_present",             "CH2 present",              nullptr}
     };
+protected:
+    bool sendDiscovery() override;
 public:    
     OTValueSlaveConfigMember();
 };

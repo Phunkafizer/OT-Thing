@@ -56,9 +56,6 @@ void DevConfig::update() {
             mqtt.setConfig(mc);
         }
 
-        JsonObject cfg = doc.as<JsonObject>();
-        otcontrol.setConfig(cfg);
-
         if (doc[F("outsideTemp")].is<JsonObject>()) {
             JsonObject obj = doc[F("outsideTemp")];
             outsideTemp.setConfig(obj);
@@ -71,6 +68,9 @@ void DevConfig::update() {
             JsonObject obj2 = doc[F("heating")][i][F("roomsetpoint")];
             roomSetPoint[i].setConfig(obj2);
         }
+
+        JsonObject cfg = doc.as<JsonObject>();
+        otcontrol.setConfig(cfg);
 
         f.close();
     }

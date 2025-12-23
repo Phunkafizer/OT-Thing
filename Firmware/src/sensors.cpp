@@ -2,16 +2,16 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include "HADiscLocal.h"
-//#include <BLEDevice.h>
 
 Sensor roomTemp[2];
 AutoSensor roomSetPoint[2];
 OutsideTemp outsideTemp;
 
-Sensor *Sensor::lastSensor = nullptr;
-
+SemaphoreHandle_t AddressableSensor::mutex;
+Sensor* Sensor::lastSensor = nullptr;
+BLESensor* BLESensor::last = nullptr;
+OneWireNode *OneWireNode::last = nullptr;
 static OneWire oneWire(4);
-OneWireNode *oneWireNode = nullptr;
 
 Sensor::Sensor():
     src(SOURCE_NA) {
@@ -20,18 +20,31 @@ Sensor::Sensor():
 }
 
 void Sensor::set(const double val, const Source src) {
-    if (src == this->src) {
+    if ((src == this->src) || (src == SOURCE_NA)) {
         this->value = round(val * 10) / 10;
         setFlag = true;
     }
 }
 
 bool Sensor::get(double &val) {
+    if (src == SOURCE_BLE) {
+        AddressableSensor::lock();
+        auto *sensor = BLESensor::find(adr);
+        if (sensor != nullptr)
+            val = sensor->temp;
+        AddressableSensor::unlock();
+        return sensor != nullptr;
+    }
+
     if (setFlag) {
         val = this->value;
         return true;
     }
     return false;
+}
+
+Sensor::operator bool() const {
+    return setFlag;
 }
 
 void Sensor::setConfig(JsonObject &obj) {
@@ -40,6 +53,10 @@ void Sensor::setConfig(JsonObject &obj) {
     own = nullptr;
     if (src == SOURCE_1WIRE) {
         own = OneWireNode::find(String(obj["adr"]));
+    }
+    else if (src == SOURCE_BLE) {
+        for (int i=0; i<6; i++)
+            adr[i] = strtol(String(obj[F("adr")]).substring(i * 2, i * 2 + 2).c_str(), 0, 16);
     }
 }
 
@@ -64,7 +81,7 @@ AutoSensor::AutoSensor() {
 }
 
 void AutoSensor::set(const double val, const Source src) {
-    if (this->src == SOURCE_AUTO) {
+    if ((this->src == SOURCE_AUTO) && (src != SOURCE_NA)) {
         if (val != values[src]) {
             Sensor::set(val, this->src);
             values[src] = val;
@@ -169,71 +186,36 @@ void OutsideTemp::loop() {
 }
 
 
-OneWireNode::OneWireNode(uint8_t *addr):
-        next(oneWireNode),
-        temp(DEVICE_DISCONNECTED_C) {
-    oneWireNode = this;
-    memcpy(this->addr, addr, sizeof(this->addr));
+AddressableSensor::AddressableSensor(const uint8_t *adr, const uint8_t adrLen, AddressableSensor **prev):
+        next(*prev) {
+
+    *prev = this;
+    this->adrLen = adrLen;
+    memcpy(this->adr, adr, adrLen);
 }
 
-void OneWireNode::begin() {
-    oneWire.reset_search();
-    uint8_t addr[8];
-    while (oneWire.search(addr)) {
-        new OneWireNode(addr);
-    }
-    loop();
+void AddressableSensor::begin() {
+    mutex = xSemaphoreCreateMutex();
+}
+void AddressableSensor::lock() {
+    xSemaphoreTake(mutex, (TickType_t) 250 / portTICK_PERIOD_MS);
+}
+void AddressableSensor::unlock() {
+    xSemaphoreGive(mutex);
 }
 
-void OneWireNode::loop() {
-    static uint32_t next = 0;
-    if (millis() > next) {
-        OneWireNode *node = oneWireNode;
-        DallasTemperature ds(&oneWire);
-        ds.requestTemperatures();
-        while (node) {
-            node->temp = round(ds.getTempC(node->addr) * 10) / 10;
-            if (node->temp != DEVICE_DISCONNECTED_C) {
-                for (int i=0; i<sizeof(roomTemp) / sizeof(roomTemp[0]); i++) {
-                    if (roomTemp[i].own == node)
-                        roomTemp[i].set(node->temp, Sensor::SOURCE_1WIRE);
-                }
-                if (outsideTemp.own == node)
-                    outsideTemp.set(node->temp, Sensor::SOURCE_1WIRE);
-            }
-            node = node->next;
-        }
-        next = millis() + 5000;
-    }
-}
-
-void OneWireNode::writeJson(JsonObject &status) {
-    OneWireNode *node = oneWireNode;
-
-    while (node) {
-        String adrStr = node->getAdr();
-
-        if (node->temp != DEVICE_DISCONNECTED_C)
-            status[adrStr] = node->temp;
-        else
-            status[adrStr] = nullptr;
-            
-        node = node->next;
-    }
-}
-
-String OneWireNode::getAdr() const {
+String AddressableSensor::getAdr() const {
     String result;
-    for (uint8_t i=0; i<sizeof(addr); i++) {
-        if (addr[i] < 0x10)
+    for (uint8_t i=0; i<adrLen; i++) {
+        if (adr[i] < 0x10)
             result += '0';
-        result += String(addr[i], 16);
+        result += String(adr[i], 16);
     }
     return result;
 }
 
-OneWireNode *OneWireNode::find(String adr) {
-    OneWireNode *node = oneWireNode;
+AddressableSensor* AddressableSensor::find(String adr, AddressableSensor *last) {
+    AddressableSensor *node = last;
     while (node) {
         if (node->getAdr() == adr)
             return node;
@@ -242,18 +224,246 @@ OneWireNode *OneWireNode::find(String adr) {
     return nullptr;
 }
 
-bool OneWireNode::sendDiscovery() {
-    bool discFlag = true;
+void AddressableSensor::writeJsonAll(JsonObject &status, AddressableSensor *last) {
+    lock();
+    AddressableSensor *node = last;
 
-    OneWireNode *node = oneWireNode;
     while (node) {
-        haDisc.createTempSensor("1wire", node->getAdr());
-        String path = F("{{ value_json['1wire']['");
-        path += node->getAdr();
-        path += F("'] }}");
-        haDisc.setValueTemplate(path);
-        discFlag &= haDisc.publish();
+        String adrStr = node->getAdr();
+        JsonVariant var = status[adrStr].to<JsonVariant>();
+        node->writeJson(var);            
         node = node->next;
     }
-    return discFlag;
+    unlock();
+}
+
+bool AddressableSensor::sendDiscoveryAll(AddressableSensor *last) {
+    bool result = true;
+    lock();
+    AddressableSensor *node = last;
+    while (node) {
+        result &= node->sendDiscovery();  
+        node = node->next;
+    }
+    unlock();
+    return result;
+}
+
+
+OneWireNode::OneWireNode(uint8_t *addr):
+        AddressableSensor(addr, 8, (AddressableSensor**) &last) {
+    temp = DEVICE_DISCONNECTED_C;
+}
+
+void OneWireNode::begin() {
+    oneWire.reset_search();
+    uint8_t addr[8];
+    while (oneWire.search(addr))
+        new OneWireNode(addr);
+    loop();
+}
+
+void OneWireNode::loop() {
+    static uint32_t next = 0;
+    if (millis() > next) {
+        OneWireNode *node = last;
+        DallasTemperature ds(&oneWire);
+        ds.requestTemperatures();
+        while (node) {
+            node->temp = round(ds.getTempC(node->adr) * 10) / 10;
+            if (node->temp != DEVICE_DISCONNECTED_C) {
+                for (int i=0; i<sizeof(roomTemp) / sizeof(roomTemp[0]); i++) {
+                    if (roomTemp[i].own == node)
+                        roomTemp[i].set(node->temp, Sensor::SOURCE_1WIRE);
+                }
+                if (outsideTemp.own == node)
+                    outsideTemp.set(node->temp, Sensor::SOURCE_1WIRE);
+            }
+            node = static_cast<OneWireNode*>(node->next);
+        }
+        next = millis() + 5000;
+    }
+}
+
+void OneWireNode::writeJson(JsonVariant val) {
+    if (this->temp != DEVICE_DISCONNECTED_C)
+        val.set(this->temp);
+    else
+        val.set(nullptr);
+}
+
+OneWireNode *OneWireNode::find(String adr) {
+    return static_cast<OneWireNode*>(AddressableSensor::find(adr, last));
+}
+
+bool OneWireNode::sendDiscoveryAll() {
+    return AddressableSensor::sendDiscoveryAll(last);
+}
+
+bool OneWireNode::sendDiscovery() {
+    String id = F("1w_");
+    id += getAdr();
+    haDisc.createTempSensor("1wire", id);
+    String path = F("{{ value_json['1wire']['");
+    path += getAdr();
+    path += F("'] }}");
+    haDisc.setValueTemplate(path);
+    return haDisc.publish();
+}
+
+void OneWireNode::writeJsonAll(JsonObject &status) {
+    AddressableSensor::writeJsonAll(status, last);
+}
+
+
+class scanCallbacks : public NimBLEScanCallbacks {
+    void onResult(const NimBLEAdvertisedDevice* dev) override {
+        BLESensor::onDiscovery(dev);
+    }
+} scanCallbacks;
+
+BLESensor::BLESensor(const uint8_t *adr):
+        AddressableSensor(adr, 6, (AddressableSensor**) &last) {
+}
+
+void BLESensor::begin() {
+    BLEDevice::init("");
+    BLEDevice::setPower(9);
+    NimBLEScan* pBLEScan = NimBLEDevice::getScan();
+    pBLEScan->setScanCallbacks(&scanCallbacks, true);
+    pBLEScan->setActiveScan(true);
+    pBLEScan->setMaxResults(0);
+    pBLEScan->start(0, true, true);
+}
+
+void BLESensor::onDiscovery(const NimBLEAdvertisedDevice* dev) {
+    auto srvdata = dev->getServiceData(NimBLEUUID("fcd2"));
+    if (srvdata.length() == 0)
+        return;
+
+    if (srvdata[0] != 0x40)
+        return;
+
+    lock();
+    BLESensor *sensor = find(dev->getAddress().getVal());
+    if (sensor == nullptr) {
+        sensor = new BLESensor(dev->getAddress().getVal());
+        sensor->sendDiscovery();
+    }
+    
+    sensor->parse(srvdata);
+    sensor->rssi = dev->getRSSI();
+    unlock();
+}
+
+void BLESensor::parse(std::string &data) {
+    int i = 1;
+    while (i < data.length()) {
+        switch (data[i++]) {
+        case 0x00:
+            // packet ID
+            i++;
+            break;
+
+        case 0x01:
+            this->bat = data[i++];
+            break;
+
+        case 0x02: {
+            int16_t temp = ((data[i] | (data[i+1] << 8)) + 5) / 10;
+            this->temp = temp / 10.0;
+            i += 2;
+            break;
+        }
+
+        case 0x03: {
+            this->rh = (data[i] | (data[i+1] << 8)) / 100;
+            i += 2;
+            break;
+        }
+
+        case 0x0C: {
+            uint16_t v = data[i] | (data[i+1] << 8);
+            i += 2;
+            break;
+        }
+
+        default:
+            return;
+        }
+    }
+}
+
+BLESensor* BLESensor::find(const uint8_t *adr) {
+    BLESensor *node = last;
+    while (node) {
+        if (memcmp(adr, node->adr, 6) == 0)
+            return node;
+        node = static_cast<BLESensor*>(node->next);
+    }
+    return nullptr;
+}
+
+void BLESensor::writeJsonAll(JsonObject &status) {
+    AddressableSensor::writeJsonAll(status, last);
+}
+
+void BLESensor::writeJson(JsonVariant val) {
+    JsonObject obj = val.to<JsonObject>();
+    obj[F("temp")] = this->temp;
+    obj[F("rh")] = this->rh;
+    obj[F("bat")] = this->bat;
+    obj[F("rssi")] = this->rssi;
+}
+
+bool BLESensor::sendDiscoveryAll() {
+    return AddressableSensor::sendDiscoveryAll(last);
+}
+
+bool BLESensor::sendDiscovery() {
+    bool result = true;
+
+    String path1 = F("{{ value_json['BLE']['");
+    path1 += getAdr();
+    path1 += F("']['?'] }}");
+
+    String id = F("ble_t_");
+    id += getAdr();
+    haDisc.createTempSensor(F("BLE temp"), id);
+    String path = path1;
+    path.replace("?", F("temp"));
+    haDisc.setValueTemplate(path);
+    result &= haDisc.publish();
+
+    id = F("ble_rh_");
+    id += getAdr();
+    haDisc.createSensor(F("BLE RH"), id);
+    haDisc.setDeviceClass(F("humidity"));
+    haDisc.setUnit(F("%"));
+    path = path1;
+    path.replace("?", F("rh"));
+    haDisc.setValueTemplate(path);
+    result &= haDisc.publish();
+
+    id = F("ble_bat_");
+    id += getAdr();
+    haDisc.createSensor(F("BLE bat."), id);
+    haDisc.setDeviceClass(F("battery"));
+    haDisc.setUnit(F("%"));
+    path = path1;
+    path.replace("?", F("bat"));
+    haDisc.setValueTemplate(path);
+    result &= haDisc.publish();
+
+    id = F("ble_rssi_");
+    id += getAdr();
+    haDisc.createSensor(F("BLE RSSI"), id);
+    haDisc.setDeviceClass(F("signal_strength"));
+    haDisc.setUnit(F("dBm"));
+    path = path1;
+    path.replace("?", F("rssi"));
+    haDisc.setValueTemplate(path);
+    result &= haDisc.publish();
+
+    return result;
 }

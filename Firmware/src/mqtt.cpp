@@ -133,7 +133,8 @@ void Mqtt::loop() {
         if (!discFlag) {
             discFlag = true;
             discFlag &= otcontrol.sendDiscovery();
-            discFlag &= OneWireNode::sendDiscovery();
+            discFlag &= OneWireNode::sendDiscoveryAll();
+            discFlag &= BLESensor::sendDiscoveryAll();
         }
 
         if ((millis() - lastStatus) > 5000) {

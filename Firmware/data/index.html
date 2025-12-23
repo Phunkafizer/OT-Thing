@@ -292,13 +292,8 @@
             text-decoration: none;
         }
 
-        #scanResults {
-            display: none;
-        }
-
         #scanHint {
             padding: 5px;
-            display: none;
         }
 
         #stickydiv {
@@ -309,7 +304,6 @@
         }
 
         #nocon {
-            display: none;
             padding: 0.6em;
             background-color: #c00;
         }
@@ -340,19 +334,19 @@
             background-color: red;
         }
 
-        #progressDiv {
-            display: none;
-        }
-
         #updprogress {
             width: 100%;
+        }
+
+        [hidden] {
+            display: none !important;
         }
     </style>
 </head>
 
 <body>
     <div id="stickydiv">
-        <div id="nocon">No connection to device...</div>
+        <div id="nocon" hidden>No connection to device...</div>
     </div>
 
     <div id="mainwrapper">
@@ -363,7 +357,7 @@
                 <li tab="status" class="active">Status</li>
                 <li tab="setup">Setup</li>
                 <li tab="heatingcurve1" class="app-heat">Heating circuit 1</li>
-                <li tab="heatingcurve2" class="app-heat">Heating circuit 2</li>
+                <li tab="heatingcurve2" class="app-heat CH2">Heating circuit 2</li>
                 <li tab="log">Log</li>
             </ul>
         </div>
@@ -763,6 +757,10 @@
                 <div class="flexline" id="oneWireSensors">
                 </div>
             </div>
+
+            <h3>BLE</h3>
+            <div id="bleSensors" class="group">
+            </div>
         </div>
 
         <div class="tab" id="heatingcurve1">
@@ -874,8 +872,7 @@
                     </div>
                     <div class="selopt">
                         <h5>address</h5>
-                        <select id="bleRoomTempAdr1" class="bleAdr">
-                        </select>
+                        <input id="bleRoomTempAdr1" type="text" />
                     </div>
                     <div class="selopt">
                         <h5>address</h5>
@@ -1052,9 +1049,7 @@
                         <input type="range" min="1.0" max="1.5" step="0.05">
                     </div>
                     <div class="infobox">
-                        Je nach Anteil von Leitung, Konvektion und Strahlung ist das Verhältnis von Vorlauftemperatur
-                        und
-                        Wärmeabgabe überliniear:
+                        Je nach Anteil von Leitung, Konvektion und Strahlung ist das Verhältnis von Vorlauftemperatur und Wärmeabgabe überlinear:
                         <ul>
                             <li>Fußbodenheizung: 1,0 - 1,05</li>
                             <li>Flachheizkörper: 1,26 - 1,33</li>
@@ -1128,8 +1123,7 @@
                     </div>
                     <div class="selopt">
                         <h5>address</h5>
-                        <select id="bleRoomTempAdr2" class="bleAdr">
-                        </select>
+                        <input id="bleRoomTempAdr2" type="text" />
                     </div>
                     <div class="selopt">
                         <h5>address</h5>
@@ -1262,8 +1256,8 @@
                         <input id="hostname" type="text" value="otthing" />
                     </div>
                 </div>
-                <button id="scan">scan</button><span id="scanHint">Scan running...</span>
-                <div id="scanResults">
+                <button id="scan">scan</button><span id="scanHint" hidden>Scan running...</span>
+                <div id="scanResults" hidden>
                     <table>
                         <thead>
                             <tr>
@@ -1330,7 +1324,7 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        <div class="param">
+                        <div class="param CH2">
                             <h5>Circuit 2</h5>
                             <label class="switch">
                                 <input id="chOn2" type="checkbox" />
@@ -1344,7 +1338,7 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        <div class="param">
+                        <div class="param DHW">
                             <h5>DHW</h5>
                             <label class="switch">
                                 <input id="dhwOn" type="checkbox" />
@@ -1365,7 +1359,7 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        <div class="param">
+                        <div class="param DHW">
                             <h5>DHW blocking</h5>
                             <label class="switch">
                                 <input id="dhwBlocking" type="checkbox" />
@@ -1373,7 +1367,7 @@
                             </label>
                         </div>
                     </div>
-                    <div id="dhwtemp" class="param">
+                    <div id="dhwtemp" class="param DHW">
                         <h5>DHW set temperature</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1444,7 +1438,7 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        <div class="param">
+                        <div class="param CH2">
                             <h5>flow temp. 2</h5>
                             <label class="switch">
                                 <input id="overrideFlow2" type="checkbox" />
@@ -1527,7 +1521,7 @@
                 </div>
                 <div class="selopt">
                     <h5>Address</h5>
-                    <input id="inpbluetoothaddress" type="text" />
+                    <input id="bleOutsideTempAdr" type="text" />
                 </div>
                 <div class="selopt">
                     <h5>address</h5>
@@ -1559,7 +1553,7 @@
                 <form id="form_upload" method='POST' enctype='multipart/form-data'>
                     <input id="inp_file" type='file' accept='.bin,.bin.gz' name='firmware'>
                     <input id="btn_upload" type='submit' value='upload'>
-                    <div id="progressDiv" class="progress">
+                    <div id="progressDiv" class="progress" hidden>
                         <div id="progressText"></div>
                         <progress id="updprogress" max="100" value="0"></progress>
                     </div>
@@ -1626,7 +1620,7 @@
                     flow: 30,
                     roomtempcomp: 0,
                     roomtempcompI: 0,
-                    chOn: true,
+                    chOn: false,
                     flowMax: 60,
                     exponent: 1.3,
                     gradient: 1.4,
@@ -1661,12 +1655,12 @@
         statuscache = {},
         roomsetpoint = [21, 21]; // used for drawing curve
 
-        function _(query) {
-            return document.querySelector(query);
+        function _(query, root = document) {
+            return root.querySelector(query);
         }
 
-        function __(query) {
-            return document.querySelectorAll(query);
+        function __(query, root = document) {
+            return root.querySelectorAll(query);
         }
 
         function _$(elename, props = {}, ...children) {
@@ -1677,17 +1671,13 @@
         }
 
         window.onload = () => {
-            items = __("div.nav li");
-            items.forEach(function (item) {
-                item.onclick = (ev) => {
-                    __("div.nav li").forEach((item) => {
-                        item.classList.remove("active");
-                    });
-                    __(".tab").forEach(function (item) {
-                        item.style.display = "none";
-                    });
-                    document.getElementById(ev.target.getAttribute("tab")).style.display = "";
-                    ev.target.classList.add("active");
+            __("div.nav li").forEach(li => {
+                li.onclick = ev => {
+                    __("div.nav li").forEach(x => x.classList.remove("active"));
+                    __(".tab").forEach(x => x.hidden = true);
+
+                    _(`#${li.getAttribute("tab")}`).hidden = false;
+                    li.classList.add("active");
                 };
             });
             _("div.nav li.active").click();
@@ -1701,40 +1691,56 @@
                 config.haName = _("#haName").value;
                 config.slaveApp = parseInt(_("#slaveapp").value);
                 config.enableSlave = _("#enableslave").checked;
-                config.otMode = (_('input[name="otMode"]:checked') !== undefined) ? parseInt(_('input[name="otMode"]:checked').value) : null,
+                config.otMode = (_('input[name="otMode"]:checked') !== undefined) ? parseInt(_('input[name="otMode"]:checked').value) : null;
                 config.outsideTemp = {
                     source: parseInt(_('#selectOutsideTempSource').value),
                     apikey: _("#inpapikey").value,
                     lat: parseFloat(_("#inplat").value),
                     lon: parseFloat(_("#inplon").value),
                     interval: parseInt(_("#inpinterval").value),
-                    adr: _("#oneWireOutsideTempAdr").value
                 };
+                switch (config.outsideTemp.source) {
+                case 2:
+                    config.outsideTemp.adr = _("#bleOutsideTempAdr").value;
+                    break;
+                case 3:
+                    config.outsideTemp.adr = _("#oneWireOutsideTempAdr").value;
+                    break;
+                }
 
-                for (let idx=0; idx<2; idx++) {
+                config.heating.forEach((heating, idx) => {
                     let ch = idx + 1;
-                    let heating = config.heating[idx];
                     heating.chOn = _(`#chOn${ch}`).checked;
                     heating.overrideFlow = _(`#overrideFlow${ch}`).checked;
                     heating.enableHyst = _(`#enableHyst${ch}`).checked;
                     delete heating.roomtemp["adr"];
-                    if (heating.roomtemp.source == 3)
+                    switch (heating.roomtemp.source) {
+                    case 2:
+                        heating.roomtemp["adr"] = _(`#bleRoomTempAdr${ch}`).value;
+                        break;
+                    case 3:
                         heating.roomtemp["adr"] = _(`#oneWireRoomTempAdr${ch}`).value;
-                }
-                    
-                config.boiler.dhwOn = _("#dhwOn").checked;
-                config.boiler.coolOn = _("#coolOn").checked;
-                config.boiler.overrideDhw = _("#overrideDhw").checked;
-                config.boiler.otc = _("#otc").checked;
-                config.boiler.summerMode = _("#summerMode").checked;
-                config.boiler.dhwBlocking = _("#dhwBlocking").checked;
+                        break;
+                    }   
+                });
 
-                if (config.vent === undefined)
-                    config.vent = {};
-                config.vent.ventEnable = _("#ventEnable").checked;
-                config.vent.openBypass = _("#openBypass").checked;
-                config.vent.autoBypass = _("#autoBypass").checked;
-                config.vent.freeVentEnable = _("#freeVentEnable").checked;
+                config.boiler = {
+                    ...(config.boiler ?? {}),
+                    dhwOn: _("#dhwOn").checked,
+                    coolOn: _("#coolOn").checked,
+                    overrideDhw: _("#overrideDhw").checked,
+                    otc: _("#otc").checked,
+                    summerMode: _("#summerMode").checked,
+                    dhwBlocking: _("#dhwBlocking").checked
+                };
+
+                config.vent = {
+                    ...(config.vent ?? {}),
+                    ventEnable: _("#ventEnable").checked,
+                    openBypass: _("#openBypass").checked,
+                    autoBypass: _("#autoBypass").checked,
+                    freeVentEnable: _("#freeVentEnable").checked
+                };
 
                 config.mqtt = {
                     host: _("#mqttHost").value,
@@ -1768,7 +1774,7 @@
             };
 
             function addMarker(hk) {
-                if (!('outsideTemp' in statuscache)) {
+                if (statuscache.outsideTemp == null) {
                     alert("No outside temperature available!");
                     return;
                 }
@@ -1829,8 +1835,8 @@
                     return;
                 }
 
-                _("#scanResults").style.display = 'block';
-                _("#scanHint").style.display = 'none';
+                _("#scanResults").hidden= false;
+                _("#scanHint").hidden = true;
 
                 scanObj.results.forEach(element => {
                     _("#scanbody").append(
@@ -1852,8 +1858,8 @@
             };
             // eventhandler for scan button
             _("#scan").onclick = (ev) => {
-                _("#scanResults").style.display = 'none';
-                _("#scanHint").style.display = 'inline';
+                _("#scanResults").hidden = true;
+                _("#scanHint").hidden = false;
                 _("#scanbody").innerHTML = "";
                 scanWiFi();
             };
@@ -1877,21 +1883,21 @@
                     }
                     val[f[i]] = parseInt(ev.target.value);
                     ev.target.parentElement.querySelectorAll("div.selopt").forEach((ele, index) => {
-                        ele.style.display = (index == ev.target.selectedIndex) ? "": "none";
+                        ele.hidden = (index != ev.target.selectedIndex);
                     });
                 }
             });
 
             _("#selectOutsideTempSource").addEventListener("change", (ev) => {
-                _("#owdiv").style.display = (ev.target.value == 4) ? "" : "none";
+                _("#owdiv").hidden = (ev.target.value != 4);
             });
 
             _("#slaveapp").onchange = (ev) => {
                 let app = parseInt(ev.target.value);
                 for (const ele of __(".app-heat"))
-                    ele.style.display = (app == 0) ? "" : "none";
+                    ele.hidden = (app != 0);
                 for (const ele of __(".app-vent"))
-                    ele.style.display = (app == 1) ? "" : "none";
+                    ele.hidden = (app != 1);
             }
 
             function drawMarkerTable(hk) {
@@ -2076,8 +2082,11 @@
                     initRangeParam(`roomtempcompI${ch}`, `heating.${idx}.roomtempcompI`);
                     initRangeParam(`hyst${ch}`, `heating.${idx}.hysteresis`);
 
-                     if ('roomtemp' in hcfg)
+                     if ('roomtemp' in hcfg) {
                         _(`#selectRoomTempSource${ch}`).value = hcfg.roomtemp.source;
+                        if (hcfg.roomtemp.source == 2)
+                            _(`#bleRoomTempAdr${ch}`).value = hcfg.roomtemp.adr;
+                     }
                     _(`#selectRoomTempSource${ch}`).dispatchEvent(new Event('change'));
 
                     if ('roomsetpoint' in hcfg)
@@ -2104,7 +2113,7 @@
                 catch (err) {
                 }
 
-                _("#nocon").style.display = "none";
+                _("#nocon").hidden = true;
 
                 let rtstr = "";
                 let runtime = statuscache.runtime;
@@ -2122,6 +2131,18 @@
                     }
                 }
                 _("#runtime").innerText = rtstr;
+
+                if (statuscache.slave?.slave_config_member?.dhw_present === false) {
+                    __(".DHW").forEach(ele => {
+                        ele.hidden = true;
+                    });
+                }
+
+                if (statuscache.slave?.slave_config_member?.ch2_present === false) {
+                    __(".CH2").forEach(ele => {
+                        ele.hidden = true;
+                    });
+                }
 
                 if ('new_fw' in statuscache) {
                     if (statuscache['new_fw'] == "") {
@@ -2158,9 +2179,9 @@
                     }
 
                     if ( ((val !== null) && (val !== undefined)) || ele.classList.contains("nohide") )
-                        ele.parentElement.style.display = "block";
+                        ele.parentElement.hidden = false;
                     else
-                        ele.parentElement.style.display = "none";
+                        ele.parentElement.hidden = true;
                 });
 
                 __(".mqttbasetopic").forEach((ele) => {
@@ -2199,6 +2220,40 @@
                     }
                 }
 
+                if ("BLE" in statuscache) {
+                    let i = 0;
+                    for (adr in statuscache["BLE"]) {
+                        if (__("#bleSensors>div").length < Object.keys(statuscache["BLE"]).length) {
+                            _("#bleSensors").append(
+                                _$("h4", {textContent: adr}),
+                                _$("div", {className: "flexline"},
+                                    _$("div", {className: "statusfield"},
+                                        _$("h5", {textContent: "temperature"}),
+                                        _$("span", {className: "statusvalue"})
+                                    ),
+                                    _$("div", {className: "statusfield"},
+                                        _$("h5", {textContent: "humidity"}),
+                                        _$("span", {className: "statusvalue"})
+                                    ),
+                                    _$("div", {className: "statusfield"},
+                                        _$("h5", {textContent: "battery"}),
+                                        _$("span", {className: "statusvalue"})
+                                    ),
+                                    _$("div", {className: "statusfield"},
+                                        _$("h5", {textContent: "RSSI"}),
+                                        _$("span", {className: "statusvalue"})
+                                    )
+                                )
+                            );
+                        }
+                        __("span", __("#bleSensors div.flexline")[i])[0].innerText = statuscache["BLE"][adr]["temp"] + " °C";
+                        __("span", __("#bleSensors div.flexline")[i])[1].innerText = statuscache["BLE"][adr]["rh"] + " %";
+                        __("span", __("#bleSensors div.flexline")[i])[2].innerText = statuscache["BLE"][adr]["bat"] + " %";
+                        __("span", __("#bleSensors div.flexline")[i])[3].innerText = statuscache["BLE"][adr]["rssi"] + " dBm";
+                        i++;
+                    }
+                }
+
                 if ("heatercircuit" in statuscache) {
                     for (let i=0; i<2; i++)
                         if ("roomsetpoint" in statuscache.heatercircuit[i])
@@ -2209,7 +2264,7 @@
                 setTimeout(fetchStatus, 5000);
             };
             xhrStatus.ontimeout = (ev) => {
-                _("#nocon").style.display = "block";
+                _("#nocon").hidden = false;
                 setTimeout(fetchStatus, 10000);
             };
 
@@ -2250,7 +2305,7 @@
                 };
 
                 xhrUpl.onloadstart = () => {
-                    _("#progressDiv").style.display = "block";
+                    _("#progressDiv").hidden = false;
                     _("#btn_upload").disabled = true;
                     _("#inp_file").disabled = true;
                 };
@@ -2285,19 +2340,19 @@
             otModeItems.forEach(function (item) {
                 item.onclick = (ev) => {
                     __('.otmode-repeater, .otmode-master, .otmode-test').forEach(function(ele) {
-                        ele.style.display = "none";
+                        ele.hidden = true;
                     });
                     switch (parseInt(item.value)) {
                         case 1:
                             // show elements for master mode
                             __('.otmode-master').forEach(function(ele) {
-                                 ele.style.display = "block";
+                                 ele.hidden = false;
                             });
                             break;
                         case 2:
                             // show elements for repeater mode
                             __('.otmode-repeater').forEach(function(ele) {
-                                 ele.style.display = "block";
+                                 ele.hidden = false;
                             });
                             break;
                         default:

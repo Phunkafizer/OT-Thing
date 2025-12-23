@@ -5,6 +5,7 @@
 #include "otcontrol.h"
 #include "sensors.h"
 #include "httpUpdate.h"
+#include <NimBLEDevice.h>
 
 DevStatus devstatus;
 
@@ -67,10 +68,11 @@ JsonDocument &DevStatus::buildDoc() {
     if (!outsideTemp.owResult.isEmpty())
         doc[F("owResult")] = outsideTemp.owResult;
 
-    if (oneWireNode) {
-        JsonObject jo = doc[F("1wire")].to<JsonObject>();
-        OneWireNode::writeJson(jo);
-    }
+    JsonObject jo = doc[F("1wire")].to<JsonObject>();
+    OneWireNode::writeJsonAll(jo);
+
+    JsonObject ble = doc[F("BLE")].to<JsonObject>();
+    BLESensor::writeJsonAll(ble);
 
     return doc;
 }
