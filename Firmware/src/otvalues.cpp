@@ -483,6 +483,13 @@ OTValueStatus::OTValueStatus():
         OTValueFlags(OpenThermMessageID::Status, -1, flags, sizeof(flags) / sizeof(flags[0]), true) {
 }
 
+bool OTValueStatus::getMode(const uint8_t channel) {
+    if (!isSet)
+        return false;
+
+    return (value & (1<<(channel == 0 ? 1 : 5))) != 0;
+}
+
 
 OTValueMasterStatus::OTValueMasterStatus():
         OTValueFlags(OpenThermMessageID::Status, -1, flags, sizeof(flags) / sizeof(flags[0]), false) {

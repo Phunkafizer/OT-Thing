@@ -161,7 +161,6 @@ public:
     static OTValue* getSlaveValue(const OpenThermMessageID id);
     static OTValue* getThermostatValue(const OpenThermMessageID id);
     void refreshDisc();
-    
     bool isSet;
 };
 
@@ -228,6 +227,7 @@ private:
     };
 public:    
     OTValueStatus();
+    bool getMode(const uint8_t channel);
 };
 
 class OTValueMasterStatus: public OTValueFlags {

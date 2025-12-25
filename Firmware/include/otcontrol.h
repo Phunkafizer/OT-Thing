@@ -100,14 +100,23 @@ private:
         double gradient;
         double offset;
         double flow; // default flow temperature
-        double roomTempComp;
+        double roomTempComp; // P K/K
+        double roomTempCompI; // I 1/h
     } heatingConfig[2];
     struct HeatingControl {
         bool chOn;
         double flowTemp;
         CtrlMode mode {CTRLMODE_AUTO};
         bool overrideFlow;
+        struct PiCtrl {
+            bool init { false };
+            double roomTempFilt;
+            double integState {0}; // state of integrator / K
+            double deltaT {0};
+        } piCtrl;
     } heatingCtrl[2];
+    void loopPiCtrl();
+    unsigned long nextPiCtrl { 0 };
     struct {
         bool ventEnable;
         bool openBypass;
