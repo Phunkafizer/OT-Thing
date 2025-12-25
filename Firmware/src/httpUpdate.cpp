@@ -14,8 +14,8 @@ void HttpUpdate::checkUpdate() {
     client.setInsecure();
     HTTPClient https;
     https.begin(client, PSTR(RELEASE_REPO));
-    https.addHeader("User-Agent", "ESP32");
-    https.addHeader("Accept", "application/vnd.github+json");
+    https.addHeader(F("User-Agent"), F("ESP32"));
+    https.addHeader(F("Accept"), F("application/vnd.github+json"));
 
     int code = https.GET();
     if (code != 200) {
@@ -29,19 +29,18 @@ void HttpUpdate::checkUpdate() {
     JsonDocument doc;
     if (deserializeJson(doc, json)) return;
 
-    newFw = doc["tag_name"].as<String>().substring(1);
-    Serial.println(newFw);
-    if (newFw != F(BUILD_VERSION)) {
+    newFw = doc["tag_name"].as<String>();
+    String currentFw('v');
+    currentFw += F(BUILD_VERSION);
+    if (newFw != currentFw)
         fwUrl = doc["assets"][0]["browser_download_url"].as<String>();
-        Serial.println(fwUrl);
-    }
 }
 
 bool HttpUpdate::getNewFw(String &version) {
     if (newFw.isEmpty() || updating)
         return false;
 
-    version = newFw;
+    version = fwUrl.isEmpty() ? "" : newFw;
     return true;
 }
 
