@@ -856,29 +856,6 @@
                     <div class="selopt">
                     </div>
                 </div>
-
-                <h4>Room compensation (PI controller)</h4>
-                <div id="roomtempcomp1" class="param">
-                    <h5>P gain</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">K/K</span>
-                        </div>
-                        <input type="range" min="0" max="4" step="0.1">
-                    </div>
-                </div>
-                <div id="roomtempcompI1" class="param">
-                    <h5>I gain</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">1/h</span>
-                        </div>
-                        <input type="range" min="0" max="1" step="0.1">
-                    </div>
-                </div>
-
                 <div class="param">
                     <h5>Current room temperature source</h5>
                     <select id="selectRoomTempSource1" field="heating.0.roomtemp.source">
@@ -904,6 +881,49 @@
                         <h5>address</h5>
                         <select id="oneWireRoomTempAdr1" class="oneWireAdr">
                         </select>
+                    </div>
+                </div>
+
+                <h4>Room compensation (PI controller)</h4>
+                <div id="roomtempcomp1" class="param">
+                    <h5>P gain</h5>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">K/K</span>
+                        </div>
+                        <input type="range" min="0" max="4" step="0.1">
+                    </div>
+                </div>
+                <div id="roomtempcompI1" class="param">
+                    <h5>I gain</h5>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">1/h</span>
+                        </div>
+                        <input type="range" min="0" max="1" step="0.1">
+                    </div>
+                </div>
+
+                <h4>Suspend on room setpoint</h4>
+                <div class="param">
+                    <h5>enable</h5>
+                    <div>
+                        <label class="switch">
+                            <input id="enableHyst1" type="checkbox" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="hyst1" class="param">
+                    <h5>hysteresis</h5>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">K</span>
+                        </div>
+                        <input type="range" min="0.1" max="2" step="0.1">
                     </div>
                 </div>
             </div>
@@ -1090,27 +1110,6 @@
                     <div class="selopt">
                     </div>
                 </div>
-                <h4>Room compensation (PI controller)</h4>
-                <div id="roomtempcomp2" class="param">
-                    <h5>P gain</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">K/K</span>
-                        </div>
-                        <input type="range" min="0" max="5" step="0.1">
-                    </div>
-                </div>
-                <div id="roomtempcompI2" class="param">
-                    <h5>I gain</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">1/h</span>
-                        </div>
-                        <input type="range" min="0" max="1" step="0.1">
-                    </div>
-                </div>
                 <div class="param">
                     <h5>Current room temperature source</h5>
                     <select id="selectRoomTempSource2" field="heating.1.roomtemp.source">
@@ -1136,6 +1135,48 @@
                         <h5>address</h5>
                         <select id="oneWireRoomTempAdr2" class="oneWireAdr">
                         </select>
+                    </div>
+                </div>
+                <h4>Room compensation (PI controller)</h4>
+                <div id="roomtempcomp2" class="param">
+                    <h5>P gain</h5>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">K/K</span>
+                        </div>
+                        <input type="range" min="0" max="5" step="0.1">
+                    </div>
+                </div>
+                <div id="roomtempcompI2" class="param">
+                    <h5>I gain</h5>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">1/h</span>
+                        </div>
+                        <input type="range" min="0" max="1" step="0.1">
+                    </div>
+                </div>
+
+                <h4>Suspend on room setpoint</h4>
+                <div class="param">
+                    <h5>enable</h5>
+                    <div>
+                        <label class="switch">
+                            <input id="enableHyst2" type="checkbox" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="hyst2" class="param">
+                    <h5>hysteresis</h5>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">K</span>
+                        </div>
+                        <input type="range" min="0.1" max="2" step="0.1">
                     </div>
                 </div>
             </div>
@@ -1577,7 +1618,9 @@
                     roomtemp: {
                         source: 1
                     },
-                    overrideFlow: false
+                    overrideFlow: false,
+                    enableHyst: false,
+                    hysteresis: 0.1
                 },
                 {
                     flow: 30,
@@ -1596,7 +1639,9 @@
                     roomtemp: {
                         source: 1
                     },
-                    overrideFlow: false
+                    overrideFlow: false,
+                    enableHyst: false,
+                    hysteresis: 0.1
                 }
             ],
             vent: {
@@ -1666,20 +1711,15 @@
                     adr: _("#oneWireOutsideTempAdr").value
                 };
 
-                let heating0 = config.heating[0];
-                heating0.chOn = _("#chOn1").checked;
-                heating0.overrideFlow = _("#overrideFlow1").checked;
-                delete heating0.roomtemp["adr"];
-                if (heating0.roomtemp.source == 3) {
-                    heating0.roomtemp["adr"] = _("#oneWireRoomTempAdr1").value;
-                }
-
-                let heating1 = config.heating[1];
-                heating1.chOn = _("#chOn2").checked;
-                heating1.overrideFlow = _("#overrideFlow2").checked;
-                delete heating1.roomtemp["adr"];
-                if (heating1.roomtemp.source == 3) {
-                    heating1.roomtemp["adr"] = _("#oneWireRoomTempAdr2").value;
+                for (let idx=0; idx<2; idx++) {
+                    let ch = idx + 1;
+                    let heating = config.heating[idx];
+                    heating.chOn = _(`#chOn${ch}`).checked;
+                    heating.overrideFlow = _(`#overrideFlow${ch}`).checked;
+                    heating.enableHyst = _(`#enableHyst${ch}`).checked;
+                    delete heating.roomtemp["adr"];
+                    if (heating.roomtemp.source == 3)
+                        heating.roomtemp["adr"] = _(`#oneWireRoomTempAdr${ch}`).value;
                 }
                     
                 config.boiler.dhwOn = _("#dhwOn").checked;
@@ -2016,44 +2056,34 @@
                 if (config.heating === undefined)
                     config.heating = [{}, {}];
 
-                _("#chOn1").checked = config.heating[0].chOn || false;
-                _("#overrideFlow1").checked = config.heating[0].overrideFlow || false;
-                _("#roomset1").addEventListener("input", (ev) => {
-                    roomsetpoint[0] = parseFloat(ev.target.value);
+                config.heating.forEach((hcfg, idx) => {
+                    let ch = idx + 1;
+
+                    _(`#chOn${ch}`).checked = hcfg.chOn || false;
+                    _(`#overrideFlow${ch}`).checked = hcfg.overrideFlow || false;
+                    _(`#roomset${ch}`).addEventListener("input", (ev) => {
+                        roomsetpoint[idx] = parseFloat(ev.target.value);
+                    });
+                    _(`#enableHyst${ch}`).checked = hcfg.enableHyst || false;
+
+                    initRangeParam(`chset${ch}`, `heating.${idx}.flow`);
+                    initRangeParam(`roomset${ch}`, `heating.${idx}.roomsetpoint.temp`);
+                    initRangeParam(`flowmax${ch}`, `heating.${idx}.flowMax`);
+                    initRangeParam(`exponent${ch}`, `heating.${idx}.exponent`);
+                    initRangeParam(`gradient${ch}`, `heating.${idx}.gradient`);
+                    initRangeParam(`offset${ch}`, `heating.${idx}.offset`);
+                    initRangeParam(`roomtempcomp${ch}`, `heating.${idx}.roomtempcomp`);
+                    initRangeParam(`roomtempcompI${ch}`, `heating.${idx}.roomtempcompI`);
+                    initRangeParam(`hyst${ch}`, `heating.${idx}.hysteresis`);
+
+                     if ('roomtemp' in hcfg)
+                        _(`#selectRoomTempSource${ch}`).value = hcfg.roomtemp.source;
+                    _(`#selectRoomTempSource${ch}`).dispatchEvent(new Event('change'));
+
+                    if ('roomsetpoint' in hcfg)
+                        _(`#selectRoomSetpointSource${ch}`).value = hcfg.roomsetpoint.source;
+                    _(`#selectRoomSetpointSource${ch}`).dispatchEvent(new Event('change'));
                 });
-
-                initRangeParam("chset1", "heating.0.flow");
-                initRangeParam("roomset1", "heating.0.roomsetpoint.temp");
-                initRangeParam("flowmax1", "heating.0.flowMax");
-                initRangeParam("exponent1", "heating.0.exponent");
-                initRangeParam("gradient1", "heating.0.gradient");
-                initRangeParam("offset1", "heating.0.offset");
-                initRangeParam("roomtempcomp1", "heating.0.roomtempcomp");
-                initRangeParam("roomtempcompI1", "heating.0.roomtempcompI");
-
-                if ('roomtemp' in config.heating[0])
-                    _("#selectRoomTempSource1").value = config.heating[0].roomtemp.source;
-
-                _("#selectRoomTempSource1").dispatchEvent(new Event('change'));
-
-                if ('roomsetpoint' in config.heating[0])
-                    _("#selectRoomSetpointSource1").value = config.heating[0].roomsetpoint.source;
-                _("#selectRoomSetpointSource1").dispatchEvent(new Event('change'));
-
-                _("#chOn2").checked = config.heating[1].chOn;
-                _("#overrideFlow2").checked = config.heating[1].overrideFlow || false;
-                _("#roomset2").addEventListener("input", (ev) => {
-                    roomsetpoint[1] = parseFloat(ev.target.value);
-                });
-
-                initRangeParam("chset2", "heating.1.flow");
-                initRangeParam("roomset2", "heating.1.roomsetpoint.temp");
-                initRangeParam("flowmax2", "heating.1.flowMax");
-                initRangeParam("exponent2", "heating.1.exponent");
-                initRangeParam("gradient2", "heating.1.gradient");
-                initRangeParam("offset2", "heating.1.offset");
-                initRangeParam("roomtempcomp2", "heating.1.roomtempcomp");
-                initRangeParam("roomtempcompI2", "heating.1.roomtempcompI");
 
                 _("#ventEnable").checked = config.vent?.ventEnable ?? false;
                 _("#openBypass").checked = config.vent?.openBypass ?? false;
@@ -2061,15 +2091,6 @@
                 _("#freeVentEnable").checked = config.vent?.freeVentEnable ?? false;
 
                 initRangeParam("ventsetpoint", "vent.setpoint");
-
-                if ('roomtemp' in config.heating[1])
-                    _("#selectRoomTempSource2").value = config.heating[1].roomtemp.source;
-                _("#selectRoomTempSource2").dispatchEvent(new Event('change'));
-
-                if ('roomsetpoint' in config.heating[1])
-                    _("#selectRoomSetpointSource2").value = config.heating[1].roomsetpoint.source;
-                _("#selectRoomSetpointSource2").dispatchEvent(new Event('change'));
-
                 drawMarkerTable();
                 drawCurve();
             }

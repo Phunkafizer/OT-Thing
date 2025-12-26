@@ -350,11 +350,11 @@ void OTControl::loop() {
                 lastBoilerStatus = millis();
 
                 unsigned long req = OpenTherm::buildSetBoilerStatusRequest(
-                    heatingCtrl[0].chOn, 
+                    heatingCtrl[0].chOn && !(heatingConfig[0].enableHyst && heatingCtrl[0].suspended), 
                     boilerCtrl.dhwOn,
                     boilerConfig.coolOn,
                     boilerConfig.otc, 
-                    heatingCtrl[1].chOn,
+                    heatingCtrl[1].chOn && !(heatingConfig[1].enableHyst && heatingCtrl[1].suspended),
                     boilerConfig.summerMode,
                     boilerConfig.dhwBlocking);
                 req |= statusReqOvl;
@@ -404,6 +404,9 @@ void OTControl::loopPiCtrl() {
         HeatingControl::PiCtrl &pictrl = heatingCtrl[i].piCtrl;
         double rt, rsp;
 
+        if (!heatingConfig[i].enableHyst)
+            heatingCtrl[i].suspended = false;
+
         pictrl.deltaT = 0;
 
         if (!roomTemp[i].get(rt))
@@ -418,6 +421,17 @@ void OTControl::loopPiCtrl() {
 
         if (!roomSetPoint[i].get(rsp))
             continue;
+
+        if (heatingConfig[i].enableHyst) {
+            if (heatingCtrl[i].suspended) {
+                if (rt < rsp - heatingConfig[i].hysteresis)
+                    heatingCtrl[i].suspended = false;
+            }
+            else {
+                if (rt > rsp + heatingConfig[i].hysteresis)
+                    heatingCtrl[i].suspended = true;
+            }
+        }
 
         double e = rsp - rt; // error
         if ((e > -0.2) && (e < 0.2)) // deadband
@@ -711,7 +725,11 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
         break;
     }   
 
-    if ( (mt == OpenThermMessageType::WRITE_DATA) || (id == OpenThermMessageID::Status) || (id == OpenThermMessageID::StatusVentilationHeatRecovery) ) {
+    if ( (mt == OpenThermMessageType::WRITE_DATA) || 
+         (id == OpenThermMessageID::Status) || 
+         (id == OpenThermMessageID::StatusVentilationHeatRecovery) ||
+         (id == OpenThermMessageID::TrSet) // roomunit RAM 786 sends TrSet as READ command (out of spec!)
+       ) {
         double d = OpenTherm::getFloat(newMsg);
         switch (id) {
         case OpenThermMessageID::Tr:
@@ -785,6 +803,8 @@ void OTControl::getJson(JsonObject &obj) {
         hc[F("mode")] = (int) heatingCtrl[i].mode;
         hc[F("integState")] = heatingCtrl[i].piCtrl.integState;
         hc[F("roomTempFilt")] = heatingCtrl[i].piCtrl.roomTempFilt;
+        if (heatingConfig[i].enableHyst)
+            hc[F("suspended")] = heatingCtrl[i].suspended;
     }
 
     if (slaveEnabled) {
@@ -861,6 +881,7 @@ bool OTControl::sendDiscovery() {
     haDisc.setTemperatureStateTemplate(F("{{ value_json.heatercircuit[0].roomsetpoint }}"));
     haDisc.setOptimistic(true);
     haDisc.setRetain(true);
+    haDisc.setModes(0x02);
     if (!heatingConfig[0].chOn)
         haDisc.clearDoc();
     discFlag &= haDisc.publish();
@@ -874,6 +895,7 @@ bool OTControl::sendDiscovery() {
     haDisc.setTemperatureStateTemplate(F("{{ value_json.heatercircuit[1].roomsetpoint }}"));
     haDisc.setOptimistic(true);
     haDisc.setRetain(true);
+    haDisc.setModes(0x02);
     if (!heatingConfig[1].chOn)
         haDisc.clearDoc();
     discFlag &= haDisc.publish();
@@ -940,6 +962,14 @@ bool OTControl::sendDiscovery() {
     haDisc.setUnit(F("K"));
     discFlag &= haDisc.publish(heatingConfig[1].roomTempCompI > 0);
 
+    haDisc.createBinarySensor(F("suspend CH1"), F("susp1"), "");
+    haDisc.setValueTemplate(F("{{ 'ON' if value_json.heatercircuit[0].suspended else 'OFF' }}"));
+    discFlag &= haDisc.publish(heatingConfig[0].enableHyst);
+
+    haDisc.createBinarySensor(F("suspend CH2"), F("susp2"), "");
+    haDisc.setValueTemplate(F("{{ 'ON' if value_json.heatercircuit[1].suspended else 'OFF' }}"));
+    discFlag &= haDisc.publish(heatingConfig[1].enableHyst);
+
     return discFlag;
 }
 
@@ -980,6 +1010,8 @@ void OTControl::setConfig(JsonObject &config) {
         hc.flow = hpObj[F("flow")] | 35;
         hc.roomTempComp = hpObj[F("roomtempcomp")] | 0;
         hc.roomTempCompI = hpObj[F("roomtempcompI")] | 0.0;
+        hc.hysteresis = hpObj[F("hysteresis")] | 0.1;
+        hc.enableHyst = hpObj[F("enableHyst")] | false;
         
         heatingCtrl[i].flowTemp = hc.flow;
         heatingCtrl[i].chOn = hc.chOn;
