@@ -112,6 +112,21 @@
             color: #fff;
         }
 
+        .statusvalue.bool-ok::before {
+            content: "✔";
+            color: #080;
+        }
+
+        .statusvalue.bool-off::before {
+            content: "✖";
+            color: #777
+        }
+
+        .statusvalue.bool-error::before {
+            content: "⚠";
+            color: #c00;
+        }
+
         div.param span.value {
             font-size: 1.8em;
             font-weight: bold;
@@ -436,8 +451,8 @@
                         <span class="statusvalue" field="slave.rel_mod" unit="%"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Diagnosis</h5>
-                        <span class="statusvalue" field="slave.status.diagnostic"></span>
+                        <h5>Diagnostic</h5>
+                        <span class="statusvalue error" field="slave.status.diagnostic"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Heater circuit 1 active</h5>
@@ -577,7 +592,7 @@
                     </div>
                     <div class="statusfield">
                         <h5>Vent. fault</h5>
-                        <span class="statusvalue" field="slave.vent_status.fault"></span>
+                        <span class="statusvalue error" field="slave.vent_status.fault"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Vent. active</h5>
@@ -597,7 +612,7 @@
                     </div>
                     <div class="statusfield">
                         <h5>Vent. diagnostic</h5>
-                        <span class="statusvalue" field="slave.vent_status.diagnostic"></span>
+                        <span class="statusvalue error" field="slave.vent_status.diagnostic"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Rel. ventilation</h5>
@@ -971,17 +986,21 @@
                 </div>
 
                 <div class="flexline">
-                    <div class="statusfield">
+                    <div class="statusfield nohide">
                         <h5>Outside temperature</h5>
                         <span class="statusvalue" field="outsideTemp" unit="°C"></span>
                     </div>
-                    <div class="statusfield">
+                    <div class="statusfield nohide">
                         <h5>Room set point</h5>
                         <span class="statusvalue" field="heatercircuit.0.roomsetpoint" unit="°C"></span>
                     </div>
-                    <div class="statusfield">
+                    <div class="statusfield nohide">
                         <h5>Room temperature</h5>
                         <span class="statusvalue" field="heatercircuit.0.roomtemp" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Suspended</h5>
+                        <span class="statusvalue" field="heatercircuit.0.suspended"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Integrator state</h5>
@@ -1217,6 +1236,10 @@
                         <span class="statusvalue" field="heatercircuit.1.roomtemp" unit="°C"></span>
                     </div>
                     <div class="statusfield">
+                        <h5>Suspended</h5>
+                        <span class="statusvalue" field="heatercircuit.1.suspended"></span>
+                    </div>
+                    <div class="statusfield">
                         <h5>Integrator state</h5>
                         <span class="statusvalue" field="heatercircuit.1.integState" unit="K"></span>
                     </div>
@@ -1331,7 +1354,7 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        <div class="param">
+                        <div class="param cool">
                             <h5>Cooling</h5>
                             <label class="switch">
                                 <input id="coolOn" type="checkbox" />
@@ -2144,6 +2167,12 @@
                     });
                 }
 
+                if (statuscache.slave?.slave_config_member?.cooling_config === false) {
+                    __(".cool").forEach(ele => {
+                        ele.hidden = true;
+                    });
+                }
+
                 if ('new_fw' in statuscache) {
                     if (statuscache['new_fw'] == "") {
                         _("#installbtn").disabled = true;
@@ -2166,13 +2195,27 @@
                         for (var i=0; i<f.length; i++)
                             val = val[f[i]];
                         
-                        if ((val !== null) && (val !== undefined))
-                            ele.innerText = val;
+                        if ((val !== null) && (val !== undefined)) {
+                            if (val === true) {
+                                if (ele.classList.contains("error"))
+                                    ele.classList.add("bool-error");
+                                else
+                                    ele.classList.add("bool-ok");
+                            }
+                            else if (val === false) {
+                                if (ele.classList.contains("error"))
+                                    ele.classList.add("bool-ok");
+                                else
+                                    ele.classList.add("bool-off");
+                            }
+                            else
+                                ele.textContent = val;
+                        }
                         else
-                            ele.innerText = "---";
+                            ele.textContent = "---";
                         
                         if (ele.hasAttribute('unit'))
-                            ele.innerText += ' ' + ele.getAttribute('unit');
+                            ele.textContent += ' ' + ele.getAttribute('unit');
                     }
                     catch (ex) {
                         val = null;

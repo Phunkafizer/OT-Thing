@@ -177,6 +177,7 @@ public:
     void setChCtrlMode(const CtrlMode mode, const uint8_t channel);
     void setDhwCtrlMode(const CtrlMode mode);
     bool sendDiscovery();
+    bool sendCapDiscoveries();
     void forceFlowCalc(const uint8_t channel);
     void setVentSetpoint(const uint8_t v);
     void setVentEnable(const bool en);
