@@ -897,7 +897,16 @@
                 </div>
 
                 <h4>Room compensation (PI controller)</h4>
-                <div id="roomtempcomp1" class="param">
+                <div class="param">
+                    <h5>enable</h5>
+                    <div>
+                        <label class="switch">
+                            <input id="roomCompEnable1" type="checkbox" hideele="roomCompP1 roomCompI1" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="roomCompP1" class="param">
                     <h5>P gain</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -907,7 +916,7 @@
                         <input type="range" min="0" max="4" step="0.1">
                     </div>
                 </div>
-                <div id="roomtempcompI1" class="param">
+                <div id="roomCompI1" class="param">
                     <h5>I gain</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -923,7 +932,7 @@
                     <h5>enable</h5>
                     <div>
                         <label class="switch">
-                            <input id="enableHyst1" type="checkbox" />
+                            <input id="enableHyst1" type="checkbox" hideele="hyst1" />
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -1151,7 +1160,16 @@
                     </div>
                 </div>
                 <h4>Room compensation (PI controller)</h4>
-                <div id="roomtempcomp2" class="param">
+                <div class="param">
+                    <h5>enable</h5>
+                    <div>
+                        <label class="switch">
+                            <input id="roomCompEnable2" type="checkbox" hideele="roomCompP2 roomCompI2" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="roomCompP2" class="param">
                     <h5>P gain</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -1161,7 +1179,7 @@
                         <input type="range" min="0" max="5" step="0.1">
                     </div>
                 </div>
-                <div id="roomtempcompI2" class="param">
+                <div id="roomCompI2" class="param">
                     <h5>I gain</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -1177,7 +1195,7 @@
                     <h5>enable</h5>
                     <div>
                         <label class="switch">
-                            <input id="enableHyst2" type="checkbox" />
+                            <input id="enableHyst2" type="checkbox" hideele="hyst2" />
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -1388,6 +1406,16 @@
                                 <input id="dhwBlocking" type="checkbox" />
                                 <span class="slider"></span>
                             </label>
+                        </div>
+                    </div>
+                    <div id="maxModulation" class="param">
+                        <h5>Max. modulation</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">%</span>
+                            </div>
+                            <input type="range" min="0" max="100" step="1" />
                         </div>
                     </div>
                     <div id="dhwtemp" class="param DHW">
@@ -1615,13 +1643,17 @@
                 coolOn: false,
                 otc: false,
                 summerMode: false,
-                dhwBlocking: false
+                dhwBlocking: false,
+                maxModulation: 100
             },
             heating: [
                 {
                     flow: 45,
-                    roomtempcomp: 0,
-                    roomtempcompI: 0,
+                    roomComp: {
+                        enabled: false,
+                        p: 0,
+                        i: 0,
+                    },
                     chOn: true,
                     flowMax: 60,
                     exponent: 1.3,
@@ -1641,8 +1673,11 @@
                 },
                 {
                     flow: 30,
-                    roomtempcomp: 0,
-                    roomtempcompI: 0,
+                    roomComp: {
+                        enabled: false,
+                        p: 0,
+                        i: 0,
+                    },
                     chOn: false,
                     flowMax: 60,
                     exponent: 1.3,
@@ -1744,7 +1779,11 @@
                     case 3:
                         heating.roomtemp["adr"] = _(`#oneWireRoomTempAdr${ch}`).value;
                         break;
-                    }   
+                    }
+                    heating.roomComp = {
+                        ...(heating.roomComp ?? {}),
+                        enabled: _(`#roomCompEnable${ch}`).checked
+                    }
                 });
 
                 config.boiler = {
@@ -1788,12 +1827,34 @@
             let xhrWiFiSet = new XMLHttpRequest();
             xhrWiFiSet.onload = (ev) => {
             };
+
             _("#btnsavewifi").onclick = (ev) => {
                 xhrWiFiSet.open('POST', 'setwifi');
                 xhrWiFiSet.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
                 let params = "ssid=" + encodeURIComponent(_("#wifissid").value) + 
                         "&pass=" + encodeURIComponent(_("#wifipass").value); 
                 xhrWiFiSet.send(params);
+            };
+
+            //eventhandler for add marker button
+            _("#addmarker1").onclick = () => {
+                addMarker(1);
+            };
+            //eventhandler for add marker button
+            _("#addmarker2").onclick = () => {
+                addMarker(2);
+            };
+
+            _("#addscheduler1").onclick = (ev) => {
+                addScheduler(1);
+            };
+
+            // eventhandler for scan button
+            _("#scan").onclick = (ev) => {
+                _("#scanResults").hidden = true;
+                _("#scanHint").hidden = false;
+                _("#scanbody").innerHTML = "";
+                scanWiFi();
             };
 
             function addMarker(hk) {
@@ -1823,15 +1884,6 @@
                 drawMarkerTable(hk);
                 drawCurve(hk);
             }
-            
-            //eventhandler for add marker button
-            _("#addmarker1").onclick = () => {
-                addMarker(1);
-            };
-            //eventhandler for add marker button
-            _("#addmarker2").onclick = () => {
-                addMarker(2);
-            };
 
             function addScheduler(channel) {
                 hcfg = config.heating[channel -1];
@@ -1845,10 +1897,6 @@
 
                 drawSchedulerTable(channel);
             }
-
-            _("#addscheduler1").onclick = (ev) => {
-                addScheduler(1);
-            };
 
             let xhrWiFiScan = new XMLHttpRequest();
             xhrWiFiScan.onload = (e) => {
@@ -1879,13 +1927,7 @@
                     );
                 });
             };
-            // eventhandler for scan button
-            _("#scan").onclick = (ev) => {
-                _("#scanResults").hidden = true;
-                _("#scanHint").hidden = false;
-                _("#scanbody").innerHTML = "";
-                scanWiFi();
-            };
+            
             function scanWiFi() {
                 xhrWiFiScan.open("GET", "scan");    
                 xhrWiFiScan.send();
@@ -1922,6 +1964,17 @@
                 for (const ele of __(".app-vent"))
                     ele.hidden = (app != 1);
             }
+
+            __('input[type="checkbox"][hideele]').forEach(cb => {
+                cb.addEventListener("change", () => {
+                    const ids = cb.getAttribute("hideele").split(/\s+/);
+                    ids.forEach(id => {
+                        const el = _(`#${id}`);
+                        if (el)
+                            el.hidden = !cb.checked;
+                    });
+                })
+            });
 
             function drawMarkerTable(hk) {
                 if (hk === undefined) {
@@ -2077,6 +2130,7 @@
                 _("#coolOn").checked = config.boiler.coolOn;
                 _("#overrideDhw").checked = config.boiler.overrideDhw;
                 initRangeParam("dhwtemp", "boiler.dhwTemperature");
+                initRangeParam("maxModulation", "boiler.maxModulation");
 
                 _("#otc").checked = config.boiler.otc;
                 _("#summerMode").checked = config.boiler.summerMode;
@@ -2094,6 +2148,7 @@
                         roomsetpoint[idx] = parseFloat(ev.target.value);
                     });
                     _(`#enableHyst${ch}`).checked = hcfg.enableHyst || false;
+                    _(`#roomCompEnable${ch}`).checked = hcfg.roomComp?.enabled || false;
 
                     initRangeParam(`chset${ch}`, `heating.${idx}.flow`);
                     initRangeParam(`roomset${ch}`, `heating.${idx}.roomsetpoint.temp`);
@@ -2101,8 +2156,8 @@
                     initRangeParam(`exponent${ch}`, `heating.${idx}.exponent`);
                     initRangeParam(`gradient${ch}`, `heating.${idx}.gradient`);
                     initRangeParam(`offset${ch}`, `heating.${idx}.offset`);
-                    initRangeParam(`roomtempcomp${ch}`, `heating.${idx}.roomtempcomp`);
-                    initRangeParam(`roomtempcompI${ch}`, `heating.${idx}.roomtempcompI`);
+                    initRangeParam(`roomCompP${ch}`, `heating.${idx}.roomComp.p`);
+                    initRangeParam(`roomCompI${ch}`, `heating.${idx}.roomComp.i`);
                     initRangeParam(`hyst${ch}`, `heating.${idx}.hysteresis`);
 
                      if ('roomtemp' in hcfg) {
@@ -2125,6 +2180,9 @@
                 initRangeParam("ventsetpoint", "vent.setpoint");
                 drawMarkerTable();
                 drawCurve();
+                __('input[type="checkbox"][hideele]').forEach(cb => {
+                    cb.dispatchEvent(new Event("change"));
+                });
             }
 
             var xhrStatus = new XMLHttpRequest();

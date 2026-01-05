@@ -292,12 +292,12 @@ void OTControl::loop() {
     case OTMODE_LOOPBACKTEST: {
         for (int ch=0; ch<(hasCh2 ? 2 : 1); ch++) {
             if (setRoomTemp[ch]) {
-                setRoomTemp[ch].sendTemp(20.1);
+                setRoomTemp[ch].sendFloat(20.1);
                 xSemaphoreGive(master.mutex);
                 return;
             }
             if (setRoomSetPoint[ch]) {
-                setRoomSetPoint[ch].sendTemp(21.3);
+                setRoomSetPoint[ch].sendFloat(21.3);
                 xSemaphoreGive(master.mutex);
                 return;
             }
@@ -316,12 +316,12 @@ void OTControl::loop() {
         for (int ch=0; ch<(hasCh2 ? 2 : 1); ch++) {
             double temp;
             if (setRoomTemp[ch] && roomTemp[ch].get(temp)) {
-                setRoomTemp[ch].sendTemp(temp);
+                setRoomTemp[ch].sendFloat(temp);
                 xSemaphoreGive(master.mutex);
                 return;
             }
             if (setRoomSetPoint[ch] && roomSetPoint[ch].get(temp)) {
-                setRoomSetPoint[ch].sendTemp(temp);
+                setRoomSetPoint[ch].sendFloat(temp);
                 xSemaphoreGive(master.mutex);
                 return;
             }
@@ -332,7 +332,7 @@ void OTControl::loop() {
                 if (heatingCtrl[ch].chOn && setBoilerRequest[ch]) {
                     double flow = getFlow(ch);
                     if (flow > 0) {
-                        setBoilerRequest[ch].sendTemp(flow);
+                        setBoilerRequest[ch].sendFloat(flow);
                         xSemaphoreGive(master.mutex);
                         return;
                     }
@@ -340,7 +340,7 @@ void OTControl::loop() {
             }
 
             if (hasDHW && setDhwRequest) {
-                setDhwRequest.sendTemp(boilerCtrl.dhwTemp);
+                setDhwRequest.sendFloat(boilerCtrl.dhwTemp);
                 xSemaphoreGive(master.mutex);
                 return;
             }
@@ -348,10 +348,16 @@ void OTControl::loop() {
             if (!outsideTemp.isOtSource() && setOutsideTemp) {
                 double t;
                 if (outsideTemp.get(t)) {
-                    setOutsideTemp.sendTemp(t);
+                    setOutsideTemp.sendFloat(t);
                     xSemaphoreGive(master.mutex);
                     return;
                 }
+            }
+
+            if (setMaxModulation) {
+                setMaxModulation.sendFloat(boilerCtrl.maxModulation);
+                xSemaphoreGive(master.mutex);
+                return;
             }
 
             if (millis() > lastBoilerStatus + 800) {
@@ -411,6 +417,12 @@ void OTControl::loopPiCtrl() {
     OTValueStatus *ots = static_cast<OTValueStatus*>(OTValue::getSlaveValue(OpenThermMessageID::Status));
     for (int i=0; i<2; i++) {
         HeatingControl::PiCtrl &pictrl = heatingCtrl[i].piCtrl;
+        if (!heatingConfig[i].roomComp.enabled) {
+            pictrl.integState = 0;
+            pictrl.deltaT = 0;
+            continue;
+        }
+        
         double rt, rsp;
 
         if (!heatingConfig[i].enableHyst)
@@ -447,12 +459,12 @@ void OTControl::loopPiCtrl() {
             e = 0;
 
         // proportional part of PI controller
-        double p = heatingConfig[i].roomTempComp * e; // Kp * e
+        double p = heatingConfig[i].roomComp.p * e; // Kp * e
         
         // integral part of PI controller
         
         if ( (ots != nullptr) && (ots->getChActive(i)) )
-            pictrl.integState += heatingConfig[i].roomTempCompI * e * PI_INTERVAL / 3600.0; // Ki * e * ts, ts = 60 s
+            pictrl.integState += heatingConfig[i].roomComp.i * e * PI_INTERVAL / 3600.0; // Ki * e * ts, ts = 60 s
         else
             pictrl.integState = pictrl.integState * 0.95; // decay
 
@@ -932,11 +944,15 @@ bool OTControl::sendDiscovery() {
     haDisc.createSensor(F("integrator state 1"), F("integ_state_ch1"));
     haDisc.setValueTemplate(F("{{ value_json.heatercircuit[0].integState }}"));
     haDisc.setUnit(F("K"));
-    discFlag &= haDisc.publish(heatingConfig[0].roomTempCompI > 0);
+    discFlag &= haDisc.publish(heatingConfig[0].roomComp.enabled);
 
     haDisc.createBinarySensor(F("suspend CH1"), F("susp1"), "");
     haDisc.setValueTemplate(F("{{ 'ON' if value_json.heatercircuit[0].suspended else 'OFF' }}"));
     discFlag &= haDisc.publish(heatingConfig[0].enableHyst);
+
+    haDisc.createNumber(F("Max. modulation"), Mqtt::getTopicString(Mqtt::TOPIC_MAXMODULATION), mqtt.getCmdTopic(Mqtt::TOPIC_MAXMODULATION));
+    haDisc.setMinMax(0, 100, 1);
+    discFlag &= haDisc.publish();
 
     return discFlag;
 }
@@ -997,7 +1013,7 @@ bool OTControl::sendCapDiscoveries() {
     haDisc.createSensor(F("integrator state 2"), F("integ_state_ch2"));
     haDisc.setValueTemplate(F("{{ value_json.heatercircuit[1].integState }}"));
     haDisc.setUnit(F("K"));
-    if (!haDisc.publish((heatingConfig[1].roomTempCompI > 0) && (vsc->hasCh2())))
+    if (!haDisc.publish((heatingConfig[1].roomComp.enabled) && (vsc->hasCh2())))
         return false;
 
     haDisc.createBinarySensor(F("suspend CH2"), F("susp2"), "");
@@ -1043,15 +1059,17 @@ void OTControl::setConfig(JsonObject &config) {
         hc.gradient = hpObj[F("gradient")] | 1.0;
         hc.offset = hpObj[F("offset")] | 0;
         hc.flow = hpObj[F("flow")] | 35;
-        hc.roomTempComp = hpObj[F("roomtempcomp")] | 0;
-        hc.roomTempCompI = hpObj[F("roomtempcompI")] | 0.0;
+        JsonObject roomComp = hpObj[F("roomComp")];
+        hc.roomComp.enabled = roomComp[F("enabled")] | false;
+        hc.roomComp.p = roomComp[F("p")] | 0.0;
+        hc.roomComp.i = roomComp[F("i")] | 0.0;
         hc.hysteresis = hpObj[F("hysteresis")] | 0.1;
         hc.enableHyst = hpObj[F("enableHyst")] | false;
         
         heatingCtrl[i].flowTemp = hc.flow;
         heatingCtrl[i].chOn = hc.chOn;
         heatingCtrl[i].overrideFlow = hpObj[F("overrideFlow")] | false;
-        if (hc.roomTempCompI == 0)
+        if (hc.roomComp.i == 0)
             heatingCtrl[i].piCtrl.integState = 0;
 
         if (!roomSetPoint[i])
@@ -1069,6 +1087,7 @@ void OTControl::setConfig(JsonObject &config) {
     boilerCtrl.dhwOn = boiler[F("dhwOn")];
     boilerCtrl.dhwTemp = boiler[F("dhwTemperature")] | 45;
     boilerCtrl.overrideDhw = boiler[F("overrideDhw")] | false;
+    boilerCtrl.maxModulation = boiler[F("maxModulation")] | 100;
     statusReqOvl = boiler[F("statusReq")] | 0x0000;
     boilerConfig.otc = boiler[F("otc")] | false;
     boilerConfig.summerMode = boiler[F("summerMode")] | false;
@@ -1111,6 +1130,11 @@ void OTControl::setOverrideCh(const bool ovrd, const uint8_t channel) {
 void OTControl::setOverrideDhw(const bool ovrd) {
     boilerCtrl.overrideDhw = ovrd;
     setDhwRequest.force();
+}
+
+void OTControl::setMaxMod(const int mm) {
+    boilerCtrl.maxModulation = mm;
+    setMaxModulation.force();
 }
 
 void OTControl::setChTemp(const double temp, const uint8_t channel) {
@@ -1168,14 +1192,14 @@ void OTWriteRequest::send(const uint16_t data) {
     otcontrol.sendRequest('T', req);
 }
 
-void OTWriteRequest::sendTemp(const double temp) {
+void OTWriteRequest::sendFloat(const double f) {
     int16_t td;
-    if (temp > 100)
+    if (f > 100)
         td = 100 << 8;
-    else if (temp < -100)
+    else if (f < -100)
         td = - (int) (100 << 8);
     else
-        td = (int) (temp * 256);
+        td = (int) (f * 256);
 
     send(td);
 }
@@ -1217,4 +1241,8 @@ OTWRSetRoomSetPoint::OTWRSetRoomSetPoint(const uint8_t ch):
 
 OTWRSetOutsideTemp::OTWRSetOutsideTemp():
         OTWriteRequest(OpenThermMessageID::Toutside, 60) {
+}
+
+OTWRSetMaxModulation::OTWRSetMaxModulation():
+        OTWriteRequest(OpenThermMessageID::MaxRelModLevelSetting, 60) {
 }

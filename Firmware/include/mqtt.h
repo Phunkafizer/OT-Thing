@@ -50,7 +50,8 @@ public:
         TOPIC_VENTENABLE,
         TOPIC_OPENBYPASS,
         TOPIC_AUTOBYPASS,
-        TOPIC_FREEVENTENABLE
+        TOPIC_FREEVENTENABLE,
+        TOPIC_MAXMODULATION
     };
     Mqtt();
     void begin();

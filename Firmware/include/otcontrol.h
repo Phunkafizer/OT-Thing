@@ -13,7 +13,7 @@ protected:
 public:
     OTWriteRequest(OpenThermMessageID id, uint16_t intervalS);
     void send(const uint16_t data);
-    void sendTemp(const double temp);
+    void sendFloat(const double f);
     void force();
     operator bool();
 };
@@ -51,6 +51,11 @@ public:
 class OTWRSetOutsideTemp: public OTWriteRequest {
 public:
     OTWRSetOutsideTemp();
+};
+
+class OTWRSetMaxModulation: public OTWriteRequest {
+public:
+    OTWRSetMaxModulation();
 };
 
 class OTControl {
@@ -99,11 +104,14 @@ private:
         double exponent;
         double gradient;
         double offset;
-        double flow; // default flow temperature
-        double roomTempComp; // P K/K
-        double roomTempCompI; // I 1/h
+        double flow; // default flow temperature 
         bool enableHyst;
         double hysteresis;
+        struct {
+            bool enabled;
+            double p; // P K/K
+            double i; // I 1/h
+        } roomComp;
     } heatingConfig[2];
     struct HeatingControl {
         bool chOn;
@@ -137,6 +145,7 @@ private:
         bool dhwOn;
         double dhwTemp;
         bool overrideDhw;
+        uint8_t maxModulation;
     } boilerCtrl;
     bool discFlag {true};
     OTWRSetDhw setDhwRequest;
@@ -146,6 +155,7 @@ private:
     OTWRSetRoomTemp setRoomTemp[2];
     OTWRSetRoomSetPoint setRoomSetPoint[2];
     OTWRSetOutsideTemp setOutsideTemp;
+    OTWRSetMaxModulation setMaxModulation;
     uint8_t masterMemberId;
     struct OTInterface {
         OTInterface(const uint8_t inPin, const uint8_t outPin, const bool isSlave);
@@ -183,6 +193,7 @@ public:
     void setVentEnable(const bool en);
     void setOverrideCh(const bool ovrd, const uint8_t channel);
     void setOverrideDhw(const bool ovrd);
+    void setMaxMod(const int mm);
 };
 
 

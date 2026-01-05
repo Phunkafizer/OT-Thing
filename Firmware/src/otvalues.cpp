@@ -77,8 +77,8 @@ static const OTItem OTITEMS[] PROGMEM = {
 
 OTValue *slaveValues[45] = { // reply data collected (read) from slave (boiler / ventilation / solar)
     new OTValueSlaveConfigMember(),
-    new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionSlave,      0, PSTR("OT-version slave")),
-    new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,               0, PSTR("productversion slave")),
+    new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionSlave,      0,                 PSTR("OT-version slave")),
+    new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,               0,                 PSTR("productversion slave")),
     new OTValueStatus(),
     new OTValueVentStatus(),
     new OTValueCapacityModulation(),
@@ -548,8 +548,7 @@ void OTValueVentFaultFlags::getValue(JsonObject &obj) const {
 
 
 OTValueProductVersion::OTValueProductVersion(const OpenThermMessageID id, const int interval, const char *haName):
-        OTValue(id, interval) {
-    this->haName = haName;
+        OTValue(id, interval, haName) {
 }
 
 bool OTValueProductVersion::sendDiscovery() {
