@@ -423,7 +423,7 @@ void OTControl::loopPiCtrl() {
             continue;
         }
         
-        double rt, rsp;
+        double rt, rsp; // roomtemp, roomsetpoint
 
         if (!heatingConfig[i].enableHyst)
             heatingCtrl[i].suspended = false;
@@ -437,7 +437,6 @@ void OTControl::loopPiCtrl() {
             pictrl.roomTempFilt = 0.1 * rt + 0.9 * pictrl.roomTempFilt;
         else
             pictrl.roomTempFilt = rt;
-
         pictrl.init = true;
 
         if (!roomSetPoint[i].get(rsp))
@@ -462,18 +461,31 @@ void OTControl::loopPiCtrl() {
         double p = heatingConfig[i].roomComp.p * e; // Kp * e
         
         // integral part of PI controller
-        
-        if ( (ots != nullptr) && (ots->getChActive(i)) )
-            pictrl.integState += heatingConfig[i].roomComp.i * e * PI_INTERVAL / 3600.0; // Ki * e * ts, ts = 60 s
+        const bool setJump = fabs(rsp - pictrl.rspPrev) > 0.3;
+        pictrl.rspPrev = rsp;
+        if ( (ots != nullptr) && ots->getChActive(i) && !heatingCtrl[i].suspended ) {
+            if (!setJump)
+                if (e > 0)
+                    pictrl.integState += heatingConfig[i].roomComp.i * e * PI_INTERVAL / 3600.0; // Ki * e * ts, ts = 60 s
+                else
+                    pictrl.integState += heatingConfig[i].roomComp.i * e * 0.3 * PI_INTERVAL / 3600.0; // slower as cooling takes more time
+            // else freeze integrator
+        }
         else
             pictrl.integState = pictrl.integState * 0.95; // decay
 
         // anti windup
         clip(pictrl.integState, -5, 5);
 
-        pictrl.deltaT = p + pictrl.integState;
+        double boost = 0;
+        if (e > 1.0)
+            boost = e * heatingConfig[i].roomComp.boost; // e * Kb
+
+        pictrl.deltaT = p + pictrl.integState + boost;
         // clipping
-        clip(pictrl.deltaT, -5, 10);
+        clip(pictrl.deltaT, -5, 12);
+
+        setBoilerRequest[i].force();
     }
 }
 
@@ -1063,6 +1075,7 @@ void OTControl::setConfig(JsonObject &config) {
         hc.roomComp.enabled = roomComp[F("enabled")] | false;
         hc.roomComp.p = roomComp[F("p")] | 0.0;
         hc.roomComp.i = roomComp[F("i")] | 0.0;
+        hc.roomComp.boost = roomComp[F("boost")] | 3.0;
         hc.hysteresis = hpObj[F("hysteresis")] | 0.1;
         hc.enableHyst = hpObj[F("enableHyst")] | false;
         
@@ -1072,8 +1085,10 @@ void OTControl::setConfig(JsonObject &config) {
         if (hc.roomComp.i == 0)
             heatingCtrl[i].piCtrl.integState = 0;
 
-        if (!roomSetPoint[i])
+        if (!roomSetPoint[i]) {
             roomSetPoint[i].set(hc.roomSet, Sensor::SOURCE_NA);
+            heatingCtrl[i].piCtrl.rspPrev = hc.roomSet;
+        }
     }
 
     JsonObject ventObj = config[F("vent")];

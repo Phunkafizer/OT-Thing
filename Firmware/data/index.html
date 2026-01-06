@@ -901,7 +901,7 @@
                     <h5>enable</h5>
                     <div>
                         <label class="switch">
-                            <input id="roomCompEnable1" type="checkbox" hideele="roomCompP1 roomCompI1" />
+                            <input id="roomCompEnable1" type="checkbox" hideele="roomCompP1 roomCompI1 roomCompBoost1" />
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -924,6 +924,16 @@
                             <span class="unit">1/h</span>
                         </div>
                         <input type="range" min="0" max="1" step="0.1">
+                    </div>
+                </div>
+                <div id="roomCompBoost1" class="param">
+                    <h5>Boost</h5>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">K/K</span>
+                        </div>
+                        <input type="range" min="0" max="4" step="0.1">
                     </div>
                 </div>
 
@@ -1164,7 +1174,7 @@
                     <h5>enable</h5>
                     <div>
                         <label class="switch">
-                            <input id="roomCompEnable2" type="checkbox" hideele="roomCompP2 roomCompI2" />
+                            <input id="roomCompEnable2" type="checkbox" hideele="roomCompP2 roomCompI2 roomCompBoost2" />
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -1187,6 +1197,17 @@
                             <span class="unit">1/h</span>
                         </div>
                         <input type="range" min="0" max="1" step="0.1">
+                    </div>
+                </div>
+
+                <div id="roomCompBoost2" class="param">
+                    <h5>Boost</h5>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">K/K</span>
+                        </div>
+                        <input type="range" min="0" max="4" step="0.1">
                     </div>
                 </div>
 
@@ -1653,6 +1674,7 @@
                         enabled: false,
                         p: 0,
                         i: 0,
+                        boost: 0
                     },
                     chOn: true,
                     flowMax: 60,
@@ -1677,6 +1699,7 @@
                         enabled: false,
                         p: 0,
                         i: 0,
+                        boost: 0
                     },
                     chOn: false,
                     flowMax: 60,
@@ -2158,6 +2181,7 @@
                     initRangeParam(`offset${ch}`, `heating.${idx}.offset`);
                     initRangeParam(`roomCompP${ch}`, `heating.${idx}.roomComp.p`);
                     initRangeParam(`roomCompI${ch}`, `heating.${idx}.roomComp.i`);
+                    initRangeParam(`roomCompBoost${ch}`, `heating.${idx}.roomComp.boost`);
                     initRangeParam(`hyst${ch}`, `heating.${idx}.hysteresis`);
 
                      if ('roomtemp' in hcfg) {

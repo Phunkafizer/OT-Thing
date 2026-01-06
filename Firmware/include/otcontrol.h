@@ -109,8 +109,9 @@ private:
         double hysteresis;
         struct {
             bool enabled;
-            double p; // P K/K
-            double i; // I 1/h
+            double p; // Kp K/K
+            double i; // Ki 1/h
+            double boost; // Kb K/K
         } roomComp;
     } heatingConfig[2];
     struct HeatingControl {
@@ -121,6 +122,7 @@ private:
         struct PiCtrl {
             bool init { false };
             double roomTempFilt;
+            double rspPrev; // previous room setpoint
             double integState {0}; // state of integrator / K
             double deltaT {0};
         } piCtrl;
