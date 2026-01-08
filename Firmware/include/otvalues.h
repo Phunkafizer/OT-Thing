@@ -90,8 +90,8 @@ ID	Msg	Name
 118	RW	DHW pump/valve starts
 119	RW	DHW burner starts
 120	RW	*   -   *   Burner operation hours
-121	RW	CH pump operation hours
-122	RW	DHW pump/valve operation hours
+121	RW	*   -   *   CH pump operation hours
+122	RW	*   -   *   DHW pump/valve operation hours
 123	RW	*   -   *   DHW burner operation hours
 
    Class 5 : Remote Boiler Parameters
@@ -173,6 +173,13 @@ public:
     uint16_t getValue() const;
 };
 
+class OTValueOperatingHours: public OTValueu16 {
+private:
+    bool sendDiscovery();
+public:
+    OTValueOperatingHours(const OpenThermMessageID id, const char *haName);
+};
+
 class OTValuei16: public OTValue {
 private:
     void getValue(JsonObject &stat) const;
@@ -228,6 +235,7 @@ private:
 public:    
     OTValueStatus();
     bool getChActive(const uint8_t channel);
+    bool getFlame() const;
 };
 
 class OTValueMasterStatus: public OTValueFlags {
@@ -446,6 +454,6 @@ public:
 };
 
 
-extern OTValue *slaveValues[45];
+extern OTValue *slaveValues[47];
 extern OTValue *thermostatValues[17];
 extern const char* getOTname(OpenThermMessageID id);

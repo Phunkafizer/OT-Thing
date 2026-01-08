@@ -68,6 +68,8 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::SuccessfulBurnerStarts,    PSTR("burner_starts")},
     {OpenThermMessageID::CHPumpStarts,              PSTR("ch_pump_starts")},
     {OpenThermMessageID::BurnerOperationHours,      PSTR("burner_op_hours")},
+    {OpenThermMessageID::CHPumpOperationHours,      PSTR("chpump_op_hours")},
+    {OpenThermMessageID::DHWPumpValveOperationHours,PSTR("dhwpump_op_hours")},
     {OpenThermMessageID::DHWBurnerOperationHours,   PSTR("dhw_burner_op_hours")},
     {OpenThermMessageID::OpenThermVersionMaster,    PSTR("master_ot_version")},
     {OpenThermMessageID::OpenThermVersionSlave,     PSTR("slave_ot_version")},
@@ -75,7 +77,7 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::SlaveVersion,              PSTR("slave_prod_version")}
 };
 
-OTValue *slaveValues[45] = { // reply data collected (read) from slave (boiler / ventilation / solar)
+OTValue *slaveValues[47] = { // reply data collected (read) from slave (boiler / ventilation / solar)
     new OTValueSlaveConfigMember(),
     new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionSlave,      0,                 PSTR("OT-version slave")),
     new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,               0,                 PSTR("productversion slave")),
@@ -112,8 +114,10 @@ OTValue *slaveValues[45] = { // reply data collected (read) from slave (boiler /
     new OTValueu16(             OpenThermMessageID::OEMDiagnosticCode,          60,     PSTR("OEM diagnostic code")),
     new OTValueu16(             OpenThermMessageID::SuccessfulBurnerStarts,     30,     PSTR("burnerstarts")),
     new OTValueu16(             OpenThermMessageID::CHPumpStarts,               30,     PSTR("CH pump starts")),
-    new OTValueu16(             OpenThermMessageID::BurnerOperationHours,       120),
-    new OTValueu16(             OpenThermMessageID::DHWBurnerOperationHours,    120),
+    new OTValueOperatingHours(  OpenThermMessageID::BurnerOperationHours,               PSTR("burner op. hours")),
+    new OTValueOperatingHours(  OpenThermMessageID::CHPumpOperationHours,               PSTR("DHW pump op. hours")),
+    new OTValueOperatingHours(  OpenThermMessageID::DHWPumpValveOperationHours,         PSTR("DHW pump/value op. hours")),
+    new OTValueOperatingHours(  OpenThermMessageID::DHWBurnerOperationHours,            PSTR("DHW op. hours")),
     new OTValueFaultFlags(                                                      30),
     new OTValueRemoteParameter(),
     new OTValueRemoteOverrideFunction(),
@@ -265,14 +269,6 @@ bool OTValue::sendDiscovery() {
             haDisc.setUnit(F("RPM"));
             break;
 
-        case OpenThermMessageID::BurnerOperationHours:
-            haDisc.createHourDuration(F("operating hours"), sName);
-            break;
-
-        case OpenThermMessageID::DHWBurnerOperationHours:
-            haDisc.createHourDuration(F("operating hours DHW"), sName);
-            break;
-
         case OpenThermMessageID::TSet:
             haDisc.createTempSensor(F("flow set temp."), sName);
             break;
@@ -387,6 +383,16 @@ void OTValueu16::getValue(JsonObject &obj) const {
 }
 
 
+OTValueOperatingHours::OTValueOperatingHours(const OpenThermMessageID id, const char *haName):
+        OTValueu16(id, 300, haName) {
+}
+
+bool OTValueOperatingHours::sendDiscovery() {
+    haDisc.createHourDuration(FPSTR(haName), FPSTR(getName()));
+    return OTValue::sendDiscovery("");
+}
+
+
 OTValuei16::OTValuei16(const OpenThermMessageID id, const int interval):
         OTValue(id, interval) {
 }
@@ -482,6 +488,12 @@ bool OTValueStatus::getChActive(const uint8_t channel) {
     return (value & (1<<((channel == 0) ? 1 : 5))) != 0;
 }
 
+bool OTValueStatus::getFlame() const {
+    if (!isSet)
+        return false;
+
+    return (value & (1<<3)) != 0;
+}
 
 OTValueMasterStatus::OTValueMasterStatus():
         OTValueFlags(OpenThermMessageID::Status, -1, flags, sizeof(flags) / sizeof(flags[0]), false) {

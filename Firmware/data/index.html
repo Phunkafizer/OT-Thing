@@ -171,7 +171,7 @@
         div.curve {
             text-align: center;
             background-color: #000;
-            margin-top: 0.5em;
+            margin-bottom: 0.5em;
         }
 
         div.toolbar {
@@ -519,12 +519,20 @@
                         <span class="statusvalue" field="slave.tr_override" unit="&deg;C"></span>    
                     </div>
                     <div class="statusfield">
-                        <h5>Operating hours burner</h5>
+                        <h5>burner op. hours</h5>
                         <span class="statusvalue" field="slave.burner_op_hours" unit="h"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Operating hours burner DHW</h5>
+                        <h5>DHW burner op. hours</h5>
                         <span class="statusvalue" field="slave.dhw_burner_op_hours" unit="h"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>CH pump op. hours</h5>
+                        <span class="statusvalue" field="slave.chpump_op_hours" unit="h"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>DHW ump/vale op. hours</h5>
+                        <span class="statusvalue" field="slave.dhwpump_op_hours" unit="h"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Burner starts</h5>
@@ -653,6 +661,14 @@
                     <div class="statusfield">
                         <h5>vent. OT version</h5>
                         <span class="statusvalue" field="slave.vent_ot_version"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>flame ratio (3 h)</h5>
+                        <span class="statusvalue" field="slave.flameRatio" unit="%"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>burner starts (3 h)</h5>
+                        <span class="statusvalue" field="slave.flameFreq" unit="/h"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Frames sent</h5>
@@ -1004,6 +1020,11 @@
                     </div>
                 </div>
 
+                <div class="curve">
+                    <canvas id="canvas1" height="375px" width="375px">
+                    </canvas>
+                </div>
+
                 <div class="flexline">
                     <div class="statusfield nohide">
                         <h5>Outside temperature</h5>
@@ -1025,11 +1046,6 @@
                         <h5>Integrator state</h5>
                         <span class="statusvalue" field="heatercircuit.0.integState" unit="K"></span>
                     </div>
-                </div>
-
-                <div class="curve">
-                    <canvas id="canvas1" height="375px" width="375px">
-                    </canvas>
                 </div>
             </div>
 
@@ -1261,6 +1277,11 @@
                     </div>
                 </div>
 
+                <div class="curve">
+                    <canvas id="canvas2" height="375px" width="375px">
+                    </canvas>
+                </div>
+
                 <div class="flexline">
                     <div class="statusfield nohide">
                         <h5>Outside temperature</h5>
@@ -1282,11 +1303,6 @@
                         <h5>Integrator state</h5>
                         <span class="statusvalue" field="heatercircuit.1.integState" unit="K"></span>
                     </div>
-                </div>
-
-                <div class="curve">
-                    <canvas id="canvas2" height="375px" width="375px">
-                    </canvas>
                 </div>
             </div>
 
@@ -2278,17 +2294,14 @@
                             val = val[f[i]];
                         
                         if ((val !== null) && (val !== undefined)) {
+                            const isErr = ele.classList.contains("error");
                             if (val === true) {
-                                if (ele.classList.contains("error"))
-                                    ele.classList.add("bool-error");
-                                else
-                                    ele.classList.add("bool-ok");
+                                ele.classList.add(isErr ? "bool-error" : "bool-ok");
+                                ele.classList.remove(isErr ? "bool-ok" :"bool-off");
                             }
                             else if (val === false) {
-                                if (ele.classList.contains("error"))
-                                    ele.classList.add("bool-ok");
-                                else
-                                    ele.classList.add("bool-off");
+                                ele.classList.add(isErr ? "bool-ok" : "bool-off");
+                                ele.classList.remove(isErr ? "bool-error" : "bool-on");
                             }
                             else
                                 ele.textContent = val;
@@ -2552,7 +2565,11 @@
                 drawCurve(2);
                 return;
             }
-            var canvas = document.getElementById("canvas" + hk);
+            var canvas = document.getElementById(`canvas${hk}`);
+            let flowmax = parseFloat(_("#flowmax" + hk + " input").value);
+            let fmg = Math.ceil(flowmax / 10) * 10 + 5; // flowmax for graph
+
+            canvas.height = 20 + (fmg - 20) * 4.5;
             var ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -2561,17 +2578,17 @@
                 y: canvas.height - 20
             };
             let xaxis = {
-                min: 20,
-                max: -20,
+                min: 20, // °C
+                max: -20, // °C
                 step: 5,
                 zoom: (canvas.width - origin.x * 2) / (20 - (-20))
             };
             let yaxis = {
-                min: 20,
-                max: 90,
+                min: 20, // °C
+                max: fmg, // °C
                 step: 10,
-                zoom: (canvas.height - (canvas.height - origin.y) * 2) / (90 - 20)
-            }; //°C
+                zoom: (canvas.height - (canvas.height - origin.y) * 2) / (fmg - 20)
+            };
 
             ctx.lineWidth = 1;
             ctx.strokeStyle = "#666";
@@ -2626,6 +2643,7 @@
             ctx.moveTo(origin.x, origin.y);
             ctx.lineTo(origin.x + (xaxis.min - xaxis.max) * xaxis.zoom, origin.y);
             ctx.stroke();
+            ctx.fillText("outside / °C", canvas.width - 55, origin.y - 10);
 
             //draw y-axis
             ctx.beginPath();
@@ -2634,7 +2652,7 @@
             ctx.stroke();
             ctx.save();
             ctx.rotate(-Math.PI / 2);
-            ctx.fillText("flow / °C", -80, 30);
+            ctx.fillText("flow / °C", -47, 30);
             ctx.restore();
 
             let roomset = roomsetpoint[hk - 1];
@@ -2645,7 +2663,6 @@
                     roomdelta = config.heating[hk-1].roomtempcomp * (roomset - hc.roomtemp) + hc.integState ?? 0;
             }
                 
-            let flowmax = parseFloat(_("#flowmax" + hk + " input").value);
             let gradient = parseFloat(_("#gradient" + hk + " input").value);
             let exponent = parseFloat(_("#exponent" + hk + " input").value);
             let offset = parseFloat(_("#offset" + hk + " input").value);
@@ -2716,13 +2733,29 @@
                 ctx.lineTo(psensor.x, psensor.y);
                 ctx.lineTo(psensor.x, origin.y);
                 ctx.stroke();
-                ctx.fillText(Math.round(ftsensor * 10) / 10, origin.x + 20, psensor.y - 8);
+                ctx.fillText(Math.round(ftsensor * 10) / 10, origin.x + 30, psensor.y - 8);
             }
 
             //draw markers
             config.heating[hk - 1].marker?.forEach(function (m) {
                 drawMarkerPoint(getPoint(m.ot, m.ft), '#3f8');
             });
+
+            // draw current flow temp
+            let flow = (hk == 1) ? statuscache.slave?.flow_t : statuscache.slave?.flow_t2;
+            if (flow !== undefined && flow !== null) {
+                let pf = getPoint(xaxis.min, (hk == 1) ? statuscache?.slave.flow_t : statuscache?.slave.flow_t2);
+                let flame = statuscache.slave?.status?.flame;
+                ctx.fillStyle = (flame === true) ? "#fa0" : "#13f";
+                ctx.strokeStyle = "#000";
+                ctx.beginPath();
+                ctx.moveTo(pf.x - 4 , pf.y);
+                ctx.lineTo(pf.x + 5, pf.y + 4);
+                ctx.lineTo(pf.x + 5, pf.y - 4);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.fill();
+            }
         }
     </script>
 </body>

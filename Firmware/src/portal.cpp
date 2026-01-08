@@ -3,6 +3,7 @@
 #include <ArduinoJson.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <WiFi.h>
 #include "portal.h"
 #include "devstatus.h"
 #include "devconfig.h"

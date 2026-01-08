@@ -1,6 +1,7 @@
 #include "command.h"
 #include "portal.h"
 #include "otvalues.h"
+#include "main.h"
 
 OtGwCommand command;
 
@@ -42,9 +43,17 @@ void OtGwCommand::begin() {
 }
 
 void OtGwCommand::sendAll(String s) {
+    s += F("\r\n");
     for (auto client: clients)
-        client->write((s + "\r\n").c_str());
-    Serial.println(s);
+        client->write(s.c_str());
+    Serial.print(s);
+
+#ifdef DEBUG
+if (bleClientConnected && bleSerialTx) {
+    bleSerialTx->setValue(s.c_str());
+    bleSerialTx->notify();
+}
+#endif
 }
 
 void OtGwCommand::sendOtEvent(const char source, const uint32_t data) {

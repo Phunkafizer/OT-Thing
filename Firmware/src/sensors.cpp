@@ -329,11 +329,13 @@ BLESensor::BLESensor(const uint8_t *adr):
 void BLESensor::begin() {
     BLEDevice::init("");
     BLEDevice::setPower(9);
+#ifndef DEBUG
     NimBLEScan* pBLEScan = NimBLEDevice::getScan();
     pBLEScan->setScanCallbacks(&scanCallbacks, true);
     pBLEScan->setActiveScan(true);
     pBLEScan->setMaxResults(0);
     pBLEScan->start(0, true, true);
+#endif
 }
 
 void BLESensor::onDiscovery(const NimBLEAdvertisedDevice* dev) {

@@ -184,6 +184,7 @@ void HADiscovery::createPressureSensor(String name, String id) {
 
 void HADiscovery::createHourDuration(String name, String id) {
     createSensor(name, id);
+    doc[FPSTR(HA_STATE_CLASS)] = F("total_increasing");
     doc[FPSTR(HA_DEVICE_CLASS)] = F("duration");
     doc[FPSTR(HA_UNIT_OF_MEASUREMENT)] = F("h");
     doc[FPSTR(HA_ICON)] = F("mdi:timer-sand-complete");
