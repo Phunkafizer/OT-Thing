@@ -17,6 +17,7 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::TSet,                      PSTR("ch_set_t")},
     {OpenThermMessageID::MConfigMMemberIDcode,      PSTR("master_config_member")},
     {OpenThermMessageID::SConfigSMemberIDcode,      PSTR("slave_config_member")},
+    {OpenThermMessageID::RemoteRequest,             PSTR("remote_req")},
     {OpenThermMessageID::ASFflags,                  PSTR("fault_flags")},
     {OpenThermMessageID::RBPflags,                  PSTR("rp_flags")},
     {OpenThermMessageID::TsetCH2,                   PSTR("ch_set_t2")},

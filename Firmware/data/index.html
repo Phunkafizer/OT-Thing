@@ -356,6 +356,65 @@
         [hidden] {
             display: none !important;
         }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal.hidden {
+            display: none;
+        }
+
+        .modal-content {
+            background-color: #000;
+            border: 2px solid #fd975a;
+            border-radius: 8px;
+            max-width: 90%;
+            width: 360px;
+            box-sizing: border-box;
+            padding: 8px;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(253, 151, 90, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fd975a;
+            color: #000;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+        }
+
+        #modalBody {
+            background-color: #000;
+            color: #fff;
+            border: 1px solid #fd975a;
+            border-radius: 6px;
+            margin-top: 8px;
+            padding: 6px;
+            font-family: "Lucida Console", "Courier New", monospace;
+            font-size: 0.75em;
+            white-space: pre-wrap;
+            max-height: 50vh;
+            overflow: auto;
+        }
     </style>
 </head>
 
@@ -386,6 +445,10 @@
                         <span class="statusvalue" id="runtime"></span>
                     </div>
                     <div class="statusfield">
+                        <h5>Reset reason</h5>
+                        <span class="statusvalue" id="reset_reason"></span>
+                    </div>
+                    <div class="statusfield">
                         <h5>Firmware</h5>
                         <span class="statusvalue" field="fw_version"></span>
                     </div>
@@ -406,7 +469,7 @@
                         <span class="statusvalue" field="wifi.hostname"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Status</h5>
+                        <h5>WiFi status</h5>
                         <span class="statusvalue" field="wifi.status"></span>
                     </div>
                     <div class="statusfield">
@@ -438,17 +501,13 @@
                     <span class="statusvalue" field="owResult"></span>
                 </div>
             </div>
-            
             <h3>Slave</h3>
             <div class="group">
+                <h4>Status</h4>
                 <div class="flexline">
                     <div class="statusfield">
                         <h5>Flame</h5>
                         <span class="statusvalue" field="slave.status.flame"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Modulation</h5>
-                        <span class="statusvalue" field="slave.rel_mod" unit="%"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Diagnostic</h5>
@@ -459,144 +518,12 @@
                         <span class="statusvalue" field="slave.status.ch_mode"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Flow temperature</h5>
-                        <span class="statusvalue" field="slave.flow_t" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield">
                         <h5>Heater circuit 2 active</h5>
                         <span class="statusvalue" field="slave.status.ch2_mode"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Flow temperature 2</h5>
-                        <span class="statusvalue" field="slave.flow_t2" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield">
                         <h5>DHW active</h5>
                         <span class="statusvalue" field="slave.status.dhw_mode"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>DHW temperature</h5>
-                        <span class="statusvalue" field="slave.dhw_t" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>DHW flow rate</h5>
-                        <span class="statusvalue" field="slave.dhw_flow_rate" unit="l/min"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>DHW temperature 2</h5>
-                        <span class="statusvalue" field="slave.dhw_t2" unit="&deg;C"></span>    
-                    </div>
-                    <div class="statusfield">
-                        <h5>DHW min. temperature</h5>
-                        <span class="statusvalue" field="slave.dhwMin" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>DHW max. temperature</h5>
-                        <span class="statusvalue" field="slave.dhwMax" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Min. flow temperature</h5>
-                        <span class="statusvalue" field="slave.chMin" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Max. flow temperature</h5>
-                        <span class="statusvalue" field="slave.chMax" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Exhaust temperature</h5>
-                        <span class="statusvalue" field="slave.exhaust_t" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Outside temperature</h5>
-                        <span class="statusvalue" field="slave.outside_t" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Return temperature</h5>
-                        <span class="statusvalue" field="slave.return_t" unit="&deg;C"></span>    
-                    </div>
-                    <div class="statusfield">
-                        <h5>Room override temp.</h5>
-                        <span class="statusvalue" field="slave.tr_override" unit="&deg;C"></span>    
-                    </div>
-                    <div class="statusfield">
-                        <h5>burner op. hours</h5>
-                        <span class="statusvalue" field="slave.burner_op_hours" unit="h"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>DHW burner op. hours</h5>
-                        <span class="statusvalue" field="slave.dhw_burner_op_hours" unit="h"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>CH pump op. hours</h5>
-                        <span class="statusvalue" field="slave.chpump_op_hours" unit="h"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>DHW ump/vale op. hours</h5>
-                        <span class="statusvalue" field="slave.dhwpump_op_hours" unit="h"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Burner starts</h5>
-                        <span class="statusvalue" field="slave.burner_starts"></span>    
-                    </div>
-                    <div class="statusfield">
-                        <h5>Unsuccessful burner starts</h5>
-                        <span class="statusvalue" field="slave.unsuccessful_burner_starts"></span>    
-                    </div>
-                    <div class="statusfield">
-                        <h5>CH pump start</h5>
-                        <span class="statusvalue" field="slave.ch_pump_starts"></span>    
-                    </div>
-                    <div class="statusfield">
-                        <h5>Number flame signal low</h5>
-                        <span class="statusvalue" field="slave.num_flame_signal_low"></span>    
-                    </div>
-                    <div class="statusfield">
-                        <h5>Pressure</h5>
-                        <span class="statusvalue" field="slave.ch_pressure" unit="bar"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Product version</h5>
-                        <span class="statusvalue" field="slave.slave_prod_version"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>OT version</h5>
-                        <span class="statusvalue" field="slave.slave_ot_version"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Member ID</h5>
-                        <span class="statusvalue" field="slave.memberId"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Max. capacity</h5>
-                        <span class="statusvalue" field="slave.max_capacity" unit="kW"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Min. modulation level</h5>
-                        <span class="statusvalue" field="slave.min_modulation" unit="%"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Heat exchanger temp.</h5>
-                        <span class="statusvalue" field="slave.boiler_heat_ex_t" unit="°C"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Boiler fanspeed setpoint</h5>
-                        <span class="statusvalue" field="slave.boiler_fan.setpoint" unit="Hz"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Boiler fanspeed actual</h5>
-                        <span class="statusvalue" field="slave.boiler_fan.actual" unit="Hz"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Flame current</h5>
-                        <span class="statusvalue" field="slave.flame_current" unit="µA"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>OEM fault code</h5>
-                        <span class="statusvalue" field="slave.oem_fault_code"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>OEM diagnostic code</h5>
-                        <span class="statusvalue" field="slave.oem_diag_code"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Vent. fault</h5>
@@ -622,13 +549,40 @@
                         <h5>Vent. diagnostic</h5>
                         <span class="statusvalue error" field="slave.vent_status.diagnostic"></span>
                     </div>
+                </div>
+                <div class="flexline">
                     <div class="statusfield">
-                        <h5>Rel. ventilation</h5>
-                        <span class="statusvalue" field="slave.rel_vent" unit="%"></span>
+                        <h5>Flow temperature</h5>
+                        <span class="statusvalue" field="slave.flow_t" unit="&deg;C"></span>
+                    </div>
+                    
+                    <div class="statusfield">
+                        <h5>Flow temperature 2</h5>
+                        <span class="statusvalue" field="slave.flow_t2" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>CO2 exhaust</h5>
-                        <span class="statusvalue" field="slave.co2_exhaust" unit="ppm"></span>
+                        <h5>DHW temperature</h5>
+                        <span class="statusvalue" field="slave.dhw_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>DHW temperature 2</h5>
+                        <span class="statusvalue" field="slave.dhw_t2" unit="&deg;C"></span>    
+                    </div>
+                    <div class="statusfield">
+                        <h5>Exhaust temperature</h5>
+                        <span class="statusvalue" field="slave.exhaust_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Outside temperature</h5>
+                        <span class="statusvalue" field="slave.outside_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Return temperature</h5>
+                        <span class="statusvalue" field="slave.return_t" unit="&deg;C"></span>    
+                    </div>
+                    <div class="statusfield">
+                        <h5>Room override temp.</h5>
+                        <span class="statusvalue" field="slave.tr_override" unit="&deg;C"></span>    
                     </div>
                     <div class="statusfield">
                         <h5>Supply inlet temp.</h5>
@@ -647,24 +601,94 @@
                         <span class="statusvalue" field="slave.exhaust_outlet_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
+                        <h5>Heat exchanger temp.</h5>
+                        <span class="statusvalue" field="slave.boiler_heat_ex_t" unit="°C"></span>
+                    </div>
+                </div>
+                <div class="flexline">
+                    <div class="statusfield">
+                        <h5>Modulation</h5>
+                        <span class="statusvalue" field="slave.rel_mod" unit="%"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Rel. ventilation</h5>
+                        <span class="statusvalue" field="slave.rel_vent" unit="%"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>flame ratio (3 h)</h5>
+                        <span class="statusvalue" field="slave.flameRatio" unit="%"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>DHW flow rate</h5>
+                        <span class="statusvalue" field="slave.dhw_flow_rate" unit="l/min"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Pressure</h5>
+                        <span class="statusvalue" field="slave.ch_pressure" unit="bar"></span>
+                    </div>                    
+                    <div class="statusfield">
+                        <h5>burner op. hours</h5>
+                        <span class="statusvalue" field="slave.burner_op_hours" unit="h"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>DHW burner op. hours</h5>
+                        <span class="statusvalue" field="slave.dhw_burner_op_hours" unit="h"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>CH pump op. hours</h5>
+                        <span class="statusvalue" field="slave.chpump_op_hours" unit="h"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>DHW ump/vale op. hours</h5>
+                        <span class="statusvalue" field="slave.dhwpump_op_hours" unit="h"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Burner starts</h5>
+                        <span class="statusvalue" field="slave.burner_starts"></span>    
+                    </div>
+                    <div class="statusfield">
+                        <h5>Unsuccessful burner starts</h5>
+                        <span class="statusvalue" field="slave.unsuccessful_burner_starts"></span>    
+                    </div>
+                    <div class="statusfield">
+                        <h5>CH pump startw</h5>
+                        <span class="statusvalue" field="slave.ch_pump_starts"></span>    
+                    </div>
+                    <div class="statusfield">
+                        <h5>Number flame signal low</h5>
+                        <span class="statusvalue" field="slave.num_flame_signal_low"></span>    
+                    </div>
+                    <div class="statusfield">
+                        <h5>Boiler fanspeed setpoint</h5>
+                        <span class="statusvalue" field="slave.boiler_fan.setpoint" unit="Hz"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Boiler fanspeed actual</h5>
+                        <span class="statusvalue" field="slave.boiler_fan.actual" unit="Hz"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Flame current</h5>
+                        <span class="statusvalue" field="slave.flame_current" unit="µA"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>OEM fault code</h5>
+                        <span class="statusvalue" field="slave.oem_fault_code"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>OEM diagnostic code</h5>
+                        <span class="statusvalue" field="slave.oem_diag_code"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>CO2 exhaust</h5>
+                        <span class="statusvalue" field="slave.co2_exhaust" unit="ppm"></span>
+                    </div>
+                    <div class="statusfield">
                         <h5>Exhaust fan speed</h5>
                         <span class="statusvalue" field="slave.exhaust_fan_speed" unit="rpm"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Supply fan speed</h5>
                         <span class="statusvalue" field="slave.supply_fan_speed" unit="rpm"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Vent. product version</h5>
-                        <span class="statusvalue" field="slave.vent_prod_version"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>vent. OT version</h5>
-                        <span class="statusvalue" field="slave.vent_ot_version"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>flame ratio (3 h)</h5>
-                        <span class="statusvalue" field="slave.flameRatio" unit="%"></span>
                     </div>
                     <div class="statusfield">
                         <h5>burner starts (3 h)</h5>
@@ -681,6 +705,55 @@
                     <div class="statusfield">
                         <h5>Frames timeouts</h5>
                         <span class="statusvalue" field="slave.timeouts"></span>
+                    </div>
+                </div>
+                <h4>configuration</h4>
+                <div class="flexline">
+                    <div class="statusfield">
+                        <h5>DHW min. temperature</h5>
+                        <span class="statusvalue" field="slave.dhwMin" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>DHW max. temperature</h5>
+                        <span class="statusvalue" field="slave.dhwMax" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Min. flow temperature</h5>
+                        <span class="statusvalue" field="slave.chMin" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Max. flow temperature</h5>
+                        <span class="statusvalue" field="slave.chMax" unit="&deg;C"></span>
+                    </div>
+                </div>
+                <div class="flexline">
+                    <div class="statusfield">
+                        <h5>Max. capacity</h5>
+                        <span class="statusvalue" field="slave.max_capacity" unit="kW"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Min. modulation level</h5>
+                        <span class="statusvalue" field="slave.min_modulation" unit="%"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Product version</h5>
+                        <span class="statusvalue" field="slave.slave_prod_version"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>OT version</h5>
+                        <span class="statusvalue" field="slave.slave_ot_version"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Vent. product version</h5>
+                        <span class="statusvalue" field="slave.vent_prod_version"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>vent. OT version</h5>
+                        <span class="statusvalue" field="slave.vent_ot_version"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Member ID</h5>
+                        <span class="statusvalue" field="slave.memberId"></span>
                     </div>
                 </div>
             </div>
@@ -1542,6 +1615,26 @@
                         </div>
                     </div>
                 </div>
+                <div class="otmode-master">
+                    <h4>slave requests</h4>
+                    <div>
+                        <select id="selRequest">
+                            <option value="0000" selected>back to normal operation</option>
+                            <option value="0100">boiler lockout reset</option>
+                            <option value="0200">CH water filling</option>
+                            <option value="0300">service mode max. power</option>
+                            <option value="0400">service mode min. power</option>
+                            <option value="0500">service mode spark test</option>
+                            <option value="0600">service mode fan max.</option>
+                            <option value="0700">service mode fan min.</option>
+                            <option value="0800">service mode 3-way valve to CH</option>
+                            <option value="0900">service mode 3-way valve to DHW</option>
+                            <option value="0a00">reset service mode flag</option>
+                            <option value="0c00">automatic hydronic air purge</option>
+                        </select>
+                        <button id="btnRequest">send</button>
+                    </div>
+                </div>
             </div>
 
             <h3>MQTT</h3>
@@ -1666,6 +1759,17 @@
             <button id="reboot">reboot</button>
         </div>
         <div class="footer"><a href="http://www.seegel-systeme.de" target="_blank">www.seegel-systeme.de</a></div>
+    </div>
+    <div id="dlgSlaveRequest" class="modal" hidden>
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Slave request</span>
+            </div>
+            <pre id="modalBody"></pre>
+            <div class="modal-footer">
+                <button id="modalClose">close</button>
+            </div>
+        </div>
     </div>
     <script>
         var config = {
@@ -1895,6 +1999,36 @@
                 _("#scanbody").innerHTML = "";
                 scanWiFi();
             };
+
+            _("#btnRequest").onclick = (ev) => {
+                let id = 4; // ID remote request
+                let rw = 0; // write
+                let data = _("#selRequest").value;
+                _("#modalBody").textContent = "Request running...";
+                _("#dlgSlaveRequest").hidden = false;
+
+                fetch(`/slaverequest?id=${id}&rw=${rw}&data=${data}`)
+                    .then(r => {
+                        if (!r.ok) throw new Error("HTTP " + r.status);
+                        return r.json();
+                    })
+                    .then(resp => {
+                        let rc = parseInt(resp["data"], 16) & 0xff;
+
+                        if (rc >= 128)
+                            _("#modalBody").innerHTML = "ACCEPTED<br>";
+                        else
+                            _("#modalBody").innerHTML = "REFUSED<br>";
+                        
+                        _("#modalBody").innerHTML += `<pre>${JSON.stringify(resp, null, 2)}</pre>`;
+                    })
+                    .catch(err => {
+                        _("#modalBody").textContent = "Error:\n" + err.message;
+                    });
+            };
+            _("#modalClose").onclick = (ev) => {
+                _("#dlgSlaveRequest").hidden = true;
+            }
 
             function addMarker(hk) {
                 if (statuscache.outsideTemp == null) {
@@ -2252,6 +2386,7 @@
                     }
                 }
                 _("#runtime").innerText = rtstr;
+                _("#reset_reason").innerText = `${statuscache.reset_reason0} / ${statuscache.reset_reason1}`;
 
                 if (statuscache.slave?.slave_config_member?.dhw_present === false) {
                     __(".DHW").forEach(ele => {

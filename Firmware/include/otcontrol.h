@@ -2,7 +2,7 @@
 
 #include <OpenTherm.h>
 #include "ArduinoJson.h"
-#include "freertos/FreeRTOS.h"
+#include "util.h"
 
 class OTWriteRequest {
 private:
@@ -58,8 +58,17 @@ public:
     OTWRSetMaxModulation();
 };
 
+struct SlaveRequestStruct {
+    OpenThermMessageID idReq;
+    OpenThermMessageType typeReq;
+    uint16_t dataReq;
+    OpenThermMessageType typeResp;
+    uint16_t dataResp;
+};
+
 class OTControl {
 friend OTWriteRequest;
+friend class SemMaster;
 public:
     enum CtrlMode: int8_t {
         CTRLMODE_UNKNOWN = -1,
@@ -83,6 +92,7 @@ private:
     void slavePinIrq();
     double getFlow(const uint8_t channel);
     uint16_t tmpToData(const double tmpf);
+    void hwYield();
     unsigned long lastBoilerStatus;
     unsigned long lastVentStatus;
     enum OTMode: int8_t {
@@ -201,7 +211,7 @@ public:
     OTControl();
     void begin();
     void loop();
-    unsigned long slaveRequest(OpenThermMessageID id, OpenThermMessageType ty, uint16_t data);
+    bool slaveRequest(SlaveRequestStruct &srs);
     void getJson(JsonObject &obj);
     void setConfig(JsonObject &config);
     void setDhwTemp(const double temp);

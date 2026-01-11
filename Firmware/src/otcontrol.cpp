@@ -26,6 +26,23 @@ void clip(double &d, const double min, const double max) {
         d = max;
 }
 
+class SemMaster: public SemHelper {    
+public:
+    SemMaster():
+            SemHelper(otcontrol.master.mutex, 2000) {
+        wait();
+    }
+    ~SemMaster() {
+        wait();
+    }
+    void wait() {
+        if (*this)
+            while (!otcontrol.master.hal.isReady()) {
+                otcontrol.hwYield();
+            }
+    }
+};
+
 // Testdata for local OT slave, can be read by a connected master
 const struct {
     OpenThermMessageID id;
@@ -315,10 +332,21 @@ double OTControl::getFlow(const uint8_t channel) {
     return flow;
 }
 
-void OTControl::loop() {
+void OTControl::hwYield() {
+    yield();
     master.hal.process();
     slave.hal.process();
+    
+    if (otMode == OTMODE_MASTER) {
+        // in OTMASTER mode use OT LEDs as master TX & RX
+        if (millis() > master.lastTx + 50)
+            setLedOTRed(false);
+    }
+}
+
+void OTControl::loop() {
     flameRatio.loop();
+    hwYield();
 
     if (millis() > nextPiCtrl) {
         loopPiCtrl();
@@ -328,19 +356,9 @@ void OTControl::loop() {
     if (!discFlag)
         discFlag = sendDiscovery();
 
-    if (otMode == OTMODE_MASTER) {
-        // in OTMASTER mode use OT LEDs as master TX & RX
-        if (millis() > master.lastTx + 50)
-            setLedOTRed(false);
-    }
-
-    if (!master.hal.isReady()) {
+    SemMaster sem;
+    if (!sem)
         return;
-    }
-
-    if (xSemaphoreTake(master.mutex, (TickType_t) 50 / portTICK_PERIOD_MS) != pdTRUE)
-        return;
-
     
     bool hasDHW = false;
     bool hasCh2 = false;
@@ -355,12 +373,10 @@ void OTControl::loop() {
         for (int ch=0; ch<(hasCh2 ? 2 : 1); ch++) {
             if (setRoomTemp[ch]) {
                 setRoomTemp[ch].sendFloat(20.1);
-                xSemaphoreGive(master.mutex);
                 return;
             }
             if (setRoomSetPoint[ch]) {
                 setRoomSetPoint[ch].sendFloat(21.3);
-                xSemaphoreGive(master.mutex);
                 return;
             }
         }
@@ -370,7 +386,6 @@ void OTControl::loop() {
     case OTMODE_MASTER:
         for (auto *valobj: slaveValues) {
             if (valobj->process()) {
-                xSemaphoreGive(master.mutex);
                 return;
             }
         }
@@ -379,12 +394,10 @@ void OTControl::loop() {
             double temp;
             if (setRoomTemp[ch] && roomTemp[ch].get(temp)) {
                 setRoomTemp[ch].sendFloat(temp);
-                xSemaphoreGive(master.mutex);
                 return;
             }
             if (setRoomSetPoint[ch] && roomSetPoint[ch].get(temp)) {
                 setRoomSetPoint[ch].sendFloat(temp);
-                xSemaphoreGive(master.mutex);
                 return;
             }
         }
@@ -395,7 +408,6 @@ void OTControl::loop() {
                     double flow = getFlow(ch);
                     if (flow > 0) {
                         setBoilerRequest[ch].sendFloat(flow);
-                        xSemaphoreGive(master.mutex);
                         return;
                     }
                 }
@@ -403,7 +415,6 @@ void OTControl::loop() {
 
             if (hasDHW && setDhwRequest) {
                 setDhwRequest.sendFloat(boilerCtrl.dhwTemp);
-                xSemaphoreGive(master.mutex);
                 return;
             }
 
@@ -411,14 +422,12 @@ void OTControl::loop() {
                 double t;
                 if (outsideTemp.get(t)) {
                     setOutsideTemp.sendFloat(t);
-                    xSemaphoreGive(master.mutex);
                     return;
                 }
             }
 
             if (setMaxModulation) {
                 setMaxModulation.sendFloat(boilerCtrl.maxModulation);
-                xSemaphoreGive(master.mutex);
                 return;
             }
 
@@ -435,7 +444,6 @@ void OTControl::loop() {
                     boilerConfig.dhwBlocking);
                 req |= statusReqOvl;
                 sendRequest('T', req);
-                xSemaphoreGive(master.mutex);
                 return;
             }  
         }
@@ -443,7 +451,6 @@ void OTControl::loop() {
         if ( (slaveApp == SLAVEAPP_VENT) || (otMode == OTMODE_LOOPBACKTEST) ) {
             if (setVentSetpointRequest) {
                 setVentSetpointRequest.send(ventCtrl.setpoint);
-                xSemaphoreGive(master.mutex);
                 return;
             }
 
@@ -460,19 +467,16 @@ void OTControl::loop() {
                     hb |= 1<<3;
                 unsigned long req = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, OpenThermMessageID::StatusVentilationHeatRecovery, hb << 8);
                 sendRequest('T', req);
-                xSemaphoreGive(master.mutex);
                 return;
             }
         }
 
         if (setMasterConfigMember) {
             setMasterConfigMember.send((1<<8) | masterMemberId);
-            xSemaphoreGive(master.mutex);
             return;
         }
         break;
     }
-    xSemaphoreGive(master.mutex);
 }
 
 void OTControl::loopPiCtrl() {
@@ -781,8 +785,9 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             newMsg = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, id, newMsg & 0xFFFF);
             break;
         }
-        master.sendRequest(0, newMsg);
         slave.onReceive((msg == newMsg) ? 'T' : 'R', msg);
+        SemMaster sem;
+        master.sendRequest(0, newMsg);
         break;
     }
 
@@ -837,7 +842,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
     if ( (mt == OpenThermMessageType::WRITE_DATA) || 
          (id == OpenThermMessageID::Status) || 
          (id == OpenThermMessageID::StatusVentilationHeatRecovery) ||
-         (id == OpenThermMessageID::TrSet) // roomunit RAM 786 sends TrSet as READ command (out of spec!)
+         (id == OpenThermMessageID::TrSet) // roomunit "RAM 786" sends TrSet as READ command (out of spec!)
        ) {
         double d = OpenTherm::getFloat(newMsg);
         switch (id) {
@@ -1248,25 +1253,22 @@ void OTControl::setVentEnable(const bool en) {
     ventCtrl.ventEnable = en;
 }
 
-unsigned long OTControl::slaveRequest(OpenThermMessageID id, OpenThermMessageType ty, uint16_t data) {
+bool OTControl::slaveRequest(SlaveRequestStruct &srs) {
     unsigned long res = 0;
 
-    if (xSemaphoreTake(master.mutex, (TickType_t)100 / portTICK_PERIOD_MS) == pdTRUE) {
-        while (!master.hal.isReady()) {
-            master.hal.process();
-            yield();
-        }
-        unsigned long req = OpenTherm::buildRequest(ty, id, data);
-        sendRequest('T', req);
-        while (!master.hal.isReady()) {
-            master.hal.process();
-            slave.hal.process(); // in loopback mode slave objekt has to process our request!
-            yield();
-        }
-        res = master.hal.getLastResponse();
-        xSemaphoreGive(master.mutex);
-    }
-    return res;
+    SemMaster sem;
+    if (!sem)
+        return false;
+
+    unsigned long req = OpenTherm::buildRequest(srs.typeReq, srs.idReq, srs.dataReq);
+    sendRequest('T', req);
+    sem.wait();
+
+    unsigned long resp = master.hal.getLastResponse();
+    srs.typeResp = OpenTherm::getMessageType(resp);
+    srs.dataResp = resp & 0xFFFF;
+    
+    return (master.hal.getLastResponseStatus() == OpenThermResponseStatus::SUCCESS);
 }
 
 

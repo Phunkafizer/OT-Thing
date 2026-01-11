@@ -171,32 +171,35 @@ void Portal::begin(bool configMode) {
             request->send(503);
             return;
         }
-        OpenThermMessageID id = (OpenThermMessageID) request->getParam("id")->value().toInt();
-
         if (!request->hasParam("rw")) {
             request->send(503);
             return;
         }
-        OpenThermMessageType ty = (request->getParam("rw")->value().toInt() != 0) ? OpenThermMessageType::READ_DATA : OpenThermMessageType::WRITE_DATA;
+
+        SlaveRequestStruct srs;
+        srs.idReq = (OpenThermMessageID) request->getParam("id")->value().toInt();
+        srs.typeReq = (request->getParam("rw")->value().toInt() != 0) ? OpenThermMessageType::READ_DATA : OpenThermMessageType::WRITE_DATA;
 
         if (!request->hasParam("data")) {
             request->send(503);
             return;
         }
         String hexData = request->getParam("data")->value();
-        uint16_t data = strtol(hexData.c_str(), nullptr, 16);
+        srs.dataReq = strtol(hexData.c_str(), nullptr, 16);
 
-        unsigned long rep = otcontrol.slaveRequest(id, ty, data);
-        JsonDocument doc;
-        JsonObject jobj = doc.to<JsonObject>();
-        
-        jobj["type"] = (int) OpenTherm::getMessageType(rep);
-        jobj["id"] = (int) id;
-        jobj["data"] = String(OpenTherm::getUInt(rep), 16);
-
-        AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));
-        serializeJson(doc, *response);
-        request->send(response);
+        if (otcontrol.slaveRequest(srs)) {    
+            JsonDocument doc;
+            JsonObject jobj = doc.to<JsonObject>();
+            
+            jobj["type"] = (int) srs.typeResp;
+            jobj["id"] = (int) srs.idReq;
+            jobj["data"] = String(OpenTherm::getUInt(srs.dataResp), 16);
+            AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));
+            serializeJson(doc, *response);
+            request->send(response);
+        }
+        else
+            request->send(503);
     });
 
     websrv.on("/checkupdate", HTTP_POST, [this](AsyncWebServerRequest *request) {

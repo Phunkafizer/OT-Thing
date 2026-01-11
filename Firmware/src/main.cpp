@@ -13,6 +13,7 @@
 #include "HADiscLocal.h"
 #include "time.h"
 #include "main.h"
+#include "esp_task_wdt.h"
 
 #ifdef DEBUG
     #include <ArduinoOTA.h>
@@ -116,6 +117,14 @@ void setup() {
     portal.begin(configMode);
     command.begin();
 
+    esp_task_wdt_config_t wdt_config = {
+        .timeout_ms = 6000,
+        .idle_core_mask = (1 << 0),
+        .trigger_panic = true
+    };
+    esp_task_wdt_init(&wdt_config);
+    esp_task_wdt_add(NULL);
+
 #ifdef DEBUG
     ArduinoOTA.begin();
 #endif
@@ -150,4 +159,6 @@ void loop() {
     Sensor::loopAll();
     devconfig.loop();
     OneWireNode::loop();
+
+    esp_task_wdt_reset();
 }
