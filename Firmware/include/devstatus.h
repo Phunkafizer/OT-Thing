@@ -4,12 +4,11 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
-#include <mutex>
+#include "freertos/FreeRTOS.h"
 
 extern class DevStatus {
 private:
-    JsonDocument doc;
-    std::mutex mutex;
+    SemaphoreHandle_t mutex;
 public:
     DevStatus();
     void lock();

@@ -482,7 +482,7 @@ OTValueStatus::OTValueStatus():
         OTValueFlags(OpenThermMessageID::Status, -1, flags, sizeof(flags) / sizeof(flags[0]), true) {
 }
 
-bool OTValueStatus::getChActive(const uint8_t channel) {
+bool OTValueStatus::getChActive(const uint8_t channel) const{
     if (!isSet)
         return false;
 
@@ -494,6 +494,13 @@ bool OTValueStatus::getFlame() const {
         return false;
 
     return (value & (1<<3)) != 0;
+}
+
+bool OTValueStatus::getDhwActive() const {
+    if (!isSet)
+        return false;
+
+    return (value & (1<<2)) != 0;
 }
 
 OTValueMasterStatus::OTValueMasterStatus():

@@ -19,13 +19,25 @@ static AsyncWebServer websrv(80);
 AsyncWebSocket ws("/ws");
 
 
+class WebSrvSem: public SemHelper {
+public:
+    WebSrvSem(AsyncWebServerRequest *request):
+            SemHelper(portal.mutex, 3000) {
+        if (!(*this))
+            request->send(403);
+    }
+};
+
+
 Portal::Portal():
     reboot(false),
     updateEnable(true) {
 }
 
 void Portal::begin(bool configMode) {
-     if (configMode) {
+    mutex = xSemaphoreCreateMutex();
+    
+    if (configMode) {
         WiFi.persistent(false);
         WiFi.softAPConfig(apAddress, apAddress, apMask);
         WiFi.softAP(F(AP_SSID), F(AP_PASSWORD));
@@ -53,6 +65,9 @@ void Portal::begin(bool configMode) {
     });
 
     websrv.on("/config", HTTP_GET, [this] (AsyncWebServerRequest *request) {
+        WebSrvSem sem(request);
+        if (!sem)
+            return;
         if (LittleFS.exists(FPSTR(CFG_FILENAME)))
             request->send(LittleFS, FPSTR(CFG_FILENAME), FPSTR(APP_JSON));
         else
@@ -65,6 +80,9 @@ void Portal::begin(bool configMode) {
         [] (AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len, bool final) {
         },
         [this] (AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
+            WebSrvSem sem(request);
+            if (!sem)
+                return;
             static String confBuf;
             if (!index)
                 confBuf.clear();
@@ -121,12 +139,15 @@ void Portal::begin(bool configMode) {
     });
 
     websrv.on("/status", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        WebSrvSem sem(request);
+        if (!sem)
+            return;
         AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));
         devstatus.lock();
         JsonDocument &doc = devstatus.buildDoc();
         serializeJson(doc, *response);
-        devstatus.unlock();
         request->send(response);
+        devstatus.unlock();
     });
 
     websrv.on("/reboot", HTTP_GET, [this](AsyncWebServerRequest *request) {

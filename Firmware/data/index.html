@@ -33,7 +33,6 @@
 
         div.nav {
             margin-bottom: 5px;
-            /*border: 1px solid #fd975a;;*/
         }
 
         div.nav li {
@@ -441,16 +440,16 @@
             <div class="group">
                 <div class="flexline">
                     <div class="statusfield">
+                        <h5>Firmware</h5>
+                        <span class="statusvalue" field="fw_version"></span>
+                    </div>
+                    <div class="statusfield">
                         <h5>Runtime</h5>
                         <span class="statusvalue" id="runtime"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Reset reason</h5>
-                        <span class="statusvalue" id="reset_reason"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Firmware</h5>
-                        <span class="statusvalue" field="fw_version"></span>
+                        <h5>reset reason</h5>
+                        <span id="reset_reason" class="statusvalue nohide"></span>
                     </div>
                     <div class="statusfield">
                         <h5>MAC</h5>
@@ -469,7 +468,7 @@
                         <span class="statusvalue" field="wifi.hostname"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>WiFi status</h5>
+                        <h5>Status</h5>
                         <span class="statusvalue" field="wifi.status"></span>
                     </div>
                     <div class="statusfield">
@@ -639,7 +638,7 @@
                         <span class="statusvalue" field="slave.chpump_op_hours" unit="h"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>DHW ump/vale op. hours</h5>
+                        <h5>DHW pump/valve op. hours</h5>
                         <span class="statusvalue" field="slave.dhwpump_op_hours" unit="h"></span>
                     </div>
                     <div class="statusfield">
@@ -1616,7 +1615,7 @@
                     </div>
                 </div>
                 <div class="otmode-master">
-                    <h4>slave requests</h4>
+                    <h4>Requests</h4>
                     <div>
                         <select id="selRequest">
                             <option value="0000" selected>back to normal operation</option>
@@ -1792,14 +1791,14 @@
                     flow: 45,
                     roomComp: {
                         enabled: false,
-                        p: 0,
-                        i: 0,
+                        p: 1.5,
+                        i: 0.5,
                         boost: 0
                     },
                     chOn: true,
                     flowMax: 60,
                     exponent: 1.3,
-                    gradient: 1.4,
+                    gradient: 1.0,
                     offset: 0,
                     marker: [],
                     roomsetpoint: {
@@ -1811,20 +1810,20 @@
                     },
                     overrideFlow: false,
                     enableHyst: false,
-                    hysteresis: 0.1
+                    hysteresis: 0.5
                 },
                 {
                     flow: 30,
                     roomComp: {
                         enabled: false,
-                        p: 0,
-                        i: 0,
+                        p: 1.5,
+                        i: 0.0,
                         boost: 0
                     },
                     chOn: false,
-                    flowMax: 60,
+                    flowMax: 30,
                     exponent: 1.3,
-                    gradient: 1.4,
+                    gradient: 1.0,
                     offset: 0,
                     marker: [],
                     roomsetpoint: {
@@ -1836,7 +1835,7 @@
                     },
                     overrideFlow: false,
                     enableHyst: false,
-                    hysteresis: 0.1
+                    hysteresis: 0.5
                 }
             ],
             vent: {
@@ -2386,7 +2385,7 @@
                     }
                 }
                 _("#runtime").innerText = rtstr;
-                _("#reset_reason").innerText = `${statuscache.reset_reason0} / ${statuscache.reset_reason1}`;
+                _("#reset_reason").innerText = `${statuscache["reset_reason0"]} / ${statuscache["reset_reason1"]}`;
 
                 if (statuscache.slave?.slave_config_member?.dhw_present === false) {
                     __(".DHW").forEach(ele => {
@@ -2792,12 +2791,13 @@
 
             let roomset = roomsetpoint[hk - 1];
             let roomdelta = 0;
-            if ("heatercircuit" in statuscache) {
-                let hc = statuscache.heatercircuit[hk - 1];
-                if ("roomtemp" in hc)
-                    roomdelta = config.heating[hk-1].roomtempcomp * (roomset - hc.roomtemp) + hc.integState ?? 0;
+            let rc = config.heating?.[hk-1]?.roomComp;
+            if (rc?.enabled === true) {
+                const hcs = statuscache?.heatercircuit?.[hk - 1];
+                if (hcs?.roomtemp !== undefined)
+                    roomdelta = (rc.p ?? 0) * (roomset - (hcs.roomtemp ?? 0)) + hcs.integState ?? 0;
             }
-                
+
             let gradient = parseFloat(_("#gradient" + hk + " input").value);
             let exponent = parseFloat(_("#exponent" + hk + " input").value);
             let offset = parseFloat(_("#offset" + hk + " input").value);

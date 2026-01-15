@@ -8,17 +8,19 @@
 #include <NimBLEDevice.h>
 
 DevStatus devstatus;
+static StaticJsonDocument<2048> doc;
 
 DevStatus::DevStatus():
         numWifiDiscon(0) {
+    mutex = xSemaphoreCreateMutex();
 }
 
 void DevStatus::lock() {
-    mutex.lock();
+    xSemaphoreTake(mutex, (TickType_t) 500 / portTICK_PERIOD_MS);
 }
+
 void DevStatus::unlock() {
-    doc.clear();
-    mutex.unlock();
+    xSemaphoreGive(mutex);
 }
 
 JsonDocument &DevStatus::buildDoc() {
@@ -26,6 +28,7 @@ JsonDocument &DevStatus::buildDoc() {
 
     doc[F("runtime")] = millis() / 1000UL;
     doc[F("freeHeap")] = ESP.getFreeHeap();
+    doc[F("largestBlock")] = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
     doc[F("resetInfo")] = rtc_get_reset_reason(0);
     doc[F("fw_version")] = F(BUILD_VERSION);
     doc[F("USB_connected")] = Serial.isConnected();

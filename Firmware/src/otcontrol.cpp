@@ -6,10 +6,13 @@
 #include "hwdef.h"
 #include "portal.h"
 #include "sensors.h"
+#include "esp_task_wdt.h"
 
-OTControl otcontrol;
+
 
 const int PI_INTERVAL = 60;
+
+OTControl otcontrol;
 
 constexpr uint16_t floatToOT(double f) {
     return (((int) f) << 8) | (int) ((f - (int) f) * 256);
@@ -18,30 +21,6 @@ constexpr uint16_t floatToOT(double f) {
 constexpr uint16_t nib(uint8_t hb, uint8_t lb) {
     return (hb << 8) | lb;
 }
-
-void clip(double &d, const double min, const double max) {
-    if (d < min)
-        d = min;
-    if (d > max)
-        d = max;
-}
-
-class SemMaster: public SemHelper {    
-public:
-    SemMaster():
-            SemHelper(otcontrol.master.mutex, 2000) {
-        wait();
-    }
-    ~SemMaster() {
-        wait();
-    }
-    void wait() {
-        if (*this)
-            while (!otcontrol.master.hal.isReady()) {
-                otcontrol.hwYield();
-            }
-    }
-};
 
 // Testdata for local OT slave, can be read by a connected master
 const struct {
@@ -94,6 +73,43 @@ const struct {
     {OpenThermMessageID::TboilerHeatExchanger,      floatToOT(48.5)},
     {OpenThermMessageID::BoilerFanSpeedSetpointAndActual, nib(20, 21)},
     {OpenThermMessageID::FlameCurrent,              floatToOT(96.8)},
+};
+
+
+void clip(double &d, const double min, const double max) {
+    if (d < min)
+        d = min;
+    if (d > max)
+        d = max;
+}
+
+class SemMaster: public SemHelper {    
+public:
+    SemMaster(const uint16_t timeout):
+            SemHelper(otcontrol.master.mutex, timeout) {
+        wait();
+    }
+
+    ~SemMaster() {
+        wait();
+    }
+
+    operator bool() {
+        return SemHelper::operator bool() && otcontrol.master.hal.isReady();
+    }
+
+    void wait() {
+        if (SemHelper::operator bool()) {
+            TickType_t start = xTaskGetTickCount();
+
+            while (!otcontrol.master.hal.isReady()) {
+                if ((xTaskGetTickCount() - start) > pdMS_TO_TICKS(2000))
+                    break;
+
+                otcontrol.hwYield();
+            }
+        }
+    }
 };
 
 void IRAM_ATTR handleIrqMaster() {
@@ -333,7 +349,8 @@ double OTControl::getFlow(const uint8_t channel) {
 }
 
 void OTControl::hwYield() {
-    yield();
+    //yield();
+    vTaskDelay(1);
     master.hal.process();
     slave.hal.process();
     
@@ -345,7 +362,6 @@ void OTControl::hwYield() {
 }
 
 void OTControl::loop() {
-    flameRatio.loop();
     hwYield();
 
     if (millis() > nextPiCtrl) {
@@ -356,9 +372,13 @@ void OTControl::loop() {
     if (!discFlag)
         discFlag = sendDiscovery();
 
-    SemMaster sem;
+    flameRatio.loop();
+
+    SemMaster sem(5);
     if (!sem)
         return;
+
+    esp_task_wdt_reset();
     
     bool hasDHW = false;
     bool hasCh2 = false;
@@ -433,13 +453,18 @@ void OTControl::loop() {
 
             if (millis() > lastBoilerStatus + 800) {
                 lastBoilerStatus = millis();
+                const bool ch1 = heatingCtrl[0].chOn && 
+                                !(heatingConfig[0].enableHyst && heatingCtrl[0].suspended);
+
+                const bool ch2 = heatingCtrl[1].chOn && 
+                                !(heatingConfig[1].enableHyst && heatingCtrl[1].suspended);
 
                 unsigned long req = OpenTherm::buildSetBoilerStatusRequest(
-                    heatingCtrl[0].chOn && !(heatingConfig[0].enableHyst && heatingCtrl[0].suspended), 
+                    ch1,
                     boilerCtrl.dhwOn,
                     boilerConfig.coolOn,
                     boilerConfig.otc, 
-                    heatingCtrl[1].chOn && !(heatingConfig[1].enableHyst && heatingCtrl[1].suspended),
+                    ch2,
                     boilerConfig.summerMode,
                     boilerConfig.dhwBlocking);
                 req |= statusReqOvl;
@@ -482,12 +507,9 @@ void OTControl::loop() {
 void OTControl::loopPiCtrl() {
     OTValueStatus *ots = static_cast<OTValueStatus*>(OTValue::getSlaveValue(OpenThermMessageID::Status));
     for (int i=0; i<2; i++) {
+        setBoilerRequest[i].force();
+
         HeatingControl::PiCtrl &pictrl = heatingCtrl[i].piCtrl;
-        if (!heatingConfig[i].roomComp.enabled) {
-            pictrl.integState = 0;
-            pictrl.deltaT = 0;
-            continue;
-        }
         
         double rt, rsp; // roomtemp, roomsetpoint
 
@@ -517,6 +539,12 @@ void OTControl::loopPiCtrl() {
                 if (rt > rsp + heatingConfig[i].hysteresis)
                     heatingCtrl[i].suspended = true;
             }
+        }
+
+        if (!heatingConfig[i].roomComp.enabled) {
+            pictrl.integState = 0;
+            pictrl.deltaT = 0;
+            continue;
         }
 
         double e = rsp - rt; // error
@@ -550,8 +578,6 @@ void OTControl::loopPiCtrl() {
         pictrl.deltaT = p + pictrl.integState + boost;
         // clipping
         clip(pictrl.deltaT, -5, 12);
-
-        setBoilerRequest[i].force();
     }
 }
 
@@ -786,8 +812,9 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             break;
         }
         slave.onReceive((msg == newMsg) ? 'T' : 'R', msg);
-        SemMaster sem;
-        master.sendRequest(0, newMsg);
+        SemMaster sem(500);
+        if (sem)
+            master.sendRequest(0, newMsg);
         break;
     }
 
@@ -898,8 +925,10 @@ void OTControl::getJson(JsonObject &obj) {
     jSlave[F("rxCount")] = master.rxCount;
     if ( (otMode == OTMODE_MASTER) || (otMode == OTMODE_LOOPBACKTEST) )
         jSlave[F("timeouts")] = master.timeoutCount;
-    jSlave[F("flameRatio")] = flameRatio.getDuty();
-    jSlave[F("flameFreq")] = flameRatio.getFreq();
+    if (OTValue::getSlaveValue(OpenThermMessageID::Status)->isSet) {
+        jSlave[F("flameRatio")] = flameRatio.getDuty();
+        jSlave[F("flameFreq")] = flameRatio.getFreq();
+    }
 
     JsonObject thermostat = obj[F("thermostat")].to<JsonObject>();
     for (auto *valobj: thermostatValues)
@@ -1256,9 +1285,10 @@ void OTControl::setVentEnable(const bool en) {
 bool OTControl::slaveRequest(SlaveRequestStruct &srs) {
     unsigned long res = 0;
 
-    SemMaster sem;
-    if (!sem)
+    SemMaster sem(2000);
+    if (!sem) {
         return false;
+    }
 
     unsigned long req = OpenTherm::buildRequest(srs.typeReq, srs.idReq, srs.dataReq);
     sendRequest('T', req);

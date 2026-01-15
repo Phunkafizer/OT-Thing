@@ -234,8 +234,9 @@ private:
     };
 public:    
     OTValueStatus();
-    bool getChActive(const uint8_t channel);
+    bool getChActive(const uint8_t channel) const;
     bool getFlame() const;
+    bool getDhwActive() const;
 };
 
 class OTValueMasterStatus: public OTValueFlags {

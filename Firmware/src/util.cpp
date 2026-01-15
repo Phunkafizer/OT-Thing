@@ -2,7 +2,6 @@
 
 SemHelper::SemHelper(SemaphoreHandle_t &mtx, const uint16_t timeout):
         mtx(mtx) {
-
     result = xSemaphoreTake(mtx, (TickType_t) timeout / portTICK_PERIOD_MS);
 }
 
