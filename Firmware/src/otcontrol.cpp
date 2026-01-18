@@ -9,8 +9,7 @@
 #include "esp_task_wdt.h"
 
 
-
-const int PI_INTERVAL = 60;
+const int PI_INTERVAL = 60; // seconds
 
 OTControl otcontrol;
 
@@ -83,23 +82,28 @@ void clip(double &d, const double min, const double max) {
         d = max;
 }
 
-class SemMaster: public SemHelper {    
+class SemMaster {
+private:
+    BaseType_t result;
 public:
-    SemMaster(const uint16_t timeout):
-            SemHelper(otcontrol.master.mutex, timeout) {
+    SemMaster(const uint16_t timeout) {
+        result = xSemaphoreTakeRecursive(otcontrol.master.mutex, (TickType_t) timeout / portTICK_PERIOD_MS);
         wait();
     }
 
     ~SemMaster() {
-        wait();
+        if (result == true) {
+            wait();
+            xSemaphoreGiveRecursive(otcontrol.master.mutex);
+        }
     }
 
     operator bool() {
-        return SemHelper::operator bool() && otcontrol.master.hal.isReady();
+        return (result == pdTRUE) && otcontrol.master.hal.isReady();
     }
 
     void wait() {
-        if (SemHelper::operator bool()) {
+        if (result == pdTRUE) {
             TickType_t start = xTaskGetTickCount();
 
             while (!otcontrol.master.hal.isReady()) {
@@ -133,7 +137,7 @@ void otCbSlave(unsigned long response, OpenThermResponseStatus status) {
 OTControl::OTInterface::OTInterface(const uint8_t inPin, const uint8_t outPin, const bool isSlave):
         hal(inPin, outPin, isSlave) {
     resetCounters();
-    mutex = xSemaphoreCreateMutex();
+    mutex = xSemaphoreCreateRecursiveMutex();
 }
 
 void OTControl::OTInterface::sendRequest(const char source, const unsigned long msg) {
@@ -374,11 +378,9 @@ void OTControl::loop() {
 
     flameRatio.loop();
 
-    SemMaster sem(5);
+    SemMaster sem(10);
     if (!sem)
         return;
-
-    esp_task_wdt_reset();
     
     bool hasDHW = false;
     bool hasCh2 = false;
@@ -541,7 +543,7 @@ void OTControl::loopPiCtrl() {
             }
         }
 
-        if (!heatingConfig[i].roomComp.enabled) {
+        if (!pictrl.enabled) {
             pictrl.integState = 0;
             pictrl.deltaT = 0;
             continue;
@@ -1002,16 +1004,21 @@ bool OTControl::sendDiscovery() {
     haDisc.setRetain(true);
     discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
 
-    haDisc.createClima(F("room set temperature 1"), F("clima_room1"), mqtt.getCmdTopic(Mqtt::TOPIC_ROOMSETPOINT1));
+    haDisc.createClima(F("room setpoint 1"), F("clima_room1"), mqtt.getCmdTopic(Mqtt::TOPIC_ROOMSETPOINT1));
     haDisc.setMinMaxTemp(10, 30, 0.5);
     haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
     haDisc.setCurrentTemperatureTemplate(F("{{ value_json.heatercircuit[0].roomtemp }}"));
     haDisc.setInitial(20);
+    haDisc.setModeCommandTopic(mqtt.getCmdTopic(Mqtt::TOPIC_ROOMCOMP1));
     haDisc.setTemperatureStateTopic(haDisc.defaultStateTopic);
     haDisc.setTemperatureStateTemplate(F("{{ value_json.heatercircuit[0].roomsetpoint }}"));
     haDisc.setOptimistic(true);
     haDisc.setRetain(true);
-    haDisc.setModes(0x02);
+    haDisc.setModes(0x06);
+    discFlag &= haDisc.publish(heatingConfig[0].chOn);
+
+    haDisc.createTempSensor(F("room setpoint 1"), F("setpoint_room1"));
+    haDisc.setStateTopic(mqtt.getCmdTopic(Mqtt::TOPIC_ROOMSETPOINT1));
     discFlag &= haDisc.publish(heatingConfig[0].chOn);
 
     haDisc.createNumber(F("room temperature 1"), Mqtt::getTopicString(Mqtt::TOPIC_ROOMTEMP1), mqtt.getCmdTopic(Mqtt::TOPIC_ROOMTEMP1));
@@ -1117,11 +1124,17 @@ bool OTControl::sendCapDiscoveries() {
     haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
     haDisc.setCurrentTemperatureTemplate(F("{{ value_json.heatercircuit[1].roomtemp }}"));
     haDisc.setInitial(20);
+    haDisc.setModeCommandTopic(mqtt.getCmdTopic(Mqtt::TOPIC_ROOMCOMP2));
     haDisc.setTemperatureStateTopic(haDisc.defaultStateTopic);
     haDisc.setTemperatureStateTemplate(F("{{ value_json.heatercircuit[1].roomsetpoint }}"));
     haDisc.setOptimistic(true);
     haDisc.setRetain(true);
-    haDisc.setModes(0x02);
+    haDisc.setModes(0x06);
+    if (!haDisc.publish(vsc->hasCh2()))
+        return false;
+
+    haDisc.createTempSensor(F("room setpoint 2"), F("setpoint_room2"));
+    haDisc.setStateTopic(mqtt.getCmdTopic(Mqtt::TOPIC_ROOMSETPOINT2));
     if (!haDisc.publish(vsc->hasCh2()))
         return false;
 
@@ -1191,6 +1204,7 @@ void OTControl::setConfig(JsonObject &config) {
         heatingCtrl[i].flowTemp = hc.flow;
         heatingCtrl[i].chOn = hc.chOn;
         heatingCtrl[i].overrideFlow = hpObj[F("overrideFlow")] | false;
+        heatingCtrl[i].piCtrl.enabled = hc.roomComp.enabled;
         if (hc.roomComp.i == 0)
             heatingCtrl[i].piCtrl.integState = 0;
 
@@ -1259,6 +1273,10 @@ void OTControl::setOverrideDhw(const bool ovrd) {
 void OTControl::setMaxMod(const int mm) {
     boilerCtrl.maxModulation = mm;
     setMaxModulation.force();
+}
+
+void OTControl::setRoomComp(const bool en, const uint8_t channel) {
+    heatingCtrl[channel].piCtrl.enabled = en;
 }
 
 void OTControl::setChTemp(const double temp, const uint8_t channel) {

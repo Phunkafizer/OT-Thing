@@ -81,7 +81,9 @@ File DevConfig::getFile() {
 }
 
 void DevConfig::write(String &str) {
-    writeBuf = str;
+    File f = LittleFS.open(FPSTR(CFG_FILENAME), "w");
+    f.write((uint8_t *) str.c_str(), str.length());
+    f.close();
     writeBufFlag = true;
 }
 
@@ -92,9 +94,6 @@ void DevConfig::remove() {
 void DevConfig::loop() {
     if (writeBufFlag) {
         writeBufFlag = false;
-        File f = LittleFS.open(FPSTR(CFG_FILENAME), "w");
-        f.write((uint8_t *) writeBuf.c_str(), writeBuf.length());
-        f.close();
         update();
     }
 }

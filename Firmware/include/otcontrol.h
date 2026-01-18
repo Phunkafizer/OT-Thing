@@ -130,6 +130,7 @@ private:
         CtrlMode mode {CTRLMODE_AUTO};
         bool overrideFlow;
         struct PiCtrl {
+            bool enabled;
             bool init { false };
             double roomTempFilt;
             double rspPrev; // previous room setpoint
@@ -226,6 +227,7 @@ public:
     void setOverrideCh(const bool ovrd, const uint8_t channel);
     void setOverrideDhw(const bool ovrd);
     void setMaxMod(const int mm);
+    void setRoomComp(const bool en, const uint8_t channel);
 };
 
 

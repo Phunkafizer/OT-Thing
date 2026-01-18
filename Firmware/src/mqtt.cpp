@@ -20,6 +20,8 @@ static struct {
     {Mqtt::TOPIC_CHMODE2, "chMode2"},
     {Mqtt::TOPIC_ROOMTEMP1, "roomTemp1"},
     {Mqtt::TOPIC_ROOMTEMP2, "roomTemp2"},
+    {Mqtt::TOPIC_ROOMCOMP1, "roomComp1"},
+    {Mqtt::TOPIC_ROOMCOMP2, "roomComp2"},
     {Mqtt::TOPIC_ROOMSETPOINT1, "roomSetpoint1"},
     {Mqtt::TOPIC_ROOMSETPOINT2, "roomSetpoint2"},
     {Mqtt::TOPIC_OVERRIDECH1, "overrideCh1"},
@@ -36,6 +38,7 @@ static struct {
 Mqtt mqtt;
 static uint32_t numDisc = 0;
 static WiFiClient espClient;
+static char statBuf[4096];
 
 void mqttConnectCb(bool sessionPresent) {
     mqtt.onConnect();
@@ -140,11 +143,10 @@ void Mqtt::loop() {
 
         if ((millis() - lastStatus) > 5000) {
             lastStatus = millis();
-            String payload;
-            devstatus.lock();
-            devstatus.getJson(payload);
-            devstatus.unlock();
-            cli.publish(haDisc.defaultStateTopic.c_str(), 0, false, payload.c_str());
+            JsonDocument doc;
+            devstatus.buildDoc(doc);
+            serializeJson(doc, statBuf);
+            cli.publish(haDisc.defaultStateTopic.c_str(), 0, false, statBuf);
             cli.publish(statusTopic.c_str(), 0, false, PSTR("online"));
         }
     }
@@ -210,66 +212,50 @@ void Mqtt::onMessage(const char *topic, String &payload) {
         break;
     }
 
-    case TOPIC_CHSETTEMP1: {
-        double d = payload.toFloat();
-        otcontrol.setChTemp(d, 0);
-        break;
-    }
-
+    case TOPIC_CHSETTEMP1:
     case TOPIC_CHSETTEMP2: {
         double d = payload.toFloat();
-        otcontrol.setChTemp(d, 1);
+        otcontrol.setChTemp(d, (uint8_t) (etop - TOPIC_CHSETTEMP1));
         break;
     }
 
-    case TOPIC_CHMODE1: {
-        OTControl::CtrlMode mode = strToCtrlMode(payload);
-        if (mode != OTControl::CTRLMODE_UNKNOWN)
-            otcontrol.setChCtrlMode(mode, 0);
-        break;
-    }
-
+    case TOPIC_CHMODE1:
     case TOPIC_CHMODE2: {
+        const uint8_t ch = (uint8_t) (etop - TOPIC_CHMODE1);
         OTControl::CtrlMode mode = strToCtrlMode(payload);
         if (mode != OTControl::CTRLMODE_UNKNOWN)
-            otcontrol.setChCtrlMode(mode, 1);
+            otcontrol.setChCtrlMode(mode, ch);
         break;
     }
 
-    case TOPIC_ROOMTEMP1: {
-        double d = payload.toFloat();
-        roomTemp[0].set(d, Sensor::SOURCE_MQTT);
-        otcontrol.forceFlowCalc(0);
-        break;
-    }
-
+    case TOPIC_ROOMTEMP1:
     case TOPIC_ROOMTEMP2: {
+        const uint8_t ch = (uint8_t) (etop - TOPIC_ROOMTEMP1);
         double d = payload.toFloat();
-        roomTemp[1].set(d, Sensor::SOURCE_MQTT);
-        otcontrol.forceFlowCalc(1);
+        roomTemp[ch].set(d, Sensor::SOURCE_MQTT);
+        otcontrol.forceFlowCalc(ch);
         break;
     }
 
-    case TOPIC_ROOMSETPOINT1: {
-        double d = payload.toFloat();
-        roomSetPoint[0].set(d, Sensor::SOURCE_MQTT);
-        otcontrol.forceFlowCalc(0);
-        break;
-    }
-
+    case TOPIC_ROOMSETPOINT1:
     case TOPIC_ROOMSETPOINT2: {
+        const uint8_t ch = (uint8_t) (etop - TOPIC_ROOMSETPOINT1);
         double d = payload.toFloat();
-        roomSetPoint[1].set(d, Sensor::SOURCE_MQTT);
-        otcontrol.forceFlowCalc(1);
+        roomSetPoint[ch].set(d, Sensor::SOURCE_MQTT);
+        otcontrol.forceFlowCalc(ch);
+        break;
+    }
+
+    case TOPIC_ROOMCOMP1:
+    case TOPIC_ROOMCOMP2: {
+        OTControl::CtrlMode mode = strToCtrlMode(payload);
+        otcontrol.setRoomComp(mode == OTControl::CTRLMODE_AUTO, (uint8_t) (etop - TOPIC_ROOMCOMP1));
         break;
     }
 
     case TOPIC_OVERRIDECH1:
-        otcontrol.setOverrideCh(payload == F("ON"), 0);
-        break;
-
     case TOPIC_OVERRIDECH2:
-        otcontrol.setOverrideCh(payload == F("ON"), 1);
+        otcontrol.setOverrideCh(payload == F("ON"), (uint8_t) (etop - TOPIC_OVERRIDECH1));
         break;
 
     case TOPIC_OVERRIDEDHW:

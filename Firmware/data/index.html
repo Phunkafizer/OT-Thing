@@ -449,7 +449,7 @@
                     </div>
                     <div class="statusfield">
                         <h5>reset reason</h5>
-                        <span id="reset_reason" class="statusvalue nohide"></span>
+                        <span class="statusvalue" field="resetInfo"></span>
                     </div>
                     <div class="statusfield">
                         <h5>MAC</h5>
@@ -468,7 +468,7 @@
                         <span class="statusvalue" field="wifi.hostname"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Status</h5>
+                        <h5>WiFi status</h5>
                         <span class="statusvalue" field="wifi.status"></span>
                     </div>
                     <div class="statusfield">
@@ -2385,7 +2385,6 @@
                     }
                 }
                 _("#runtime").innerText = rtstr;
-                _("#reset_reason").innerText = `${statuscache["reset_reason0"]} / ${statuscache["reset_reason1"]}`;
 
                 if (statuscache.slave?.slave_config_member?.dhw_present === false) {
                     __(".DHW").forEach(ele => {

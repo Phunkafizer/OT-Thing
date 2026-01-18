@@ -95,7 +95,7 @@ void HADiscovery::setCurrentTemperatureTemplate(String templ) {
     doc[FPSTR(HA_CURRENT_TEMPERATURE_TEMPLATE)] = templ;
 }
 
-void HADiscovery::setStateTopic(String &stateTopic) {
+void HADiscovery::setStateTopic(String stateTopic) {
     doc[FPSTR(HA_STATE_TOPIC)] = stateTopic;
 }
 

@@ -13,6 +13,12 @@ BLESensor* BLESensor::last = nullptr;
 OneWireNode *OneWireNode::last = nullptr;
 static OneWire oneWire(4);
 
+class SensorLock: public SemHelper {
+public:
+    SensorLock(): SemHelper(AddressableSensor::mutex, 100) {    
+    }
+};
+
 Sensor::Sensor():
     src(SOURCE_NA) {
     prevSensor = lastSensor;
@@ -28,12 +34,14 @@ void Sensor::set(const double val, const Source src) {
 
 bool Sensor::get(double &val) {
     if (src == SOURCE_BLE) {
-        AddressableSensor::lock();
+        SensorLock lock;
+        if (!lock)
+            return false;
+
         auto *sensor = BLESensor::find(adr);
         if (sensor != nullptr)
             val = sensor->temp;
-        AddressableSensor::unlock();
-        return sensor != nullptr;
+        return true;
     }
 
     if (setFlag) {
@@ -197,12 +205,6 @@ AddressableSensor::AddressableSensor(const uint8_t *adr, const uint8_t adrLen, A
 void AddressableSensor::begin() {
     mutex = xSemaphoreCreateMutex();
 }
-void AddressableSensor::lock() {
-    xSemaphoreTake(mutex, (TickType_t) 250 / portTICK_PERIOD_MS);
-}
-void AddressableSensor::unlock() {
-    xSemaphoreGive(mutex);
-}
 
 String AddressableSensor::getAdr() const {
     String result;
@@ -218,34 +220,38 @@ AddressableSensor* AddressableSensor::find(String adr, AddressableSensor *last) 
     AddressableSensor *node = last;
     while (node) {
         if (node->getAdr() == adr)
-            return node;
+            break;
         node = node->next;
     }
-    return nullptr;
+    return node;
 }
 
 void AddressableSensor::writeJsonAll(JsonObject &status, AddressableSensor *last) {
-    lock();
-    AddressableSensor *node = last;
+    SensorLock lock;
+    if (!lock)
+        return;
 
+    AddressableSensor *node = last;
     while (node) {
         String adrStr = node->getAdr();
         JsonVariant var = status[adrStr].to<JsonVariant>();
         node->writeJson(var);            
         node = node->next;
     }
-    unlock();
 }
 
 bool AddressableSensor::sendDiscoveryAll(AddressableSensor *last) {
+    SensorLock lock;
+    if (!lock)
+        return false;
+
     bool result = true;
-    lock();
+    
     AddressableSensor *node = last;
     while (node) {
         result &= node->sendDiscovery();  
         node = node->next;
     }
-    unlock();
     return result;
 }
 
@@ -329,13 +335,13 @@ BLESensor::BLESensor(const uint8_t *adr):
 void BLESensor::begin() {
     BLEDevice::init("");
     BLEDevice::setPower(9);
-#ifndef DEBUG
     NimBLEScan* pBLEScan = NimBLEDevice::getScan();
     pBLEScan->setScanCallbacks(&scanCallbacks, true);
-    pBLEScan->setActiveScan(true);
+    pBLEScan->setActiveScan(false);
     pBLEScan->setMaxResults(0);
-    pBLEScan->start(0, true, true);
-#endif
+    pBLEScan->setInterval(160);
+    pBLEScan->setWindow(80);
+    pBLEScan->start(0, false, true);
 }
 
 void BLESensor::onDiscovery(const NimBLEAdvertisedDevice* dev) {
@@ -346,7 +352,11 @@ void BLESensor::onDiscovery(const NimBLEAdvertisedDevice* dev) {
     if (srvdata[0] != 0x40)
         return;
 
-    lock();
+    SensorLock lock;
+
+    if (!lock)
+        return;
+
     BLESensor *sensor = find(dev->getAddress().getVal());
     if (sensor == nullptr) {
         sensor = new BLESensor(dev->getAddress().getVal());
@@ -355,7 +365,6 @@ void BLESensor::onDiscovery(const NimBLEAdvertisedDevice* dev) {
     
     sensor->parse(srvdata);
     sensor->rssi = dev->getRSSI();
-    unlock();
 }
 
 void BLESensor::parse(std::string &data) {

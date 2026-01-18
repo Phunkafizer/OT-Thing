@@ -23,7 +23,7 @@ public:
     virtual bool publish() {return false;}
     void clearDoc();
     void setValueTemplate(String valueTemplate);
-    void setStateTopic(String &stateTopic);
+    void setStateTopic(String stateTopic);
     void setMinMax(double min, double max, double step);
     void setMinMaxTemp(double min, double max, double step = 0);
     void setTemperatureStateTopic(String topic);

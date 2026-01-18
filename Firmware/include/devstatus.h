@@ -4,17 +4,17 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
-#include "freertos/FreeRTOS.h"
+#include "util.h"
 
 extern class DevStatus {
+friend class DevStatusLock;
 private:
     SemaphoreHandle_t mutex;
 public:
     DevStatus();
-    void lock();
+    bool lock();
     void unlock();
-    JsonDocument &buildDoc();
-    void getJson(String &str);
+    void buildDoc(JsonDocument &doc);
     uint32_t numWifiDiscon;
 } devstatus;
 

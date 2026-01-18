@@ -8,24 +8,29 @@
 #include <NimBLEDevice.h>
 
 DevStatus devstatus;
-static StaticJsonDocument<2048> doc;
+
+class DevStatusLock: public SemHelper {
+public:
+    DevStatusLock(): SemHelper(devstatus.mutex, 100) {
+    }
+};
 
 DevStatus::DevStatus():
         numWifiDiscon(0) {
     mutex = xSemaphoreCreateMutex();
 }
 
-void DevStatus::lock() {
-    xSemaphoreTake(mutex, (TickType_t) 500 / portTICK_PERIOD_MS);
+bool DevStatus::lock() {
+    const auto res = xSemaphoreTake(mutex, (TickType_t) 500 / portTICK_PERIOD_MS);
+    return (res == pdTRUE);
 }
 
 void DevStatus::unlock() {
     xSemaphoreGive(mutex);
 }
 
-JsonDocument &DevStatus::buildDoc() {
+ void DevStatus::buildDoc(JsonDocument &doc) {
     doc.clear();
-
     doc[F("runtime")] = millis() / 1000UL;
     doc[F("freeHeap")] = ESP.getFreeHeap();
     doc[F("largestBlock")] = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
@@ -33,7 +38,6 @@ JsonDocument &DevStatus::buildDoc() {
     doc[F("fw_version")] = F(BUILD_VERSION);
     doc[F("USB_connected")] = Serial.isConnected();
     doc[F("reset_reason0")] = rtc_get_reset_reason(0);
-    doc[F("reset_reason1")] = rtc_get_reset_reason(1);
     doc[F("numWifiDisc")] = numWifiDiscon;
 
     String newFw;
@@ -76,11 +80,4 @@ JsonDocument &DevStatus::buildDoc() {
 
     JsonObject ble = doc[F("BLE")].to<JsonObject>();
     BLESensor::writeJsonAll(ble);
-
-    return doc;
-}
-
-void DevStatus::getJson(String &str) {
-    buildDoc();
-    serializeJson(doc, str);
 }

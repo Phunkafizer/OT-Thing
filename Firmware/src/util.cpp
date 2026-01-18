@@ -6,9 +6,8 @@ SemHelper::SemHelper(SemaphoreHandle_t &mtx, const uint16_t timeout):
 }
 
 SemHelper::~SemHelper() {
-    if (*this) {
+    if (*this)
         xSemaphoreGive(mtx);
-    }
 }
 
 SemHelper::operator bool() {

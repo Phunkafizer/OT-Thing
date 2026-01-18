@@ -9,7 +9,6 @@ extern class DevConfig {
 private:
     void update();
     bool writeBufFlag;
-    String writeBuf;
     String hostname;
     int timezone;
 public:

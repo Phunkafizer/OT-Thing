@@ -117,12 +117,6 @@ void setup() {
     portal.begin(configMode);
     command.begin();
 
-    esp_task_wdt_config_t wdt_config = {
-        .timeout_ms = 6000,
-        .idle_core_mask = (1 << 0),
-        .trigger_panic = true
-    };
-    esp_task_wdt_init(&wdt_config);
     esp_task_wdt_add(NULL);
 
 #ifdef DEBUG
@@ -153,12 +147,11 @@ void loop() {
 #ifdef DEBUG
     ArduinoOTA.handle();
 #endif
+    esp_task_wdt_reset();
     portal.loop();
     mqtt.loop();
     otcontrol.loop();
     Sensor::loopAll();
     devconfig.loop();
     OneWireNode::loop();
-
-    esp_task_wdt_reset();
 }

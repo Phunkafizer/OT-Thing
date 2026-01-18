@@ -4,9 +4,11 @@
 #include <ArduinoJson.h>
 #include <AsyncTCP.h>
 #include <NimBLEDevice.h>
+#include "util.h"
 
 class AddressableSensor {
 friend class Sensor;
+friend class SensorLock;
 private:
     uint8_t adrLen;
     static SemaphoreHandle_t mutex;
@@ -23,8 +25,6 @@ protected:
     double temp;
 public:
     static void begin();
-    static void lock();
-    static void unlock();
 };
 
 class BLESensor: public AddressableSensor {
