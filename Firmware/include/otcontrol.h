@@ -68,6 +68,7 @@ struct SlaveRequestStruct {
 
 class OTControl {
 friend OTWriteRequest;
+friend class BrandInfo;
 friend class SemMaster;
 public:
     enum CtrlMode: int8_t {
@@ -93,6 +94,7 @@ private:
     double getFlow(const uint8_t channel);
     uint16_t tmpToData(const double tmpf);
     void hwYield();
+    unsigned long buildBrandResponse(const OpenThermMessageID id, String &str, const uint8_t idx);
     unsigned long lastBoilerStatus;
     unsigned long lastVentStatus;
     enum OTMode: int8_t {

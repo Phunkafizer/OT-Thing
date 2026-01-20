@@ -1,3 +1,4 @@
+#include <WiFi.h>
 #include "otcontrol.h"
 #include "otvalues.h"
 #include "command.h"
@@ -10,6 +11,7 @@
 
 
 const int PI_INTERVAL = 60; // seconds
+const char SLAVE_BRAND[] PROGMEM = "Seegel Systeme";
 
 OTControl otcontrol;
 
@@ -510,8 +512,6 @@ void OTControl::loop() {
     default:
         break;
     }
-
-    
 }
 
 void OTControl::loopPiCtrl() {
@@ -601,25 +601,11 @@ void OTControl::sendRequest(const char source, const unsigned long msg) {
 }
 
 void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatus status) {
-    switch (status) {
-    case OpenThermResponseStatus::TIMEOUT:
+    if (status == OpenThermResponseStatus::TIMEOUT) {
         master.timeoutCount++;
         return;
-
-    case OpenThermResponseStatus::INVALID:
-        if (otMode != OTMODE_REPEATER) {
-            master.onReceive('E', msg);
-            return;
-        }
-        break;
-
-    case OpenThermResponseStatus::SUCCESS:
-        break;
-
-    default:
-        return;
     }
- 
+  
     // we received response from connected slave (boiler, ventilation, solar storage)
     auto id = OpenTherm::getDataID(msg);
     auto mt = OpenTherm::getMessageType(msg);
@@ -659,12 +645,17 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         break;
     }
 
-    master.onReceive((newMsg == msg) ? 'B' : 'A', msg);
+    char c;
+    if ((status == OpenThermResponseStatus::INVALID) && (otMode != OTMODE_REPEATER))
+        c = 'E';
+    else
+        c = (newMsg == msg) ? 'B' : 'A';
+    master.onReceive(c, msg);
 
     if (otval) {
+        otval->setValue(mt, newMsg & 0xFFFF);
         switch (mt) {
         case OpenThermMessageType::READ_ACK:
-            otval->setValue(newMsg & 0xFFFF);
             switch (id) {
             case OpenThermMessageID::Toutside:
                 outsideTemp.set(OpenTherm::getFloat(msg), OutsideTemp::SOURCE_OT);
@@ -686,17 +677,21 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
             }
             break;
 
-        case OpenThermMessageType::UNKNOWN_DATA_ID:
-            otval->disable();
-            break;
-
         default:
             break;
         }
     }
 
     if (!otval && (mt == OpenThermMessageType::READ_ACK))
-        portal.textAll(F("no otval!"));
+        portal.textAll(F("no slave val!"));
+}
+
+unsigned long OTControl::buildBrandResponse(const OpenThermMessageID id, String &str, const uint8_t idx) {
+    if ((idx) < str.length())
+        return OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, (str.length() << 8) | str[idx]);
+    
+    return OpenTherm::buildResponse(OpenThermMessageType::DATA_INVALID, id, str.length() << 8);
+
 }
 
 void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus status) {
@@ -749,6 +744,24 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                     const uint16_t tmp = timeinfo.tm_year + 1900;
                     resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, tmp);
                 }
+                break;
+            }
+
+            case OpenThermMessageID::Brand: {
+                String brand = PSTR(SLAVE_BRAND);
+                resp = buildBrandResponse(id, brand, msg >> 8);
+                break;
+            }
+
+            case OpenThermMessageID::BrandVersion: {
+                String brandVersion = PSTR(BUILD_VERSION);
+                resp = buildBrandResponse(id, brandVersion, msg >> 8);
+                break;
+            }
+
+            case OpenThermMessageID::BrandSerialNumber: {
+                String mac = WiFi.macAddress();
+                resp = buildBrandResponse(id, mac, msg >> 8);
                 break;
             }
 
@@ -848,13 +861,8 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
         case OpenThermMessageType::READ_DATA: {
             uint32_t reply = OpenTherm::buildResponse(OpenThermMessageType::UNKNOWN_DATA_ID, id, msg & 0xFFFF);
 
-            for (unsigned int i = 0; i< sizeof(loopbackTestData) / sizeof(loopbackTestData[0]); i++) {
-                if (loopbackTestData[i].id == id) {
-                    reply = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, loopbackTestData[i].value);
-                    break;
-                }
-            }
-            if (id == OpenThermMessageID::Status) {
+            switch (id) {
+            case OpenThermMessageID::Status: {
                 uint8_t temp = millis() / 206723;
                 uint8_t x = ((temp % 3) == 0) ? 0 : 1;
                 uint16_t data = x<<3; // flame on
@@ -867,6 +875,35 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 if ((msg & (1<<12)) != 0)
                     data |= 1<<5;  // CH2 enable -> CH2 active
                 reply = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, data);
+                break;
+            }
+
+            case OpenThermMessageID::Brand: {
+                String brand = PSTR(SLAVE_BRAND);
+                reply = buildBrandResponse(id, brand, msg >> 8);
+                break;
+            }
+
+            case OpenThermMessageID::BrandVersion: {
+                String brandVersion = PSTR(BUILD_VERSION);
+                reply = buildBrandResponse(id, brandVersion, msg >> 8);
+                break;
+            }
+
+            case OpenThermMessageID::BrandSerialNumber: {
+                String mac = WiFi.macAddress();
+                reply = buildBrandResponse(id, mac, msg >> 8);
+                break;
+            }
+
+            default:
+                for (unsigned int i = 0; i< sizeof(loopbackTestData) / sizeof(loopbackTestData[0]); i++) {
+                    if (loopbackTestData[i].id == id) {
+                        reply = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, loopbackTestData[i].value);
+                        break;
+                    }
+                }
+                break;
             }
 
             slave.sendResponse(reply, 'P');
@@ -916,7 +953,7 @@ bool OTControl::setThermostatVal(const unsigned long msg) {
 
     for (auto *valobj: thermostatValues) {
         if (valobj->getId() == id) {
-            valobj->setValue(msg & 0xFFFF);
+            valobj->setValue(OpenThermMessageType::WRITE_DATA, msg & 0xFFFF);
             return true;
         }
     }
@@ -1227,15 +1264,10 @@ void OTControl::setConfig(JsonObject &config) {
         if (hc.roomComp.i == 0)
             heatingCtrl[i].piCtrl.integState = 0;
 
-        Serial.print("Configuring roomsetpoint ");
         if (!roomSetPoint[i]) {
-            Serial.print("not set! ");
             roomSetPoint[i].set(hc.roomSet, Sensor::SOURCE_NA);
             heatingCtrl[i].piCtrl.rspPrev = hc.roomSet;
-            Serial.print(" set to ");
-            Serial.print(hc.roomSet);
         }
-        Serial.println("");
     }
 
     JsonObject ventObj = config[F("vent")];
@@ -1280,6 +1312,8 @@ void OTControl::setChCtrlMode(const CtrlMode mode, const uint8_t channel) {
         break;
     case CTRLMODE_ON:
         heatingCtrl[channel].chOn = true;
+    default:
+        break;
     }
     setBoilerRequest[channel].force();
 }

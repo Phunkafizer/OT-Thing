@@ -28,9 +28,9 @@ ID	Msg	Name
 74	R-	Configuration ventilation/heat-recovery
 75	R-	*   -   *   OpenTherm version ventilation/heat-recovery
 76  R-  *   -   *   Ventilation / heat-recovery product version number and type
-93	R-	Brand index
-94	R-	Brand version index
-95	R-	Brand serial number index
+93	R-	*   *   *   Brand index
+94	R-	*   *   *   Brand version index
+95	R-	*   *   *   Brand serial number index
 103	R-	Solar Storage configuration
 104\tR-\tSolar Storage product version number and type
 124	-W	-   *   -   OpenTherm version Master
@@ -136,28 +136,27 @@ ID	Msg	Name
 
 class OTValue {
 private:
-    const OpenThermMessageID id;
     unsigned long lastTransfer;
     const int interval;
     virtual void getValue(JsonObject &stat) const = 0;
 protected:
-    uint16_t value;
-    bool enabled;
     virtual bool sendDiscovery();
     bool sendDiscovery(String field, const bool addBaseName = false);
     const char* getName() const;
+    const OpenThermMessageID id;
+    uint16_t value;
+    bool enabled;
     bool discFlag;
     const char *haName {nullptr};
 public:
     OTValue(const OpenThermMessageID id, const int interval, const char *haName = nullptr);
-    bool process();
+    virtual bool process();
     OpenThermMessageID getId() const;
-    void setValue(uint16_t val);
+    virtual void setValue(const OpenThermMessageType ty, const uint16_t val);
     uint16_t getValue();
     void setStatus(const OpenThermMessageType mt);
     void getJson(JsonObject &obj) const;
-    void disable();
-    void init(const bool enabled);
+    virtual void init(const bool enabled);
     void setTimeout();
     static OTValue* getSlaveValue(const OpenThermMessageID id);
     static OTValue* getThermostatValue(const OpenThermMessageID id);
@@ -207,10 +206,10 @@ public:
 class OTValueFlags: public OTValue {
 protected:
     struct Flag {
-        uint8_t bit;
-        const char *name;
-        const char *discName;
-        const char *haDevClass;
+        uint8_t bit {0};
+        const char *name {nullptr};
+        const char *discName {nullptr};
+        const char *haDevClass {nullptr};
     };
     uint8_t numFlags;
     const Flag *flagTable;
@@ -455,6 +454,18 @@ public:
 };
 
 
-extern OTValue *slaveValues[47];
+class BrandInfo: public OTValue {
+private:
+    void getValue(JsonObject &obj) const override;
+    char buf[50];
+public:
+    BrandInfo(const OpenThermMessageID id, const char *name);
+    void init(const bool enabled) override;
+    bool process() override;
+    void setValue(const OpenThermMessageType ty, const uint16_t val) override;
+};
+
+
+extern OTValue *slaveValues[50];
 extern OTValue *thermostatValues[17];
 extern const char* getOTname(OpenThermMessageID id);
