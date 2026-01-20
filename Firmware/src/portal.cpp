@@ -155,13 +155,11 @@ void Portal::begin(bool configMode) {
             if (!this->updateEnable)
                 return;
 
-            if (!index) {
-                bool res = Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASH);
-            }
-            uint32_t res = Update.write(data, len);
-            if (final) {
-                bool res = Update.end(true);
-            }
+            if (!index)
+                Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASH);
+            Update.write(data, len);
+            if (final)
+                Update.end(true);
         }
     );
 

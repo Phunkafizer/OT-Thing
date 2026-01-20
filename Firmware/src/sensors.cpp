@@ -20,7 +20,8 @@ public:
 };
 
 Sensor::Sensor():
-    src(SOURCE_NA) {
+    src(SOURCE_NA),
+    setFlag(false) {
     prevSensor = lastSensor;
     lastSensor = this;
 }
@@ -44,11 +45,10 @@ bool Sensor::get(double &val) {
         return true;
     }
 
-    if (setFlag) {
+    if (setFlag)
         val = this->value;
-        return true;
-    }
-    return false;
+    
+    return setFlag;
 }
 
 Sensor::operator bool() const {
@@ -394,7 +394,7 @@ void BLESensor::parse(std::string &data) {
         }
 
         case 0x0C: {
-            uint16_t v = data[i] | (data[i+1] << 8);
+            //uint16_t v = data[i] | (data[i+1] << 8);
             i += 2;
             break;
         }

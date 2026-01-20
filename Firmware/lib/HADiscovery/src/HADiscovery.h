@@ -20,7 +20,7 @@ public:
     String devPrefix;
     String defaultStateTopic;
     static void setHAPrefix(String prefix);
-    virtual bool publish() {return false;}
+    virtual bool publish();
     void clearDoc();
     void setValueTemplate(String valueTemplate);
     void setStateTopic(String stateTopic);

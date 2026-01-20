@@ -75,6 +75,10 @@ void HADiscovery::clearDoc() {
     doc.clear();
 }
 
+bool HADiscovery::publish() {
+    return false;
+}
+
 void HADiscovery::setValueTemplate(String valueTemplate) {
     doc[FPSTR(HA_VALUE_TEMPLATE)] = valueTemplate;
 }

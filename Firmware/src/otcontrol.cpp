@@ -250,12 +250,12 @@ OTControl::OTControl():
         lastBoilerStatus(0),
         lastVentStatus(0),
         otMode(OTMODE_LOOPBACKTEST),
-        master(GPIO_OTMASTER_IN, GPIO_OTMASTER_OUT, false),
-        slave(GPIO_OTSLAVE_IN, GPIO_OTSLAVE_OUT, true),
+        slaveApp(SLAVEAPP_HEATCOOL),
         setBoilerRequest{OTWRSetBoilerTemp(0), OTWRSetBoilerTemp(1)},
         setRoomTemp{OTWRSetRoomTemp(0), OTWRSetRoomTemp(1)},
         setRoomSetPoint{OTWRSetRoomSetPoint(0), OTWRSetRoomSetPoint(1)},
-        slaveApp(SLAVEAPP_HEATCOOL) {
+        master(GPIO_OTMASTER_IN, GPIO_OTMASTER_OUT, false),
+        slave(GPIO_OTSLAVE_IN, GPIO_OTSLAVE_OUT, true) {
 }
 
 void OTControl::begin() {
@@ -338,6 +338,9 @@ double OTControl::getFlow(const uint8_t channel) {
             double c1 = (hc.flowMax - roomSet) / pow(roomSet - minOutside, 1.0 / hc.exponent);
             flow = roomSet + c1 * pow(roomSet - outTmp, 1.0 / hc.exponent) + hc.offset;
         }
+        break;
+
+    default:
         break;
     }
 
@@ -503,7 +506,12 @@ void OTControl::loop() {
             return;
         }
         break;
+
+    default:
+        break;
     }
+
+    
 }
 
 void OTControl::loopPiCtrl() {
@@ -557,14 +565,15 @@ void OTControl::loopPiCtrl() {
         double p = heatingConfig[i].roomComp.p * e; // Kp * e
         
         // integral part of PI controller
-        const bool setJump = fabs(rsp - pictrl.rspPrev) > 0.3;
+        const bool setJump = (fabs(rsp - pictrl.rspPrev)) > 0.3;
         pictrl.rspPrev = rsp;
         if ( (ots != nullptr) && ots->getChActive(i) && !heatingCtrl[i].suspended ) {
-            if (!setJump)
+            if (!setJump) {
                 if (e > 0)
                     pictrl.integState += heatingConfig[i].roomComp.i * e * PI_INTERVAL / 3600.0; // Ki * e * ts, ts = 60 s
                 else
                     pictrl.integState += heatingConfig[i].roomComp.i * e * 0.3 * PI_INTERVAL / 3600.0; // slower as cooling takes more time
+            }
             // else freeze integrator
         }
         else
@@ -644,6 +653,9 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
             break;
         }
         slave.sendResponse(newMsg);
+        break;
+
+    default:
         break;
     }
 
@@ -812,6 +824,9 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             
             newMsg = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, id, newMsg & 0xFFFF);
             break;
+
+        default:
+            break;
         }
         slave.onReceive((msg == newMsg) ? 'T' : 'R', msg);
         SemMaster sem(500);
@@ -887,6 +902,8 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
         case OpenThermMessageID::TrSetCH2:
             roomSetPoint[1].set(d, Sensor::SOURCE_OT);
             break;
+        default:
+            break;
         }
         if (otMode != OTMODE_MASTER)
             if (!setThermostatVal(newMsg))
@@ -941,16 +958,18 @@ void OTControl::getJson(JsonObject &obj) {
     for (int i=0; i<2; i++) {
         JsonObject hc = hcarr.add<JsonObject>();
         double d;
-        roomSetPoint[i].get(d);
-        hc[F("roomsetpoint")] = d;
 
+        if (roomSetPoint[i].get(d)) {
+            hc[F("roomsetpoint")] = d;
+            hc[F("roomTempFilt")] = heatingCtrl[i].piCtrl.roomTempFilt;
+        }
+        
         if (roomTemp[i].get(d))
             hc[F("roomtemp")] = d;
 
         hc[F("ovrdFlow")] = heatingCtrl[i].overrideFlow;
         hc[F("mode")] = (int) heatingCtrl[i].mode;
         hc[F("integState")] = round(heatingCtrl[i].piCtrl.integState * 100) / 100.0;
-        hc[F("roomTempFilt")] = heatingCtrl[i].piCtrl.roomTempFilt;
         if (heatingConfig[i].enableHyst)
             hc[F("suspended")] = heatingCtrl[i].suspended;
     }
@@ -1106,7 +1125,7 @@ bool OTControl::sendCapDiscoveries() {
         return false;
 
     haDisc.createClima(F("flow set temperature 2"), Mqtt::getTopicString(Mqtt::TOPIC_CHSETTEMP2), mqtt.getCmdTopic(Mqtt::TOPIC_CHSETTEMP2));
-    haDisc.setMinMaxTemp(20, heatingConfig[2].flowMax, 0.5);
+    haDisc.setMinMaxTemp(20, heatingConfig[1].flowMax, 0.5);
     haDisc.setCurrentTemperatureTemplate(F("{{ value_json.slave.flow_t2 }}"));
     haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
     haDisc.setInitial(35);
@@ -1208,10 +1227,15 @@ void OTControl::setConfig(JsonObject &config) {
         if (hc.roomComp.i == 0)
             heatingCtrl[i].piCtrl.integState = 0;
 
+        Serial.print("Configuring roomsetpoint ");
         if (!roomSetPoint[i]) {
+            Serial.print("not set! ");
             roomSetPoint[i].set(hc.roomSet, Sensor::SOURCE_NA);
             heatingCtrl[i].piCtrl.rspPrev = hc.roomSet;
+            Serial.print(" set to ");
+            Serial.print(hc.roomSet);
         }
+        Serial.println("");
     }
 
     JsonObject ventObj = config[F("vent")];
@@ -1301,8 +1325,6 @@ void OTControl::setVentEnable(const bool en) {
 }
 
 bool OTControl::slaveRequest(SlaveRequestStruct &srs) {
-    unsigned long res = 0;
-
     SemMaster sem(2000);
     if (!sem) {
         return false;
@@ -1321,8 +1343,8 @@ bool OTControl::slaveRequest(SlaveRequestStruct &srs) {
 
 
 OTWriteRequest::OTWriteRequest(OpenThermMessageID id, uint16_t intervalS):
-        id(id),
-        interval(intervalS) {
+    interval(intervalS),
+        id(id) {
 }
 
 void OTWriteRequest::send(const uint16_t data) {
