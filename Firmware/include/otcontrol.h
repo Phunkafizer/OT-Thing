@@ -231,6 +231,7 @@ public:
     void setOverrideDhw(const bool ovrd);
     void setMaxMod(const int mm);
     void setRoomComp(const bool en, const uint8_t channel);
+    void bypass();
 };
 
 

@@ -14,6 +14,7 @@ public:
     void checkUpdate();
     void update();
     bool getNewFw(String &version);
+    bool isUpdating();
 };
 
 extern HttpUpdate httpupdate;

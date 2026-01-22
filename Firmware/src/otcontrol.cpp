@@ -7,8 +7,6 @@
 #include "hwdef.h"
 #include "portal.h"
 #include "sensors.h"
-#include "esp_task_wdt.h"
-
 
 const int PI_INTERVAL = 60; // seconds
 const char SLAVE_BRAND[] PROGMEM = "Seegel Systeme";
@@ -358,7 +356,6 @@ double OTControl::getFlow(const uint8_t channel) {
 }
 
 void OTControl::hwYield() {
-    //yield();
     vTaskDelay(1);
     master.hal.process();
     slave.hal.process();
@@ -368,6 +365,10 @@ void OTControl::hwYield() {
         if (millis() > master.lastTx + 50)
             setLedOTRed(false);
     }
+}
+
+void OTControl::bypass() {
+    setOTMode(OTMODE_BYPASS);
 }
 
 void OTControl::loop() {

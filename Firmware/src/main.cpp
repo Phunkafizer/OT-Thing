@@ -23,20 +23,6 @@ Ticker statusLedTicker;
 volatile uint16_t statusLedData = 0x8000;
 bool configMode = false;
 
-#ifdef DEBUG
-    NimBLECharacteristic *bleSerialTx;
-    volatile bool bleClientConnected = false;
-
-class ServerCallbacks : public NimBLEServerCallbacks {
-    void onConnect(NimBLEServer* server, NimBLEConnInfo& connInfo) override {
-        bleClientConnected = true;
-    }
-
-    void onDisconnect(NimBLEServer* server, NimBLEConnInfo& connInfo, int reason) override {
-        bleClientConnected = false;
-    }
-};
-#endif
 
 void statusLedLoop() {
     static uint16_t mask = 0x8000;
@@ -83,24 +69,6 @@ void setup() {
 
     Serial.begin();
     Serial.setTxTimeoutMs(100);
-
-#ifdef DEBUG
-    //auto bleSrv = NimBLEDevice::createServer();
-    //auto bleSrvc = bleSrv->createService("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
-    /*bleSerialTx = bleSrvc->createCharacteristic(
-        "6E400003-B5A3-F393-E0A9-E50E24DCCA9E",
-        NIMBLE_PROPERTY::NOTIFY
-    );
-    auto bleSerialRx = bleSrvc->createCharacteristic(
-        "6E400002-B5A3-F393-E0A9-E50E24DCCA9E",
-        NIMBLE_PROPERTY::WRITE
-    );
-    bleSrvc->start();
-    NimBLEAdvertising *adv = NimBLEDevice::getAdvertising();
-    adv->addServiceUUID(bleSrvc->getUUID());
-    //adv->setScanResponse(true);
-    adv->start();*/
-#endif
     
     WiFi.onEvent(wifiEvent);
     WiFi.setSleep(false);

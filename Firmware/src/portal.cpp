@@ -19,7 +19,6 @@ static AsyncWebServer websrv(80);
 AsyncWebSocket ws("/ws");
 
 
-
 Portal::Portal():
     reboot(false),
     updateEnable(true) {
@@ -122,6 +121,10 @@ void Portal::begin(bool configMode) {
     });
 
     websrv.on("/status", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        if (httpupdate.isUpdating()) {
+            request->send(503);
+            return;
+        }
         JsonDocument doc;
         devstatus.buildDoc(doc);
         AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));
@@ -138,7 +141,7 @@ void Portal::begin(bool configMode) {
         [this] (AsyncWebServerRequest *request) { // onRequest handler
             int httpRes;
 
-            if (!this->updateEnable) {
+            if (!this->updateEnable || httpupdate.isUpdating()) {
                 httpRes = 503; // service unavailable
             }
             else {
@@ -153,12 +156,14 @@ void Portal::begin(bool configMode) {
             request->send(response);
         },
         [this] (AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len, bool final) { // onUpdate handler
-            if (!this->updateEnable)
+            if (!this->updateEnable || httpupdate.isUpdating())
                 return;
 
             if (!index)
                 Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASH);
+
             Update.write(data, len);
+
             if (final)
                 Update.end(true);
         }

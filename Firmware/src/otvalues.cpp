@@ -319,7 +319,7 @@ bool OTValue::sendDiscovery(String field, const bool addBaseName) {
         haDisc.setStateClass("");
 
     haDisc.setValueTemplate(valTempl);
-    return haDisc.publish();
+    return haDisc.publish(enabled);
 }
 
 void OTValue::refreshDisc() {
@@ -336,12 +336,12 @@ void OTValue::setValue(const OpenThermMessageType ty, const uint16_t val) {
     if ((ty == OpenThermMessageType::INVALID_DATA) || (ty == OpenThermMessageType::UNKNOWN_DATA_ID)) {
         enabled = false;
         isSet = false;
-        return;
     }
-
-    value = val;
-    isSet = true;
-    enabled = true;
+    else {
+        value = val;
+        isSet = true;
+        enabled = true;
+    }
 
     if (!discFlag)
         discFlag = sendDiscovery();
@@ -460,7 +460,7 @@ bool OTValueFlags::sendDiscFlag(String name, const char *field, const char *devC
     valTmpl.replace("#1", getName());
     valTmpl.replace("#2", FPSTR(field));
     haDisc.setValueTemplate(valTmpl);
-    return haDisc.publish();
+    return haDisc.publish(enabled);
 };
 
 bool OTValueFlags::sendDiscovery() {

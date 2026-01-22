@@ -2615,6 +2615,7 @@
             _("#installbtn").onclick = (ev) => {
                 let xhrInstall = new XMLHttpRequest;
                 _("#installbtn").disabled = true;
+                _("#installbtn").innerText = "installing...";
                 xhrInstall.open('post', '/install');
                 xhrInstall.send('');
             };
