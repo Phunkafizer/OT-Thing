@@ -6,6 +6,7 @@ public:
     OTThingHADiscovery();
     void begin();
     void createSwitch(String name, Mqtt::MqttTopic topic);
+    using HADiscovery::publish;
     bool publish(const bool avail = true);
 };
 

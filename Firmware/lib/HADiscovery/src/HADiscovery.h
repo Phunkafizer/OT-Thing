@@ -4,7 +4,7 @@
 extern const char *HA_DEVICE_CLASS_RUNNING PROGMEM;
 extern const char *HA_DEVICE_CLASS_PROBLEM PROGMEM;
 extern const char *HA_DEVICE_CLASS_HEAT PROGMEM;
-extern const char *HA_DEVICE_CLASS_OPEN PROGMEM;
+extern const char *HA_DEVICE_CLASS_OPENING PROGMEM;
 
 class HADiscovery {
 private:

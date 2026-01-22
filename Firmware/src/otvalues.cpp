@@ -230,12 +230,9 @@ bool OTValue::sendDiscovery() {
     }
     
 /* missing discoveries: 
-    {OpenThermMessageID::TrOverride,                PSTR("tr_override")},
     {OpenThermMessageID::DayTime,                   PSTR("day_time")},
     {OpenThermMessageID::Date,                      PSTR("date")},
     {OpenThermMessageID::Year,                      PSTR("year")},
-    {OpenThermMessageID::TrCH2,                     PSTR("room_t2")},
-    {OpenThermMessageID::TrOverride2,               PSTR("tr_override2")},           
     {OpenThermMessageID::TdhwSet,                   PSTR("dhw_set_t")},
     {OpenThermMessageID::Vset,                      PSTR("rel_vent_set")},
     {OpenThermMessageID::RemoteOverrideFunction,    PSTR("remote_override_function")},
@@ -294,17 +291,7 @@ bool OTValue::sendDiscovery() {
             return false;
     }
 
-    String valTempl = F("{{ value_json.thermostat.# }}");
-    for (auto *valobj: slaveValues) {
-        if (valobj == this) {
-            valTempl = F("{{ value_json.slave.# }}");
-            break;
-        }
-    }
-    valTempl.replace("#", sName);
-    haDisc.setValueTemplate(valTempl);
-        
-    return haDisc.publish();
+    return sendDiscovery("");
 }
 
 bool OTValue::sendDiscovery(String field, const bool addBaseName) {
@@ -326,7 +313,10 @@ bool OTValue::sendDiscovery(String field, const bool addBaseName) {
         valTempl += '.';
         valTempl += field;
     }   
-    valTempl += F(" }}");
+    valTempl += F(" | default(None) }}");
+
+    if (interval == 0)
+        haDisc.setStateClass("");
 
     haDisc.setValueTemplate(valTempl);
     return haDisc.publish();
@@ -463,7 +453,9 @@ bool OTValueFlags::sendDiscFlag(String name, const char *field, const char *devC
     if (devClass != nullptr)
         dc = FPSTR(devClass);
     haDisc.createBinarySensor(name, FPSTR(field), dc);
-    String valTmpl = F("{{ 'ON' if value_json.#0.#1.#2 else 'OFF' }}");
+    
+    String valTmpl = F("{{ None if (value_json.#0.get('#1')) is none else 'ON' if (value_json.#0.#1.#2) else 'OFF' }}");
+
     valTmpl.replace("#0", slave ? F("slave") : F("thermostat"));
     valTmpl.replace("#1", getName());
     valTmpl.replace("#2", FPSTR(field));
@@ -781,6 +773,9 @@ void BrandInfo::setValue(const OpenThermMessageType ty, const uint16_t msg) {
         isSet = strlen(buf) > 0;
         enabled = isSet;
     }
+
+    if (!discFlag)
+        discFlag = sendDiscovery();
 }
 
 void BrandInfo::getValue(JsonObject &obj) const {

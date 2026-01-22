@@ -399,11 +399,11 @@ void OTControl::loop() {
     case OTMODE_LOOPBACKTEST: {
         for (int ch=0; ch<(hasCh2 ? 2 : 1); ch++) {
             if (setRoomTemp[ch]) {
-                setRoomTemp[ch].sendFloat(20.1);
+                setRoomTemp[ch].sendFloat(20.1 + ch);
                 return;
             }
             if (setRoomSetPoint[ch]) {
-                setRoomSetPoint[ch].sendFloat(21.3);
+                setRoomSetPoint[ch].sendFloat(21.3 + ch);
                 return;
             }
         }
@@ -691,7 +691,6 @@ unsigned long OTControl::buildBrandResponse(const OpenThermMessageID id, String 
         return OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, (str.length() << 8) | str[idx]);
     
     return OpenTherm::buildResponse(OpenThermMessageType::DATA_INVALID, id, str.length() << 8);
-
 }
 
 void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus status) {
@@ -1042,45 +1041,12 @@ bool OTControl::sendDiscovery() {
     bool discFlag = true;
 
     haDisc.createNumber(F("outside temperature"), Mqtt::getTopicString(Mqtt::TOPIC_OUTSIDETEMP), mqtt.getCmdTopic(Mqtt::TOPIC_OUTSIDETEMP));
-    haDisc.setValueTemplate(F("{{ value_json.outsideTemp }}"));
+    haDisc.setValueTemplate(F("{{ value_json.outsideTemp | default(None) }}"));
     haDisc.setMinMax(-25, 20, 0.1);
     haDisc.setRetain(true);
     discFlag &= haDisc.publish(outsideTemp.isMqttSource());
 
-    haDisc.createClima(F("flow set temperature"), Mqtt::getTopicString(Mqtt::TOPIC_CHSETTEMP1), mqtt.getCmdTopic(Mqtt::TOPIC_CHSETTEMP1));
-    haDisc.setMinMaxTemp(20, heatingConfig[0].flowMax, 0.5);
-    haDisc.setCurrentTemperatureTemplate(F("{{ value_json.slave.flow_t }}"));
-    haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
-    haDisc.setInitial(35);
-    haDisc.setModeCommandTopic(mqtt.getCmdTopic(Mqtt::TOPIC_CHMODE1));
-    haDisc.setTemperatureStateTopic(haDisc.defaultStateTopic);
-    haDisc.setTemperatureStateTemplate(F("{{ value_json.thermostat.ch_set_t }}"));
-    haDisc.setOptimistic(true);
-    haDisc.setIcon(F("mdi:heating-coil"));
-    haDisc.setRetain(true);
-    discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
-
-    haDisc.createClima(F("room setpoint 1"), F("clima_room1"), mqtt.getCmdTopic(Mqtt::TOPIC_ROOMSETPOINT1));
-    haDisc.setMinMaxTemp(10, 30, 0.5);
-    haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
-    haDisc.setCurrentTemperatureTemplate(F("{{ value_json.heatercircuit[0].roomtemp }}"));
-    haDisc.setInitial(20);
-    haDisc.setModeCommandTopic(mqtt.getCmdTopic(Mqtt::TOPIC_ROOMCOMP1));
-    haDisc.setTemperatureStateTopic(haDisc.defaultStateTopic);
-    haDisc.setTemperatureStateTemplate(F("{{ value_json.heatercircuit[0].roomsetpoint }}"));
-    haDisc.setOptimistic(true);
-    haDisc.setRetain(true);
-    haDisc.setModes(0x06);
-    discFlag &= haDisc.publish(heatingConfig[0].chOn);
-
-    haDisc.createTempSensor(F("room setpoint 1"), F("setpoint_room1"));
-    haDisc.setStateTopic(mqtt.getCmdTopic(Mqtt::TOPIC_ROOMSETPOINT1));
-    discFlag &= haDisc.publish(heatingConfig[0].chOn);
-
-    haDisc.createNumber(F("room temperature 1"), Mqtt::getTopicString(Mqtt::TOPIC_ROOMTEMP1), mqtt.getCmdTopic(Mqtt::TOPIC_ROOMTEMP1));
-    haDisc.setValueTemplate(F("{{ value_json.heatercircuit[0].roomtemp }}"));
-    haDisc.setMinMax(0, 30, 0.1);
-    discFlag &= haDisc.publish(roomTemp[0].isMqttSource());
+    discFlag &= sendChDiscoveries(0, true);
 
     haDisc.createNumber(F("ventilation set point"), Mqtt::getTopicString(Mqtt::TOPIC_VENTSETPOINT), mqtt.getCmdTopic(Mqtt::TOPIC_VENTSETPOINT));
     haDisc.setValueTemplate(F("{{ value_json.slave.rel_vent }}"));
@@ -1115,30 +1081,114 @@ bool OTControl::sendDiscovery() {
     haDisc.createSwitch(F("override DHW"), Mqtt::TOPIC_OVERRIDEDHW);
     discFlag &= haDisc.publish(ovr);
 
-    haDisc.createSensor(F("integrator state 1"), F("integ_state_ch1"));
-    haDisc.setValueTemplate(F("{{ value_json.heatercircuit[0].integState }}"));
-    haDisc.setUnit(F("K"));
-    discFlag &= haDisc.publish(heatingConfig[0].roomComp.enabled);
-
-    haDisc.createBinarySensor(F("suspend CH1"), F("susp1"), "");
-    haDisc.setValueTemplate(F("{{ 'ON' if value_json.heatercircuit[0].suspended else 'OFF' }}"));
-    discFlag &= haDisc.publish(heatingConfig[0].enableHyst);
-
     haDisc.createNumber(F("Max. modulation"), Mqtt::getTopicString(Mqtt::TOPIC_MAXMODULATION), mqtt.getCmdTopic(Mqtt::TOPIC_MAXMODULATION));
     haDisc.setMinMax(0, 100, 1);
+    haDisc.setValueTemplate(F("{{ value_json.thermostat.max_rel_mod | default(None) }}"));
     discFlag &= haDisc.publish();
 
     haDisc.createSensor(F("flame ratio"), F("flame_ratio"));
-    haDisc.setValueTemplate(F("{{ value_json.slave.flameRatio }}"));
+    haDisc.setValueTemplate(F("{{ value_json.slave.flameRatio | default(None) }}"));
+    haDisc.setDeviceClass(F("power_factor"));
     haDisc.setUnit(F("%"));
     discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
 
     haDisc.createSensor(F("burner starts /h"), F("flame_freq"));
-    haDisc.setValueTemplate(F("{{ value_json.slave.flameFreq }}"));
+    haDisc.setValueTemplate(F("{{ value_json.slave.flameFreq | default(None) }}"));
     haDisc.setUnit(F("/h"));
     discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
 
     return discFlag;
+}
+
+bool OTControl::sendChDiscoveries(const uint8_t ch, const bool en) {
+    auto replace = [](const char *str, const uint8_t val, const uint8_t ommit = -1) {
+        String result = FPSTR(str);
+        if (val == ommit)
+            result.replace("#", "");
+        else
+            result.replace("#", String(val));
+
+        result.replace("?", F("| default(None)"));
+        result.trim();
+        return result;
+    };
+
+    auto topic = [](const Mqtt::MqttTopic topic, const uint8_t ch) {
+        return (Mqtt::MqttTopic) ((int) topic + ch);
+    };
+
+    String str = replace(PSTR("flow temperature #"), ch + 1, 1);
+    Mqtt::MqttTopic tp = topic(Mqtt::TOPIC_CHSETTEMP1, ch);
+    haDisc.createClima(str, Mqtt::getTopicString(tp), mqtt.getCmdTopic(tp));
+    haDisc.setMinMaxTemp(20, heatingConfig[ch].flowMax, 0.5);
+    str = replace(PSTR("{{ value_json.slave.flow_t# ? }}"), ch + 1, 1);
+    haDisc.setCurrentTemperatureTemplate(str);
+    haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
+    haDisc.setInitial(35);
+    haDisc.setModeCommandTopic(mqtt.getCmdTopic(topic(Mqtt::TOPIC_CHMODE1, ch)));
+    haDisc.setTemperatureStateTopic(haDisc.defaultStateTopic);
+    str = replace(PSTR("{{ value_json.thermostat.ch_set_t# ? }}"), ch + 1, 1);
+    haDisc.setTemperatureStateTemplate(str);
+    haDisc.setOptimistic(true);
+    haDisc.setIcon(F("mdi:heating-coil"));
+    haDisc.setRetain(true);
+    if (!haDisc.publish(en))
+        return false;
+
+    str = replace(PSTR("room temperature #"), ch + 1, 1);
+    tp = topic(Mqtt::TOPIC_ROOMSETPOINT1, ch);
+    haDisc.createClima(str, Mqtt::getTopicString(tp), mqtt.getCmdTopic(tp));
+    haDisc.setMinMaxTemp(10, 30, 0.5);
+    haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
+    str = replace(PSTR("{{ value_json.heatercircuit[#].roomtemp ? }}"), ch);
+    haDisc.setCurrentTemperatureTemplate(str);
+    haDisc.setInitial(20);
+    tp = topic(Mqtt::TOPIC_ROOMCOMP1, ch);
+    haDisc.setModeCommandTopic(mqtt.getCmdTopic(tp));
+    haDisc.setTemperatureStateTopic(haDisc.defaultStateTopic);
+    str = replace(PSTR("{{ value_json.heatercircuit[#].roomsetpoint ? }}"), ch);
+    haDisc.setTemperatureStateTemplate(str);
+    haDisc.setOptimistic(true);
+    haDisc.setRetain(true);
+    haDisc.setModes(0x06);
+    if (!haDisc.publish(en))
+        return false;
+
+    str = replace(PSTR("room setpoint #"), ch + 1, 1);
+    tp = topic(Mqtt::TOPIC_ROOMSETPOINT1, ch);
+    haDisc.createTempSensor(str, Mqtt::getTopicString(tp));
+    haDisc.setStateTopic(mqtt.getCmdTopic(tp));
+    if (!haDisc.publish(en))
+        return false;
+
+    str = replace(PSTR("room temperature #"), ch + 1, 1);
+    tp = topic(Mqtt::TOPIC_ROOMTEMP1, ch);
+    haDisc.createNumber(str, Mqtt::getTopicString(tp), mqtt.getCmdTopic(tp));
+    str = replace(PSTR("{{ value_json.heatercircuit[#].roomtemp ? }}"), ch);
+    haDisc.setValueTemplate(str);
+    haDisc.setMinMax(0, 30, 0.1);
+    if (!haDisc.publish(roomTemp[ch].isMqttSource() && en))
+        return false;
+
+    str = replace(PSTR("integrator state #"), ch + 1, 1);
+    String id = replace(PSTR("integ_state_ch#"),ch + 1);
+    haDisc.createSensor(str, id);
+    str = replace(PSTR("{{ value_json.heatercircuit[#].integState ? }}"), ch);
+    haDisc.setValueTemplate(str);
+    haDisc.setUnit(F("K"));
+    if (!haDisc.publish((heatingConfig[ch].roomComp.enabled) && en))
+        return false;
+
+    str = replace(PSTR("suspend CH #"), ch + 1, 1);
+    id = replace(PSTR("ch_susp#"), ch + 1, 1);
+    haDisc.createBinarySensor(str, id, "");
+
+    str = replace(PSTR("{{ None if value_json.heatercircuit[#].suspended is not defined else 'ON' if value_json.heatercircuit[#].suspended else 'OFF' }}"), ch);
+    haDisc.setValueTemplate(str);
+    if (!haDisc.publish(heatingConfig[ch].enableHyst && en))
+        return false;
+
+    return true;
 }
 
 bool OTControl::sendCapDiscoveries() {
@@ -1148,12 +1198,12 @@ bool OTControl::sendCapDiscoveries() {
 
     haDisc.createClima(F("DHW"), Mqtt::getTopicString(Mqtt::TOPIC_DHWSETTEMP), mqtt.getCmdTopic(Mqtt::TOPIC_DHWSETTEMP));
     haDisc.setMinMaxTemp(5, 65, 1);
-    haDisc.setCurrentTemperatureTemplate(F("{{ value_json.slave.dhw_t }}"));
+    haDisc.setCurrentTemperatureTemplate(F("{{ value_json.slave.dhw_t | default(None) }}"));
     haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
     haDisc.setInitial(45);
     haDisc.setModeCommandTopic(mqtt.getCmdTopic(Mqtt::TOPIC_DHWMODE));
     haDisc.setTemperatureStateTopic(haDisc.defaultStateTopic);
-    haDisc.setTemperatureStateTemplate(F("{{ value_json.thermostat.dhw_set_t }}"));
+    haDisc.setTemperatureStateTemplate(F("{{ value_json.thermostat.dhw_set_t | default(None) }}"));
     haDisc.setOptimistic(true);
     haDisc.setIcon(F("mdi:water-heater"));
     haDisc.setRetain(true);
@@ -1161,57 +1211,7 @@ bool OTControl::sendCapDiscoveries() {
     if (!haDisc.publish(vsc->hasDHW()))
         return false;
 
-    haDisc.createClima(F("flow set temperature 2"), Mqtt::getTopicString(Mqtt::TOPIC_CHSETTEMP2), mqtt.getCmdTopic(Mqtt::TOPIC_CHSETTEMP2));
-    haDisc.setMinMaxTemp(20, heatingConfig[1].flowMax, 0.5);
-    haDisc.setCurrentTemperatureTemplate(F("{{ value_json.slave.flow_t2 }}"));
-    haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
-    haDisc.setInitial(35);
-    haDisc.setModeCommandTopic(mqtt.getCmdTopic(Mqtt::TOPIC_CHMODE2));
-    haDisc.setTemperatureStateTopic(haDisc.defaultStateTopic);
-    haDisc.setTemperatureStateTemplate(F("{{ value_json.thermostat.ch_set_t2 }}"));
-    haDisc.setOptimistic(true);
-    haDisc.setIcon(F("mdi:heating-coil"));
-    haDisc.setRetain(true);
-    if (!haDisc.publish(vsc->hasCh2()))
-        return false;
-
-    haDisc.createClima(F("room set temperature 2"), F("clima_room2"), mqtt.getCmdTopic(Mqtt::TOPIC_ROOMSETPOINT2));
-    haDisc.setMinMaxTemp(10, 30, 0.5);
-    haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
-    haDisc.setCurrentTemperatureTemplate(F("{{ value_json.heatercircuit[1].roomtemp }}"));
-    haDisc.setInitial(20);
-    haDisc.setModeCommandTopic(mqtt.getCmdTopic(Mqtt::TOPIC_ROOMCOMP2));
-    haDisc.setTemperatureStateTopic(haDisc.defaultStateTopic);
-    haDisc.setTemperatureStateTemplate(F("{{ value_json.heatercircuit[1].roomsetpoint }}"));
-    haDisc.setOptimistic(true);
-    haDisc.setRetain(true);
-    haDisc.setModes(0x06);
-    if (!haDisc.publish(vsc->hasCh2()))
-        return false;
-
-    haDisc.createTempSensor(F("room setpoint 2"), F("setpoint_room2"));
-    haDisc.setStateTopic(mqtt.getCmdTopic(Mqtt::TOPIC_ROOMSETPOINT2));
-    if (!haDisc.publish(vsc->hasCh2()))
-        return false;
-
-    haDisc.createNumber(F("room temperature 2"), Mqtt::getTopicString(Mqtt::TOPIC_ROOMTEMP2), mqtt.getCmdTopic(Mqtt::TOPIC_ROOMTEMP2));
-    haDisc.setValueTemplate(F("{{ value_json.heatercircuit[1].roomtemp }}"));
-    haDisc.setMinMax(0, 30, 0.1);
-    if (!haDisc.publish(roomTemp[1].isMqttSource() && vsc->hasCh2()))
-        return false;
-
-    haDisc.createSensor(F("integrator state 2"), F("integ_state_ch2"));
-    haDisc.setValueTemplate(F("{{ value_json.heatercircuit[1].integState }}"));
-    haDisc.setUnit(F("K"));
-    if (!haDisc.publish((heatingConfig[1].roomComp.enabled) && (vsc->hasCh2())))
-        return false;
-
-    haDisc.createBinarySensor(F("suspend CH2"), F("susp2"), "");
-    haDisc.setValueTemplate(F("{{ 'ON' if value_json.heatercircuit[1].suspended else 'OFF' }}"));
-    if (!haDisc.publish(heatingConfig[1].enableHyst && vsc->hasCh2()))
-        return false;
-
-    return true;
+    return sendChDiscoveries(1, vsc->hasCh2());
 }
 
 void OTControl::setDhwTemp(double temp) {

@@ -95,6 +95,7 @@ private:
     uint16_t tmpToData(const double tmpf);
     void hwYield();
     unsigned long buildBrandResponse(const OpenThermMessageID id, String &str, const uint8_t idx);
+    bool sendChDiscoveries(const uint8_t ch, const bool en);
     unsigned long lastBoilerStatus;
     unsigned long lastVentStatus;
     enum OTMode: int8_t {

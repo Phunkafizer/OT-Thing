@@ -256,7 +256,7 @@ private:
     const Flag flags[6] PROGMEM = {
         {0, "fault",        "fault",                HA_DEVICE_CLASS_PROBLEM},
         {1, "vent_active",  "Ventilation active",   HA_DEVICE_CLASS_RUNNING },
-        {2, "bypass_open",  "Bypass open",          HA_DEVICE_CLASS_OPEN},
+        {2, "bypass_open",  "Bypass open",          HA_DEVICE_CLASS_OPENING},
         {3, "bypass_auto",  "Bypass auto",          HA_DEVICE_CLASS_RUNNING},
         {4, "free_vent",    "free ventilation",     HA_DEVICE_CLASS_RUNNING},
         {6, "diagnostic",   "diagnostic",           HA_DEVICE_CLASS_PROBLEM}
