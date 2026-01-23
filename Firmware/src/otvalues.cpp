@@ -71,6 +71,8 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::OEMDiagnosticCode,         PSTR("oem_diag_code")},
     {OpenThermMessageID::SuccessfulBurnerStarts,    PSTR("burner_starts")},
     {OpenThermMessageID::CHPumpStarts,              PSTR("ch_pump_starts")},
+    {OpenThermMessageID::DHWPumpValveStarts,        PSTR("dhw_pump_starts")},
+    {OpenThermMessageID::DHWBurnerStarts,           PSTR("dhw_burner_starts")},
     {OpenThermMessageID::BurnerOperationHours,      PSTR("burner_op_hours")},
     {OpenThermMessageID::CHPumpOperationHours,      PSTR("chpump_op_hours")},
     {OpenThermMessageID::DHWPumpValveOperationHours,PSTR("dhwpump_op_hours")},
@@ -81,7 +83,7 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::SlaveVersion,              PSTR("slave_prod_version")}
 };
 
-OTValue *slaveValues[50] = { // reply data collected (read) from slave (boiler / ventilation / solar)
+OTValue *slaveValues[52] = { // reply data collected (read) from slave (boiler / ventilation / solar)
     new OTValueSlaveConfigMember(),
     new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionSlave,      0,                 PSTR("OT-version slave")),
     new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,               0,                 PSTR("productversion slave")),
@@ -113,11 +115,13 @@ OTValue *slaveValues[50] = { // reply data collected (read) from slave (boiler /
     new OTValueFloatTemp(       OpenThermMessageID::Teo,                        PSTR("exhaust outlet temp.")),
     new OTValueu16(             OpenThermMessageID::RPMexhaust,                 10),
     new OTValueu16(             OpenThermMessageID::RPMsupply,                  10),
-    new OTValueu16(             OpenThermMessageID::UnsuccessfulBurnerStarts,   30,     PSTR("failed burnerstarts")),
-    new OTValueu16(             OpenThermMessageID::FlameSignalTooLowNumber,    30,     PSTR("Flame sig low")),
+    new OTValueu16(             OpenThermMessageID::UnsuccessfulBurnerStarts,   60,     PSTR("failed burnerstarts")),
+    new OTValueu16(             OpenThermMessageID::FlameSignalTooLowNumber,    60,     PSTR("Flame sig low")),
     new OTValueu16(             OpenThermMessageID::OEMDiagnosticCode,          60,     PSTR("OEM diagnostic code")),
-    new OTValueu16(             OpenThermMessageID::SuccessfulBurnerStarts,     30,     PSTR("burnerstarts")),
-    new OTValueu16(             OpenThermMessageID::CHPumpStarts,               30,     PSTR("CH pump starts")),
+    new OTValueu16(             OpenThermMessageID::SuccessfulBurnerStarts,     60,     PSTR("burnerstarts")),
+    new OTValueu16(             OpenThermMessageID::CHPumpStarts,               60,     PSTR("CH pump starts")),
+    new OTValueu16(             OpenThermMessageID::DHWPumpValveStarts,         60,     PSTR("DHW pump starts")),
+    new OTValueu16(             OpenThermMessageID::DHWBurnerStarts,            60,     PSTR("DHW burnerstarts")),
     new OTValueOperatingHours(  OpenThermMessageID::BurnerOperationHours,               PSTR("burner op. hours")),
     new OTValueOperatingHours(  OpenThermMessageID::CHPumpOperationHours,               PSTR("DHW pump op. hours")),
     new OTValueOperatingHours(  OpenThermMessageID::DHWPumpValveOperationHours,         PSTR("DHW pump/value op. hours")),

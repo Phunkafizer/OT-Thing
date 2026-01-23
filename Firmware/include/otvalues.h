@@ -18,7 +18,7 @@ ID	Msg SV  TV  LV  Name
 73	R-	OEM diagnostic code ventilation/heat-recovery
 101	R-	Solar Storage status
 102	R-	Solar Storage specific fault flags
-115	R-	OEM diagnostic code
+115	R-	*   -   *   OEM diagnostic code
 
 
    Class 2 : Configuration Information
@@ -87,8 +87,8 @@ ID	Msg	Name
 114	RW	*   -   *   Number of times flame signal was too low
 116	RW	*   -   *   Successful Burner starts
 117	RW	*   -   *   CH pump starts
-118	RW	DHW pump/valve starts
-119	RW	DHW burner starts
+118	RW	*   -   *   DHW pump/valve starts
+119	RW	*   -   *   DHW burner starts
 120	RW	*   -   *   Burner operation hours
 121	RW	*   -   *   CH pump operation hours
 122	RW	*   -   *   DHW pump/valve operation hours
@@ -241,11 +241,11 @@ public:
 class OTValueMasterStatus: public OTValueFlags {
 private:
     const Flag flags[5] PROGMEM = {
-        {8, "ch_enable",    "CH enable",    nullptr},
-        {9, "dhw_enable",   "DHW enable",   nullptr},
-        {10, "cooling_enable", "cooling enable", nullptr},
-        {11, "otc_active",  "OTC active",   nullptr},
-        {12, "ch2_enable",  "CH2 enable",   nullptr}
+        {8, "ch_enable",        "CH enable",        nullptr},
+        {9, "dhw_enable",       "DHW enable",       nullptr},
+        {10, "cooling_enable",  "cooling enable",   nullptr},
+        {11, "otc_active",      "OTC active",       nullptr},
+        {12, "ch2_enable",      "CH2 enable",       nullptr}
     };
 public:    
     OTValueMasterStatus();
@@ -283,7 +283,7 @@ class OTValueSlaveConfigMember: public OTValueFlags {
 private:
     void getValue(JsonObject &obj) const;
     const Flag flags[6] PROGMEM = {
-        {8, "dhw_present",              "DHW presemt",              nullptr},
+        {8, "dhw_present",              "DHW present",              nullptr},
         {9, "ctrl_type",                "Control type on/off",      nullptr},
         {10, "cooling_config",          "Cooling supported",        nullptr},
         {11, "dhw_config",              "DHW storage",              nullptr},
@@ -384,10 +384,10 @@ public:
 class OTValueRemoteParameter: public OTValueFlags {
 private:
     const Flag flags[4] PROGMEM = {
-        {0, "dhw_setpoint_rw", "DHW setpoint write", nullptr},
-        {1, "max_ch_setpoint_rw", "Max. CH setpoint write", nullptr},
-        {8, "dhw_setpoint_trans", "DHW setpoint transfer", nullptr},
-        {9, "max_ch_setpoint_trans", "Max. CH setpoint transfer", nullptr}
+        {0, "dhw_setpoint_rw",      "DHW setpoint write",           nullptr},
+        {1, "max_ch_setpoint_rw",   "Max. CH setpoint write",       nullptr},
+        {8, "dhw_setpoint_trans",   "DHW setpoint transfer",        nullptr},
+        {9, "max_ch_setpoint_trans", "Max. CH setpoint transfer",   nullptr}
     };
 public:    
     OTValueRemoteParameter();
@@ -466,6 +466,6 @@ public:
 };
 
 
-extern OTValue *slaveValues[50];
+extern OTValue *slaveValues[52];
 extern OTValue *thermostatValues[17];
 extern const char* getOTname(OpenThermMessageID id);

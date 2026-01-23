@@ -46,6 +46,8 @@ const struct {
     {OpenThermMessageID::MaxTSetUBMaxTSetLB,        nib(60, 25)}, // 60 °C upper bound, 20 C° lower bound
     {OpenThermMessageID::SuccessfulBurnerStarts,    9999},
     {OpenThermMessageID::CHPumpStarts,              7777},
+    {OpenThermMessageID::DHWPumpValveStarts,        5544},
+    {OpenThermMessageID::DHWBurnerStarts,           9955},
     {OpenThermMessageID::BurnerOperationHours,      8888},
     {OpenThermMessageID::CHPumpOperationHours,      6666},
     {OpenThermMessageID::DHWPumpValveOperationHours,5555},
@@ -1083,16 +1085,6 @@ bool OTControl::sendDiscovery() {
     haDisc.setValueTemplate(F("{{ value_json.slave.vent_status.free_vent }}"));
     discFlag &= haDisc.publish(slaveApp == SLAVEAPP_VENT);
 
-    bool ovr = (otMode == OTMODE_REPEATER) || ( (otMode == OTMODE_MASTER) && slaveEnabled );
-    haDisc.createSwitch(F("override CH1"), Mqtt::TOPIC_OVERRIDECH1);
-    discFlag &= haDisc.publish(ovr);
-
-    haDisc.createSwitch(F("override CH2"), Mqtt::TOPIC_OVERRIDECH2);
-    discFlag &= haDisc.publish(ovr);
-
-    haDisc.createSwitch(F("override DHW"), Mqtt::TOPIC_OVERRIDEDHW);
-    discFlag &= haDisc.publish(ovr);
-
     haDisc.createNumber(F("Max. modulation"), Mqtt::getTopicString(Mqtt::TOPIC_MAXMODULATION), mqtt.getCmdTopic(Mqtt::TOPIC_MAXMODULATION));
     haDisc.setMinMax(0, 100, 1);
     haDisc.setValueTemplate(F("{{ value_json.thermostat.max_rel_mod | default(None) }}"));
@@ -1194,10 +1186,16 @@ bool OTControl::sendChDiscoveries(const uint8_t ch, const bool en) {
     str = replace(PSTR("suspend CH #"), ch + 1, 1);
     id = replace(PSTR("ch_susp#"), ch + 1, 1);
     haDisc.createBinarySensor(str, id, "");
-
     str = replace(PSTR("{{ None if value_json.heatercircuit[#].suspended is not defined else 'ON' if value_json.heatercircuit[#].suspended else 'OFF' }}"), ch);
     haDisc.setValueTemplate(str);
     if (!haDisc.publish(heatingConfig[ch].enableHyst && en))
+        return false;
+
+    bool ovr = (otMode == OTMODE_REPEATER) || ( (otMode == OTMODE_MASTER) && slaveEnabled );
+    str = replace(PSTR("override CH #"), ch + 1, 1);
+    tp = topic(Mqtt::TOPIC_OVERRIDECH1, ch);
+    haDisc.createSwitch(str, tp);
+    if (!haDisc.publish(ovr & en))
         return false;
 
     return true;
@@ -1221,6 +1219,11 @@ bool OTControl::sendCapDiscoveries() {
     haDisc.setRetain(true);
     haDisc.setModes(0x03);
     if (!haDisc.publish(vsc->hasDHW()))
+        return false;
+
+    bool ovr = (otMode == OTMODE_REPEATER) || ( (otMode == OTMODE_MASTER) && slaveEnabled );
+    haDisc.createSwitch(F("override DHW"), Mqtt::TOPIC_OVERRIDEDHW);
+    if (!haDisc.publish(ovr & vsc->hasDHW()))
         return false;
 
     return sendChDiscoveries(1, vsc->hasCh2());
