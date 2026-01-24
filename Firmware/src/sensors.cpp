@@ -309,7 +309,9 @@ bool OneWireNode::sendDiscoveryAll() {
 bool OneWireNode::sendDiscovery() {
     String id = F("1w_");
     id += getAdr();
-    haDisc.createTempSensor("1wire", id);
+    String name = F("1wire ");
+    name += getAdr();
+    haDisc.createTempSensor(name, id);
     String path = F("{{ value_json['1wire']['");
     path += getAdr();
     path += F("'] }}");
