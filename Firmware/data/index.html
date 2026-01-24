@@ -679,7 +679,7 @@
                     </div>
                     <div class="statusfield">
                         <h5>OEM fault code</h5>
-                        <span class="statusvalue" field="slave.oem_fault_code"></span>
+                        <span class="statusvalue" field="slave.fault_flags.oem_fault_code"></span>
                     </div>
                     <div class="statusfield">
                         <h5>OEM diagnostic code</h5>
@@ -718,29 +718,29 @@
                 <div class="flexline">
                     <div class="statusfield">
                         <h5>DHW min. temperature</h5>
-                        <span class="statusvalue" field="slave.dhwMin" unit="&deg;C"></span>
+                        <span class="statusvalue" field="slave.dhw_bounds.min" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>DHW max. temperature</h5>
-                        <span class="statusvalue" field="slave.dhwMax" unit="&deg;C"></span>
+                        <span class="statusvalue" field="slave.dhw_bounds.max" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Min. flow temperature</h5>
-                        <span class="statusvalue" field="slave.chMin" unit="&deg;C"></span>
+                        <span class="statusvalue" field="slave.ch_bounds.min" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Max. flow temperature</h5>
-                        <span class="statusvalue" field="slave.chMax" unit="&deg;C"></span>
+                        <span class="statusvalue" field="slave.ch_bounds.max" unit="&deg;C"></span>
                     </div>
                 </div>
                 <div class="flexline">
                     <div class="statusfield">
                         <h5>Max. capacity</h5>
-                        <span class="statusvalue" field="slave.max_capacity" unit="kW"></span>
+                        <span class="statusvalue" field="slave.max_cap_min_mod.max_capacity" unit="kW"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Min. modulation level</h5>
-                        <span class="statusvalue" field="slave.min_modulation" unit="%"></span>
+                        <span class="statusvalue" field="slave.max_cap_min_mod.min_modulation" unit="%"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Product version</h5>
@@ -760,7 +760,7 @@
                     </div>
                     <div class="statusfield">
                         <h5>Member ID</h5>
-                        <span class="statusvalue" field="slave.memberId"></span>
+                        <span class="statusvalue" field="slave.slave_config_member.memberId"></span>
                     </div>
                     <div class="statusfield">
                         <h5>brand</h5>
@@ -794,7 +794,7 @@
                     </div>
                     <div class="statusfield">
                         <h5>Outside temp. compensation</h5>
-                        <span class="statusvalue" field="thermostat.status.otc_enable"></span>
+                        <span class="statusvalue" field="thermostat.status.otc_active"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Flow set temperature</h5>
@@ -838,11 +838,15 @@
                     </div>
                     <div class="statusfield">
                         <h5>Member ID</h5>
-                        <span class="statusvalue" field="thermostat.memberId"></span>
+                        <span class="statusvalue" field="thermostat.master_config_member.memberId"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Smart power</h5>
                         <span class="statusvalue" field="thermostat.smartPower"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Smart power implemented</h5>
+                        <span class="statusvalue" field="thermostat.master_config_member.smartPowerImplemented"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Frames sent</h5>

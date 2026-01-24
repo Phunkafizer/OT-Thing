@@ -90,8 +90,8 @@ OTValue *slaveValues[52] = { // reply data collected (read) from slave (boiler /
     new OTValueStatus(),
     new OTValueVentStatus(),
     new OTValueCapacityModulation(),
-    new OTValueDHWBounds(),
-    new OTValueCHBounds(),
+    new OTValueTempBounds(OpenThermMessageID::TdhwSetUBTdhwSetLB,               PSTR("DHW")),
+    new OTValueTempBounds(OpenThermMessageID::MaxTSetUBMaxTSetLB,               PSTR("CH")),
     new OTValueFloatTemp(       OpenThermMessageID::TrOverride,                 PSTR("room setpoint override")),
     new OTValueFloat(           OpenThermMessageID::RelModLevel,                10),
     new OTValueFloat(           OpenThermMessageID::CHPressure,                 30),
@@ -175,6 +175,7 @@ const char* OTItem::getName(OpenThermMessageID id) {
  */
 OTValue::OTValue(const OpenThermMessageID id, const int interval, const char *haName):
         interval(interval),
+        numSet(0),
         id(id),
         value(0),
         enabled(interval != -1),
@@ -298,7 +299,7 @@ bool OTValue::sendDiscovery() {
     return sendDiscovery("");
 }
 
-bool OTValue::sendDiscovery(String field, const bool addBaseName) {
+bool OTValue::sendDiscovery(String field) {
     bool inSlave = false;
     for (auto *valobj: slaveValues) {
         if (valobj == this) {
@@ -308,11 +309,8 @@ bool OTValue::sendDiscovery(String field, const bool addBaseName) {
     }
 
     String valTempl = F("{{ value_json");
-    valTempl += inSlave ? F(".slave") : F(".thermostat");
-    if (field.isEmpty() || addBaseName) {
-        valTempl += '.';
-        valTempl += FPSTR(getName());
-    }
+    valTempl += inSlave ? F(".slave.") : F(".thermostat.");
+    valTempl += FPSTR(getName());
     if (!field.isEmpty()) {
         valTempl += '.';
         valTempl += field;
@@ -349,6 +347,9 @@ void OTValue::setValue(const OpenThermMessageType ty, const uint16_t val) {
 
     if (!discFlag)
         discFlag = sendDiscovery();
+
+    numSet++;
+    lastMsgType = ty;
 }
 
 uint16_t OTValue::getValue() {
@@ -362,26 +363,32 @@ void OTValue::init(const bool enabled) {
 
 void OTValue::getJson(JsonObject &obj) const {
     if (enabled) {
+        JsonVariant var = obj[FPSTR(getName())].to<JsonVariant>();
         if (isSet)
-            getValue(obj);        
-        else {
-            const char *name = getName();
-            if (name)
-                obj[FPSTR(name)] = (char*) NULL;
-        }
+            getValue(var);
+        else
+            var.set(nullptr);
     }
+}
+
+void OTValue::getStatus(JsonObject &obj) const {
+    JsonObject stat = obj[FPSTR(getName())].to<JsonObject>();
+
+    stat[F("id")] = (int) id;
+    stat[F("enabled")] = enabled;
+    stat[F("set")] = isSet;
+    stat[F("value")] = String(value, HEX);
+    stat[F("lastMsgType")] = (int) lastMsgType;
+    stat[F("numSet")] = numSet;
+    stat[F("disc")] = discFlag;
 }
 
 OTValueu16::OTValueu16(const OpenThermMessageID id, const int interval, const char *haName):
         OTValue(id, interval, haName) {
 }
 
-uint16_t OTValueu16::getValue() const {
-    return value;
-}
-
-void OTValueu16::getValue(JsonObject &obj) const {
-    obj[FPSTR(getName())] = getValue();
+void OTValueu16::getValue(JsonVariant var) const {
+    var.set<unsigned int>(value);
 }
 
 
@@ -399,12 +406,8 @@ OTValuei16::OTValuei16(const OpenThermMessageID id, const int interval):
         OTValue(id, interval) {
 }
 
-int16_t OTValuei16::getValue() const {
-    return (int16_t) value;
-}
-
-void OTValuei16::getValue(JsonObject &obj) const {
-    obj[FPSTR(getName())] = getValue();
+void OTValuei16::getValue(JsonVariant var) const {
+    var.set<int>(value);
 }
 
 
@@ -412,16 +415,15 @@ OTValueFloat::OTValueFloat(const OpenThermMessageID id, const int interval):
         OTValue(id, interval) {
 }
 
-double OTValueFloat::getValue() const {
+void OTValueFloat::getValue(JsonVariant var) const {
     int8_t i = value >> 8;
+    double d;
     if (i >= 0)
-        return round((i + (value & 0xFF) / 256.0) * 10) / 10.0;
+        d = round((i + (value & 0xFF) / 256.0) * 10) / 10.0;
     else
-        return round((i - (value & 0xFF) / 256.0) * 10) / 10.0;
-}
+        d = round((i - (value & 0xFF) / 256.0) * 10) / 10.0;
 
-void OTValueFloat::getValue(JsonObject &obj) const {
-    obj[FPSTR(getName())] = getValue();
+    var.set<double>(d);
 }
 
 
@@ -443,12 +445,11 @@ OTValueFlags::OTValueFlags(const OpenThermMessageID id, const int interval, cons
         slave(slave) {
 }
 
-void OTValueFlags::getValue(JsonObject &obj) const {
-    JsonObject flags = obj[FPSTR(getName())].to<JsonObject>();
-    flags[F("value")] = String(value, HEX);
+void OTValueFlags::getValue(JsonVariant var) const {
+    var[F("value")] = String(value, HEX);
     for (uint8_t i=0; i<numFlags; i++) {
         const char *str = flagTable[i].name;
-        flags[FPSTR(str)] = (bool) (value & (1<<flagTable[i].bit));
+        var[FPSTR(str)] = (bool) (value & (1<<flagTable[i].bit));
     }
 }
 
@@ -528,9 +529,9 @@ OTValueSlaveConfigMember::OTValueSlaveConfigMember():
         OTValueFlags(OpenThermMessageID::SConfigSMemberIDcode, 0, flags, sizeof(flags) / sizeof(flags[0]), true) {
 }
 
-void OTValueSlaveConfigMember::getValue(JsonObject &obj) const {
-    OTValueFlags::getValue(obj);
-    obj[F("memberId")] = value & 0xFF;
+void OTValueSlaveConfigMember::getValue(JsonVariant var) const {
+    OTValueFlags::getValue(var);
+    var[F("memberId")] = value & 0xFF;
 }
 
 bool OTValueSlaveConfigMember::hasDHW() const {
@@ -542,6 +543,11 @@ bool OTValueSlaveConfigMember::hasCh2() const {
 }
 
 bool OTValueSlaveConfigMember::sendDiscovery() {
+    haDisc.createSensor(F("slave member ID"), F("slave_member_id"));
+    haDisc.setStateClass("");
+    if (!OTValue::sendDiscovery(F("memberId")))
+        return false;
+
     if (!OTValueFlags::sendDiscovery())
         return false;
     if (!otcontrol.sendCapDiscoveries())
@@ -554,9 +560,17 @@ OTValueFaultFlags::OTValueFaultFlags(const int interval):
         OTValueFlags(OpenThermMessageID::ASFflags, interval, flags, sizeof(flags) / sizeof(flags[0]), true) {
 }
 
-void OTValueFaultFlags::getValue(JsonObject &obj) const {
-    OTValueFlags::getValue(obj);
-    obj[F("oem_fault_code")] = value & 0xFF;
+void OTValueFaultFlags::getValue(JsonVariant var) const {
+    OTValueFlags::getValue(var);
+    var[PSTR(OEM_FAULT_CODE)] = value & 0xFF;
+}
+
+bool OTValueFaultFlags::sendDiscovery() {
+    if (!OTValueFlags::sendDiscovery())
+        return false;
+
+    haDisc.createSensor(F("OEM fault code"), FPSTR(OEM_FAULT_CODE));
+    return OTValue::sendDiscovery(FPSTR(OEM_FAULT_CODE));
 }
 
 
@@ -564,9 +578,17 @@ OTValueVentFaultFlags::OTValueVentFaultFlags(const int interval):
         OTValueFlags(OpenThermMessageID::ASFflagsOEMfaultCodeVentilationHeatRecovery, interval, flags, sizeof(flags) / sizeof(flags[0]), true) {
 }
 
-void OTValueVentFaultFlags::getValue(JsonObject &obj) const {
-    OTValueFlags::getValue(obj);
-    obj[F("oem_vent_fault_code")] = value & 0xFF;
+void OTValueVentFaultFlags::getValue(JsonVariant var) const {
+    OTValueFlags::getValue(var);
+    var[PSTR(OEM_VENT_FAULT_CODE)] = value & 0xFF;
+}
+
+bool OTValueVentFaultFlags::sendDiscovery() {
+    if (!OTValueFlags::sendDiscovery())
+        return false;
+
+    haDisc.createSensor(F("OEM fault code"), FPSTR(OEM_VENT_FAULT_CODE));
+    return OTValue::sendDiscovery(FPSTR(OEM_VENT_FAULT_CODE));
 }
 
 
@@ -580,11 +602,11 @@ bool OTValueProductVersion::sendDiscovery() {
     return OTValue::sendDiscovery("");
 }
 
-void OTValueProductVersion::getValue(JsonObject &obj) const {
+void OTValueProductVersion::getValue(JsonVariant var) const {
     String v = String(value >> 8);
     v += '.';
     v += String(value & 0xFF);
-    obj[FPSTR(getName())] = v;
+    var.set<String>(v);
 }
 
 
@@ -603,45 +625,36 @@ bool OTValueCapacityModulation::sendDiscovery() {
     return OTValue::sendDiscovery(FPSTR(MIN_MODULATION));
 }
 
-void OTValueCapacityModulation::getValue(JsonObject &obj) const {
-    obj[PSTR(MAX_CAPACITY)] = value >> 8;
-    obj[PSTR(MIN_MODULATION)] = value & 0xFF;
+void OTValueCapacityModulation::getValue(JsonVariant var) const {
+    var[PSTR(MAX_CAPACITY)] = value >> 8;
+    var[PSTR(MIN_MODULATION)] = value & 0xFF;
 }
 
-OTValueDHWBounds::OTValueDHWBounds():
-        OTValue(OpenThermMessageID::TdhwSetUBTdhwSetLB, 0) {
+OTValueTempBounds::OTValueTempBounds(const OpenThermMessageID id, const char *namePrefix):
+        OTValue(id, 0),
+        namePrefix(namePrefix) {
 }
 
-void OTValueDHWBounds::getValue(JsonObject &obj) const {
-    obj[PSTR(DHW_MAX)] = value >> 8;
-    obj[PSTR(DHW_MIN)] = value & 0xFF;
+void OTValueTempBounds::getValue(JsonVariant var) const {
+    var[PSTR(MAX)] = value >> 8;
+    var[PSTR(MIN)] = value & 0xFF;
 }
 
-bool OTValueDHWBounds::sendDiscovery() {
-    haDisc.createTempSensor(F("DHW max. temp."), FPSTR(DHW_MAX));
-    if (!OTValue::sendDiscovery(FPSTR(DHW_MAX)))
+bool OTValueTempBounds::sendDiscovery() {
+    String name = FPSTR(namePrefix);
+    name += F(" max. temp.");
+    String id = FPSTR(namePrefix);
+    id += F("_max");
+    haDisc.createTempSensor(name, id);
+    if (!OTValue::sendDiscovery(FPSTR(MAX)))
         return false;
-    
-    haDisc.createTempSensor(F("DHW min. temp."), FPSTR(DHW_MIN));
-    return OTValue::sendDiscovery(FPSTR(DHW_MIN));
-}
 
-OTValueCHBounds::OTValueCHBounds():
-        OTValue(OpenThermMessageID::MaxTSetUBMaxTSetLB, 0) {
-}
-
-void OTValueCHBounds::getValue(JsonObject &obj) const {
-    obj[PSTR(CH_MAX)] = value >> 8;
-    obj[PSTR(CH_MIN)] = value & 0xFF;
-}
-
-bool OTValueCHBounds::sendDiscovery() {
-    haDisc.createTempSensor(F("CH max. temp."), FPSTR(CH_MAX));
-    if (!OTValue::sendDiscovery(FPSTR(CH_MAX)))
-        return false;
-    
-    haDisc.createTempSensor(F("CH min. temp."), FPSTR(CH_MIN));
-    return OTValue::sendDiscovery(FPSTR(CH_MIN));
+    name = FPSTR(namePrefix);
+    name += F(" min. temp.");
+    id = FPSTR(namePrefix);
+    id += F("_min");
+    haDisc.createTempSensor(name, id);
+    return OTValue::sendDiscovery(FPSTR(MIN));
 }
 
 
@@ -649,9 +662,9 @@ OTValueMasterConfig::OTValueMasterConfig():
         OTValueFlags(OpenThermMessageID::MConfigMMemberIDcode, -1, flags, sizeof(flags) / sizeof(flags[0]), false) {
 }
 
-void OTValueMasterConfig::getValue(JsonObject &obj) const {
-    OTValueFlags::getValue(obj);
-    obj[F("memberId")] = value & 0xFF;
+void OTValueMasterConfig::getValue(JsonVariant var) const {
+    OTValueFlags::getValue(var);
+    var[F("memberId")] = value & 0xFF;
 }
 
 bool OTValueMasterConfig::sendDiscovery() {
@@ -675,10 +688,10 @@ OTValueDayTime::OTValueDayTime():
         OTValue(OpenThermMessageID::DayTime, 0) {
 }
 
-void OTValueDayTime::getValue(JsonObject &obj) const {
-    obj[F("dayOfWeek")] = (value >> 13) & 0x07;
-    obj[F("hour")] = (value >> 8) & 0x1F;
-    obj[F("minute")] = value & 0xFF;
+void OTValueDayTime::getValue(JsonVariant var) const {
+    var[F("dayOfWeek")] = (value >> 13) & 0x07;
+    var[F("hour")] = (value >> 8) & 0x1F;
+    var[F("minute")] = value & 0xFF;
 }
 
 bool OTValueDayTime::sendDiscovery() {
@@ -690,9 +703,9 @@ OTValueDate::OTValueDate():
         OTValue(OpenThermMessageID::Date, 0) {
 }
 
-void OTValueDate::getValue(JsonObject &obj) const {
-    obj[F("month")] = (value >> 8);
-    obj[F("day")] = value & 0xFF;
+void OTValueDate::getValue(JsonVariant var) const {
+    var[F("month")] = (value >> 8);
+    var[F("day")] = value & 0xFF;
 }
 
 bool OTValueDate::sendDiscovery() {
@@ -714,20 +727,19 @@ OTValueBoilerFanSpeed::OTValueBoilerFanSpeed():
         OTValue(OpenThermMessageID::BoilerFanSpeedSetpointAndActual, 30) {
 }
 
-void OTValueBoilerFanSpeed::getValue(JsonObject &obj) const {
-    JsonObject fanspeeds = obj[FPSTR(getName())].to<JsonObject>();
-    fanspeeds[PSTR(SETPOINT)] = value >> 8;
-    fanspeeds[PSTR(ACTUAL)] = value & 0xFF;
+void OTValueBoilerFanSpeed::getValue(JsonVariant var) const {
+    var[PSTR(SETPOINT)] = value >> 8;
+    var[PSTR(ACTUAL)] = value & 0xFF;
 }
 
 bool OTValueBoilerFanSpeed::sendDiscovery() {
     haDisc.createTempSensor(F("Boiler fan speed setpoint"), FPSTR(SETPOINT));
     String field = FPSTR(getName());
-    if (!OTValue::sendDiscovery(FPSTR(SETPOINT), true))
+    if (!OTValue::sendDiscovery(FPSTR(SETPOINT)))
         return false;
     
     haDisc.createTempSensor(F("Boiler fan speed actual"), FPSTR(ACTUAL));
-    return OTValue::sendDiscovery(FPSTR(ACTUAL), true);
+    return OTValue::sendDiscovery(FPSTR(ACTUAL));
 }
 
 
@@ -782,6 +794,6 @@ void BrandInfo::setValue(const OpenThermMessageType ty, const uint16_t msg) {
         discFlag = sendDiscovery();
 }
 
-void BrandInfo::getValue(JsonObject &obj) const {
-    obj[FPSTR(getName())] = String(buf);
+void BrandInfo::getValue(JsonVariant var) const {
+    var.set<String>(buf);
 }

@@ -48,7 +48,7 @@ OTWRSetBoilerTemp::OTWRSetBoilerTemp(const uint8_t ch):
 }
 
 OTWRMasterConfigMember::OTWRMasterConfigMember():
-        OTWriteRequest(OpenThermMessageID::MConfigMMemberIDcode, 60) {
+        OTWriteRequest(OpenThermMessageID::MConfigMMemberIDcode, 180) {
 }
 
 OTWRSetVentSetpoint::OTWRSetVentSetpoint():
@@ -68,15 +68,15 @@ OTWRSetOutsideTemp::OTWRSetOutsideTemp():
 }
 
 OTWRSetMaxModulation::OTWRSetMaxModulation():
-        OTWriteRequest(OpenThermMessageID::MaxRelModLevelSetting, 60) {
+        OTWriteRequest(OpenThermMessageID::MaxRelModLevelSetting, 180) {
 }
 
 
 OTWRProdVersion::OTWRProdVersion():
-        OTWriteRequest(OpenThermMessageID::MasterVersion, 0) {
+        OTWriteRequest(OpenThermMessageID::MasterVersion, 180) {
 }
 
 OTWRSetOTVersion::OTWRSetOTVersion():
-        OTWriteRequest(OpenThermMessageID::OpenThermVersionMaster, 0) {
+        OTWriteRequest(OpenThermMessageID::OpenThermVersionMaster, 180) {
 }
 

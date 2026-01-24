@@ -1311,6 +1311,10 @@ void OTControl::setConfig(JsonObject &config) {
     setDhwRequest.force();
     setBoilerRequest[0].force();
     setBoilerRequest[1].force();
+    setMasterConfigMember.force();
+    setMaxModulation.force();
+    setProdVersion.force();
+    setOTVersion.force();
 
     master.resetCounters();
     slave.resetCounters();

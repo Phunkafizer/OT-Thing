@@ -9,6 +9,7 @@
 #include "devconfig.h"
 #include "html.h"
 #include "otcontrol.h"
+#include "otvalues.h"
 #include "httpUpdate.h"
 
 static const char APP_JSON[] PROGMEM = "application/json";
@@ -17,6 +18,7 @@ static const IPAddress apMask(255, 255, 255, 0);
 Portal portal;
 static AsyncWebServer websrv(80);
 AsyncWebSocket ws("/ws");
+
 
 
 Portal::Portal():
@@ -52,14 +54,14 @@ void Portal::begin(bool configMode) {
         request->send(200, F("text/html"), (uint8_t*) html, strlen_P(html));
     });
 
-    websrv.on("/config", HTTP_GET, [this] (AsyncWebServerRequest *request) {
+    websrv.on(PSTR("/config"), HTTP_GET, [this] (AsyncWebServerRequest *request) {
         if (LittleFS.exists(FPSTR(CFG_FILENAME)))
             request->send(LittleFS, FPSTR(CFG_FILENAME), FPSTR(APP_JSON));
         else
             request->send(404);
     });
 
-    websrv.on("/config", HTTP_POST, 
+    websrv.on(PSTR("/config"), HTTP_POST, 
         [this] (AsyncWebServerRequest *request) {
         },
         [] (AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len, bool final) {
@@ -79,7 +81,7 @@ void Portal::begin(bool configMode) {
         }
     );
 
-    websrv.on("/scan", HTTP_GET, [this] (AsyncWebServerRequest *request) {
+    websrv.on(PSTR("/scan"), HTTP_GET, [this] (AsyncWebServerRequest *request) {
         JsonDocument doc;
         JsonObject jobj = doc.to<JsonObject>();
 
@@ -104,7 +106,7 @@ void Portal::begin(bool configMode) {
         request->send(response);
     });
 
-    websrv.on("/setwifi", HTTP_POST, [this] (AsyncWebServerRequest *request) {
+    websrv.on(PSTR("/setwifi"), HTTP_POST, [this] (AsyncWebServerRequest *request) {
         if (request->hasArg(F("ssid")) && request->hasArg(F("pass"))) {
             request->send(200);
             delay(500);
@@ -120,7 +122,7 @@ void Portal::begin(bool configMode) {
             request->send(400); // bad request
     });
 
-    websrv.on("/status", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    websrv.on(PSTR("/status"), HTTP_GET, [this](AsyncWebServerRequest *request) {
         if (httpupdate.isUpdating()) {
             request->send(503);
             return;
@@ -132,12 +134,31 @@ void Portal::begin(bool configMode) {
         request->send(response);
     });
 
-    websrv.on("/reboot", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    websrv.on(PSTR("/otitems"), HTTP_GET, [this](AsyncWebServerRequest *request) {
+        if (httpupdate.isUpdating()) {
+            request->send(503);
+            return;
+        }
+        JsonDocument doc;
+        JsonObject jSlave = doc[F("slave")].to<JsonObject>();
+            for (auto *valobj: slaveValues)
+                valobj->getStatus(jSlave);
+
+        JsonObject jMaster = doc[F("master")].to<JsonObject>();
+            for (auto *valobj: thermostatValues)
+                valobj->getStatus(jMaster);
+
+        AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));
+        serializeJson(doc, *response);
+        request->send(response);
+    });
+
+    websrv.on(PSTR("/reboot"), HTTP_GET, [this](AsyncWebServerRequest *request) {
         request->send(200);
         this->reboot = true;
     });
 
-    websrv.on("/update", HTTP_POST, 
+    websrv.on(PSTR("/update"), HTTP_POST, 
         [this] (AsyncWebServerRequest *request) { // onRequest handler
             int httpRes;
 
@@ -169,7 +190,7 @@ void Portal::begin(bool configMode) {
         }
     );
 
-    websrv.on("/slaverequest", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    websrv.on(PSTR("/slaverequest"), HTTP_GET, [this](AsyncWebServerRequest *request) {
         if (!request->hasParam("id")) {
             request->send(503);
             return;
@@ -205,12 +226,12 @@ void Portal::begin(bool configMode) {
             request->send(503);
     });
 
-    websrv.on("/checkupdate", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    websrv.on(PSTR("/checkupdate"), HTTP_POST, [this](AsyncWebServerRequest *request) {
         this->checkUpdate = true;
         request->send(200);
     });
 
-    websrv.on("/install", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    websrv.on(PSTR("/install"), HTTP_POST, [this](AsyncWebServerRequest *request) {
         this->doUpdate = true;
         request->send(200);
     });
