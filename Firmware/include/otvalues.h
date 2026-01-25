@@ -366,7 +366,7 @@ public:
 class OTValueMasterConfig: public OTValueFlags {
 private:
     const Flag flags[1] PROGMEM = {
-        {0, "smartPowerImplemented"},
+        {8, "smartPowerImplemented"},
     };
     void getValue(JsonVariant var) const override;
 protected:
