@@ -410,8 +410,8 @@ void OTControl::loop() {
                 return;
             }
         }
-        // no break!!
     }
+    [[fallthrough]];
 
     case OTMODE_MASTER:
         if (setProdVersion) {
