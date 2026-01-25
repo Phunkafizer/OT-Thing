@@ -44,6 +44,7 @@ const struct {
     {OpenThermMessageID::TrOverride2,               0},
     {OpenThermMessageID::TdhwSetUBTdhwSetLB,        nib(60, 40)}, // 60 °C upper bound, 40 C° lower bound
     {OpenThermMessageID::MaxTSetUBMaxTSetLB,        nib(60, 25)}, // 60 °C upper bound, 20 C° lower bound
+    {OpenThermMessageID::PowerCycles,               159},
     {OpenThermMessageID::SuccessfulBurnerStarts,    9999},
     {OpenThermMessageID::CHPumpStarts,              7777},
     {OpenThermMessageID::DHWPumpValveStarts,        5544},
@@ -779,7 +780,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             }
 
             default:
-                if ((otval != nullptr) && otval->isSet)
+                if ((otval != nullptr) && otval->isSet())
                     resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, otval->getValue());
             }
 
@@ -994,7 +995,7 @@ void OTControl::getJson(JsonObject &obj) {
     jSlave[F("rxCount")] = master.rxCount;
     if ( (otMode == OTMODE_MASTER) || (otMode == OTMODE_LOOPBACKTEST) )
         jSlave[F("timeouts")] = master.timeoutCount;
-    if (OTValue::getSlaveValue(OpenThermMessageID::Status)->isSet) {
+    if (OTValue::getSlaveValue(OpenThermMessageID::Status)->isSet()) {
         jSlave[F("flameRatio")] = flameRatio.getDuty();
         jSlave[F("flameFreq")] = flameRatio.getFreq();
     }
@@ -1211,7 +1212,7 @@ bool OTControl::sendChDiscoveries(const uint8_t ch, const bool en) {
 
 bool OTControl::sendCapDiscoveries() {
     OTValueSlaveConfigMember *vsc = static_cast<OTValueSlaveConfigMember*>(OTValue::getSlaveValue(OpenThermMessageID::SConfigSMemberIDcode));
-    if ((vsc == nullptr) || !(vsc->isSet))
+    if ((vsc == nullptr) || !(vsc->isSet()))
         return true;
 
     haDisc.createClima(F("DHW"), Mqtt::getTopicString(Mqtt::TOPIC_DHWSETTEMP), mqtt.getCmdTopic(Mqtt::TOPIC_DHWSETTEMP));

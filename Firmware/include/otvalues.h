@@ -77,7 +77,7 @@ ID	Msg	Name
 84	R-	*   -   *   Actual exhaust fan speed
 85	R-	*   -   *   Actual inlet fan speed
 96	RW	Cooling Operation hours
-97	RW	Power Cycles
+97	RW	*   -   *   Power Cycles
 98	-W	Type of sensor
 109	RW	Electricity producer starts
 110	RW	Electricity producer hours
@@ -107,7 +107,7 @@ ID	Msg	Name
 
    Class 6 : Transparent Slave Parameters
 ID	Msg	Name
-10	R-	Number of Transparent Slave Parameters
+10	R-	*   -   -   Number of Transparent Slave Parameters
 11	RW	TSP index/value
 88	R-	Number of TSPs ventilation/heat-recovery
 89	RW	TSP index/value ventilation/heat-recovery
@@ -116,7 +116,7 @@ ID	Msg	Name
 
    Class 7 : Fault History Data
 ID	Msg	Name
-12	R-	Size of Fault Buffer
+12	R-	*   -   -   Size of Fault Buffer
 13	R-	FHB-entry index/value
 90	R-	Size of Fault Buffer ventilation/heat-recovery
 91	R-	FHB-entry index/value ventilation/heat-recovery
@@ -164,7 +164,7 @@ public:
     static OTValue* getSlaveValue(const OpenThermMessageID id);
     static OTValue* getThermostatValue(const OpenThermMessageID id);
     void refreshDisc();
-    bool isSet;
+    bool isSet() const;
 };
 
 class OTValueu16: public OTValue {
@@ -186,6 +186,14 @@ private:
     void getValue(JsonVariant var) const override;
 public:
     OTValuei16(const OpenThermMessageID id, const int interval);
+};
+
+
+class OTValueBufSize: public OTValue {
+private:
+    void getValue(JsonVariant var) const override;
+public:
+    OTValueBufSize(const OpenThermMessageID id);
 };
 
 class OTValueFloat: public OTValue {
@@ -460,6 +468,6 @@ public:
 };
 
 
-extern OTValue *slaveValues[52];
+extern OTValue *slaveValues[55];
 extern OTValue *thermostatValues[17];
 extern const char* getOTname(OpenThermMessageID id);

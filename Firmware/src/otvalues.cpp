@@ -22,6 +22,8 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::RBPflags,                  PSTR("rp_flags")},
     {OpenThermMessageID::TsetCH2,                   PSTR("ch_set_t2")},
     {OpenThermMessageID::TrOverride,                PSTR("tr_override")},
+    {OpenThermMessageID::TSP,                       PSTR("num_tsps")},
+    {OpenThermMessageID::FHBsize,                   PSTR("size_fhb")},
     {OpenThermMessageID::MaxRelModLevelSetting,     PSTR("max_rel_mod")},
     {OpenThermMessageID::MaxCapacityMinModLevel,    PSTR("max_cap_min_mod")},
     {OpenThermMessageID::TrSet,                     PSTR("room_set_t")},
@@ -65,6 +67,7 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::Brand,                     PSTR("brand")},
     {OpenThermMessageID::BrandVersion,              PSTR("brand_version")},
     {OpenThermMessageID::BrandSerialNumber,         PSTR("brand_serial")},
+    {OpenThermMessageID::PowerCycles,               PSTR("power_cycles")},
     {OpenThermMessageID::RemoteOverrideFunction,    PSTR("remote_override_function")},
     {OpenThermMessageID::UnsuccessfulBurnerStarts,  PSTR("unsuccessful_burner_starts")},
     {OpenThermMessageID::FlameSignalTooLowNumber,   PSTR("num_flame_signal_low")},
@@ -83,7 +86,7 @@ static const OTItem OTITEMS[] PROGMEM = {
     {OpenThermMessageID::SlaveVersion,              PSTR("slave_prod_version")}
 };
 
-OTValue *slaveValues[52] = { // reply data collected (read) from slave (boiler / ventilation / solar)
+OTValue *slaveValues[55] = { // reply data collected (read) from slave (boiler / ventilation / solar)
     new OTValueSlaveConfigMember(),
     new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionSlave,      0,                 PSTR("OT-version slave")),
     new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,               0,                 PSTR("productversion slave")),
@@ -115,6 +118,7 @@ OTValue *slaveValues[52] = { // reply data collected (read) from slave (boiler /
     new OTValueFloatTemp(       OpenThermMessageID::Teo,                        PSTR("exhaust outlet temp.")),
     new OTValueu16(             OpenThermMessageID::RPMexhaust,                 10),
     new OTValueu16(             OpenThermMessageID::RPMsupply,                  10),
+    new OTValueu16(             OpenThermMessageID::PowerCycles,                180,    PSTR("power cycles")),
     new OTValueu16(             OpenThermMessageID::UnsuccessfulBurnerStarts,   60,     PSTR("failed burnerstarts")),
     new OTValueu16(             OpenThermMessageID::FlameSignalTooLowNumber,    60,     PSTR("Flame sig low")),
     new OTValueu16(             OpenThermMessageID::OEMDiagnosticCode,          60,     PSTR("OEM diagnostic code")),
@@ -135,7 +139,10 @@ OTValue *slaveValues[52] = { // reply data collected (read) from slave (boiler /
     new OTValueFlameCurrent(),
     new BrandInfo(              OpenThermMessageID::Brand,                              PSTR("brand")),
     new BrandInfo(              OpenThermMessageID::BrandVersion,                       PSTR("brand version")),
-    new BrandInfo(              OpenThermMessageID::BrandSerialNumber,                  PSTR("brand serial"))
+    new BrandInfo(              OpenThermMessageID::BrandSerialNumber,                  PSTR("brand serial")),
+
+    new OTValueBufSize(         OpenThermMessageID::TSP),
+    new OTValueBufSize(         OpenThermMessageID::FHBsize)
 };
 
 
@@ -180,8 +187,7 @@ OTValue::OTValue(const OpenThermMessageID id, const int interval, const char *ha
         enabled(interval != -1),
         discFlag(false),
         numSet(0),
-        haName(haName),
-        isSet(false) {
+        haName(haName) {
 }
 
 OTValue* OTValue::getSlaveValue(const OpenThermMessageID id) {
@@ -206,7 +212,7 @@ bool OTValue::process() {
     if (!enabled || (interval == -1))
         return false;
 
-    if (isSet && (interval == 0))
+    if (isSet() && (interval == 0))
         return false;
 
     if ((lastTransfer > 0) && ((millis() - lastTransfer) / 1000 < interval))
@@ -220,6 +226,10 @@ bool OTValue::process() {
 
 OpenThermMessageID OTValue::getId() const {
     return id;
+}
+
+bool OTValue::isSet() const {
+    return (numSet > 0);
 }
 
 bool OTValue::sendDiscovery() {
@@ -326,7 +336,7 @@ bool OTValue::sendDiscovery(String field) {
 
 void OTValue::refreshDisc() {
     discFlag = false;
-    if (isSet && enabled)
+    if (isSet() && enabled)
         discFlag = sendDiscovery();
 }
 
@@ -337,18 +347,17 @@ const char* OTValue::getName() const {
 void OTValue::setValue(const OpenThermMessageType ty, const uint16_t val) {
     if ((ty == OpenThermMessageType::READ_ACK) || (ty == OpenThermMessageType::WRITE_DATA)) {
         value = val;
-        isSet = true;
+        numSet++;
         enabled = true;
     }
     else {
         enabled = false;
-        isSet = false;
+        numSet = 0;
     }
 
     if (!discFlag)
         discFlag = sendDiscovery();
 
-    numSet++;
     lastMsgType = ty;
 }
 
@@ -358,13 +367,13 @@ uint16_t OTValue::getValue() {
 
 void OTValue::init(const bool enabled) {
     this->enabled = enabled;
-    isSet = false;
+    numSet = 0;
 }
 
 void OTValue::getJson(JsonObject &obj) const {
     if (enabled) {
         JsonVariant var = obj[FPSTR(getName())].to<JsonVariant>();
-        if (isSet)
+        if (isSet())
             getValue(var);
         else
             var.set(nullptr);
@@ -376,14 +385,12 @@ void OTValue::getStatus(JsonObject &obj) const {
 
     stat[F("id")] = (int) id;
     stat[F("enabled")] = enabled;
-    stat[F("set")] = isSet;
-    if (numSet > 0){
+    stat[F("lastMsgType")] = (int) lastMsgType;
+    stat[F("numSet")] = numSet;
+    if (isSet()) {
         stat[F("value")] = String(value, HEX);
-        stat[F("lastMsgType")] = (int) lastMsgType;
         stat[F("disc")] = discFlag;
     }
-    
-    stat[F("numSet")] = numSet;
 }
 
 OTValueu16::OTValueu16(const OpenThermMessageID id, const int interval, const char *haName):
@@ -392,6 +399,15 @@ OTValueu16::OTValueu16(const OpenThermMessageID id, const int interval, const ch
 
 void OTValueu16::getValue(JsonVariant var) const {
     var.set<unsigned int>(value);
+}
+
+
+OTValueBufSize::OTValueBufSize(const OpenThermMessageID id):
+        OTValue(id, 0) {
+}
+
+void OTValueBufSize::getValue(JsonVariant var) const {
+    var.set<unsigned int>(value >> 8);
 }
 
 
@@ -490,24 +506,15 @@ OTValueStatus::OTValueStatus():
 }
 
 bool OTValueStatus::getChActive(const uint8_t channel) const{
-    if (!isSet)
-        return false;
-
-    return (value & (1<<((channel == 0) ? 1 : 5))) != 0;
+    return isSet() ? ((value & (1<<((channel == 0) ? 1 : 5))) != 0) : false;
 }
 
 bool OTValueStatus::getFlame() const {
-    if (!isSet)
-        return false;
-
-    return (value & (1<<3)) != 0;
+    return isSet() ? ((value & (1<<3)) != 0) : false;
 }
 
 bool OTValueStatus::getDhwActive() const {
-    if (!isSet)
-        return false;
-
-    return (value & (1<<2)) != 0;
+    return isSet() ? ((value & (1<<2)) != 0) : false;
 }
 
 OTValueMasterStatus::OTValueMasterStatus():
@@ -768,7 +775,7 @@ void BrandInfo::init(const bool enabled) {
 }
 
 bool BrandInfo::process() {
-    if (isSet || !enabled) 
+    if (isSet() || !enabled) 
         return false;
 
     unsigned long req = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, id, strlen(buf) << 8);
@@ -777,23 +784,22 @@ bool BrandInfo::process() {
 }
 
 void BrandInfo::setValue(const OpenThermMessageType ty, const uint16_t val) {
-    numSet++;
     lastMsgType = ty;
 
     if (ty == OpenThermMessageType::READ_ACK) {
         value = val;
         if (strlen(buf) >= sizeof(buf) - 1) {
-            isSet = true;
+            numSet++;
             return;
         }
         buf[strlen(buf) + 1] = 0;
         buf[strlen(buf)] = val & 0xFF;
         if (strlen(buf) == (val >> 8))
-            isSet = true;
+            numSet++;
     }
     else {
-        isSet = strlen(buf) > 0;
-        enabled = isSet;
+        numSet = (strlen(buf) > 0) ? 1 : 0;
+        enabled = isSet();
     }
 
     if (!discFlag)
