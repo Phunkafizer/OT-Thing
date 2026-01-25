@@ -175,11 +175,11 @@ const char* OTItem::getName(OpenThermMessageID id) {
  */
 OTValue::OTValue(const OpenThermMessageID id, const int interval, const char *haName):
         interval(interval),
-        numSet(0),
         id(id),
         value(0),
         enabled(interval != -1),
         discFlag(false),
+        numSet(0),
         haName(haName),
         isSet(false) {
 }
@@ -335,14 +335,14 @@ const char* OTValue::getName() const {
 }
 
 void OTValue::setValue(const OpenThermMessageType ty, const uint16_t val) {
-    if ((ty == OpenThermMessageType::INVALID_DATA) || (ty == OpenThermMessageType::UNKNOWN_DATA_ID)) {
-        enabled = false;
-        isSet = false;
-    }
-    else {
+    if ((ty == OpenThermMessageType::READ_ACK) || (ty == OpenThermMessageType::WRITE_DATA)) {
         value = val;
         isSet = true;
         enabled = true;
+    }
+    else {
+        enabled = false;
+        isSet = false;
     }
 
     if (!discFlag)
@@ -377,10 +377,13 @@ void OTValue::getStatus(JsonObject &obj) const {
     stat[F("id")] = (int) id;
     stat[F("enabled")] = enabled;
     stat[F("set")] = isSet;
-    stat[F("value")] = String(value, HEX);
-    stat[F("lastMsgType")] = (int) lastMsgType;
+    if (numSet > 0){
+        stat[F("value")] = String(value, HEX);
+        stat[F("lastMsgType")] = (int) lastMsgType;
+        stat[F("disc")] = discFlag;
+    }
+    
     stat[F("numSet")] = numSet;
-    stat[F("disc")] = discFlag;
 }
 
 OTValueu16::OTValueu16(const OpenThermMessageID id, const int interval, const char *haName):
@@ -773,15 +776,19 @@ bool BrandInfo::process() {
     return true;
 }
 
-void BrandInfo::setValue(const OpenThermMessageType ty, const uint16_t msg) {
+void BrandInfo::setValue(const OpenThermMessageType ty, const uint16_t val) {
+    numSet++;
+    lastMsgType = ty;
+
     if (ty == OpenThermMessageType::READ_ACK) {
+        value = val;
         if (strlen(buf) >= sizeof(buf) - 1) {
             isSet = true;
             return;
         }
         buf[strlen(buf) + 1] = 0;
-        buf[strlen(buf)] = msg & 0xFF;
-        if (strlen(buf) == (msg >> 8))
+        buf[strlen(buf)] = val & 0xFF;
+        if (strlen(buf) == (val >> 8))
             isSet = true;
     }
     else {

@@ -138,8 +138,6 @@ class OTValue {
 private:
     unsigned long lastTransfer;
     const int interval;
-    uint32_t numSet;
-    OpenThermMessageType lastMsgType;
     virtual void getValue(JsonVariant var) const = 0;
 protected:
     virtual bool sendDiscovery();
@@ -149,6 +147,8 @@ protected:
     uint16_t value;
     bool enabled;
     bool discFlag;
+    uint32_t numSet;
+    OpenThermMessageType lastMsgType;
     const char *haName;
 public:
     OTValue(const OpenThermMessageID id, const int interval, const char *haName = nullptr);
