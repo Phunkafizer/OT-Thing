@@ -26,7 +26,7 @@ const struct {
     OpenThermMessageID id;
     uint16_t value;
 } loopbackTestData[] PROGMEM = {
-    {OpenThermMessageID::SConfigSMemberIDcode,      0x2101}, // DHW & CH2 present
+    {OpenThermMessageID::SConfigSMemberIDcode,      nib(0x21, 1)}, // DHW & CH2 present, Member ID 1
     {OpenThermMessageID::ASFflags,                  0x0000}, // no error flags, oem error code 0
     {OpenThermMessageID::RBPflags,                  0x0101},
     {OpenThermMessageID::TrOverride,                0},
@@ -1174,8 +1174,16 @@ bool OTControl::sendChDiscoveries(const uint8_t ch, const bool en) {
     if (!haDisc.publish(roomTemp[ch].isMqttSource() && en))
         return false;
 
+    str = replace(PSTR("room temperature #"), ch + 1, 1);
+    String id = replace(PSTR("current_room_temp#"), ch + 1);
+    haDisc.createTempSensor(str, id);
+    str = replace(PSTR("{{ value_json.heatercircuit[#].roomtemp ? }}"), ch);
+    haDisc.setValueTemplate(str);
+    if (!haDisc.publish(en))
+        return false;
+
     str = replace(PSTR("integrator state #"), ch + 1, 1);
-    String id = replace(PSTR("integ_state_ch#"),ch + 1);
+    id = replace(PSTR("integ_state_ch#"), ch + 1);
     haDisc.createSensor(str, id);
     str = replace(PSTR("{{ value_json.heatercircuit[#].integState ? }}"), ch);
     haDisc.setValueTemplate(str);
@@ -1195,7 +1203,7 @@ bool OTControl::sendChDiscoveries(const uint8_t ch, const bool en) {
     str = replace(PSTR("override CH #"), ch + 1, 1);
     tp = topic(Mqtt::TOPIC_OVERRIDECH1, ch);
     haDisc.createSwitch(str, tp);
-    if (!haDisc.publish(ovr & en))
+    if (!haDisc.publish(ovr && en))
         return false;
 
     return true;
@@ -1223,7 +1231,7 @@ bool OTControl::sendCapDiscoveries() {
 
     bool ovr = (otMode == OTMODE_REPEATER) || ( (otMode == OTMODE_MASTER) && slaveEnabled );
     haDisc.createSwitch(F("override DHW"), Mqtt::TOPIC_OVERRIDEDHW);
-    if (!haDisc.publish(ovr & vsc->hasDHW()))
+    if (!haDisc.publish(ovr && vsc->hasDHW()))
         return false;
 
     return sendChDiscoveries(1, vsc->hasCh2());
