@@ -544,7 +544,6 @@ bool OTValueSlaveConfigMember::hasCh2() const {
 
 bool OTValueSlaveConfigMember::sendDiscovery() {
     haDisc.createSensor(F("slave member ID"), F("slave_member_id"));
-    haDisc.setStateClass("");
     if (!OTValue::sendDiscovery(F("memberId")))
         return false;
 
