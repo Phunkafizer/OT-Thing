@@ -103,10 +103,13 @@ void loop() {
             devconfig.remove();
             WiFi.persistent(true);
             WiFi.disconnect(true, true);
-            while (digitalRead(GPIO_CONFIG_BUTTON) == 0)
+            while (digitalRead(GPIO_CONFIG_BUTTON) == 0) {
+                esp_task_wdt_reset();
                 yield();
+            }
             ESP.restart();
         }
+        esp_task_wdt_reset();
         return;
     }
     else
