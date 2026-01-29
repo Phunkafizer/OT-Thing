@@ -794,7 +794,7 @@ void BrandInfo::setValue(const OpenThermMessageType ty, const uint16_t val) {
         }
         buf[strlen(buf) + 1] = 0;
         buf[strlen(buf)] = val & 0xFF;
-        if (strlen(buf) == (val >> 8))
+        if ( (strlen(buf) == (val >> 8)) || (val & 0xFF == 0) )
             numSet++;
     }
     else {
@@ -802,7 +802,7 @@ void BrandInfo::setValue(const OpenThermMessageType ty, const uint16_t val) {
         enabled = isSet();
     }
 
-    if (!discFlag)
+    if ((isSet() || !enabled) && !discFlag)
         discFlag = sendDiscovery();
 }
 
