@@ -702,10 +702,11 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
 }
 
 unsigned long OTControl::buildBrandResponse(const OpenThermMessageID id, String &str, const uint8_t idx) {
+    uint16_t msg = str.length() << 8;
     if ((idx) < str.length())
-        return OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, (str.length() << 8) | str[idx]);
-    
-    return OpenTherm::buildResponse(OpenThermMessageType::DATA_INVALID, id, str.length() << 8);
+        msg |= str[idx];
+
+    return OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, msg);
 }
 
 void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus status) {

@@ -30,8 +30,7 @@ private:
     bool conFlag;
     OTControl::CtrlMode strToCtrlMode(String &str);
 public:
-    enum MqttTopic {
-        TOPIC_UNKNOWN = -1,
+    enum MqttTopic: uint8_t {
         TOPIC_OUTSIDETEMP,
         TOPIC_DHWSETTEMP,
         TOPIC_CHSETTEMP1,
@@ -53,7 +52,8 @@ public:
         TOPIC_OPENBYPASS,
         TOPIC_AUTOBYPASS,
         TOPIC_FREEVENTENABLE,
-        TOPIC_MAXMODULATION
+        TOPIC_MAXMODULATION,
+        TOPIC_UNKNOWN // has to be at end of list!
     };
     Mqtt();
     void begin();

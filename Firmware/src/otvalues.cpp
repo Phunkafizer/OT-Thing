@@ -186,6 +186,7 @@ OTValue::OTValue(const OpenThermMessageID id, const int interval, const char *ha
         value(0),
         enabled(interval != -1),
         discFlag(false),
+        setFlag(false),
         numSet(0),
         haName(haName) {
 }
@@ -229,7 +230,7 @@ OpenThermMessageID OTValue::getId() const {
 }
 
 bool OTValue::isSet() const {
-    return (numSet > 0);
+    return setFlag;
 }
 
 bool OTValue::sendDiscovery() {
@@ -345,15 +346,14 @@ const char* OTValue::getName() const {
 }
 
 void OTValue::setValue(const OpenThermMessageType ty, const uint16_t val) {
+    numSet++;
     if ((ty == OpenThermMessageType::READ_ACK) || (ty == OpenThermMessageType::WRITE_DATA)) {
         value = val;
-        numSet++;
+        setFlag = true;
         enabled = true;
     }
-    else {
+    else
         enabled = false;
-        numSet = 0;
-    }
 
     if (!discFlag)
         discFlag = sendDiscovery();
@@ -368,6 +368,7 @@ uint16_t OTValue::getValue() {
 void OTValue::init(const bool enabled) {
     this->enabled = enabled;
     numSet = 0;
+    setFlag = false;
 }
 
 void OTValue::getJson(JsonObject &obj) const {
@@ -785,21 +786,22 @@ bool BrandInfo::process() {
 
 void BrandInfo::setValue(const OpenThermMessageType ty, const uint16_t val) {
     lastMsgType = ty;
+    numSet++;
 
     if (ty == OpenThermMessageType::READ_ACK) {
         value = val;
         if (strlen(buf) >= sizeof(buf) - 1) {
-            numSet++;
+            setFlag = true;
             return;
         }
         buf[strlen(buf) + 1] = 0;
         buf[strlen(buf)] = val & 0xFF;
-        if ( (strlen(buf) == (val >> 8)) || (val & 0xFF == 0) )
-            numSet++;
+        if ( (strlen(buf) == (val >> 8)) || ((val & 0xFF) == 0) )
+            setFlag = true;
     }
     else {
-        numSet = (strlen(buf) > 0) ? 1 : 0;
-        enabled = isSet();
+        setFlag = (strlen(buf) > 0);
+        enabled = setFlag;
     }
 
     if ((isSet() || !enabled) && !discFlag)

@@ -147,6 +147,7 @@ protected:
     uint16_t value;
     bool enabled;
     bool discFlag;
+    bool setFlag;
     uint32_t numSet;
     OpenThermMessageType lastMsgType;
     const char *haName;

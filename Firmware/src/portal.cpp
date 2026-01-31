@@ -20,7 +20,6 @@ static AsyncWebServer websrv(80);
 AsyncWebSocket ws("/ws");
 
 
-
 Portal::Portal():
     reboot(false),
     updateEnable(true) {
@@ -234,6 +233,16 @@ void Portal::begin(bool configMode) {
     websrv.on(PSTR("/install"), HTTP_POST, [this](AsyncWebServerRequest *request) {
         this->doUpdate = true;
         request->send(200);
+    });
+
+    websrv.on(PSTR("/topics"), HTTP_GET, [this](AsyncWebServerRequest *request) {
+        String list;
+        for (uint8_t topic = Mqtt::TOPIC_OUTSIDETEMP; topic < Mqtt::TOPIC_UNKNOWN; topic++) {
+            String line;
+            line = mqtt.getCmdTopic((Mqtt::MqttTopic) topic);
+            list += line + F("\r\n");
+        }
+        request->send(200, F("text/plain"), list);
     });
 }
 
