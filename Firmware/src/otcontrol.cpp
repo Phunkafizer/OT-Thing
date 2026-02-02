@@ -546,14 +546,17 @@ void OTControl::loopPiCtrl() {
         if (!roomTemp[i].get(rt))
             continue;
 
-        if (pictrl.init)
-            pictrl.roomTempFilt = 0.1 * rt + 0.9 * pictrl.roomTempFilt;
-        else
-            pictrl.roomTempFilt = rt;
-        pictrl.init = true;
-
         if (!roomSetPoint[i].get(rsp))
             continue;
+
+        if (pictrl.init)
+            pictrl.roomTempFilt = 0.1 * rt + 0.9 * pictrl.roomTempFilt;
+        else {
+            pictrl.roomTempFilt = rt;
+            pictrl.rspPrev = rsp;
+        }
+        pictrl.init = true;
+
 
         if (heatingConfig[i].enableHyst) {
             if (heatingCtrl[i].suspended) {
@@ -580,16 +583,13 @@ void OTControl::loopPiCtrl() {
         double p = heatingConfig[i].roomComp.p * e; // Kp * e
         
         // integral part of PI controller
-        const bool setJump = (fabs(rsp - pictrl.rspPrev)) > 0.3;
+        pictrl.integState += rsp - pictrl.rspPrev;
         pictrl.rspPrev = rsp;
         if ( (ots != nullptr) && ots->getChActive(i) && !heatingCtrl[i].suspended ) {
-            if (!setJump) {
-                if (e > 0)
-                    pictrl.integState += heatingConfig[i].roomComp.i * e * PI_INTERVAL / 3600.0; // Ki * e * ts, ts = 60 s
-                else
-                    pictrl.integState += heatingConfig[i].roomComp.i * e * 0.3 * PI_INTERVAL / 3600.0; // slower as cooling takes more time
-            }
-            // else freeze integrator
+            if (e > 0)
+                pictrl.integState += heatingConfig[i].roomComp.i * e * PI_INTERVAL / 3600.0; // Ki * e * ts, ts = 60 s
+            else
+                pictrl.integState += heatingConfig[i].roomComp.i * e * 0.3 * PI_INTERVAL / 3600.0; // slower as cooling takes more time
         }
         else
             pictrl.integState = pictrl.integState * 0.95; // decay
@@ -781,8 +781,8 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             }
 
             default:
-                if ((otval != nullptr) && otval->isSet())
-                    resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, otval->getValue());
+                if ((otval != nullptr) && otval->hasReply())
+                    resp = OpenTherm::buildResponse(otval->getLastMsgType(), id, otval->getValue());
             }
 
             slave.sendResponse(resp, 'P');

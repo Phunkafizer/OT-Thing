@@ -166,6 +166,8 @@ public:
     static OTValue* getThermostatValue(const OpenThermMessageID id);
     void refreshDisc();
     bool isSet() const;
+    bool hasReply() const;
+    OpenThermMessageType getLastMsgType() const;
 };
 
 class OTValueu16: public OTValue {

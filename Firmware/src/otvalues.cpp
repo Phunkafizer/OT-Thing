@@ -233,6 +233,14 @@ bool OTValue::isSet() const {
     return setFlag;
 }
 
+bool OTValue::hasReply() const {
+    return numSet > 0;
+}
+
+OpenThermMessageType OTValue::getLastMsgType() const {
+    return lastMsgType;
+}
+
 bool OTValue::sendDiscovery() {
     const char *name = getName();
     if (name == nullptr)
