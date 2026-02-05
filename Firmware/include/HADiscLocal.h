@@ -1,6 +1,7 @@
 #pragma once
 #include "HADiscovery.h"
 #include "mqtt.h"
+
 class OTThingHADiscovery: public HADiscovery {
 public:
     OTThingHADiscovery();

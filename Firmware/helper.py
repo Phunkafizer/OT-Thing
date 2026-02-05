@@ -1,12 +1,12 @@
 import shutil
 import gzip
 import os
-import esptool
 import time
 import webbrowser
 import requests
 from serial.tools import list_ports
 Import("env")
+import esptool
 
 
 CONFIG = {

@@ -3,6 +3,7 @@
 const char *HA_DEVICE_CLASS_RUNNING PROGMEM = "running";
 const char *HA_DEVICE_CLASS_PROBLEM PROGMEM = "problem";
 const char *HA_DEVICE_CLASS_OPENING PROGMEM = "opening";
+const char *HA_DEVICE_CLASS_TEMPERATURE PROGMEM = "temperature";
 
 const char HA_AVAILABILITY[]                    PROGMEM = "availability";
 const char HA_TOPIC[]                           PROGMEM = "t";
@@ -22,7 +23,6 @@ const char HA_STATE_CLASS[]                     PROGMEM = "stat_cla";
 const char HA_DEVICE_CLASS[]                    PROGMEM = "dev_cla";
 const char HA_UNIT_OF_MEASUREMENT[]             PROGMEM = "unit_of_meas";
 const char HA_STATE_CLASS_MEASUREMENT[]         PROGMEM = "measurement";
-const char HA_DEVICE_CLASS_TEMPERATURE[]        PROGMEM = "temperature";
 const char HA_ICON[]                            PROGMEM = "ic";
 const char HA_MANUFACTURER[]                    PROGMEM = "mf";
 const char HA_PLATFORM[]                        PROGMEM = "p";
@@ -168,12 +168,12 @@ void HADiscovery::setStateClass(const String sc) {
 
 void HADiscovery::createSensor(String name, String id) {
     init(name, id, F("sensor"));
-    doc[FPSTR(HA_STATE_CLASS)] = F("measurement");
+    doc[FPSTR(HA_STATE_CLASS)] = FPSTR(HA_STATE_CLASS_MEASUREMENT);
 }
 
 void HADiscovery::createTempSensor(String name, String id) {
     createSensor(name, id);
-    setDeviceClass(F("temperature"));
+    setDeviceClass(FPSTR(HA_DEVICE_CLASS_TEMPERATURE));
     setUnit(F("°C"));
 }
 
