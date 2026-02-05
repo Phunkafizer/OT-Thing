@@ -1,0 +1,42 @@
+blueprint:
+  name: Sensor to OTthing
+  domain: automation
+  author: "S. Seegel"
+
+  input:
+    source_entity:
+      name: Source entity
+      description: "Temperature data source"
+      selector:
+        entity:
+          multiple: false
+          filter:
+            - domain: weather
+
+    target_entity:
+      name: Targets
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: number
+              device_class: temperature
+
+mode: single
+
+variables:
+  source_entity: !input source_entity
+  target_entity: !input target_entity
+
+trigger:
+  - platform: time_pattern
+    seconds: /60
+condition:
+  - condition: template
+    value_template: "{{ states(source_entity) != 'unavailable' and states(target_entity) != 'unavailable' }}"
+action:
+  - service: number.set_value
+    data:
+      value: "{{ state_attr(source_entity, 'temperature')|float(0)|round(2) }}"
+    target:
+      entity_id: "{{ target_entity }}"

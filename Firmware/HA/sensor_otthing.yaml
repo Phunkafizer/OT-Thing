@@ -1,0 +1,49 @@
+blueprint:
+  name: Sensor to OTthing
+  domain: automation
+  author: "S. Seegel"
+
+  input:
+    source_entity:
+      name: Source
+      selector:
+        entity:
+          filter:
+            - domain: sensor
+              device_class: temperature
+
+    target_entity:
+      name: Targets
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: number
+              device_class: temperature
+
+mode: single
+
+variables:
+  source_entity: !input source_entity
+  target_entity: !input target_entity
+
+condition:
+  - condition: template
+    value_template: >
+      {{ trigger.event.data.new_state is not none and
+         trigger.event.data.new_state.state not in
+         ['unknown','unavailable','none'] }}
+
+trigger:
+  - platform: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input source_entity
+
+action:
+  - service: number.set_value
+    target:
+      entity_id: !input target_entity
+    data:
+      value: >
+        {{ trigger.event.data.new_state.state | float | round(2) }}
