@@ -23,6 +23,7 @@ blueprint:
 
 mode: single
 
+
 variables:
   source_entity: !input source_entity
   target_entity: !input target_entity

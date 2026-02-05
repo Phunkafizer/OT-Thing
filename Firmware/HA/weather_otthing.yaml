@@ -1,5 +1,5 @@
 blueprint:
-  name: Sensor to OTthing
+  name: Weather to OTthing
   domain: automation
   author: "S. Seegel"
 
@@ -30,7 +30,7 @@ variables:
 
 trigger:
   - platform: time_pattern
-    seconds: /60
+    seconds: /30
 condition:
   - condition: template
     value_template: "{{ states(source_entity) != 'unavailable' and states(target_entity) != 'unavailable' }}"
