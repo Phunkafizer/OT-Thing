@@ -591,7 +591,6 @@
 				(hide yes)
 			)
 			(pin_names
-				(offset 1.016)
 				(hide yes)
 			)
 			(exclude_from_sim no)
@@ -632,6 +631,24 @@
 				)
 			)
 			(property "Description" "100V 0.15A standard switching diode, MiniMELF"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Sim.Device" "D"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Sim.Pins" "1=K 2=A"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1479,6 +1496,24 @@
 					(hide yes)
 				)
 			)
+			(property "Sim.Device" "NPN"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Sim.Pins" "1=B 2=E 3=C"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
 			(property "ki_keywords" "NPN Small Signal Transistor"
 				(at 0 0 0)
 				(effects
@@ -1500,34 +1535,22 @@
 			(symbol "BC847_0_1"
 				(polyline
 					(pts
-						(xy 0.635 1.905) (xy 0.635 -1.905) (xy 0.635 -1.905)
+						(xy -2.54 0) (xy 0.635 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.635 1.905) (xy 0.635 -1.905)
 					)
 					(stroke
 						(width 0.508)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0.635 0.635) (xy 2.54 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0.635 -0.635) (xy 2.54 -2.54) (xy 2.54 -2.54)
-					)
-					(stroke
-						(width 0)
 						(type default)
 					)
 					(fill
@@ -1545,9 +1568,35 @@
 						(type none)
 					)
 				)
+			)
+			(symbol "BC847_1_1"
 				(polyline
 					(pts
-						(xy 1.27 -1.778) (xy 1.778 -1.27) (xy 2.286 -2.286) (xy 1.27 -1.778) (xy 1.27 -1.778)
+						(xy 0.635 0.635) (xy 2.54 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.635 -0.635) (xy 2.54 -2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 -1.778) (xy 1.778 -1.27) (xy 2.286 -2.286) (xy 1.27 -1.778)
 					)
 					(stroke
 						(width 0)
@@ -1557,11 +1606,9 @@
 						(type outline)
 					)
 				)
-			)
-			(symbol "BC847_1_1"
 				(pin input line
 					(at -5.08 0 0)
-					(length 5.715)
+					(length 2.54)
 					(name "B"
 						(effects
 							(font
@@ -1672,6 +1719,24 @@
 					(hide yes)
 				)
 			)
+			(property "Sim.Device" "PNP"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Sim.Pins" "1=B 2=E 3=C"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
 			(property "ki_keywords" "PNP transistor"
 				(at 0 0 0)
 				(effects
@@ -1693,7 +1758,19 @@
 			(symbol "BC858_0_1"
 				(polyline
 					(pts
-						(xy 0.635 1.905) (xy 0.635 -1.905) (xy 0.635 -1.905)
+						(xy -2.54 0) (xy 0.635 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.635 1.905) (xy 0.635 -1.905)
 					)
 					(stroke
 						(width 0.508)
@@ -1717,7 +1794,7 @@
 				)
 				(polyline
 					(pts
-						(xy 0.635 -0.635) (xy 2.54 -2.54) (xy 2.54 -2.54)
+						(xy 0.635 -0.635) (xy 2.54 -2.54)
 					)
 					(stroke
 						(width 0)
@@ -1740,7 +1817,7 @@
 				)
 				(polyline
 					(pts
-						(xy 2.286 -1.778) (xy 1.778 -2.286) (xy 1.27 -1.27) (xy 2.286 -1.778) (xy 2.286 -1.778)
+						(xy 2.286 -1.778) (xy 1.778 -2.286) (xy 1.27 -1.27) (xy 2.286 -1.778)
 					)
 					(stroke
 						(width 0)
@@ -1754,7 +1831,7 @@
 			(symbol "BC858_1_1"
 				(pin input line
 					(at -5.08 0 0)
-					(length 5.715)
+					(length 2.54)
 					(name "B"
 						(effects
 							(font
@@ -1811,8 +1888,12 @@
 		)
 		(symbol "power:+24V"
 			(power)
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
 				(offset 0)
+				(hide yes)
 			)
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -1912,8 +1993,7 @@
 				(pin power_in line
 					(at 0 0 90)
 					(length 0)
-					(hide yes)
-					(name "+24V"
+					(name "~"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1933,8 +2013,12 @@
 		)
 		(symbol "power:+3.3V"
 			(power)
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
 				(offset 0)
+				(hide yes)
 			)
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -2034,8 +2118,7 @@
 				(pin power_in line
 					(at 0 0 90)
 					(length 0)
-					(hide yes)
-					(name "+3.3V"
+					(name "~"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2055,8 +2138,12 @@
 		)
 		(symbol "power:+5V"
 			(power)
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
 				(offset 0)
+				(hide yes)
 			)
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -2105,7 +2192,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_keywords" "power-flag"
+			(property "ki_keywords" "global power"
 				(at 0 0 0)
 				(effects
 					(font
@@ -2156,8 +2243,7 @@
 				(pin power_in line
 					(at 0 0 90)
 					(length 0)
-					(hide yes)
-					(name "+5V"
+					(name "~"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2177,8 +2263,12 @@
 		)
 		(symbol "power:GND"
 			(power)
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
 				(offset 0)
+				(hide yes)
 			)
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -2227,7 +2317,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_keywords" "power-flag"
+			(property "ki_keywords" "global power"
 				(at 0 0 0)
 				(effects
 					(font
@@ -2254,8 +2344,7 @@
 				(pin power_in line
 					(at 0 0 270)
 					(length 0)
-					(hide yes)
-					(name "GND"
+					(name "~"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -3798,7 +3887,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 215.9 82.55 0)
 			(effects
 				(font
@@ -3864,7 +3953,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 77.47 151.13 0)
 			(effects
 				(font
@@ -3929,7 +4018,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 101.6 170.18 0)
 			(effects
 				(font
@@ -3969,7 +4058,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "D_TVS"
+		(property "Value" "PESD24VL1BA"
 			(at 215.9 124.4599 90)
 			(effects
 				(font
@@ -3978,7 +4067,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Diode_SMD:D_SOD-123"
+		(property "Footprint" "Diode_SMD:D_SOD-323"
 			(at 213.36 123.19 0)
 			(effects
 				(font
@@ -3998,6 +4087,15 @@
 		)
 		(property "Description" "Bidirectional transient-voltage-suppression diode"
 			(at 213.36 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C2687132"
+			(at 213.36 123.19 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4107,17 +4205,16 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "0895f70e-2e39-488b-a3f4-fdaf3f812bee")
 		(property "Reference" "FB4"
-			(at 228.5619 123.19 90)
+			(at 228.6 126.492 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "FerriteBead_Small"
+		(property "Value" "~"
 			(at 228.5619 125.73 90)
 			(effects
 				(font
@@ -4194,7 +4291,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1N4148W"
+		(property "Value" "LL4148"
 			(at 164.084 127.254 0)
 			(effects
 				(font
@@ -4203,7 +4300,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Diode_SMD:D_SOD-123"
+		(property "Footprint" "Diode_SMD:D_MiniMELF"
 			(at 167.64 128.905 0)
 			(effects
 				(font
@@ -4221,7 +4318,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "100V 0.15A standard switching diode, MiniMELF"
 			(at 167.64 124.46 0)
 			(effects
 				(font
@@ -4230,7 +4327,25 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" ""
+		(property "LCSC" "C435829"
+			(at 167.64 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "D"
+			(at 167.64 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=K 2=A"
 			(at 167.64 124.46 0)
 			(effects
 				(font
@@ -4586,7 +4701,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "D_Schottky"
+		(property "Value" "PTVS24VS1UR"
 			(at 223.52 97.7899 90)
 			(effects
 				(font
@@ -4615,6 +4730,15 @@
 		)
 		(property "Description" "Zener diode"
 			(at 220.98 96.52 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C5380693"
+			(at 220.98 96.52 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4681,7 +4805,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
 			(at 49.53 66.04 0)
 			(effects
 				(font
@@ -4720,7 +4844,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1N4148W"
+		(property "Value" "LL4148"
 			(at 189.992 111.633 90)
 			(effects
 				(font
@@ -4729,7 +4853,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Diode_SMD:D_SOD-123"
+		(property "Footprint" "Diode_SMD:D_MiniMELF"
 			(at 183.515 110.49 0)
 			(effects
 				(font
@@ -4747,7 +4871,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "100V 0.15A standard switching diode, MiniMELF"
 			(at 187.96 110.49 0)
 			(effects
 				(font
@@ -4756,7 +4880,25 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" ""
+		(property "LCSC" "C435829"
+			(at 187.96 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "D"
+			(at 187.96 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=K 2=A"
 			(at 187.96 110.49 0)
 			(effects
 				(font
@@ -4973,7 +5115,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1N4148W"
+		(property "Value" "LL4148"
 			(at 201.422 128.143 90)
 			(effects
 				(font
@@ -4982,7 +5124,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Diode_SMD:D_SOD-123"
+		(property "Footprint" "Diode_SMD:D_MiniMELF"
 			(at 194.945 127 0)
 			(effects
 				(font
@@ -5000,7 +5142,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "100V 0.15A standard switching diode, MiniMELF"
 			(at 199.39 127 0)
 			(effects
 				(font
@@ -5009,7 +5151,25 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" ""
+		(property "LCSC" "C435829"
+			(at 199.39 127 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "D"
+			(at 199.39 127 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=K 2=A"
 			(at 199.39 127 0)
 			(effects
 				(font
@@ -5080,7 +5240,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "0.1A Ic, 45V Vce, NPN Transistor, SOT-23"
 			(at 66.04 49.53 0)
 			(effects
 				(font
@@ -5090,6 +5250,24 @@
 			)
 		)
 		(property "LCSC" "C7420337"
+			(at 66.04 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "NPN"
+			(at 66.04 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=B 2=E 3=C"
 			(at 66.04 49.53 0)
 			(effects
 				(font
@@ -5319,7 +5497,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 69.85 96.52 0)
 			(effects
 				(font
@@ -5389,7 +5567,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "0.1A Ic, 30V Vce, PNP Transistor, SOT-23"
 			(at 80.01 49.53 0)
 			(effects
 				(font
@@ -5399,6 +5577,24 @@
 			)
 		)
 		(property "LCSC" "C5204725"
+			(at 80.01 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "PNP"
+			(at 80.01 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=B 2=E 3=C"
 			(at 80.01 49.53 0)
 			(effects
 				(font
@@ -5469,7 +5665,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
 			(at 69.85 66.04 0)
 			(effects
 				(font
@@ -5535,7 +5731,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 115.57 81.28 0)
 			(effects
 				(font
@@ -5683,7 +5879,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "0.1A Ic, 45V Vce, NPN Transistor, SOT-23"
 			(at 90.17 161.29 0)
 			(effects
 				(font
@@ -5693,6 +5889,24 @@
 			)
 		)
 		(property "LCSC" "C7420337"
+			(at 90.17 161.29 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "NPN"
+			(at 90.17 161.29 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=B 2=E 3=C"
 			(at 90.17 161.29 0)
 			(effects
 				(font
@@ -5763,7 +5977,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
 			(at 68.58 121.92 0)
 			(effects
 				(font
@@ -5833,7 +6047,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "0.1A Ic, 45V Vce, NPN Transistor, SOT-23"
 			(at 50.8 139.7 0)
 			(effects
 				(font
@@ -5843,6 +6057,24 @@
 			)
 		)
 		(property "LCSC" "C7420337"
+			(at 50.8 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "NPN"
+			(at 50.8 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=B 2=E 3=C"
 			(at 50.8 139.7 0)
 			(effects
 				(font
@@ -6072,7 +6304,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 49.53 96.52 0)
 			(effects
 				(font
@@ -6111,7 +6343,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1N4148W"
+		(property "Value" "LL4148"
 			(at 189.992 128.143 90)
 			(effects
 				(font
@@ -6120,7 +6352,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Diode_SMD:D_SOD-123"
+		(property "Footprint" "Diode_SMD:D_MiniMELF"
 			(at 183.515 127 0)
 			(effects
 				(font
@@ -6138,7 +6370,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "100V 0.15A standard switching diode, MiniMELF"
 			(at 187.96 127 0)
 			(effects
 				(font
@@ -6147,7 +6379,25 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" ""
+		(property "LCSC" "C435829"
+			(at 187.96 127 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "D"
+			(at 187.96 127 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=K 2=A"
 			(at 187.96 127 0)
 			(effects
 				(font
@@ -6219,7 +6469,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "0.1A Ic, 45V Vce, NPN Transistor, SOT-23"
 			(at 171.45 144.78 0)
 			(effects
 				(font
@@ -6229,6 +6479,24 @@
 			)
 		)
 		(property "LCSC" "C7420337"
+			(at 171.45 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "NPN"
+			(at 171.45 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=B 2=E 3=C"
 			(at 171.45 144.78 0)
 			(effects
 				(font
@@ -6303,7 +6571,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "0.1A Ic, 30V Vce, PNP Transistor, SOT-23"
 			(at 72.39 73.66 0)
 			(effects
 				(font
@@ -6313,6 +6581,24 @@
 			)
 		)
 		(property "LCSC" "C5204725"
+			(at 72.39 73.66 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "PNP"
+			(at 72.39 73.66 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=B 2=E 3=C"
 			(at 72.39 73.66 0)
 			(effects
 				(font
@@ -6463,7 +6749,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 48.26 151.13 0)
 			(effects
 				(font
@@ -6528,7 +6814,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
 			(at 66.04 43.18 0)
 			(effects
 				(font
@@ -6593,7 +6879,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 92.71 170.18 0)
 			(effects
 				(font
@@ -6736,7 +7022,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
 			(at 48.26 121.92 0)
 			(effects
 				(font
@@ -6802,7 +7088,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 82.55 96.52 0)
 			(effects
 				(font
@@ -7025,7 +7311,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"+5V\""
 			(at 154.94 128.27 0)
 			(effects
 				(font
@@ -7054,17 +7340,16 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "aacf12b4-a8e5-412b-b2bc-ccfd5f4f1910")
 		(property "Reference" "FB1"
-			(at 228.5619 73.66 90)
+			(at 228.6 76.708 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "FerriteBead_Small"
+		(property "Value" "~"
 			(at 228.5619 76.2 90)
 			(effects
 				(font
@@ -7169,7 +7454,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"+24V\""
 			(at 115.57 43.18 0)
 			(effects
 				(font
@@ -7318,7 +7603,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "0.1A Ic, 30V Vce, PNP Transistor, SOT-23"
 			(at 110.49 139.7 0)
 			(effects
 				(font
@@ -7328,6 +7613,24 @@
 			)
 		)
 		(property "LCSC" "C5204725"
+			(at 110.49 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "PNP"
+			(at 110.49 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=B 2=E 3=C"
 			(at 110.49 139.7 0)
 			(effects
 				(font
@@ -7399,7 +7702,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 173.99 153.67 0)
 			(effects
 				(font
@@ -7548,7 +7851,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "0.1A Ic, 45V Vce, NPN Transistor, SOT-23"
 			(at 52.07 83.82 0)
 			(effects
 				(font
@@ -7558,6 +7861,24 @@
 			)
 		)
 		(property "LCSC" "C7420337"
+			(at 52.07 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "NPN"
+			(at 52.07 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=B 2=E 3=C"
 			(at 52.07 83.82 0)
 			(effects
 				(font
@@ -7708,7 +8029,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 187.96 140.97 0)
 			(effects
 				(font
@@ -7775,7 +8096,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"+24V\""
 			(at 82.55 43.18 0)
 			(effects
 				(font
@@ -7804,17 +8125,16 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "d47bb5ef-34b7-48d0-850d-4b4d849eb6c2")
 		(property "Reference" "FB2"
-			(at 228.5619 82.55 90)
+			(at 228.6 85.598 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "FerriteBead_Small"
+		(property "Value" "~"
 			(at 228.5619 85.09 90)
 			(effects
 				(font
@@ -7891,7 +8211,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1N4148W"
+		(property "Value" "LL4148"
 			(at 201.422 111.633 90)
 			(effects
 				(font
@@ -7900,7 +8220,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Diode_SMD:D_SOD-123"
+		(property "Footprint" "Diode_SMD:D_MiniMELF"
 			(at 194.945 110.49 0)
 			(effects
 				(font
@@ -7918,7 +8238,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "100V 0.15A standard switching diode, MiniMELF"
 			(at 199.39 110.49 0)
 			(effects
 				(font
@@ -7927,7 +8247,25 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" ""
+		(property "LCSC" "C435829"
+			(at 199.39 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "D"
+			(at 199.39 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=K 2=A"
 			(at 199.39 110.49 0)
 			(effects
 				(font
@@ -8000,7 +8338,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "0.1A Ic, 30V Vce, PNP Transistor, SOT-23"
 			(at 113.03 50.8 0)
 			(effects
 				(font
@@ -8010,6 +8348,24 @@
 			)
 		)
 		(property "LCSC" "C5204725"
+			(at 113.03 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "PNP"
+			(at 113.03 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=B 2=E 3=C"
 			(at 113.03 50.8 0)
 			(effects
 				(font
@@ -8080,7 +8436,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 113.03 170.18 0)
 			(effects
 				(font
@@ -8109,17 +8465,16 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "dddb288a-ec57-439d-aacf-827b007015f9")
 		(property "Reference" "FB3"
-			(at 228.5619 110.49 90)
+			(at 228.6 113.792 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "FerriteBead_Small"
+		(property "Value" "~"
 			(at 228.5619 113.03 90)
 			(effects
 				(font
@@ -8304,7 +8659,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "0.1A Ic, 30V Vce, PNP Transistor, SOT-23"
 			(at 106.68 59.69 0)
 			(effects
 				(font
@@ -8314,6 +8669,24 @@
 			)
 		)
 		(property "LCSC" "C5204725"
+			(at 106.68 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "PNP"
+			(at 106.68 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=B 2=E 3=C"
 			(at 106.68 59.69 0)
 			(effects
 				(font
@@ -8465,7 +8838,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"+24V\""
 			(at 99.06 43.18 0)
 			(effects
 				(font
@@ -8534,7 +8907,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "0.1A Ic, 30V Vce, PNP Transistor, SOT-23"
 			(at 71.12 129.54 0)
 			(effects
 				(font
@@ -8544,6 +8917,24 @@
 			)
 		)
 		(property "LCSC" "C5204725"
+			(at 71.12 129.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "PNP"
+			(at 71.12 129.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=B 2=E 3=C"
 			(at 71.12 129.54 0)
 			(effects
 				(font
@@ -8615,7 +9006,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 199.39 140.97 0)
 			(effects
 				(font
@@ -8681,7 +9072,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 220.98 102.87 0)
 			(effects
 				(font
@@ -8747,7 +9138,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 68.58 151.13 0)
 			(effects
 				(font
