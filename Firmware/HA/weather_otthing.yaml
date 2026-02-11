@@ -31,12 +31,16 @@ variables:
 trigger:
   - platform: time_pattern
     seconds: /30
+
 condition:
   - condition: template
-    value_template: "{{ states(source_entity) != 'unavailable' and states(target_entity) != 'unavailable' }}"
+    value_template: >
+      {{ state_attr(source_entity, 'temperature') not in [none] }}
+
 action:
   - service: number.set_value
-    data:
-      value: "{{ state_attr(source_entity, 'temperature')|float(0)|round(2) }}"
     target:
-      entity_id: "{{ target_entity }}"
+      entity_id: !input target_entity
+    data:
+      value: >
+        {{ state_attr(source_entity, 'temperature') | float | round(2) }}

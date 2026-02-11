@@ -468,7 +468,6 @@ public:
     void init(const bool enabled) override;
     bool process() override;
     void setValue(const OpenThermMessageType ty, const uint16_t val) override;
-    void getStatus(JsonObject &obj) const override;
 };
 
 

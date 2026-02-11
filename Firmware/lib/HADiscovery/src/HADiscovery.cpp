@@ -5,6 +5,13 @@ const char *HA_DEVICE_CLASS_PROBLEM PROGMEM = "problem";
 const char *HA_DEVICE_CLASS_OPENING PROGMEM = "opening";
 const char *HA_DEVICE_CLASS_TEMPERATURE PROGMEM = "temperature";
 
+const char *HA_UNIT_PPM PROGMEM = "ppm";
+const char *HA_UNIT_RPM PROGMEM = "rpm";
+const char *HA_UNIT_HZ PROGMEM = "Hz";
+const char *HA_UNIT_PERCENT PROGMEM = "%";
+const char *HA_UNIT_CELSIUS PROGMEM = "°C";
+const char *HA_UNIT_KELVIN PROGMEM = "K";
+
 const char HA_AVAILABILITY[]                    PROGMEM = "availability";
 const char HA_TOPIC[]                           PROGMEM = "t";
 const char HA_UNIQUE_ID[]                       PROGMEM = "uniq_id";
@@ -174,13 +181,13 @@ void HADiscovery::createSensor(String name, String id) {
 void HADiscovery::createTempSensor(String name, String id) {
     createSensor(name, id);
     setDeviceClass(FPSTR(HA_DEVICE_CLASS_TEMPERATURE));
-    setUnit(F("°C"));
+    setUnit(PSTR(HA_UNIT_CELSIUS));
 }
 
 void HADiscovery::createPowerFactorSensor(String name, String id) {
     createSensor(name, id);
     doc[FPSTR(HA_DEVICE_CLASS)] = F("power_factor");
-    doc[FPSTR(HA_UNIT_OF_MEASUREMENT)] = F("%");
+    doc[FPSTR(HA_UNIT_OF_MEASUREMENT)] = PSTR(HA_UNIT_PERCENT);
 }
 
 void HADiscovery::createPressureSensor(String name, String id) {

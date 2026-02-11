@@ -1059,7 +1059,7 @@ bool OTControl::sendDiscovery() {
     haDisc.createNumber(F("outside temperature"), Mqtt::getTopicString(Mqtt::TOPIC_OUTSIDETEMP), mqtt.getCmdTopic(Mqtt::TOPIC_OUTSIDETEMP));
     haDisc.setValueTemplate(F("{{ value_json.outsideTemp | default(None) }}"));
     haDisc.setDeviceClass(FPSTR(HA_DEVICE_CLASS_TEMPERATURE));
-    haDisc.setUnit(F("°C"));
+    haDisc.setUnit(FPSTR(HA_UNIT_CELSIUS));
     haDisc.setMinMax(-25, 20, 0.1);
     haDisc.setRetain(true);
     discFlag &= haDisc.publish(outsideTemp.isMqttSource());
@@ -1092,13 +1092,13 @@ bool OTControl::sendDiscovery() {
     haDisc.createNumber(F("Max. modulation"), Mqtt::getTopicString(Mqtt::TOPIC_MAXMODULATION), mqtt.getCmdTopic(Mqtt::TOPIC_MAXMODULATION));
     haDisc.setMinMax(0, 100, 1);
     haDisc.setValueTemplate(F("{{ value_json.thermostat.max_rel_mod | default(None) }}"));
-    haDisc.setUnit(F("%"));
+    haDisc.setUnit(FPSTR(HA_UNIT_PERCENT));
     discFlag &= haDisc.publish();
 
     haDisc.createSensor(F("flame ratio"), F("flame_ratio"));
     haDisc.setValueTemplate(F("{{ value_json.slave.flameRatio | default(None) }}"));
     haDisc.setDeviceClass(F("power_factor"));
-    haDisc.setUnit(F("%"));
+    haDisc.setUnit(FPSTR(HA_UNIT_PERCENT));
     discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
 
     haDisc.createSensor(F("burner starts /h"), F("flame_freq"));
@@ -1175,7 +1175,7 @@ bool OTControl::sendChDiscoveries(const uint8_t ch, const bool en) {
     haDisc.createNumber(str, Mqtt::getTopicString(tp), mqtt.getCmdTopic(tp));
     str = replace(PSTR("{{ value_json.heatercircuit[#].roomtemp ? }}"), ch);
     haDisc.setDeviceClass(FPSTR(HA_DEVICE_CLASS_TEMPERATURE));
-    haDisc.setUnit(F("°C"));
+    haDisc.setUnit(FPSTR(HA_UNIT_CELSIUS));
     haDisc.setValueTemplate(str);
     haDisc.setMinMax(0, 30, 0.1);
     if (!haDisc.publish(roomTemp[ch].isMqttSource() && en))
@@ -1194,7 +1194,7 @@ bool OTControl::sendChDiscoveries(const uint8_t ch, const bool en) {
     haDisc.createSensor(str, id);
     str = replace(PSTR("{{ value_json.heatercircuit[#].integState ? }}"), ch);
     haDisc.setValueTemplate(str);
-    haDisc.setUnit(F("K"));
+    haDisc.setUnit(FPSTR(HA_UNIT_KELVIN));
     if (!haDisc.publish((heatingConfig[ch].roomComp.enabled) && en))
         return false;
 
