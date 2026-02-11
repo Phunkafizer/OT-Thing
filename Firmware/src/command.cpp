@@ -109,7 +109,15 @@ void OtGwCommand::sendOtEvent(const char source, const uint32_t data) {
         line += F("ID ");
         line += String((int) id);
     }
-    line += F(" data 0x");
+    line += F(" 0x");
+    uint16_t mask = 0xF000;
+    while (mask > 0x000F) {
+        if ((data & mask) == 0)
+            line += '0';
+        else
+            break;
+        mask >>= 4;
+    }
     line += String(data & 0xFFFF, HEX);
     portal.textAll(line);
 }

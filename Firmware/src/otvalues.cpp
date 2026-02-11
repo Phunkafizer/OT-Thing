@@ -188,6 +188,7 @@ OTValue::OTValue(const OpenThermMessageID id, const int interval, const char *ha
         discFlag(false),
         setFlag(false),
         numSet(0),
+        lastMsgType(OpenThermMessageType::RESERVED),
         haName(haName) {
 }
 
@@ -818,4 +819,13 @@ void BrandInfo::setValue(const OpenThermMessageType ty, const uint16_t val) {
 
 void BrandInfo::getValue(JsonVariant var) const {
     var.set<String>(buf);
+}
+
+void BrandInfo::getStatus(JsonObject &obj) const {
+    OTValue::getStatus(obj);
+    JsonObject stat = obj[FPSTR(getName())];
+    stat[F("strLen")] = strlen(buf);
+    JsonArray ja = stat[F("buf")].to<JsonArray>();
+    for (int i=0; i<10; i++)
+        ja.add((int) buf[i]);
 }

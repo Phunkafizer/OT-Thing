@@ -701,8 +701,8 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         portal.textAll(F("no slave val!"));
 }
 
-unsigned long OTControl::buildBrandResponse(const OpenThermMessageID id, String &str, const uint8_t idx) {
-    uint16_t msg = str.length() << 8;
+unsigned long OTControl::buildBrandResponse(const OpenThermMessageID id, const String &str, const uint8_t idx) {
+    uint16_t msg = (str.length() + 1) << 8;
     if ((idx) < str.length())
         msg |= str[idx];
 

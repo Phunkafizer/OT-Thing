@@ -159,7 +159,7 @@ public:
     uint16_t getValue();
     void setStatus(const OpenThermMessageType mt);
     void getJson(JsonObject &obj) const;
-    void getStatus(JsonObject &obj) const;
+    virtual void getStatus(JsonObject &obj) const;
     virtual void init(const bool enabled);
     void setTimeout();
     static OTValue* getSlaveValue(const OpenThermMessageID id);
@@ -468,6 +468,7 @@ public:
     void init(const bool enabled) override;
     bool process() override;
     void setValue(const OpenThermMessageType ty, const uint16_t val) override;
+    void getStatus(JsonObject &obj) const override;
 };
 
 
