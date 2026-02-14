@@ -667,6 +667,7 @@ void OTControl::sendRequest(const char source, const unsigned long msg) {
 void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatus status) {
     if (status == OpenThermResponseStatus::TIMEOUT) {
         master.timeoutCount++;
+        command.sendAll(FPSTR("RX master timeout"));
         return;
     }
   
@@ -674,40 +675,45 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
     auto id = OpenTherm::getDataID(msg);
     auto mt = OpenTherm::getMessageType(msg);
     auto *otval = OTValue::getSlaveValue(id);
-
     unsigned long newMsg = msg;
 
-    switch (otMode) {
-    case OTMODE_LOOPBACKTEST:
+    switch (mt) {
+    case OpenThermMessageType::READ_DATA:
+    case OpenThermMessageType::WRITE_DATA: {
+        String log = FPSTR("RX master invalid: 0x");
+        log += String(msg, HEX);
+        command.sendAll(log);
+        return;
+    }
+    default:
         break;
+    }
 
-    case OTMODE_REPEATER:
+    if (otMode == OTMODE_REPEATER) {
         // forward reply from boiler to room unit
-        // READ replies can be modified here
+        // replies can be modified here
+
         switch (id) {
         case OpenThermMessageID::Toutside: {
             double ost;
-            if ( !outsideTemp.isOtSource() && outsideTemp.get(ost))
+            if ( !outsideTemp.isOtSource() && outsideTemp.get(ost) && (mt != OpenThermMessageType::WRITE_ACK) )
                 newMsg = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, tmpToData(ost));
             break;
         }
         case OpenThermMessageID::TdhwSet: {
-            if (boilerCtrl.overrideDhw) {
-                if (mt == OpenThermMessageType::READ_ACK)
-                    // roomunit tried to read dhw set temp. Catch it in order to force writing DHW setpoint by roomunit.
-                    newMsg = OpenTherm::buildResponse(OpenThermMessageType::DATA_INVALID, id, 0x0000);
+            if (boilerCtrl.overrideDhw && (mt == OpenThermMessageType::READ_ACK)) {
+                // roomunit tried to read dhw set temp. Catch it in order to force writing DHW setpoint by roomunit.
+                newMsg = OpenTherm::buildResponse(OpenThermMessageType::DATA_INVALID, id, 0x0000);
             }
             break;
         }
         default:
             break;
         }
-        slave.sendResponse(newMsg);
-        break;
 
-    default:
-        break;
+        slave.sendResponse(newMsg);
     }
+
 
     char c;
     if ((status == OpenThermResponseStatus::INVALID) && (otMode != OTMODE_REPEATER))
@@ -764,11 +770,24 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
         return;
     }
 
+    // we received a request from connected room unit
+
     auto id = OpenTherm::getDataID(msg);
     auto mt = OpenTherm::getMessageType(msg);
     unsigned long newMsg = msg;
 
-    // we received a request from the room unit
+    switch (mt) {
+    case OpenThermMessageType::READ_DATA:
+    case OpenThermMessageType::WRITE_DATA: {
+        break;
+    }
+    default:
+        String log = FPSTR("RX slave invalid: 0x");
+        log += String(msg, HEX);
+        command.sendAll(log);
+        return;
+    }
+
     switch (otMode) {
     case OTMODE_MASTER: {
         unsigned long resp = OpenTherm::buildResponse(OpenThermMessageType::UNKNOWN_DATA_ID, id, 0x0000);

@@ -481,5 +481,5 @@ public:
 
 
 extern OTValue *slaveValues[55];
-extern OTValue *thermostatValues[17];
+extern OTValue *thermostatValues[18];
 extern const char* getOTname(OpenThermMessageID id);

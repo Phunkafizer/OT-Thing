@@ -146,7 +146,7 @@ OTValue *slaveValues[55] = { // reply data collected (read) from slave (boiler /
 };
 
 
-OTValue *thermostatValues[17] = { // request data sent (written) from roomunit
+OTValue *thermostatValues[18] = { // request data sent (written) from roomunit
     new OTValueFloat(           OpenThermMessageID::TSet,                   -1),
     new OTValueFloat(           OpenThermMessageID::TsetCH2,                -1),
     new OTValueFloat(           OpenThermMessageID::Tr,                     -1),
@@ -164,6 +164,7 @@ OTValue *thermostatValues[17] = { // request data sent (written) from roomunit
     new OTValueDate(),
     new OTValueu16(             OpenThermMessageID::Year,                   -1),
     new OTValueu16(             OpenThermMessageID::Vset,                   -1),
+    new OTValueFloat(           OpenThermMessageID::Toutside,               -1)
 };
 
 const char* getOTname(OpenThermMessageID id) {
