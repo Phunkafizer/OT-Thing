@@ -28,55 +28,55 @@ const struct {
     OpenThermMessageID id;
     uint16_t value;
 } loopbackTestData[] PROGMEM = {
-    {SConfigSMemberIDcode,      nib(1<<0 | 1<<5, 1)}, // DHW & CH2 present, Member ID 1
-    {ASFflags,                  0x0000}, // no error flags, oem error code 0
-    {RBPflags,                  0x0101},
-    {TrOverride,                0},
-    {MaxCapacityMinModLevel,    nib(20, 5)}, // 20 kW / 5 %
-    {RelModLevel,               floatToOT(33.3)},
-    {CHPressure,                floatToOT(1.25)},
-    {DHWFlowRate,               floatToOT(2.4)},
-    {Tboiler,                   floatToOT(48.5)},
-    {Tdhw,                      floatToOT(37.5)},
-    {Toutside,                  floatToOT(3.5)},
-    {Tret,                      floatToOT(41.7)},
-    {TflowCH2,                  floatToOT(48.6)},
-    {Tdhw2,                     floatToOT(37.6)},
-    {Texhaust,                  90},
-    {TrOverride2,               0},
-    {TdhwSetUBTdhwSetLB,        nib(60, 40)}, // 60 °C upper bound, 40 C° lower bound
-    {MaxTSetUBMaxTSetLB,        nib(60, 25)}, // 60 °C upper bound, 20 C° lower bound
-    {PowerCycles,               159},
-    {SuccessfulBurnerStarts,    9999},
-    {CHPumpStarts,              7777},
-    {DHWPumpValveStarts,        5544},
-    {DHWBurnerStarts,           9955},
-    {BurnerOperationHours,      8888},
-    {CHPumpOperationHours,      6666},
-    {DHWPumpValveOperationHours,5555},
-    {DHWBurnerOperationHours,   2222},
-    {OpenThermVersionSlave,     nib(2, 2)},
-    {SlaveVersion,              nib(4, 4)},
-    {StatusVentilationHeatRecovery, 0x001E},
-    {RelVentLevel,              55}, // relative ventilation 0..100 %
-    {RHexhaust,                 45},
-    {CO2exhaust,                1450}, // PPM
-    {Tsi,                       floatToOT(22.1)},
-    {Tso,                       floatToOT(22.2)},
-    {Tei,                       floatToOT(22.3)},
-    {Teo,                       floatToOT(22.1)},
-    {RPMexhaust,                2300},
-    {RPMsupply,                 2400},
-    {ASFflagsOEMfaultCodeVentilationHeatRecovery,   0x0F33},
-    {OpenThermVersionVentilationHeatRecovery,       0x0105},
-    {VentilationHeatRecoveryVersion,                0x0107},
-    {RemoteOverrideFunction,    0x0000},
-    {UnsuccessfulBurnerStarts,  19},
-    {FlameSignalTooLowNumber,   4},
-    {OEMDiagnosticCode,         123},
-    {TboilerHeatExchanger,      floatToOT(48.5)},
-    {BoilerFanSpeedSetpointAndActual, nib(20, 21)},
-    {FlameCurrent,              floatToOT(96.8)},
+    {OpenThermMessageID::SConfigSMemberIDcode,      nib(1<<0 | 1<<5, 1)}, // DHW & CH2 present, Member ID 1
+    {OpenThermMessageID::ASFflags,                  0x0000}, // no error flags, oem error code 0
+    {OpenThermMessageID::RBPflags,                  0x0101},
+    {OpenThermMessageID::TrOverride,                0},
+    {OpenThermMessageID::MaxCapacityMinModLevel,    nib(20, 5)}, // 20 kW / 5 %
+    {OpenThermMessageID::RelModLevel,               floatToOT(33.3)},
+    {OpenThermMessageID::CHPressure,                floatToOT(1.25)},
+    {OpenThermMessageID::DHWFlowRate,               floatToOT(2.4)},
+    {OpenThermMessageID::Tboiler,                   floatToOT(48.5)},
+    {OpenThermMessageID::Tdhw,                      floatToOT(37.5)},
+    {OpenThermMessageID::Toutside,                  floatToOT(3.5)},
+    {OpenThermMessageID::Tret,                      floatToOT(41.7)},
+    {OpenThermMessageID::TflowCH2,                  floatToOT(48.6)},
+    {OpenThermMessageID::Tdhw2,                     floatToOT(37.6)},
+    {OpenThermMessageID::Texhaust,                  90},
+    {OpenThermMessageID::TrOverride2,               0},
+    {OpenThermMessageID::TdhwSetUBTdhwSetLB,        nib(60, 40)}, // 60 °C upper bound, 40 C° lower bound
+    {OpenThermMessageID::MaxTSetUBMaxTSetLB,        nib(60, 25)}, // 60 °C upper bound, 20 C° lower bound
+    {OpenThermMessageID::PowerCycles,               159},
+    {OpenThermMessageID::SuccessfulBurnerStarts,    9999},
+    {OpenThermMessageID::CHPumpStarts,              7777},
+    {OpenThermMessageID::DHWPumpValveStarts,        5544},
+    {OpenThermMessageID::DHWBurnerStarts,           9955},
+    {OpenThermMessageID::BurnerOperationHours,      8888},
+    {OpenThermMessageID::CHPumpOperationHours,      6666},
+    {OpenThermMessageID::DHWPumpValveOperationHours,5555},
+    {OpenThermMessageID::DHWBurnerOperationHours,   2222},
+    {OpenThermMessageID::OpenThermVersionSlave,     nib(2, 2)},
+    {OpenThermMessageID::SlaveVersion,              nib(4, 4)},
+    {OpenThermMessageID::StatusVentilationHeatRecovery, 0x001E},
+    {OpenThermMessageID::RelVentLevel,              55}, // relative ventilation 0..100 %
+    {OpenThermMessageID::RHexhaust,                 45},
+    {OpenThermMessageID::CO2exhaust,                1450}, // PPM
+    {OpenThermMessageID::Tsi,                       floatToOT(22.1)},
+    {OpenThermMessageID::Tso,                       floatToOT(22.2)},
+    {OpenThermMessageID::Tei,                       floatToOT(22.3)},
+    {OpenThermMessageID::Teo,                       floatToOT(22.1)},
+    {OpenThermMessageID::RPMexhaust,                2300},
+    {OpenThermMessageID::RPMsupply,                 2400},
+    {OpenThermMessageID::ASFflagsOEMfaultCodeVentilationHeatRecovery,   0x0F33},
+    {OpenThermMessageID::OpenThermVersionVentilationHeatRecovery,       0x0105},
+    {OpenThermMessageID::VentilationHeatRecoveryVersion,                0x0107},
+    {OpenThermMessageID::RemoteOverrideFunction,    0x0000},
+    {OpenThermMessageID::UnsuccessfulBurnerStarts,  19},
+    {OpenThermMessageID::FlameSignalTooLowNumber,   4},
+    {OpenThermMessageID::OEMDiagnosticCode,         123},
+    {OpenThermMessageID::TboilerHeatExchanger,      floatToOT(48.5)},
+    {OpenThermMessageID::BoilerFanSpeedSetpointAndActual, nib(20, 21)},
+    {OpenThermMessageID::FlameCurrent,              floatToOT(96.8)},
 };
 
 

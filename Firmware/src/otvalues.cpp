@@ -207,7 +207,7 @@ OTValue* OTValue::getSlaveValue(const OpenThermMessageID id) {
 }
 
 OTValueSlaveConfigMember* OTValue::getSlaveConfig() {
-    return static_cast<OTValueSlaveConfigMember*>(getSlaveValue(SConfigSMemberIDcode));
+    return static_cast<OTValueSlaveConfigMember*>(getSlaveValue(OpenThermMessageID::SConfigSMemberIDcode));
 }
 
 OTValue* OTValue::getThermostatValue(const OpenThermMessageID id) {
