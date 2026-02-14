@@ -763,7 +763,7 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
                 newMsg = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, tmpToData(ost));
             break;
         }
-        case TdhwSet: {
+        case OpenThermMessageID::TdhwSet: {
             if (boilerCtrl.overrideDhw && (mt == OpenThermMessageType::READ_ACK)) {
                 // roomunit tried to read dhw set temp. Catch it in order to force writing DHW setpoint by roomunit.
                 newMsg = OpenTherm::buildResponse(OpenThermMessageType::DATA_INVALID, id, 0x0000);

@@ -149,26 +149,25 @@ OTValue *slaveValues[55] = { // reply data collected (read) from slave (boiler /
 };
 
 
-OTValue *thermostatValues[19] = { // request data sent (written) from roomunit
-    new OTValueFloat(           TSet,                   -1),
-    new OTValueFloat(           TsetCH2,                -1),
-    new OTValueFloat(           Tr,                     -1),
-    new OTValueFloat(           TrCH2,                  -1),
-    new OTValueFloat(           TrSet,                  -1),
-    new OTValueFloat(           TrSetCH2,               -1),
-    new OTValueProductVersion(  MasterVersion,          -1, PSTR("productversion master")),
-    new OTValueFloat(           MaxRelModLevelSetting,  -1),
-    new OTValueProductVersion(  OpenThermVersionMaster, -1, PSTR("OT-version master")),
+OTValue *thermostatValues[18] = { // request data sent (written) from roomunit
+    new OTValueFloat(           OpenThermMessageID::TSet,                   -1),
+    new OTValueFloat(           OpenThermMessageID::TsetCH2,                -1),
+    new OTValueFloat(           OpenThermMessageID::Tr,                     -1),
+    new OTValueFloat(           OpenThermMessageID::TrCH2,                  -1),
+    new OTValueFloat(           OpenThermMessageID::TrSet,                  -1),
+    new OTValueFloat(           OpenThermMessageID::TrSetCH2,               -1),
+    new OTValueProductVersion(  OpenThermMessageID::MasterVersion,          -1, PSTR("productversion master")),
+    new OTValueFloat(           OpenThermMessageID::MaxRelModLevelSetting,  -1),
+    new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionMaster, -1, PSTR("OT-version master")),
     new OTValueMasterConfig(),
     new OTValueFloat(           TdhwSet,                -1),
     new OTValueMasterStatus(),
     new OTValueVentMasterStatus(),
     new OTValueDayTime(),
     new OTValueDate(),
-    new OTValueu16(             Year,                   -1),
-    new OTValueu16(             Vset,                   -1),
-    new OTValueFloat(           Toutside,               -1),
-    new OTValueFloat(           MaxTSet,                -1)
+    new OTValueu16(             OpenThermMessageID::Year,                   -1),
+    new OTValueu16(             OpenThermMessageID::Vset,                   -1),
+    new OTValueFloat(           OpenThermMessageID::Toutside,               -1)
 };
 
 const char* getOTname(OpenThermMessageID id) {
