@@ -201,6 +201,10 @@ OTValue* OTValue::getSlaveValue(const OpenThermMessageID id) {
     return nullptr;
 }
 
+OTValueSlaveConfigMember* OTValue::getSlaveConfig() {
+    return static_cast<OTValueSlaveConfigMember*>(getSlaveValue(OpenThermMessageID::SConfigSMemberIDcode));
+}
+
 OTValue* OTValue::getThermostatValue(const OpenThermMessageID id) {
     for (auto *val: thermostatValues) {
         if (val->id == id) {
@@ -527,8 +531,35 @@ bool OTValueStatus::getDhwActive() const {
     return isSet() ? ((value & (1<<2)) != 0) : false;
 }
 
+void OTValueStatus::getValue(JsonVariant var) const {
+    OTValueFlags::getValue(var);
+
+    OTValueSlaveConfigMember *cfg = getSlaveConfig();
+    if (cfg) {
+        if (!cfg->hasDHW())
+            var.remove(PSTR(DHW_MODE));
+
+        if (!cfg->hasCh2())
+            var.remove(PSTR(CH2_MODE));
+    }
+}
+
+
 OTValueMasterStatus::OTValueMasterStatus():
         OTValueFlags(OpenThermMessageID::Status, -1, flags, sizeof(flags) / sizeof(flags[0]), false) {
+}
+
+void OTValueMasterStatus::getValue(JsonVariant var) const {
+    OTValueFlags::getValue(var);
+
+    OTValueSlaveConfigMember *cfg = getSlaveConfig();
+    if (cfg) {
+        if (!cfg->hasDHW())
+            var.remove(PSTR(DHW_ENABLE));
+
+        if (!cfg->hasCh2())
+            var.remove(PSTR(CH2_ENABLE));
+    }
 }
 
 

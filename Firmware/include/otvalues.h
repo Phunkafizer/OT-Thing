@@ -159,11 +159,12 @@ public:
     uint16_t getValue();
     void setStatus(const OpenThermMessageType mt);
     void getJson(JsonObject &obj) const;
-    virtual void getStatus(JsonObject &obj) const;
+    void getStatus(JsonObject &obj) const;
     virtual void init(const bool enabled);
     void setTimeout();
     static OTValue* getSlaveValue(const OpenThermMessageID id);
     static OTValue* getThermostatValue(const OpenThermMessageID id);
+    static class OTValueSlaveConfigMember* getSlaveConfig();
     void refreshDisc();
     bool isSet() const;
     bool hasReply() const;
@@ -233,15 +234,19 @@ protected:
 
 class OTValueStatus: public OTValueFlags {
 private:
+    const char *CH2_MODE PROGMEM = "ch2_mode";
+    const char *DHW_MODE PROGMEM = "dhw_mode";
     const Flag flags[7] PROGMEM = {
         {0, "fault",        "fault",        HA_DEVICE_CLASS_PROBLEM},
         {1, "ch_mode",      "heating",      HA_DEVICE_CLASS_RUNNING},
-        {2, "dhw_mode",     "DHW",          HA_DEVICE_CLASS_RUNNING},
+        {2, DHW_MODE,       "DHW",          HA_DEVICE_CLASS_RUNNING},
         {3, "flame",        "flame",        HA_DEVICE_CLASS_RUNNING},
         {4, "cooling",      "cooling",      HA_DEVICE_CLASS_RUNNING},
-        {5, "ch2_mode",     "heating 2",    HA_DEVICE_CLASS_RUNNING},
+        {5, CH2_MODE,       "heating 2",    HA_DEVICE_CLASS_RUNNING},
         {6, "diagnostic",   "diagnostic",   HA_DEVICE_CLASS_PROBLEM}
     };
+protected:
+    void getValue(JsonVariant var) const override;
 public:    
     OTValueStatus();
     bool getChActive(const uint8_t channel) const;
@@ -251,13 +256,17 @@ public:
 
 class OTValueMasterStatus: public OTValueFlags {
 private:
+    const char *DHW_ENABLE PROGMEM = "dhw_enable";
+    const char *CH2_ENABLE PROGMEM = "ch2_enable";
     const Flag flags[5] PROGMEM = {
         {8, "ch_enable",        "CH enable",        nullptr},
-        {9, "dhw_enable",       "DHW enable",       nullptr},
+        {9, DHW_ENABLE,         "DHW enable",       nullptr},
         {10, "cooling_enable",  "cooling enable",   nullptr},
         {11, "otc_active",      "OTC active",       nullptr},
-        {12, "ch2_enable",      "CH2 enable",       nullptr}
+        {12, CH2_ENABLE,        "CH2 enable",       nullptr}
     };
+protected:
+    void getValue(JsonVariant var) const override;
 public:    
     OTValueMasterStatus();
 };

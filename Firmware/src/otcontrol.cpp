@@ -26,7 +26,7 @@ const struct {
     OpenThermMessageID id;
     uint16_t value;
 } loopbackTestData[] PROGMEM = {
-    {OpenThermMessageID::SConfigSMemberIDcode,      nib(0x21, 1)}, // DHW & CH2 present, Member ID 1
+    {OpenThermMessageID::SConfigSMemberIDcode,      nib(1<<0 | 1<<5, 1)}, // DHW & CH2 present, Member ID 1
     {OpenThermMessageID::ASFflags,                  0x0000}, // no error flags, oem error code 0
     {OpenThermMessageID::RBPflags,                  0x0101},
     {OpenThermMessageID::TrOverride,                0},
@@ -442,7 +442,7 @@ void OTControl::loop() {
     
     bool hasDHW = false;
     bool hasCh2 = false;
-    OTValueSlaveConfigMember *sc = static_cast<OTValueSlaveConfigMember*>(OTValue::getSlaveValue(OpenThermMessageID::SConfigSMemberIDcode));
+    OTValueSlaveConfigMember *sc = OTValue::getSlaveConfig();
     if (sc != nullptr) {
         hasDHW = sc->hasDHW();
         hasCh2 = sc->hasCh2();
@@ -1271,7 +1271,7 @@ bool OTControl::sendChDiscoveries(const uint8_t ch, const bool en) {
 }
 
 bool OTControl::sendCapDiscoveries() {
-    OTValueSlaveConfigMember *vsc = static_cast<OTValueSlaveConfigMember*>(OTValue::getSlaveValue(OpenThermMessageID::SConfigSMemberIDcode));
+    OTValueSlaveConfigMember *vsc = OTValue::getSlaveConfig();
     if ((vsc == nullptr) || !(vsc->isSet()))
         return true;
 
