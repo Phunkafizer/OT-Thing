@@ -145,6 +145,7 @@
 
         input[type=text],
         input[type=password],
+        input[type=number],
         select {
             background-color: #111;
             margin: 5px 0;
@@ -879,6 +880,10 @@
                         <span class="statusvalue" field="thermostat.room_set_t2" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
+                        <h5>outside temp.</h5>
+                        <span class="statusvalue" field="thermostat.outside_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
                         <h5>Max. rel. modulation</h5>
                         <span class="statusvalue" field="thermostat.max_rel_mod" unit="%"></span>
                     </div>
@@ -969,7 +974,7 @@
                     </div>
                 </div>
 
-                <div id="exponent1" class="param">
+                <div id="exponent1" class="param linear-only">
                     <h5>Heating surface exponent</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -1144,7 +1149,52 @@
 
             <h3>Heating curve</h3>
             <div class="group">
-                <div id="gradient1" class="param">
+                <div class="param">
+                    <h5>Curve mode</h5>
+                    <div class="flexline">
+                        <label class="switch">
+                            <input id="curveMode1" type="checkbox" hideele="curvePoints1" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="curvePoints1" class="param" hidden>
+                    <h5>Curve points</h5>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>point</th>
+                                <th class="ot">outside</th>
+                                <th class="ft">flow</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>P1</td>
+                                <td><input id="curve1p1out" type="number" step="0.5" /></td>
+                                <td><input id="curve1p1flow" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td>P2</td>
+                                <td><input id="curve1p2out" type="number" step="0.5" /></td>
+                                <td><input id="curve1p2flow" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td>P3</td>
+                                <td><input id="curve1p3out" type="number" step="0.5" /></td>
+                                <td><input id="curve1p3flow" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td>P4</td>
+                                <td><input id="curve1p4out" type="number" step="0.5" /></td>
+                                <td><input id="curve1p4flow" type="number" step="0.5" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="gradient1" class="param linear-only">
                     <h5>Gradient</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -1159,7 +1209,7 @@
                     </div>
                 </div>
 
-                <div id="offset1" class="param">
+                <div id="offset1" class="param linear-only">
                     <h5>Offset</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -1244,7 +1294,7 @@
                     </div>
                 </div>
 
-                <div id="exponent2" class="param">
+                <div id="exponent2" class="param linear-only">
                     <h5>Heating surface exponent</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -1401,7 +1451,53 @@
 
             <h3>Heating curve</h3>
             <div class="group">
-                <div id="gradient2" class="param">
+                <div class="param">
+                    <h5>Curve mode</h5>
+                    <div class="flexline">
+                        <label class="switch">
+                            <input id="curveMode2" type="checkbox" hideele="curvePoints2" />
+                            <span class="slider"></span>
+                        </label>
+                        <div class="valunit">Curve mode</div>
+                    </div>
+                </div>
+
+                <div id="curvePoints2" class="param" hidden>
+                    <h5>Curve points</h5>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>point</th>
+                                <th class="ot">outside</th>
+                                <th class="ft">flow</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>P1</td>
+                                <td><input id="curve2p1out" type="number" step="0.5" /></td>
+                                <td><input id="curve2p1flow" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td>P2</td>
+                                <td><input id="curve2p2out" type="number" step="0.5" /></td>
+                                <td><input id="curve2p2flow" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td>P3</td>
+                                <td><input id="curve2p3out" type="number" step="0.5" /></td>
+                                <td><input id="curve2p3flow" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td>P4</td>
+                                <td><input id="curve2p4out" type="number" step="0.5" /></td>
+                                <td><input id="curve2p4flow" type="number" step="0.5" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="gradient2" class="param linear-only">
                     <h5>Gradient</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -1416,7 +1512,7 @@
                     </div>
                 </div>
 
-                <div id="offset2" class="param">
+                <div id="offset2" class="param linear-only">
                     <h5>Offset</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -1734,10 +1830,6 @@
                         <input id="haPrefix" type="text" />
                     </div>
                     <div class="param">
-                        <h5>HA device name</h5>
-                        <input id="haName" type="text" />
-                    </div>
-                    <div class="param">
                         <h5>TLS</h5>
                         <div>
                             <label class="switch">
@@ -1879,6 +1971,8 @@
                     exponent: 1.3,
                     gradient: 1.0,
                     offset: 0,
+                    curveMode: 0,
+                    curvePoints: [],
                     marker: [],
                     roomsetpoint: {
                         source: 0,
@@ -1904,6 +1998,8 @@
                     exponent: 1.3,
                     gradient: 1.0,
                     offset: 0,
+                    curveMode: 0,
+                    curvePoints: [],
                     marker: [],
                     roomsetpoint: {
                         source: 0,
@@ -1967,7 +2063,6 @@
                 config.timezone = parseInt(_("#selTimezone").value);
                 config.hostname = _("#hostname").value;
                 config.haPrefix = _("#haPrefix").value;
-                config.haName = _("#haName").value;
                 config.slaveApp = parseInt(_("#slaveapp").value);
                 config.enableSlave = _("#enableslave").checked;
                 config.otMode = (_('input[name="otMode"]:checked') !== undefined) ? parseInt(_('input[name="otMode"]:checked').value) : null;
@@ -2114,14 +2209,22 @@
                     return;
                 }
                 let heatCfg = config.heating[hk - 1];
-                let ft = getFlowTemperature(
-                    statuscache.outsideTemp, 
-                    roomsetpoint[hk - 1], 
-                    heatCfg.flowMax, 
-                    heatCfg.exponent, 
-                    heatCfg.gradient, 
-                    heatCfg.offset
-                );
+                let roomset = roomsetpoint[hk - 1];
+                let ft = null;
+                if ((heatCfg.curveMode ?? 0) === 1) {
+                    const points = ensureCurvePoints(heatCfg, roomset);
+                    ft = getFourPointFlow(statuscache.outsideTemp, points);
+                }
+                if (ft === null) {
+                    ft = getFlowTemperature(
+                        statuscache.outsideTemp, 
+                        roomset, 
+                        heatCfg.flowMax, 
+                        heatCfg.exponent, 
+                        heatCfg.gradient, 
+                        heatCfg.offset
+                    );
+                }
                 let comment = _("#comment" + hk).value;
                 if (heatCfg.marker === undefined)
                     heatCfg.marker = [];
@@ -2349,7 +2452,6 @@
                 _("#hostname").value = config.hostname || "otthing";
                 _("#haPrefix").value = config.haPrefix || "homeassistant";
                 _("#selTimezone").value = config.timezone || 3600;
-                _("#haName").value = config.haName || "OTthing";
                 let otradio = _('input[name="otMode"][value="' + config.otMode + '"]');
                 if (otradio !== undefined) {
                     otradio.checked = true;
@@ -2412,6 +2514,45 @@
                     initRangeParam(`roomCompBoost${ch}`, `heating.${idx}.roomComp.boost`);
                     initRangeParam(`hyst${ch}`, `heating.${idx}.hysteresis`);
 
+                    if (!Array.isArray(hcfg.curvePoints))
+                        hcfg.curvePoints = [];
+                    let curveModeInput = _(`#curveMode${ch}`);
+                    curveModeInput.checked = (hcfg.curveMode ?? 0) === 1;
+                    curveModeInput.onchange = (ev) => {
+                        hcfg.curveMode = ev.target.checked ? 1 : 0;
+                        toggleCurveModeUi(ch, ev.target.checked);
+                        drawCurve(ch);
+                    };
+                    curveModeInput.dispatchEvent(new Event('change'));
+
+                    let points = ensureCurvePoints(hcfg, roomsetpoint[idx]);
+                    const pointIds = [
+                        { out: `#curve${ch}p1out`, flow: `#curve${ch}p1flow`, idx: 0 },
+                        { out: `#curve${ch}p2out`, flow: `#curve${ch}p2flow`, idx: 1 },
+                        { out: `#curve${ch}p3out`, flow: `#curve${ch}p3flow`, idx: 2 },
+                        { out: `#curve${ch}p4out`, flow: `#curve${ch}p4flow`, idx: 3 }
+                    ];
+                    pointIds.forEach((entry) => {
+                        const outInput = _(entry.out);
+                        const flowInput = _(entry.flow);
+                        outInput.value = points[entry.idx].out;
+                        flowInput.value = points[entry.idx].flow;
+                        outInput.oninput = (ev) => {
+                            hcfg.curvePoints[entry.idx].out = parseFloat(ev.target.value);
+                            hcfg.curvePoints = normalizeCurvePoints(hcfg.curvePoints);
+                            outInput.value = hcfg.curvePoints[entry.idx].out;
+                            flowInput.value = hcfg.curvePoints[entry.idx].flow;
+                            drawCurve(ch);
+                        };
+                        flowInput.oninput = (ev) => {
+                            hcfg.curvePoints[entry.idx].flow = parseFloat(ev.target.value);
+                            hcfg.curvePoints = normalizeCurvePoints(hcfg.curvePoints);
+                            outInput.value = hcfg.curvePoints[entry.idx].out;
+                            flowInput.value = hcfg.curvePoints[entry.idx].flow;
+                            drawCurve(ch);
+                        };
+                    });
+
                      if ('roomtemp' in hcfg) {
                         _(`#selectRoomTempSource${ch}`).value = hcfg.roomtemp.source;
                         if (hcfg.roomtemp.source == 2)
@@ -2432,6 +2573,8 @@
                 initRangeParam("ventsetpoint", "vent.setpoint");
                 drawMarkerTable();
                 drawCurve();
+                initCurveDrag(1);
+                initCurveDrag(2);
                 __('input[type="checkbox"][hideele]').forEach(cb => {
                     cb.dispatchEvent(new Event("change"));
                 });
@@ -2790,6 +2933,266 @@
             return rs + c1 * (rs - ot) ** (1.0 / n) + s;
         }
 
+        function clamp(val, min, max) {
+            return Math.min(Math.max(val, min), max);
+        }
+
+        function calcLinearFlow(outTemp, hcfg, roomset) {
+            let flowmax = hcfg.flowMax ?? 40;
+            let gradient = hcfg.gradient ?? 1.0;
+            let offset = hcfg.offset ?? 0.0;
+            let ft = roomset + gradient * (roomset - outTemp) + offset;
+            return clamp(ft, 20, flowmax);
+        }
+
+        function ensureCurvePoints(hcfg, roomset) {
+            const defaults = [20, 10, -5, -15];
+            if (!Array.isArray(hcfg.curvePoints))
+                hcfg.curvePoints = [];
+            let points = [];
+            for (let i = 0; i < 4; i++) {
+                const current = hcfg.curvePoints[i] || {};
+                const outTemp = (current.out ?? defaults[i]);
+                const flowTemp = (current.flow ?? calcLinearFlow(outTemp, hcfg, roomset));
+                points.push({ out: outTemp, flow: flowTemp });
+            }
+            hcfg.curvePoints = normalizeCurvePoints(points);
+            return hcfg.curvePoints;
+        }
+
+        function normalizeCurvePoints(points) {
+            const result = points.map((p) => ({ ...p }));
+            for (let i = 1; i < result.length; i++) {
+                if (result[i].out > result[i - 1].out)
+                    result[i].out = result[i - 1].out;
+            }
+            for (let i = 1; i < result.length; i++) {
+                if (result[i].flow < result[i - 1].flow)
+                    result[i].flow = result[i - 1].flow;
+            }
+            return result;
+        }
+
+        function toggleCurveModeUi(ch, isFourPoint) {
+            __(`#heatingcurve${ch} .linear-only`).forEach((el) => {
+                el.hidden = isFourPoint;
+            });
+        }
+
+        function getFourPointFlow(outTemp, points) {
+            if (!Array.isArray(points) || points.length < 4)
+                return null;
+            const sorted = [...points].sort((a, b) => b.out - a.out);
+            if (outTemp >= sorted[0].out) return sorted[0].flow;
+            if (outTemp <= sorted[3].out) return sorted[3].flow;
+            for (let i = 0; i < 3; i++) {
+                if (outTemp < sorted[i].out && outTemp >= sorted[i + 1].out) {
+                    const x1 = sorted[i].out;
+                    const y1 = sorted[i].flow;
+                    const x2 = sorted[i + 1].out;
+                    const y2 = sorted[i + 1].flow;
+                    if (Math.abs(x2 - x1) < 0.001)
+                        return y1;
+                    return y1 + (outTemp - x1) * (y2 - y1) / (x2 - x1);
+                }
+            }
+            return sorted[3].flow;
+        }
+
+        function calcHeatingLogicBaseFlow(outTemp, hcfg, roomset) {
+            let flowmax = hcfg.flowMax ?? 40;
+            let minFlow = hcfg.minFlow ?? 20;
+            let curveMode = hcfg.curveMode ?? 0;
+            let ft = null;
+
+            if (curveMode === 1) {
+                const points = ensureCurvePoints(hcfg, roomset);
+                ft = getFourPointFlow(outTemp, points);
+            } else {
+                let gradient = hcfg.gradient ?? 1.0;
+                let exponent = hcfg.exponent ?? 1.0;
+                let offset = hcfg.offset ?? 0.0;
+                let delta = roomset - outTemp;
+                let shaped = delta;
+                if (delta > 0.0 && exponent > 0.0)
+                    shaped = Math.pow(delta, 1.0 / exponent);
+                ft = roomset + gradient * shaped + offset;
+            }
+
+            if (ft === null)
+                return null;
+            return clamp(ft, minFlow, flowmax);
+        }
+
+        function calcHeatingLogicActualFlow(outTemp, hcfg, roomset, roomdelta) {
+            let base = calcHeatingLogicBaseFlow(outTemp, hcfg, roomset);
+            if (base === null)
+                return null;
+            let flowmax = hcfg.flowMax ?? 40;
+            let minFlow = hcfg.minFlow ?? 20;
+            return clamp(base + roomdelta, minFlow, flowmax);
+        }
+
+        function catmullRom(t, p0, p1, p2, p3) {
+            const t2 = t * t;
+            const t3 = t2 * t;
+            return 0.5 * (
+                (2 * p1) +
+                (-p0 + p2) * t +
+                (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 +
+                (-p0 + 3 * p1 - 3 * p2 + p3) * t3
+            );
+        }
+
+        function getFourPointFlowSmooth(outTemp, points) {
+            if (!Array.isArray(points) || points.length < 4)
+                return null;
+            const sorted = [...points].sort((a, b) => b.out - a.out);
+            if (outTemp >= sorted[0].out) return sorted[0].flow;
+            if (outTemp <= sorted[3].out) return sorted[3].flow;
+
+            for (let i = 0; i < 3; i++) {
+                const x1 = sorted[i].out;
+                const x2 = sorted[i + 1].out;
+                if (outTemp < x1 && outTemp >= x2) {
+                    const t = (outTemp - x1) / (x2 - x1);
+                    const p0 = (i === 0) ? sorted[0].flow : sorted[i - 1].flow;
+                    const p1 = sorted[i].flow;
+                    const p2 = sorted[i + 1].flow;
+                    const p3 = (i + 2 <= 3) ? sorted[i + 2].flow : sorted[3].flow;
+                    return catmullRom(t, p0, p1, p2, p3);
+                }
+            }
+            return sorted[3].flow;
+        }
+
+        function getCurveAxes(hk, canvas) {
+            let flowmax = parseFloat(_("#flowmax" + hk + " input").value);
+            let fmg = Math.ceil(flowmax / 10) * 10 + 5;
+            let origin = {
+                x: 20,
+                y: canvas.height - 20
+            };
+            let xaxis = {
+                min: 20,
+                max: -20,
+                step: 5,
+                zoom: (canvas.width - origin.x * 2) / (20 - (-20))
+            };
+            let yaxis = {
+                min: 20,
+                max: fmg,
+                step: 10,
+                zoom: (canvas.height - (canvas.height - origin.y) * 2) / (fmg - 20)
+            };
+            return { origin, xaxis, yaxis };
+        }
+
+        function roundToStep(value, step) {
+            if (!step || step <= 0) return value;
+            return Math.round(value / step) * step;
+        }
+
+        function initCurveDrag(hk) {
+            const canvas = document.getElementById(`canvas${hk}`);
+            if (!canvas || canvas.dataset.dragInit === "1")
+                return;
+            canvas.dataset.dragInit = "1";
+
+            let dragIndex = null;
+            let activePointerId = null;
+
+            function getRoomDelta() {
+                let roomset = roomsetpoint[hk - 1];
+                let hcfg = config.heating?.[hk - 1] ?? {};
+                let rc = hcfg.roomComp;
+                if (rc?.enabled === true) {
+                    const hcs = statuscache?.heatercircuit?.[hk - 1];
+                    if (hcs?.roomtemp !== undefined)
+                        return (rc.p ?? 0) * (roomset - (hcs.roomtemp ?? 0)) + hcs.integState ?? 0;
+                }
+                return 0;
+            }
+
+            function findNearestPoint(x, y) {
+                let hcfg = config.heating?.[hk - 1] ?? {};
+                if ((hcfg.curveMode ?? 0) !== 1)
+                    return null;
+                const points = ensureCurvePoints(hcfg, roomsetpoint[hk - 1]);
+                const { origin, xaxis, yaxis } = getCurveAxes(hk, canvas);
+                let roomdelta = getRoomDelta();
+                let closest = { idx: null, dist: 9999 };
+                points.forEach((pt, idx) => {
+                    const px = origin.x + (xaxis.min - pt.out) * xaxis.zoom;
+                    const py = origin.y - ((pt.flow + roomdelta) - yaxis.min) * yaxis.zoom;
+                    const dx = px - x;
+                    const dy = py - y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < closest.dist) {
+                        closest = { idx, dist };
+                    }
+                });
+                return closest.dist <= 12 ? closest.idx : null;
+            }
+
+            function updatePointFromCanvas(x, y) {
+                let hcfg = config.heating?.[hk - 1] ?? {};
+                const points = ensureCurvePoints(hcfg, roomsetpoint[hk - 1]);
+                const { origin, xaxis, yaxis } = getCurveAxes(hk, canvas);
+                let outTemp = xaxis.min - (x - origin.x) / xaxis.zoom;
+                let flowTemp = yaxis.min + (origin.y - y) / yaxis.zoom;
+                outTemp = clamp(outTemp, xaxis.max, xaxis.min);
+                flowTemp = clamp(flowTemp, yaxis.min, yaxis.max);
+
+                let roomdelta = getRoomDelta();
+                flowTemp = flowTemp - roomdelta;
+                flowTemp = clamp(flowTemp, yaxis.min, yaxis.max);
+
+                outTemp = roundToStep(outTemp, 0.5);
+                flowTemp = roundToStep(flowTemp, 0.5);
+
+                points[dragIndex].out = outTemp;
+                points[dragIndex].flow = flowTemp;
+                hcfg.curvePoints = normalizeCurvePoints(points);
+
+                const outInput = _(`#curve${hk}p${dragIndex + 1}out`);
+                const flowInput = _(`#curve${hk}p${dragIndex + 1}flow`);
+                if (outInput) outInput.value = hcfg.curvePoints[dragIndex].out;
+                if (flowInput) flowInput.value = hcfg.curvePoints[dragIndex].flow;
+
+                drawCurve(hk);
+            }
+
+            canvas.addEventListener("pointerdown", (ev) => {
+                if (activePointerId !== null)
+                    return;
+                dragIndex = findNearestPoint(ev.offsetX, ev.offsetY);
+                if (dragIndex === null)
+                    return;
+                activePointerId = ev.pointerId;
+                canvas.setPointerCapture(activePointerId);
+                updatePointFromCanvas(ev.offsetX, ev.offsetY);
+            });
+
+            canvas.addEventListener("pointermove", (ev) => {
+                if (ev.pointerId !== activePointerId || dragIndex === null)
+                    return;
+                updatePointFromCanvas(ev.offsetX, ev.offsetY);
+            });
+
+            function clearDrag(ev) {
+                if (ev.pointerId !== activePointerId)
+                    return;
+                canvas.releasePointerCapture(activePointerId);
+                activePointerId = null;
+                dragIndex = null;
+            }
+
+            canvas.addEventListener("pointerup", clearDrag);
+            canvas.addEventListener("pointercancel", clearDrag);
+            canvas.addEventListener("pointerleave", clearDrag);
+        }
+
         function drawCurve(hk) {
             if (hk === undefined) {
                 drawCurve(1);
@@ -2888,7 +3291,8 @@
 
             let roomset = roomsetpoint[hk - 1];
             let roomdelta = 0;
-            let rc = config.heating?.[hk-1]?.roomComp;
+            let hcfg = config.heating?.[hk - 1] ?? {};
+            let rc = hcfg.roomComp;
             if (rc?.enabled === true) {
                 const hcs = statuscache?.heatercircuit?.[hk - 1];
                 if (hcs?.roomtemp !== undefined)
@@ -2898,6 +3302,8 @@
             let gradient = parseFloat(_("#gradient" + hk + " input").value);
             let exponent = parseFloat(_("#exponent" + hk + " input").value);
             let offset = parseFloat(_("#offset" + hk + " input").value);
+            let curveMode = hcfg.curveMode ?? 0;
+            let curvePoints = ensureCurvePoints(hcfg, roomset);
 
             function getPoint(ot, ft) {
                 return {
@@ -2911,61 +3317,129 @@
                 ctx.fillRect(p.x - 3, p.y - 3, 6, 6);    
             }
 
-            let otStart = Math.min(roomset, xaxis.min);
-            let ft = getFlowTemperature(otStart, roomset, flowmax, exponent, gradient, offset);
-            let p1 = getPoint(otStart, ft); //foot
-
-            drawMarkerPoint(p1, '#A33');
-
-            function drawFlowCurve(color, delta) {
-                ctx.strokeStyle = color;
+            if (curveMode === 1) {
+                const sorted = [...curvePoints].sort((a, b) => b.out - a.out);
+                ctx.strokeStyle = "#F00";
                 ctx.lineWidth = 3;
-                let ft = getFlowTemperature(otStart, roomset, flowmax, exponent, gradient, offset) + delta;
-                let p = getPoint(otStart, ft);
                 ctx.beginPath();
-                ctx.moveTo(p.x, p.y);
-                let otf = false;
-                for (var ot = otStart; ot >= xaxis.max; ot -= 0.5) {
-                    ft = getFlowTemperature(ot, roomset, flowmax, exponent, gradient, offset) + delta;
-
-                    if ((ft >= flowmax) && !otf) {
-                        ctx.stroke();
-                        ctx.strokeStyle = "#888";
-                        ctx.beginPath();
-                        ctx.moveTo(p.x, p.y);
-                        otf = true;
-                    }
-
-                    p = getPoint(ot, ft);
+                let start = getPoint(sorted[0].out, calcHeatingLogicBaseFlow(sorted[0].out, hcfg, roomset));
+                ctx.moveTo(start.x, start.y);
+                for (let ot = xaxis.min; ot >= xaxis.max; ot -= 0.5) {
+                    let ft = calcHeatingLogicBaseFlow(ot, hcfg, roomset);
+                    if (ft === null)
+                        continue;
+                    const p = getPoint(ot, ft);
                     ctx.lineTo(p.x, p.y);
-
-                    if (ft >= yaxis.max)
-                        break;
                 }
                 ctx.stroke();
-            }
-            drawFlowCurve("#F00", 0);
-            if (roomdelta != 0)
-                drawFlowCurve("#0F0", roomdelta);
 
-            //draw curve's basepoint
-            drawMarkerPoint(p1, '#F00');
+                ctx.fillStyle = "#aaa";
+                ctx.font = '11px sans-serif';
+                ctx.fillText("Drag points", origin.x + 48, origin.y - 10);
 
-            if (statuscache.outsideTemp !== undefined) {
-                //draw outsidetemp & it's flowtemperature
-                let ftsensor = getFlowTemperature(statuscache.outsideTemp, roomset, flowmax, exponent, gradient, offset) + roomdelta;
-                if (ftsensor > flowmax)
-                    ftsensor = flowmax;
-                let psensor = getPoint(statuscache.outsideTemp, ftsensor);
-                drawMarkerPoint(psensor, '#F83');
-                ctx.strokeStyle = "#F83";
-                ctx.lineWidth = 1;
+                const coldPoint = sorted[sorted.length - 1];
+                ctx.strokeStyle = "#888";
+                ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.moveTo(origin.x, psensor.y);
-                ctx.lineTo(psensor.x, psensor.y);
-                ctx.lineTo(psensor.x, origin.y);
+                ctx.moveTo(
+                    getPoint(coldPoint.out, calcHeatingLogicBaseFlow(coldPoint.out, hcfg, roomset)).x,
+                    getPoint(coldPoint.out, calcHeatingLogicBaseFlow(coldPoint.out, hcfg, roomset)).y
+                );
+                const rightPoint = getPoint(xaxis.max, calcHeatingLogicBaseFlow(xaxis.max, hcfg, roomset));
+                ctx.lineTo(rightPoint.x, rightPoint.y);
                 ctx.stroke();
-                ctx.fillText(Math.round(ftsensor * 10) / 10, origin.x + 30, psensor.y - 8);
+
+                ctx.save();
+                ctx.strokeStyle = "#9aa";
+                ctx.globalAlpha = 0.8;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                let ghostStart = getPoint(sorted[0].out, calcHeatingLogicActualFlow(sorted[0].out, hcfg, roomset, roomdelta));
+                ctx.moveTo(ghostStart.x, ghostStart.y);
+                for (let ot = xaxis.min; ot >= xaxis.max; ot -= 0.5) {
+                    let ft = calcHeatingLogicActualFlow(ot, hcfg, roomset, roomdelta);
+                    if (ft === null)
+                        continue;
+                    const p = getPoint(ot, ft);
+                    ctx.lineTo(p.x, p.y);
+                }
+                ctx.stroke();
+                ctx.restore();
+
+                sorted.forEach((pt) => {
+                    drawMarkerPoint(getPoint(pt.out, pt.flow), '#F00');
+                });
+
+                if (statuscache.outsideTemp !== undefined) {
+                    let ftsensor = calcHeatingLogicActualFlow(statuscache.outsideTemp, hcfg, roomset, roomdelta);
+                    if (ftsensor !== null) {
+                        let psensor = getPoint(statuscache.outsideTemp, ftsensor);
+                        drawMarkerPoint(psensor, '#F83');
+                        ctx.strokeStyle = "#F83";
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(origin.x, psensor.y);
+                        ctx.lineTo(psensor.x, psensor.y);
+                        ctx.lineTo(psensor.x, origin.y);
+                        ctx.stroke();
+                        ctx.fillText(Math.round(ftsensor * 10) / 10, origin.x + 30, psensor.y - 8);
+                    }
+                }
+            } else {
+                let otStart = Math.min(roomset, xaxis.min);
+                let ft = calcHeatingLogicBaseFlow(otStart, hcfg, roomset);
+                let p1 = getPoint(otStart, ft); //foot
+
+                drawMarkerPoint(p1, '#A33');
+
+                function drawFlowCurve(color, delta) {
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 3;
+                    let ft = calcHeatingLogicBaseFlow(otStart, hcfg, roomset) + delta;
+                    let p = getPoint(otStart, ft);
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    let otf = false;
+                    for (var ot = otStart; ot >= xaxis.max; ot -= 0.5) {
+                        ft = calcHeatingLogicBaseFlow(ot, hcfg, roomset) + delta;
+
+                        if ((ft >= flowmax) && !otf) {
+                            ctx.stroke();
+                            ctx.strokeStyle = "#888";
+                            ctx.beginPath();
+                            ctx.moveTo(p.x, p.y);
+                            otf = true;
+                        }
+
+                        p = getPoint(ot, ft);
+                        ctx.lineTo(p.x, p.y);
+
+                        if (ft >= yaxis.max)
+                            break;
+                    }
+                    ctx.stroke();
+                }
+                drawFlowCurve("#F00", 0);
+
+                //draw curve's basepoint
+                drawMarkerPoint(p1, '#F00');
+
+
+                if (statuscache.outsideTemp !== undefined) {
+                    //draw outsidetemp & it's flowtemperature
+                    let ftsensor = calcHeatingLogicActualFlow(statuscache.outsideTemp, hcfg, roomset, roomdelta);
+                    let psensor = getPoint(statuscache.outsideTemp, ftsensor);
+                    drawMarkerPoint(psensor, '#F83');
+                    ctx.strokeStyle = "#F83";
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(origin.x, psensor.y);
+                    ctx.lineTo(psensor.x, psensor.y);
+                    ctx.lineTo(psensor.x, origin.y);
+                    ctx.stroke();
+                    ctx.fillText(Math.round(ftsensor * 10) / 10, origin.x + 30, psensor.y - 8);
+                }
             }
 
             //draw markers
