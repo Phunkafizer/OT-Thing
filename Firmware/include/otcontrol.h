@@ -4,6 +4,7 @@
 #include "ArduinoJson.h"
 #include "util.h"
 #include "masterrequests.h"
+#include "heatinglogic.h"
 
 const uint8_t NUM_HEATCIRCUITS = 2;
 
@@ -26,6 +27,10 @@ public:
         CTRLMODE_ON = 1,
         CTRLMODE_AUTO = 2
     };
+    enum CurveMode: uint8_t {
+        CURVE_LINEAR = 0,
+        CURVE_FOUR_POINT = 1
+    };
     friend void otCbSlave(unsigned long response, OpenThermResponseStatus status);
     friend void otCbMaster(unsigned long response, OpenThermResponseStatus status);
     friend void IRAM_ATTR handleIrqMaster();
@@ -41,7 +46,7 @@ private:
     void masterPinIrq();
     void slavePinIrq();
     double getFlow(const uint8_t channel);
-    bool getChannelOn(const uint8_t channel);
+    bool getReturnTemp(double &retTemp);
     uint16_t tmpToData(const double tmpf);
     void hwYield();
     unsigned long buildBrandResponse(const OpenThermMessageID id, const String &str, const uint8_t idx);
@@ -63,10 +68,16 @@ private:
     struct HeatingConfig {
         bool chOn;
         double roomSet; // default room set point
+        double minFlow;
         double flowMax;
         double exponent;
         double gradient;
         double offset;
+        CurveMode curveMode {CURVE_LINEAR};
+        struct CurvePoint {
+            double outside;
+            double flow;
+        } curvePoints[4];
         double flow; // default flow temperature 
         bool enableHyst;
         double hysteresis;
@@ -77,8 +88,8 @@ private:
             double i; // Ki 1/h
             double boost; // Kb K/K
         } roomComp;
-        bool minSuspend;
     } heatingConfig[NUM_HEATCIRCUITS];
+    HeatingLogic heatingLogic[NUM_HEATCIRCUITS];
     struct HeatingControl {
         bool chOn;
         double flowTemp;
@@ -110,6 +121,13 @@ private:
         bool summerMode;
         bool dhwBlocking;
     } boilerConfig;
+    struct {
+        bool enabled;
+        double maxReturn;
+        double minFlow;
+        double gain;
+        double hysteresis;
+    } retLimit;
     struct {
         bool dhwOn;
         double dhwTemp;
