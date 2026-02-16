@@ -52,7 +52,6 @@ static const OTItem OTITEMS[] PROGMEM = {
     {TdhwSetUBTdhwSetLB,        PSTR("dhw_bounds")},
     {MaxTSetUBMaxTSetLB,        PSTR("ch_bounds")},
     {TdhwSet,                   PSTR("dhw_set_t")},
-    {MaxTSet,                   PSTR("max_set_t")},
     {StatusVentilationHeatRecovery, PSTR("vent_status")},
     {Vset,                      PSTR("rel_vent_set")},
     {ASFflagsOEMfaultCodeVentilationHeatRecovery, PSTR("vent_fault_flags")},
@@ -150,24 +149,24 @@ OTValue *slaveValues[55] = { // reply data collected (read) from slave (boiler /
 
 
 OTValue *thermostatValues[18] = { // request data sent (written) from roomunit
-    new OTValueFloat(           OpenThermMessageID::TSet,                   -1),
-    new OTValueFloat(           OpenThermMessageID::TsetCH2,                -1),
-    new OTValueFloat(           OpenThermMessageID::Tr,                     -1),
-    new OTValueFloat(           OpenThermMessageID::TrCH2,                  -1),
-    new OTValueFloat(           OpenThermMessageID::TrSet,                  -1),
-    new OTValueFloat(           OpenThermMessageID::TrSetCH2,               -1),
-    new OTValueProductVersion(  OpenThermMessageID::MasterVersion,          -1, PSTR("productversion master")),
-    new OTValueFloat(           OpenThermMessageID::MaxRelModLevelSetting,  -1),
-    new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionMaster, -1, PSTR("OT-version master")),
+    new OTValueFloat(           TSet,                   -1),
+    new OTValueFloat(           TsetCH2,                -1),
+    new OTValueFloat(           Tr,                     -1),
+    new OTValueFloat(           TrCH2,                  -1),
+    new OTValueFloat(           TrSet,                  -1),
+    new OTValueFloat(           TrSetCH2,               -1),
+    new OTValueProductVersion(  MasterVersion,          -1, PSTR("productversion master")),
+    new OTValueFloat(           MaxRelModLevelSetting,  -1),
+    new OTValueProductVersion(  OpenThermVersionMaster, -1, PSTR("OT-version master")),
     new OTValueMasterConfig(),
     new OTValueFloat(           TdhwSet,                -1),
     new OTValueMasterStatus(),
     new OTValueVentMasterStatus(),
     new OTValueDayTime(),
     new OTValueDate(),
-    new OTValueu16(             OpenThermMessageID::Year,                   -1),
-    new OTValueu16(             OpenThermMessageID::Vset,                   -1),
-    new OTValueFloat(           OpenThermMessageID::Toutside,               -1)
+    new OTValueu16(             Year,                   -1),
+    new OTValueu16(             Vset,                   -1),
+    new OTValueFloat(           Toutside,               -1)
 };
 
 const char* getOTname(OpenThermMessageID id) {
@@ -206,7 +205,7 @@ OTValue* OTValue::getSlaveValue(const OpenThermMessageID id) {
 }
 
 OTValueSlaveConfigMember* OTValue::getSlaveConfig() {
-    return static_cast<OTValueSlaveConfigMember*>(getSlaveValue(OpenThermMessageID::SConfigSMemberIDcode));
+    return static_cast<OTValueSlaveConfigMember*>(getSlaveValue(SConfigSMemberIDcode));
 }
 
 OTValue* OTValue::getThermostatValue(const OpenThermMessageID id) {
@@ -565,7 +564,6 @@ bool OTValueMasterStatus::sendDiscovery() {
         if (!sendDiscFlag(&flagTable[i], enb))
             return false;
     }
-    return true;
 }
 
 void OTValueMasterStatus::getValue(JsonVariant var) const {
