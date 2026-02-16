@@ -190,33 +190,37 @@ void Portal::begin(bool configMode) {
     );
 
     websrv.on(PSTR("/slaverequest"), HTTP_GET, [this](AsyncWebServerRequest *request) {
-        if (!request->hasParam("id")) {
+        static const char* STR_ID PROGMEM = "id";
+        static const char* STR_RW PROGMEM = "rw";
+        static const char* STR_DATA PROGMEM = "data";
+
+        if (!request->hasParam(PSTR(STR_ID))) {
             request->send(503);
             return;
         }
-        if (!request->hasParam("rw")) {
+        if (!request->hasParam(PSTR(STR_RW))) {
             request->send(503);
             return;
         }
 
         SlaveRequestStruct srs;
-        srs.idReq = (OpenThermMessageID) request->getParam("id")->value().toInt();
-        srs.typeReq = (request->getParam("rw")->value().toInt() != 0) ? OpenThermMessageType::READ_DATA : OpenThermMessageType::WRITE_DATA;
+        srs.idReq = (OpenThermMessageID) request->getParam(PSTR(STR_ID))->value().toInt();
+        srs.typeReq = (request->getParam(PSTR(STR_RW))->value().toInt() != 0) ? OpenThermMessageType::READ_DATA : OpenThermMessageType::WRITE_DATA;
 
-        if (!request->hasParam("data")) {
+        if (!request->hasParam(PSTR(STR_DATA))) {
             request->send(503);
             return;
         }
-        String hexData = request->getParam("data")->value();
+        String hexData = request->getParam(PSTR(STR_DATA))->value();
         srs.dataReq = strtol(hexData.c_str(), nullptr, 16);
 
         if (otcontrol.slaveRequest(srs)) {    
             JsonDocument doc;
             JsonObject jobj = doc.to<JsonObject>();
             
-            jobj["type"] = (int) srs.typeResp;
-            jobj["id"] = (int) srs.idReq;
-            jobj["data"] = String(OpenTherm::getUInt(srs.dataResp), 16);
+            jobj[F("type")] = (int) srs.typeResp;
+            jobj[F("id")] = (int) srs.idReq;
+            jobj[F("data")] = String(OpenTherm::getUInt(srs.dataResp), 16);
             AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));
             serializeJson(doc, *response);
             request->send(response);

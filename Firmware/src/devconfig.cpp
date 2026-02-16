@@ -31,9 +31,6 @@ void DevConfig::update() {
         if (doc[F("haPrefix")].is<String>())
             HADiscovery::setHAPrefix(doc[F("haPrefix")].as<String>());
 
-        if (doc[F("haName")].is<String>())
-            HADiscovery::devName = doc[F("haName")].as<String>();
-
         timezone = doc[F("timezone")] | 3600;
             
         if (hostname.isEmpty())
@@ -46,13 +43,13 @@ void DevConfig::update() {
 
         if (doc[F("mqtt")].is<JsonObject>()) {
             MqttConfig mc;
-            const JsonObject &jobj = doc["mqtt"].as<JsonObject>();
-            mc.host = jobj["host"].as<String>();
-            mc.port = jobj["port"].as<uint16_t>();
-            mc.tls = jobj["tls"].as<bool>();
-            mc.user = jobj["user"].as<String>();
-            mc.pass = jobj["pass"].as<String>();
-            mc.keepAlive = jobj["keepAlive"] | 15;
+            const JsonObject &jobj = doc[F("mqtt")].as<JsonObject>();
+            mc.host = jobj[F("host")].as<String>();
+            mc.port = jobj[F("port")].as<uint16_t>();
+            mc.tls = jobj[F("tls")].as<bool>();
+            mc.user = jobj[F("user")].as<String>();
+            mc.pass = jobj[F("pass")].as<String>();
+            mc.keepAlive = jobj[F("keepAlive")] | 15;
             mqtt.setConfig(mc);
         }
 

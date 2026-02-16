@@ -95,7 +95,7 @@ void OtGwCommand::sendOtEvent(const char source, const uint32_t data) {
         line += F("DATA_INVALID");
         break;
     case OpenThermMessageType::UNKNOWN_DATA_ID:
-        line += F("UKNOWN ID");
+        line += F("UKNOWN_ID");
         break;
     default:
         break;

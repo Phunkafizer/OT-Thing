@@ -11,125 +11,127 @@ struct OTItem {
     static const char* getName(OpenThermMessageID id);
 };
 
+using enum OpenThermMessageID;
+
 static const OTItem OTITEMS[] PROGMEM = {
 //  ID of message                                   string id for MQTT                  
-    {OpenThermMessageID::Status,                    PSTR("status")},
-    {OpenThermMessageID::TSet,                      PSTR("ch_set_t")},
-    {OpenThermMessageID::MConfigMMemberIDcode,      PSTR("master_config_member")},
-    {OpenThermMessageID::SConfigSMemberIDcode,      PSTR("slave_config_member")},
-    {OpenThermMessageID::RemoteRequest,             PSTR("remote_req")},
-    {OpenThermMessageID::ASFflags,                  PSTR("fault_flags")},
-    {OpenThermMessageID::RBPflags,                  PSTR("rp_flags")},
-    {OpenThermMessageID::TsetCH2,                   PSTR("ch_set_t2")},
-    {OpenThermMessageID::TrOverride,                PSTR("tr_override")},
-    {OpenThermMessageID::TSP,                       PSTR("num_tsps")},
-    {OpenThermMessageID::FHBsize,                   PSTR("size_fhb")},
-    {OpenThermMessageID::MaxRelModLevelSetting,     PSTR("max_rel_mod")},
-    {OpenThermMessageID::MaxCapacityMinModLevel,    PSTR("max_cap_min_mod")},
-    {OpenThermMessageID::TrSet,                     PSTR("room_set_t")},
-    {OpenThermMessageID::RelModLevel,               PSTR("rel_mod")},
-    {OpenThermMessageID::CHPressure,                PSTR("ch_pressure")},
-    {OpenThermMessageID::DHWFlowRate,               PSTR("dhw_flow_rate")},
-    {OpenThermMessageID::DayTime,                   PSTR("day_time")},
-    {OpenThermMessageID::Date,                      PSTR("date")},
-    {OpenThermMessageID::Year,                      PSTR("year")},
-    {OpenThermMessageID::TrSetCH2,                  PSTR("room_set_t2")},
-    {OpenThermMessageID::Tr,                        PSTR("room_t")},
-    {OpenThermMessageID::Tboiler,                   PSTR("flow_t")},
-    {OpenThermMessageID::Tdhw,                      PSTR("dhw_t")},
-    {OpenThermMessageID::Toutside,                  PSTR("outside_t")},
-    {OpenThermMessageID::Tret,                      PSTR("return_t")},
-    {OpenThermMessageID::TflowCH2,                  PSTR("flow_t2")},
-    {OpenThermMessageID::Tdhw2,                     PSTR("dhw_t2")},
-    {OpenThermMessageID::Texhaust,                  PSTR("exhaust_t")},
-    {OpenThermMessageID::TboilerHeatExchanger,      PSTR("boiler_heat_ex_t")},
-    {OpenThermMessageID::BoilerFanSpeedSetpointAndActual, PSTR("boiler_fan")},
-    {OpenThermMessageID::FlameCurrent,              PSTR("flame_current")},
-    {OpenThermMessageID::TrCH2,                     PSTR("room_t2")},
-    {OpenThermMessageID::TrOverride2,               PSTR("tr_override2")},           
-    {OpenThermMessageID::TdhwSetUBTdhwSetLB,        PSTR("dhw_bounds")},
-    {OpenThermMessageID::MaxTSetUBMaxTSetLB,        PSTR("ch_bounds")},
-    {OpenThermMessageID::TdhwSet,                   PSTR("dhw_set_t")},
-    {OpenThermMessageID::StatusVentilationHeatRecovery, PSTR("vent_status")},
-    {OpenThermMessageID::Vset,                      PSTR("rel_vent_set")},
-    {OpenThermMessageID::ASFflagsOEMfaultCodeVentilationHeatRecovery, PSTR("vent_fault_flags")},
-    {OpenThermMessageID::OpenThermVersionVentilationHeatRecovery,   PSTR("vent_ot_version")},
-    {OpenThermMessageID::VentilationHeatRecoveryVersion,    PSTR("vent_prod_version")},
-    {OpenThermMessageID::RelVentLevel,              PSTR("rel_vent")},
-    {OpenThermMessageID::RHexhaust,                 PSTR("rel_hum_exhaust")},
-    {OpenThermMessageID::CO2exhaust,                PSTR("co2_exhaust")},
-    {OpenThermMessageID::Tsi,                       PSTR("supply_inlet_t")},
-    {OpenThermMessageID::Tso,                       PSTR("supply_outlet_t")},
-    {OpenThermMessageID::Tei,                       PSTR("exhaust_inlet_t")},
-    {OpenThermMessageID::Teo,                       PSTR("exhaust_outlet_t")},
-    {OpenThermMessageID::RPMexhaust,                PSTR("exhaust_fan_speed")},
-    {OpenThermMessageID::RPMsupply,                 PSTR("supply_fan_speed")},
-    {OpenThermMessageID::Brand,                     PSTR("brand")},
-    {OpenThermMessageID::BrandVersion,              PSTR("brand_version")},
-    {OpenThermMessageID::BrandSerialNumber,         PSTR("brand_serial")},
-    {OpenThermMessageID::PowerCycles,               PSTR("power_cycles")},
-    {OpenThermMessageID::RemoteOverrideFunction,    PSTR("remote_override_function")},
-    {OpenThermMessageID::UnsuccessfulBurnerStarts,  PSTR("unsuccessful_burner_starts")},
-    {OpenThermMessageID::FlameSignalTooLowNumber,   PSTR("num_flame_signal_low")},
-    {OpenThermMessageID::OEMDiagnosticCode,         PSTR("oem_diag_code")},
-    {OpenThermMessageID::SuccessfulBurnerStarts,    PSTR("burner_starts")},
-    {OpenThermMessageID::CHPumpStarts,              PSTR("ch_pump_starts")},
-    {OpenThermMessageID::DHWPumpValveStarts,        PSTR("dhw_pump_starts")},
-    {OpenThermMessageID::DHWBurnerStarts,           PSTR("dhw_burner_starts")},
-    {OpenThermMessageID::BurnerOperationHours,      PSTR("burner_op_hours")},
-    {OpenThermMessageID::CHPumpOperationHours,      PSTR("chpump_op_hours")},
-    {OpenThermMessageID::DHWPumpValveOperationHours,PSTR("dhwpump_op_hours")},
-    {OpenThermMessageID::DHWBurnerOperationHours,   PSTR("dhw_burner_op_hours")},
-    {OpenThermMessageID::OpenThermVersionMaster,    PSTR("master_ot_version")},
-    {OpenThermMessageID::OpenThermVersionSlave,     PSTR("slave_ot_version")},
-    {OpenThermMessageID::MasterVersion,             PSTR("master_prod_version")},
-    {OpenThermMessageID::SlaveVersion,              PSTR("slave_prod_version")}
+    {Status,                    PSTR("status")},
+    {TSet,                      PSTR("ch_set_t")},
+    {MConfigMMemberIDcode,      PSTR("master_config_member")},
+    {SConfigSMemberIDcode,      PSTR("slave_config_member")},
+    {RemoteRequest,             PSTR("remote_req")},
+    {ASFflags,                  PSTR("fault_flags")},
+    {RBPflags,                  PSTR("rp_flags")},
+    {TsetCH2,                   PSTR("ch_set_t2")},
+    {TrOverride,                PSTR("tr_override")},
+    {TSP,                       PSTR("num_tsps")},
+    {FHBsize,                   PSTR("size_fhb")},
+    {MaxRelModLevelSetting,     PSTR("max_rel_mod")},
+    {MaxCapacityMinModLevel,    PSTR("max_cap_min_mod")},
+    {TrSet,                     PSTR("room_set_t")},
+    {RelModLevel,               PSTR("rel_mod")},
+    {CHPressure,                PSTR("ch_pressure")},
+    {DHWFlowRate,               PSTR("dhw_flow_rate")},
+    {DayTime,                   PSTR("day_time")},
+    {Date,                      PSTR("date")},
+    {Year,                      PSTR("year")},
+    {TrSetCH2,                  PSTR("room_set_t2")},
+    {Tr,                        PSTR("room_t")},
+    {Tboiler,                   PSTR("flow_t")},
+    {Tdhw,                      PSTR("dhw_t")},
+    {Toutside,                  PSTR("outside_t")},
+    {Tret,                      PSTR("return_t")},
+    {TflowCH2,                  PSTR("flow_t2")},
+    {Tdhw2,                     PSTR("dhw_t2")},
+    {Texhaust,                  PSTR("exhaust_t")},
+    {TboilerHeatExchanger,      PSTR("boiler_heat_ex_t")},
+    {BoilerFanSpeedSetpointAndActual, PSTR("boiler_fan")},
+    {FlameCurrent,              PSTR("flame_current")},
+    {TrCH2,                     PSTR("room_t2")},
+    {TrOverride2,               PSTR("tr_override2")},           
+    {TdhwSetUBTdhwSetLB,        PSTR("dhw_bounds")},
+    {MaxTSetUBMaxTSetLB,        PSTR("ch_bounds")},
+    {TdhwSet,                   PSTR("dhw_set_t")},
+    {StatusVentilationHeatRecovery, PSTR("vent_status")},
+    {Vset,                      PSTR("rel_vent_set")},
+    {ASFflagsOEMfaultCodeVentilationHeatRecovery, PSTR("vent_fault_flags")},
+    {OpenThermVersionVentilationHeatRecovery,   PSTR("vent_ot_version")},
+    {VentilationHeatRecoveryVersion,    PSTR("vent_prod_version")},
+    {RelVentLevel,              PSTR("rel_vent")},
+    {RHexhaust,                 PSTR("rel_hum_exhaust")},
+    {CO2exhaust,                PSTR("co2_exhaust")},
+    {Tsi,                       PSTR("supply_inlet_t")},
+    {Tso,                       PSTR("supply_outlet_t")},
+    {Tei,                       PSTR("exhaust_inlet_t")},
+    {Teo,                       PSTR("exhaust_outlet_t")},
+    {RPMexhaust,                PSTR("exhaust_fan_speed")},
+    {RPMsupply,                 PSTR("supply_fan_speed")},
+    {Brand,                     PSTR("brand")},
+    {BrandVersion,              PSTR("brand_version")},
+    {BrandSerialNumber,         PSTR("brand_serial")},
+    {PowerCycles,               PSTR("power_cycles")},
+    {RemoteOverrideFunction,    PSTR("remote_override_function")},
+    {UnsuccessfulBurnerStarts,  PSTR("unsuccessful_burner_starts")},
+    {FlameSignalTooLowNumber,   PSTR("num_flame_signal_low")},
+    {OEMDiagnosticCode,         PSTR("oem_diag_code")},
+    {SuccessfulBurnerStarts,    PSTR("burner_starts")},
+    {CHPumpStarts,              PSTR("ch_pump_starts")},
+    {DHWPumpValveStarts,        PSTR("dhw_pump_starts")},
+    {DHWBurnerStarts,           PSTR("dhw_burner_starts")},
+    {BurnerOperationHours,      PSTR("burner_op_hours")},
+    {CHPumpOperationHours,      PSTR("chpump_op_hours")},
+    {DHWPumpValveOperationHours,PSTR("dhwpump_op_hours")},
+    {DHWBurnerOperationHours,   PSTR("dhw_burner_op_hours")},
+    {OpenThermVersionMaster,    PSTR("master_ot_version")},
+    {OpenThermVersionSlave,     PSTR("slave_ot_version")},
+    {MasterVersion,             PSTR("master_prod_version")},
+    {SlaveVersion,              PSTR("slave_prod_version")}
 };
 
 OTValue *slaveValues[55] = { // reply data collected (read) from slave (boiler / ventilation / solar)
     new OTValueSlaveConfigMember(),
-    new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionSlave,      0,                 PSTR("OT-version slave")),
-    new OTValueProductVersion(  OpenThermMessageID::SlaveVersion,               0,                 PSTR("productversion slave")),
+    new OTValueProductVersion(  OpenThermVersionSlave,      0,                 PSTR("OT-version slave")),
+    new OTValueProductVersion(  SlaveVersion,               0,                 PSTR("productversion slave")),
     new OTValueStatus(),
     new OTValueVentStatus(),
     new OTValueCapacityModulation(),
-    new OTValueTempBounds(OpenThermMessageID::TdhwSetUBTdhwSetLB,               PSTR("DHW")),
-    new OTValueTempBounds(OpenThermMessageID::MaxTSetUBMaxTSetLB,               PSTR("CH")),
-    new OTValueFloatTemp(       OpenThermMessageID::TrOverride,                 PSTR("room setpoint override")),
-    new OTValueFloat(           OpenThermMessageID::RelModLevel,                10),
-    new OTValueFloat(           OpenThermMessageID::CHPressure,                 30),
-    new OTValueFloat(           OpenThermMessageID::DHWFlowRate,                10),
-    new OTValueFloatTemp(       OpenThermMessageID::Tboiler,                    PSTR("flow temp.")),
-    new OTValueFloatTemp(       OpenThermMessageID::TflowCH2,                   PSTR("flow temp. 2")),
-    new OTValueFloatTemp(       OpenThermMessageID::Tdhw,                       PSTR("DHW temperature")),
-    new OTValueFloatTemp(       OpenThermMessageID::Tdhw2,                      PSTR("DHW temperature 2")),
-    new OTValueFloatTemp(       OpenThermMessageID::Toutside,                   PSTR("outside temp.")),
-    new OTValueFloatTemp(       OpenThermMessageID::Tret,                       PSTR("return temp.")),
-    new OTValuei16(             OpenThermMessageID::Texhaust,                   10),
-    new OTValueFloatTemp(       OpenThermMessageID::TrOverride2,                PSTR("room setpoint 2 override")),
-    new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionVentilationHeatRecovery,    0, PSTR("OT-version slave")),
-    new OTValueProductVersion(  OpenThermMessageID::VentilationHeatRecoveryVersion,             0, PSTR("productversion slave")),
-    new OTValueu16(             OpenThermMessageID::RelVentLevel,               10),
-    new OTValueu16(             OpenThermMessageID::RHexhaust,                  10),
-    new OTValueu16(             OpenThermMessageID::CO2exhaust,                 10),
-    new OTValueFloatTemp(       OpenThermMessageID::Tsi,                        PSTR("supply inlet temp.")),
-    new OTValueFloatTemp(       OpenThermMessageID::Tso,                        PSTR("supply outlet temp.")),
-    new OTValueFloatTemp(       OpenThermMessageID::Tei,                        PSTR("exhaust inlet temp.")),
-    new OTValueFloatTemp(       OpenThermMessageID::Teo,                        PSTR("exhaust outlet temp.")),
-    new OTValueu16(             OpenThermMessageID::RPMexhaust,                 10),
-    new OTValueu16(             OpenThermMessageID::RPMsupply,                  10),
-    new OTValueu16(             OpenThermMessageID::PowerCycles,                180,    PSTR("power cycles")),
-    new OTValueu16(             OpenThermMessageID::UnsuccessfulBurnerStarts,   60,     PSTR("failed burnerstarts")),
-    new OTValueu16(             OpenThermMessageID::FlameSignalTooLowNumber,    60,     PSTR("Flame sig low")),
-    new OTValueu16(             OpenThermMessageID::OEMDiagnosticCode,          60,     PSTR("OEM diagnostic code")),
-    new OTValueu16(             OpenThermMessageID::SuccessfulBurnerStarts,     60,     PSTR("burnerstarts")),
-    new OTValueu16(             OpenThermMessageID::CHPumpStarts,               60,     PSTR("CH pump starts")),
-    new OTValueu16(             OpenThermMessageID::DHWPumpValveStarts,         60,     PSTR("DHW pump starts")),
-    new OTValueu16(             OpenThermMessageID::DHWBurnerStarts,            60,     PSTR("DHW burnerstarts")),
-    new OTValueOperatingHours(  OpenThermMessageID::BurnerOperationHours,               PSTR("burner op. hours")),
-    new OTValueOperatingHours(  OpenThermMessageID::CHPumpOperationHours,               PSTR("DHW pump op. hours")),
-    new OTValueOperatingHours(  OpenThermMessageID::DHWPumpValveOperationHours,         PSTR("DHW pump/value op. hours")),
-    new OTValueOperatingHours(  OpenThermMessageID::DHWBurnerOperationHours,            PSTR("DHW op. hours")),
+    new OTValueTempBounds(TdhwSetUBTdhwSetLB,               PSTR("DHW")),
+    new OTValueTempBounds(MaxTSetUBMaxTSetLB,               PSTR("CH")),
+    new OTValueFloatTemp(       TrOverride,                 PSTR("room setpoint override")),
+    new OTValueFloat(           RelModLevel,                10),
+    new OTValueFloat(           CHPressure,                 30),
+    new OTValueFloat(           DHWFlowRate,                10),
+    new OTValueFloatTemp(       Tboiler,                    PSTR("flow temp.")),
+    new OTValueFloatTemp(       TflowCH2,                   PSTR("flow temp. 2")),
+    new OTValueFloatTemp(       Tdhw,                       PSTR("DHW temperature")),
+    new OTValueFloatTemp(       Tdhw2,                      PSTR("DHW temperature 2")),
+    new OTValueFloatTemp(       Toutside,                   PSTR("outside temp.")),
+    new OTValueFloatTemp(       Tret,                       PSTR("return temp.")),
+    new OTValuei16(             Texhaust,                   10),
+    new OTValueFloatTemp(       TrOverride2,                PSTR("room setpoint 2 override")),
+    new OTValueProductVersion(  OpenThermVersionVentilationHeatRecovery,    0, PSTR("OT-version slave")),
+    new OTValueProductVersion(  VentilationHeatRecoveryVersion,             0, PSTR("productversion slave")),
+    new OTValueu16(             RelVentLevel,               10),
+    new OTValueu16(             RHexhaust,                  10),
+    new OTValueu16(             CO2exhaust,                 10),
+    new OTValueFloatTemp(       Tsi,                        PSTR("supply inlet temp.")),
+    new OTValueFloatTemp(       Tso,                        PSTR("supply outlet temp.")),
+    new OTValueFloatTemp(       Tei,                        PSTR("exhaust inlet temp.")),
+    new OTValueFloatTemp(       Teo,                        PSTR("exhaust outlet temp.")),
+    new OTValueu16(             RPMexhaust,                 10),
+    new OTValueu16(             RPMsupply,                  10),
+    new OTValueu16(             PowerCycles,                180,    PSTR("power cycles")),
+    new OTValueu16(             UnsuccessfulBurnerStarts,   60,     PSTR("failed burnerstarts")),
+    new OTValueu16(             FlameSignalTooLowNumber,    60,     PSTR("Flame sig low")),
+    new OTValueu16(             OEMDiagnosticCode,          60,     PSTR("OEM diagnostic code")),
+    new OTValueu16(             SuccessfulBurnerStarts,     60,     PSTR("burnerstarts")),
+    new OTValueu16(             CHPumpStarts,               60,     PSTR("CH pump starts")),
+    new OTValueu16(             DHWPumpValveStarts,         60,     PSTR("DHW pump starts")),
+    new OTValueu16(             DHWBurnerStarts,            60,     PSTR("DHW burnerstarts")),
+    new OTValueOperatingHours(  BurnerOperationHours,               PSTR("burner op. hours")),
+    new OTValueOperatingHours(  CHPumpOperationHours,               PSTR("DHW pump op. hours")),
+    new OTValueOperatingHours(  DHWPumpValveOperationHours,         PSTR("DHW pump/value op. hours")),
+    new OTValueOperatingHours(  DHWBurnerOperationHours,            PSTR("DHW op. hours")),
     new OTValueFaultFlags(                                                      30),
     new OTValueRemoteParameter(),
     new OTValueRemoteOverrideFunction(),
@@ -137,34 +139,34 @@ OTValue *slaveValues[55] = { // reply data collected (read) from slave (boiler /
     new OTValueHeatExchangerTemp(),
     new OTValueBoilerFanSpeed(),
     new OTValueFlameCurrent(),
-    new BrandInfo(              OpenThermMessageID::Brand,                              PSTR("brand")),
-    new BrandInfo(              OpenThermMessageID::BrandVersion,                       PSTR("brand version")),
-    new BrandInfo(              OpenThermMessageID::BrandSerialNumber,                  PSTR("brand serial")),
+    new BrandInfo(              Brand,                              PSTR("brand")),
+    new BrandInfo(              BrandVersion,                       PSTR("brand version")),
+    new BrandInfo(              BrandSerialNumber,                  PSTR("brand serial")),
 
-    new OTValueBufSize(         OpenThermMessageID::TSP),
-    new OTValueBufSize(         OpenThermMessageID::FHBsize)
+    new OTValueBufSize(         TSP),
+    new OTValueBufSize(         FHBsize)
 };
 
 
 OTValue *thermostatValues[18] = { // request data sent (written) from roomunit
-    new OTValueFloat(           OpenThermMessageID::TSet,                   -1),
-    new OTValueFloat(           OpenThermMessageID::TsetCH2,                -1),
-    new OTValueFloat(           OpenThermMessageID::Tr,                     -1),
-    new OTValueFloat(           OpenThermMessageID::TrCH2,                  -1),
-    new OTValueFloat(           OpenThermMessageID::TrSet,                  -1),
-    new OTValueFloat(           OpenThermMessageID::TrSetCH2,               -1),
-    new OTValueProductVersion(  OpenThermMessageID::MasterVersion,          -1, PSTR("productversion master")),
-    new OTValueFloat(           OpenThermMessageID::MaxRelModLevelSetting,  -1),
-    new OTValueProductVersion(  OpenThermMessageID::OpenThermVersionMaster, -1, PSTR("OT-version master")),
+    new OTValueFloat(           TSet,                   -1),
+    new OTValueFloat(           TsetCH2,                -1),
+    new OTValueFloat(           Tr,                     -1),
+    new OTValueFloat(           TrCH2,                  -1),
+    new OTValueFloat(           TrSet,                  -1),
+    new OTValueFloat(           TrSetCH2,               -1),
+    new OTValueProductVersion(  MasterVersion,          -1, PSTR("productversion master")),
+    new OTValueFloat(           MaxRelModLevelSetting,  -1),
+    new OTValueProductVersion(  OpenThermVersionMaster, -1, PSTR("OT-version master")),
     new OTValueMasterConfig(),
-    new OTValueFloat(           OpenThermMessageID::TdhwSet,                -1),
+    new OTValueFloat(           TdhwSet,                -1),
     new OTValueMasterStatus(),
     new OTValueVentMasterStatus(),
     new OTValueDayTime(),
     new OTValueDate(),
-    new OTValueu16(             OpenThermMessageID::Year,                   -1),
-    new OTValueu16(             OpenThermMessageID::Vset,                   -1),
-    new OTValueFloat(           OpenThermMessageID::Toutside,               -1)
+    new OTValueu16(             Year,                   -1),
+    new OTValueu16(             Vset,                   -1),
+    new OTValueFloat(           Toutside,               -1)
 };
 
 const char* getOTname(OpenThermMessageID id) {
@@ -203,7 +205,7 @@ OTValue* OTValue::getSlaveValue(const OpenThermMessageID id) {
 }
 
 OTValueSlaveConfigMember* OTValue::getSlaveConfig() {
-    return static_cast<OTValueSlaveConfigMember*>(getSlaveValue(OpenThermMessageID::SConfigSMemberIDcode));
+    return static_cast<OTValueSlaveConfigMember*>(getSlaveValue(SConfigSMemberIDcode));
 }
 
 OTValue* OTValue::getThermostatValue(const OpenThermMessageID id) {
@@ -269,49 +271,49 @@ bool OTValue::sendDiscovery() {
 */
 
     switch (id) {
-        case OpenThermMessageID::CO2exhaust:
+        case CO2exhaust:
             haDisc.createSensor(F("CO2 exhaust"), sName);
             haDisc.setUnit(FPSTR(HA_UNIT_PPM));
             haDisc.setDeviceClass(F("carbon_dioxide"));
             break;
 
-        case OpenThermMessageID::RelModLevel:
+        case RelModLevel:
             haDisc.createPowerFactorSensor(F("rel. modulation"), sName);
             break;
 
-        case OpenThermMessageID::CHPressure:
+        case CHPressure:
             haDisc.createPressureSensor(F("CH pressure"), sName);
             break;
 
-        case OpenThermMessageID::RelVentLevel:
+        case RelVentLevel:
             haDisc.createSensor(F("rel. ventilation"), sName);
             break;
 
-        case OpenThermMessageID::RHexhaust:
+        case RHexhaust:
             haDisc.createSensor(F("humidity exhaust"), sName);
             haDisc.setDeviceClass(F("humidity"));
             haDisc.setUnit(FPSTR(HA_UNIT_PERCENT));
             break;
 
-        case OpenThermMessageID::RPMexhaust:
+        case RPMexhaust:
             haDisc.createSensor(F("exhaust fan speed"), sName);
             haDisc.setUnit(FPSTR(HA_UNIT_RPM));
             break;
 
-        case OpenThermMessageID::RPMsupply:
+        case RPMsupply:
             haDisc.createSensor(F("supply fan speed"), sName);
             haDisc.setUnit(FPSTR(HA_UNIT_RPM));
             break;
 
-        case OpenThermMessageID::TSet:
+        case TSet:
             haDisc.createTempSensor(F("flow set temp."), sName);
             break;
 
-        case OpenThermMessageID::Texhaust:
+        case Texhaust:
             haDisc.createTempSensor(F("exhaust temp."), sName);
             break;
 
-        case OpenThermMessageID::DHWFlowRate:
+        case DHWFlowRate:
             haDisc.createSensor(F("flow rate"), sName);
             haDisc.setUnit(F("L/min"));
             haDisc.setDeviceClass(F("volume_flow_rate"));
@@ -517,7 +519,7 @@ bool OTValueFlags::sendDiscovery() {
 
 
 OTValueStatus::OTValueStatus():
-        OTValueFlags(OpenThermMessageID::Status, -1, flags, sizeof(flags) / sizeof(flags[0]), true) {
+        OTValueFlags(Status, -1, flags, sizeof(flags) / sizeof(flags[0]), true) {
 }
 
 bool OTValueStatus::getChActive(const uint8_t channel) const{
@@ -547,7 +549,7 @@ void OTValueStatus::getValue(JsonVariant var) const {
 
 
 OTValueMasterStatus::OTValueMasterStatus():
-        OTValueFlags(OpenThermMessageID::Status, -1, flags, sizeof(flags) / sizeof(flags[0]), false) {
+        OTValueFlags(Status, -1, flags, sizeof(flags) / sizeof(flags[0]), false) {
 }
 
 void OTValueMasterStatus::getValue(JsonVariant var) const {
@@ -565,12 +567,12 @@ void OTValueMasterStatus::getValue(JsonVariant var) const {
 
 
 OTValueVentStatus::OTValueVentStatus():
-        OTValueFlags(OpenThermMessageID::StatusVentilationHeatRecovery, -1, flags, sizeof(flags) / sizeof(flags[0]), true) {
+        OTValueFlags(StatusVentilationHeatRecovery, -1, flags, sizeof(flags) / sizeof(flags[0]), true) {
 }
 
 
 OTValueVentMasterStatus::OTValueVentMasterStatus():
-        OTValueFlags(OpenThermMessageID::StatusVentilationHeatRecovery, -1, flags, sizeof(flags) / sizeof(flags[0]), false) {
+        OTValueFlags(StatusVentilationHeatRecovery, -1, flags, sizeof(flags) / sizeof(flags[0]), false) {
 }
 
 bool OTValueVentMasterStatus::sendDiscovery() {
@@ -578,7 +580,7 @@ bool OTValueVentMasterStatus::sendDiscovery() {
 }
 
 OTValueSlaveConfigMember::OTValueSlaveConfigMember():
-        OTValueFlags(OpenThermMessageID::SConfigSMemberIDcode, 0, flags, sizeof(flags) / sizeof(flags[0]), true) {
+        OTValueFlags(SConfigSMemberIDcode, 0, flags, sizeof(flags) / sizeof(flags[0]), true) {
 }
 
 void OTValueSlaveConfigMember::getValue(JsonVariant var) const {
@@ -608,7 +610,7 @@ bool OTValueSlaveConfigMember::sendDiscovery() {
 
 
 OTValueFaultFlags::OTValueFaultFlags(const int interval):
-        OTValueFlags(OpenThermMessageID::ASFflags, interval, flags, sizeof(flags) / sizeof(flags[0]), true) {
+        OTValueFlags(ASFflags, interval, flags, sizeof(flags) / sizeof(flags[0]), true) {
 }
 
 void OTValueFaultFlags::getValue(JsonVariant var) const {
@@ -626,7 +628,7 @@ bool OTValueFaultFlags::sendDiscovery() {
 
 
 OTValueVentFaultFlags::OTValueVentFaultFlags(const int interval):
-        OTValueFlags(OpenThermMessageID::ASFflagsOEMfaultCodeVentilationHeatRecovery, interval, flags, sizeof(flags) / sizeof(flags[0]), true) {
+        OTValueFlags(ASFflagsOEMfaultCodeVentilationHeatRecovery, interval, flags, sizeof(flags) / sizeof(flags[0]), true) {
 }
 
 void OTValueVentFaultFlags::getValue(JsonVariant var) const {
@@ -662,7 +664,7 @@ void OTValueProductVersion::getValue(JsonVariant var) const {
 
 
 OTValueCapacityModulation::OTValueCapacityModulation():
-        OTValue(OpenThermMessageID::MaxCapacityMinModLevel, 0) {
+        OTValue(MaxCapacityMinModLevel, 0) {
 }
 
 bool OTValueCapacityModulation::sendDiscovery() {
@@ -710,7 +712,7 @@ bool OTValueTempBounds::sendDiscovery() {
 
 
 OTValueMasterConfig::OTValueMasterConfig():
-        OTValueFlags(OpenThermMessageID::MConfigMMemberIDcode, -1, flags, sizeof(flags) / sizeof(flags[0]), false) {
+        OTValueFlags(MConfigMMemberIDcode, -1, flags, sizeof(flags) / sizeof(flags[0]), false) {
 }
 
 void OTValueMasterConfig::getValue(JsonVariant var) const {
@@ -723,12 +725,12 @@ bool OTValueMasterConfig::sendDiscovery() {
 }
 
 OTValueRemoteParameter::OTValueRemoteParameter():
-        OTValueFlags(OpenThermMessageID::RBPflags, 0, flags, sizeof(flags) / sizeof(flags[0]), true) {
+        OTValueFlags(RBPflags, 0, flags, sizeof(flags) / sizeof(flags[0]), true) {
 }
 
 
 OTValueRemoteOverrideFunction::OTValueRemoteOverrideFunction():
-        OTValueFlags(OpenThermMessageID::RemoteOverrideFunction, 0, flags, sizeof(flags) / sizeof(flags[0]), true) {
+        OTValueFlags(RemoteOverrideFunction, 0, flags, sizeof(flags) / sizeof(flags[0]), true) {
 }
 
 bool OTValueRemoteOverrideFunction::sendDiscovery() {
@@ -736,7 +738,7 @@ bool OTValueRemoteOverrideFunction::sendDiscovery() {
 }
 
 OTValueDayTime::OTValueDayTime():
-        OTValue(OpenThermMessageID::DayTime, 0) {
+        OTValue(DayTime, 0) {
 }
 
 void OTValueDayTime::getValue(JsonVariant var) const {
@@ -751,7 +753,7 @@ bool OTValueDayTime::sendDiscovery() {
 
 
 OTValueDate::OTValueDate():
-        OTValue(OpenThermMessageID::Date, 0) {
+        OTValue(Date, 0) {
 }
 
 void OTValueDate::getValue(JsonVariant var) const {
@@ -765,7 +767,7 @@ bool OTValueDate::sendDiscovery() {
 
 
 OTValueHeatExchangerTemp::OTValueHeatExchangerTemp():
-        OTValueFloat(OpenThermMessageID::TboilerHeatExchanger, 30) {
+        OTValueFloat(TboilerHeatExchanger, 30) {
 }
 
 bool OTValueHeatExchangerTemp::sendDiscovery() {
@@ -775,7 +777,7 @@ bool OTValueHeatExchangerTemp::sendDiscovery() {
 
 
 OTValueBoilerFanSpeed::OTValueBoilerFanSpeed():
-        OTValue(OpenThermMessageID::BoilerFanSpeedSetpointAndActual, 30) {
+        OTValue(BoilerFanSpeedSetpointAndActual, 30) {
 }
 
 void OTValueBoilerFanSpeed::getValue(JsonVariant var) const {
@@ -797,7 +799,7 @@ bool OTValueBoilerFanSpeed::sendDiscovery() {
 
 
 OTValueFlameCurrent::OTValueFlameCurrent():
-        OTValueFloat(OpenThermMessageID::FlameCurrent, 30) {
+        OTValueFloat(FlameCurrent, 30) {
 }
 
 bool OTValueFlameCurrent::sendDiscovery() {

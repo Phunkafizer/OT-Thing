@@ -11,6 +11,8 @@
 const int PI_INTERVAL = 60; // seconds
 const char SLAVE_BRAND[] PROGMEM = "Seegel Systeme";
 
+using enum OpenThermMessageID;
+
 OTControl otcontrol;
 
 constexpr uint16_t floatToOT(double f) {
@@ -26,55 +28,55 @@ const struct {
     OpenThermMessageID id;
     uint16_t value;
 } loopbackTestData[] PROGMEM = {
-    {OpenThermMessageID::SConfigSMemberIDcode,      nib(1<<0 | 1<<5, 1)}, // DHW & CH2 present, Member ID 1
-    {OpenThermMessageID::ASFflags,                  0x0000}, // no error flags, oem error code 0
-    {OpenThermMessageID::RBPflags,                  0x0101},
-    {OpenThermMessageID::TrOverride,                0},
-    {OpenThermMessageID::MaxCapacityMinModLevel,    nib(20, 5)}, // 20 kW / 5 %
-    {OpenThermMessageID::RelModLevel,               floatToOT(33.3)},
-    {OpenThermMessageID::CHPressure,                floatToOT(1.25)},
-    {OpenThermMessageID::DHWFlowRate,               floatToOT(2.4)},
-    {OpenThermMessageID::Tboiler,                   floatToOT(48.5)},
-    {OpenThermMessageID::Tdhw,                      floatToOT(37.5)},
-    {OpenThermMessageID::Toutside,                  floatToOT(3.5)},
-    {OpenThermMessageID::Tret,                      floatToOT(41.7)},
-    {OpenThermMessageID::TflowCH2,                  floatToOT(48.6)},
-    {OpenThermMessageID::Tdhw2,                     floatToOT(37.6)},
-    {OpenThermMessageID::Texhaust,                  90},
-    {OpenThermMessageID::TrOverride2,               0},
-    {OpenThermMessageID::TdhwSetUBTdhwSetLB,        nib(60, 40)}, // 60 °C upper bound, 40 C° lower bound
-    {OpenThermMessageID::MaxTSetUBMaxTSetLB,        nib(60, 25)}, // 60 °C upper bound, 20 C° lower bound
-    {OpenThermMessageID::PowerCycles,               159},
-    {OpenThermMessageID::SuccessfulBurnerStarts,    9999},
-    {OpenThermMessageID::CHPumpStarts,              7777},
-    {OpenThermMessageID::DHWPumpValveStarts,        5544},
-    {OpenThermMessageID::DHWBurnerStarts,           9955},
-    {OpenThermMessageID::BurnerOperationHours,      8888},
-    {OpenThermMessageID::CHPumpOperationHours,      6666},
-    {OpenThermMessageID::DHWPumpValveOperationHours,5555},
-    {OpenThermMessageID::DHWBurnerOperationHours,   2222},
-    {OpenThermMessageID::OpenThermVersionSlave,     nib(2, 2)},
-    {OpenThermMessageID::SlaveVersion,              nib(4, 4)},
-    {OpenThermMessageID::StatusVentilationHeatRecovery, 0x001E},
-    {OpenThermMessageID::RelVentLevel,              55}, // relative ventilation 0..100 %
-    {OpenThermMessageID::RHexhaust,                 45},
-    {OpenThermMessageID::CO2exhaust,                1450}, // PPM
-    {OpenThermMessageID::Tsi,                       floatToOT(22.1)},
-    {OpenThermMessageID::Tso,                       floatToOT(22.2)},
-    {OpenThermMessageID::Tei,                       floatToOT(22.3)},
-    {OpenThermMessageID::Teo,                       floatToOT(22.1)},
-    {OpenThermMessageID::RPMexhaust,                2300},
-    {OpenThermMessageID::RPMsupply,                 2400},
-    {OpenThermMessageID::ASFflagsOEMfaultCodeVentilationHeatRecovery,   0x0F33},
-    {OpenThermMessageID::OpenThermVersionVentilationHeatRecovery,       0x0105},
-    {OpenThermMessageID::VentilationHeatRecoveryVersion,                0x0107},
-    {OpenThermMessageID::RemoteOverrideFunction,    0x0000},
-    {OpenThermMessageID::UnsuccessfulBurnerStarts,  19},
-    {OpenThermMessageID::FlameSignalTooLowNumber,   4},
-    {OpenThermMessageID::OEMDiagnosticCode,         123},
-    {OpenThermMessageID::TboilerHeatExchanger,      floatToOT(48.5)},
-    {OpenThermMessageID::BoilerFanSpeedSetpointAndActual, nib(20, 21)},
-    {OpenThermMessageID::FlameCurrent,              floatToOT(96.8)},
+    {SConfigSMemberIDcode,      nib(1<<0 | 1<<5, 1)}, // DHW & CH2 present, Member ID 1
+    {ASFflags,                  0x0000}, // no error flags, oem error code 0
+    {RBPflags,                  0x0101},
+    {TrOverride,                0},
+    {MaxCapacityMinModLevel,    nib(20, 5)}, // 20 kW / 5 %
+    {RelModLevel,               floatToOT(33.3)},
+    {CHPressure,                floatToOT(1.25)},
+    {DHWFlowRate,               floatToOT(2.4)},
+    {Tboiler,                   floatToOT(48.5)},
+    {Tdhw,                      floatToOT(37.5)},
+    {Toutside,                  floatToOT(3.5)},
+    {Tret,                      floatToOT(41.7)},
+    {TflowCH2,                  floatToOT(48.6)},
+    {Tdhw2,                     floatToOT(37.6)},
+    {Texhaust,                  90},
+    {TrOverride2,               0},
+    {TdhwSetUBTdhwSetLB,        nib(60, 40)}, // 60 °C upper bound, 40 C° lower bound
+    {MaxTSetUBMaxTSetLB,        nib(60, 25)}, // 60 °C upper bound, 20 C° lower bound
+    {PowerCycles,               159},
+    {SuccessfulBurnerStarts,    9999},
+    {CHPumpStarts,              7777},
+    {DHWPumpValveStarts,        5544},
+    {DHWBurnerStarts,           9955},
+    {BurnerOperationHours,      8888},
+    {CHPumpOperationHours,      6666},
+    {DHWPumpValveOperationHours,5555},
+    {DHWBurnerOperationHours,   2222},
+    {OpenThermVersionSlave,     nib(2, 2)},
+    {SlaveVersion,              nib(4, 4)},
+    {StatusVentilationHeatRecovery, 0x001E},
+    {RelVentLevel,              55}, // relative ventilation 0..100 %
+    {RHexhaust,                 45},
+    {CO2exhaust,                1450}, // PPM
+    {Tsi,                       floatToOT(22.1)},
+    {Tso,                       floatToOT(22.2)},
+    {Tei,                       floatToOT(22.3)},
+    {Teo,                       floatToOT(22.1)},
+    {RPMexhaust,                2300},
+    {RPMsupply,                 2400},
+    {ASFflagsOEMfaultCodeVentilationHeatRecovery,   0x0F33},
+    {OpenThermVersionVentilationHeatRecovery,       0x0105},
+    {VentilationHeatRecoveryVersion,                0x0107},
+    {RemoteOverrideFunction,    0x0000},
+    {UnsuccessfulBurnerStarts,  19},
+    {FlameSignalTooLowNumber,   4},
+    {OEMDiagnosticCode,         123},
+    {TboilerHeatExchanger,      floatToOT(48.5)},
+    {BoilerFanSpeedSetpointAndActual, nib(20, 21)},
+    {FlameCurrent,              floatToOT(96.8)},
 };
 
 
@@ -225,7 +227,7 @@ void OTControl::FlameRatio::update() {
 }
 
 void OTControl::FlameRatio::loop() {
-    OTValueStatus *ots = static_cast<OTValueStatus*>(OTValue::getSlaveValue(OpenThermMessageID::Status));
+    OTValueStatus *ots = static_cast<OTValueStatus*>(OTValue::getSlaveValue(Status));
     if (ots)
         set(ots->getFlame());
 
@@ -565,7 +567,7 @@ void OTControl::loop() {
                     hb |= 1<<2;
                 if (ventCtrl.freeVentEnable)
                     hb |= 1<<3;
-                unsigned long req = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, OpenThermMessageID::StatusVentilationHeatRecovery, hb << 8);
+                unsigned long req = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, StatusVentilationHeatRecovery, hb << 8);
                 sendRequest('T', req);
                 return;
             }
@@ -579,7 +581,7 @@ void OTControl::loop() {
 }
 
 void OTControl::loopPiCtrl() {
-    OTValueStatus *ots = static_cast<OTValueStatus*>(OTValue::getSlaveValue(OpenThermMessageID::Status));
+    OTValueStatus *ots = static_cast<OTValueStatus*>(OTValue::getSlaveValue(Status));
     for (int i=0; i<2; i++) {
         setBoilerRequest[i].force();
 
@@ -694,13 +696,13 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         // replies can be modified here
 
         switch (id) {
-        case OpenThermMessageID::Toutside: {
+        case Toutside: {
             double ost;
             if ( !outsideTemp.isOtSource() && outsideTemp.get(ost) && (mt != OpenThermMessageType::WRITE_ACK) )
                 newMsg = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, tmpToData(ost));
             break;
         }
-        case OpenThermMessageID::TdhwSet: {
+        case TdhwSet: {
             if (boilerCtrl.overrideDhw && (mt == OpenThermMessageType::READ_ACK)) {
                 // roomunit tried to read dhw set temp. Catch it in order to force writing DHW setpoint by roomunit.
                 newMsg = OpenTherm::buildResponse(OpenThermMessageType::DATA_INVALID, id, 0x0000);
@@ -727,19 +729,19 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         switch (mt) {
         case OpenThermMessageType::READ_ACK:
             switch (id) {
-            case OpenThermMessageID::Toutside:
+            case Toutside:
                 outsideTemp.set(OpenTherm::getFloat(msg), OutsideTemp::SOURCE_OT);
                 break;
-            case OpenThermMessageID::Tr:
+            case Tr:
                 roomTemp[0].set(OpenTherm::getFloat(msg), OutsideTemp::SOURCE_OT);
                 break;
-            case OpenThermMessageID::TrCH2:
+            case TrCH2:
                 roomTemp[1].set(OpenTherm::getFloat(msg), OutsideTemp::SOURCE_OT);
                 break;
-            case OpenThermMessageID::TrSet:
+            case TrSet:
                 roomSetPoint[0].set(OpenTherm::getFloat(msg), OutsideTemp::SOURCE_OT);
                 break;
-            case OpenThermMessageID::TrSetCH2:
+            case TrSetCH2:
                 roomSetPoint[1].set(OpenTherm::getFloat(msg), OutsideTemp::SOURCE_OT);
                 break;
             default:
@@ -796,14 +798,14 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
         case OpenThermMessageType::READ_DATA: {
             OTValue *otval = OTValue::getSlaveValue(id);
             switch (id) {
-            case OpenThermMessageID::Toutside: {
+            case Toutside: {
                 double t;
                 if (outsideTemp.get(t))
                     resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, tmpToData(t));
                 break;
             }
 
-            case OpenThermMessageID::DayTime: {
+            case DayTime: {
                 struct tm timeinfo;
                 if (getLocalTime(&timeinfo, 0)) {
                     const uint16_t tmp = ((((timeinfo.tm_wday + 1) % 7) + 1) << 13) | (timeinfo.tm_hour << 8) | timeinfo.tm_min;
@@ -812,7 +814,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 break;
             }
 
-            case OpenThermMessageID::Date: {
+            case Date: {
                 struct tm timeinfo;
                 if (getLocalTime(&timeinfo, 0)) {
                     const uint16_t tmp = ((timeinfo.tm_mon + 1) << 8) | timeinfo.tm_mday;
@@ -821,7 +823,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 break;
             }
 
-            case OpenThermMessageID::Year: {
+            case Year: {
                 struct tm timeinfo;
                 if (getLocalTime(&timeinfo, 0)) {
                     const uint16_t tmp = timeinfo.tm_year + 1900;
@@ -830,19 +832,19 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 break;
             }
 
-            case OpenThermMessageID::Brand: {
+            case Brand: {
                 String brand = PSTR(SLAVE_BRAND);
                 resp = buildBrandResponse(id, brand, msg >> 8);
                 break;
             }
 
-            case OpenThermMessageID::BrandVersion: {
+            case BrandVersion: {
                 String brandVersion = PSTR(BUILD_VERSION);
                 resp = buildBrandResponse(id, brandVersion, msg >> 8);
                 break;
             }
 
-            case OpenThermMessageID::BrandSerialNumber: {
+            case BrandSerialNumber: {
                 String mac = WiFi.macAddress();
                 resp = buildBrandResponse(id, mac, msg >> 8);
                 break;
@@ -861,7 +863,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             slave.sendResponse(resp, 'P');
 
             switch (id) {
-            case OpenThermMessageID::TSet:
+            case TSet:
                 if (heatingCtrl[0].overrideFlow) {
                     heatingCtrl[0].mode = CTRLMODE_ON;
                     heatingCtrl[0].flowTemp = OpenTherm::getFloat(msg);
@@ -883,22 +885,22 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
         // WRITE commands to boiler can be modified here
 
         switch (id) {
-        case OpenThermMessageID::TSet:
+        case TSet:
             if ( (heatingCtrl[0].overrideFlow) && (mt == OpenThermMessageType::WRITE_DATA) )
                 newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(getFlow(0)));
             break;
 
-        case OpenThermMessageID::TsetCH2:
+        case TsetCH2:
             if ( (heatingCtrl[1].overrideFlow) && (mt == OpenThermMessageType::WRITE_DATA) )
                 newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(getFlow(1)));
             break;
 
-        case OpenThermMessageID::TdhwSet:
+        case TdhwSet:
             if ( boilerCtrl.overrideDhw && (mt == OpenThermMessageType::WRITE_DATA) )
                 newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(boilerCtrl.dhwTemp));
             break;
 
-        case OpenThermMessageID::Status:
+        case Status:
             if (heatingCtrl[0].overrideFlow) {
                 if (heatingCtrl[0].mode == CtrlMode::CTRLMODE_OFF)
                     newMsg &= ~(1<<8); // CH1 disable
@@ -945,7 +947,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             uint32_t reply = OpenTherm::buildResponse(OpenThermMessageType::UNKNOWN_DATA_ID, id, msg & 0xFFFF);
 
             switch (id) {
-            case OpenThermMessageID::Status: {
+            case Status: {
                 uint8_t temp = millis() / 206723;
                 uint8_t x = ((temp % 3) == 0) ? 0 : 1;
                 uint16_t data = x<<3; // flame on
@@ -961,19 +963,19 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 break;
             }
 
-            case OpenThermMessageID::Brand: {
+            case Brand: {
                 String brand = PSTR(SLAVE_BRAND);
                 reply = buildBrandResponse(id, brand, msg >> 8);
                 break;
             }
 
-            case OpenThermMessageID::BrandVersion: {
+            case BrandVersion: {
                 String brandVersion = PSTR(BUILD_VERSION);
                 reply = buildBrandResponse(id, brandVersion, msg >> 8);
                 break;
             }
 
-            case OpenThermMessageID::BrandSerialNumber: {
+            case BrandSerialNumber: {
                 String mac = WiFi.macAddress();
                 reply = buildBrandResponse(id, mac, msg >> 8);
                 break;
@@ -1004,22 +1006,22 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
     }   
 
     if ( (mt == OpenThermMessageType::WRITE_DATA) || 
-         (id == OpenThermMessageID::Status) || 
-         (id == OpenThermMessageID::StatusVentilationHeatRecovery) ||
-         (id == OpenThermMessageID::TrSet) // roomunit "RAM 786" sends TrSet as READ command (out of spec!)
+         (id == Status) || 
+         (id == StatusVentilationHeatRecovery) ||
+         (id == TrSet) // roomunit "RAM 786" sends TrSet as READ command (out of spec!)
        ) {
         double d = OpenTherm::getFloat(newMsg);
         switch (id) {
-        case OpenThermMessageID::Tr:
+        case Tr:
             roomTemp[0].set(d, Sensor::SOURCE_OT);
             break;
-        case OpenThermMessageID::TrSet:
+        case TrSet:
             roomSetPoint[0].set(d, Sensor::SOURCE_OT);
             break;
-        case OpenThermMessageID::TrCH2:
+        case TrCH2:
             roomTemp[1].set(d, Sensor::SOURCE_OT);
             break;
-        case OpenThermMessageID::TrSetCH2:
+        case TrSetCH2:
             roomSetPoint[1].set(d, Sensor::SOURCE_OT);
             break;
         default:
@@ -1064,7 +1066,7 @@ void OTControl::getJson(JsonObject &obj) {
     jSlave[F("rxCount")] = master.rxCount;
     if ( (otMode == OTMODE_MASTER) || (otMode == OTMODE_LOOPBACKTEST) )
         jSlave[F("timeouts")] = master.timeoutCount;
-    if (OTValue::getSlaveValue(OpenThermMessageID::Status)->isSet()) {
+    if (OTValue::getSlaveValue(Status)->isSet()) {
         jSlave[F("flameRatio")] = flameRatio.getDuty();
         jSlave[F("flameFreq")] = flameRatio.getFreq();
     }

@@ -67,13 +67,13 @@ void HADiscovery::init(String &name, String &id, String component) {
     dev[FPSTR(HA_IDENTIFIERS)][0] = devPrefix;
     dev[FPSTR(HA_SW_VERSION)] = BUILD_VERSION;
     dev[FPSTR(HA_NAME)] = devName;
-    dev[FPSTR(HA_MANUFACTURER)] = manufacturer;
+    dev[FPSTR(HA_MANUFACTURER)] = FPSTR(manufacturer);
 
     doc[FPSTR(HA_NAME)] = name;
     doc[FPSTR(HA_UNIQUE_ID)] = devPrefix + "_" + id;
 
     topic = ha_prefix;
-    topic += '/' + component + '/' + devPrefix + '/' + id + "/config";
+    topic += '/' + component + '/' + devPrefix + '/' + id + F("/config");
 
     setStateTopic(defaultStateTopic);
 }

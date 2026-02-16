@@ -144,7 +144,7 @@ def after_upload(source, target, env):
         
         print("Bring target to config mode & press enter")
         input("")
-        os.system('cmd /c netsh wlan connect name = "OT Thing"')
+        os.system('cmd /c netsh wlan connect name = "OTthing"')
         time.sleep(2)
         webbrowser.open('http://4.3.2.1')
         print("Press enter to send default config to target")
