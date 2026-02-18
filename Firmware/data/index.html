@@ -154,6 +154,12 @@
             padding: 3px;
         }
 
+        #curvePoints1 input[type=number],
+        #curvePoints2 input[type=number] {
+            width: 4.5em;
+            text-align: right;
+        }
+
         input[type=range] {
             -webkit-appearance: none;
             background: #fd975a;
@@ -2538,14 +2544,14 @@
                         outInput.value = points[entry.idx].out;
                         flowInput.value = points[entry.idx].flow;
                         outInput.oninput = (ev) => {
-                            hcfg.curvePoints[entry.idx].out = parseFloat(ev.target.value);
+                            hcfg.curvePoints[entry.idx].out = roundToStep(parseFloat(ev.target.value), 0.5);
                             hcfg.curvePoints = normalizeCurvePoints(hcfg.curvePoints);
                             outInput.value = hcfg.curvePoints[entry.idx].out;
                             flowInput.value = hcfg.curvePoints[entry.idx].flow;
                             drawCurve(ch);
                         };
                         flowInput.oninput = (ev) => {
-                            hcfg.curvePoints[entry.idx].flow = parseFloat(ev.target.value);
+                            hcfg.curvePoints[entry.idx].flow = roundToStep(parseFloat(ev.target.value), 0.5);
                             hcfg.curvePoints = normalizeCurvePoints(hcfg.curvePoints);
                             outInput.value = hcfg.curvePoints[entry.idx].out;
                             flowInput.value = hcfg.curvePoints[entry.idx].flow;
@@ -2940,9 +2946,9 @@
         function calcLinearFlow(outTemp, hcfg, roomset) {
             let flowmax = hcfg.flowMax ?? 40;
             let gradient = hcfg.gradient ?? 1.0;
+            let exponent = hcfg.exponent ?? 1.0;
             let offset = hcfg.offset ?? 0.0;
-            let ft = roomset + gradient * (roomset - outTemp) + offset;
-            return clamp(ft, 20, flowmax);
+            return getFlowTemperature(outTemp, roomset, flowmax, exponent, gradient, offset);
         }
 
         function ensureCurvePoints(hcfg, roomset) {
@@ -2954,7 +2960,10 @@
                 const current = hcfg.curvePoints[i] || {};
                 const outTemp = (current.out ?? defaults[i]);
                 const flowTemp = (current.flow ?? calcLinearFlow(outTemp, hcfg, roomset));
-                points.push({ out: outTemp, flow: flowTemp });
+                points.push({
+                    out: roundToStep(outTemp, 0.5),
+                    flow: roundToStep(flowTemp, 0.5)
+                });
             }
             hcfg.curvePoints = normalizeCurvePoints(points);
             return hcfg.curvePoints;
@@ -3000,25 +3009,12 @@
         }
 
         function calcHeatingLogicBaseFlow(outTemp, hcfg, roomset) {
+            if ((hcfg.curveMode ?? 0) !== 1)
+                return null;
             let flowmax = hcfg.flowMax ?? 40;
             let minFlow = hcfg.minFlow ?? 20;
-            let curveMode = hcfg.curveMode ?? 0;
-            let ft = null;
-
-            if (curveMode === 1) {
-                const points = ensureCurvePoints(hcfg, roomset);
-                ft = getFourPointFlow(outTemp, points);
-            } else {
-                let gradient = hcfg.gradient ?? 1.0;
-                let exponent = hcfg.exponent ?? 1.0;
-                let offset = hcfg.offset ?? 0.0;
-                let delta = roomset - outTemp;
-                let shaped = delta;
-                if (delta > 0.0 && exponent > 0.0)
-                    shaped = Math.pow(delta, 1.0 / exponent);
-                ft = roomset + gradient * shaped + offset;
-            }
-
+            const points = ensureCurvePoints(hcfg, roomset);
+            let ft = getFourPointFlow(outTemp, points);
             if (ft === null)
                 return null;
             return clamp(ft, minFlow, flowmax);
@@ -3296,14 +3292,16 @@
             if (rc?.enabled === true) {
                 const hcs = statuscache?.heatercircuit?.[hk - 1];
                 if (hcs?.roomtemp !== undefined)
-                    roomdelta = (rc.p ?? 0) * (roomset - (hcs.roomtemp ?? 0)) + hcs.integState ?? 0;
+                    roomdelta = (rc.p ?? 0) * (roomset - (hcs.roomtemp ?? 0)) + (hcs.integState ?? 0);
             }
 
             let gradient = parseFloat(_("#gradient" + hk + " input").value);
             let exponent = parseFloat(_("#exponent" + hk + " input").value);
             let offset = parseFloat(_("#offset" + hk + " input").value);
             let curveMode = hcfg.curveMode ?? 0;
-            let curvePoints = ensureCurvePoints(hcfg, roomset);
+            let curvePoints = null;
+            if (curveMode === 1)
+                curvePoints = ensureCurvePoints(hcfg, roomset);
 
             function getPoint(ot, ft) {
                 return {
@@ -3388,7 +3386,7 @@
                 }
             } else {
                 let otStart = Math.min(roomset, xaxis.min);
-                let ft = calcHeatingLogicBaseFlow(otStart, hcfg, roomset);
+                let ft = getFlowTemperature(otStart, roomset, flowmax, exponent, gradient, offset);
                 let p1 = getPoint(otStart, ft); //foot
 
                 drawMarkerPoint(p1, '#A33');
@@ -3396,13 +3394,13 @@
                 function drawFlowCurve(color, delta) {
                     ctx.strokeStyle = color;
                     ctx.lineWidth = 3;
-                    let ft = calcHeatingLogicBaseFlow(otStart, hcfg, roomset) + delta;
+                    let ft = getFlowTemperature(otStart, roomset, flowmax, exponent, gradient, offset) + delta;
                     let p = getPoint(otStart, ft);
                     ctx.beginPath();
                     ctx.moveTo(p.x, p.y);
                     let otf = false;
                     for (var ot = otStart; ot >= xaxis.max; ot -= 0.5) {
-                        ft = calcHeatingLogicBaseFlow(ot, hcfg, roomset) + delta;
+                        ft = getFlowTemperature(ot, roomset, flowmax, exponent, gradient, offset) + delta;
 
                         if ((ft >= flowmax) && !otf) {
                             ctx.stroke();
@@ -3421,14 +3419,17 @@
                     ctx.stroke();
                 }
                 drawFlowCurve("#F00", 0);
+                if (roomdelta != 0)
+                    drawFlowCurve("#0F0", roomdelta);
 
                 //draw curve's basepoint
                 drawMarkerPoint(p1, '#F00');
 
-
                 if (statuscache.outsideTemp !== undefined) {
                     //draw outsidetemp & it's flowtemperature
-                    let ftsensor = calcHeatingLogicActualFlow(statuscache.outsideTemp, hcfg, roomset, roomdelta);
+                    let ftsensor = getFlowTemperature(statuscache.outsideTemp, roomset, flowmax, exponent, gradient, offset) + roomdelta;
+                    if (ftsensor > flowmax)
+                        ftsensor = flowmax;
                     let psensor = getPoint(statuscache.outsideTemp, ftsensor);
                     drawMarkerPoint(psensor, '#F83');
                     ctx.strokeStyle = "#F83";

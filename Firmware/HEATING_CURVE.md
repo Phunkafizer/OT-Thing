@@ -38,6 +38,7 @@ matches the HeatingLogic P1..P4 definition.
       "minFlow": 25,
       "flowMax": 75,
       "gradient": 1.2,
+      "exponent": 1.3,
       "roomsetpoint": { "temp": 20 },
       "curvePoints": [
         { "out": -15, "flow": 70 },
@@ -52,6 +53,5 @@ matches the HeatingLogic P1..P4 definition.
 
 ## Notes
 
-- `exponent` is still stored in config.json for compatibility, but
-  the HeatingLogic class does not use it.
-- Linear mode uses: `flow = baseTemp + linearSlope * (baseTemp - outside) + offset`.
+- `exponent` is used in Linear Mode to shape the curve (radiator characteristics).
+- Linear mode uses: `flow = baseTemp + linearSlope * (baseTemp - outside)^(1/exponent) + offset`.
