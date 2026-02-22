@@ -1525,14 +1525,14 @@ void OTControl::setConfig(JsonObject &config) {
         hlc.tMin = hc.minFlow;
         hlc.tMax = hc.flowMax;
         hlc.hysteresis = hc.hysteresis;
-        hlc.p1_out = hc.curvePoints[3].outside;
-        hlc.p1_flow = hc.curvePoints[3].flow;
-        hlc.p2_out = hc.curvePoints[2].outside;
-        hlc.p2_flow = hc.curvePoints[2].flow;
-        hlc.p3_out = hc.curvePoints[1].outside;
-        hlc.p3_flow = hc.curvePoints[1].flow;
-        hlc.p4_out = hc.curvePoints[0].outside;
-        hlc.p4_flow = hc.curvePoints[0].flow;
+        hlc.points[0].out = hc.curvePoints[3].outside;
+        hlc.points[0].flow = hc.curvePoints[3].flow;
+        hlc.points[1].out = hc.curvePoints[2].outside;
+        hlc.points[1].flow = hc.curvePoints[2].flow;
+        hlc.points[2].out = hc.curvePoints[1].outside;
+        hlc.points[2].flow = hc.curvePoints[1].flow;
+        hlc.points[3].out = hc.curvePoints[0].outside;
+        hlc.points[3].flow = hc.curvePoints[0].flow;
     }
 
     JsonObject ventObj = config[F("vent")];

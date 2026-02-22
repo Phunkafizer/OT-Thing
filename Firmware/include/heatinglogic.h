@@ -14,10 +14,10 @@ struct HeatingConfig {
   float tMax;         // Global maximum temperature
 
   // 4-point definition
-  float p1_out, p1_flow; 
-  float p2_out, p2_flow; 
-  float p3_out, p3_flow; 
-  float p4_out, p4_flow; 
+  struct CurvePoint {
+    float out;
+    float flow;
+  } points[4];
   
   float hysteresis;      
 };
@@ -44,10 +44,10 @@ class HeatingLogic {
       config.hysteresis = 2.0; 
       
       // Viessmann-like curve
-      config.p1_out = 18.0; config.p1_flow = 20.0; 
-      config.p2_out = 10.0; config.p2_flow = 38.0; 
-      config.p3_out = 0.0;  config.p3_flow = 50.0; 
-      config.p4_out = -15.0; config.p4_flow = 65.0; 
+      config.points[0] = {18.0, 20.0};
+      config.points[1] = {10.0, 38.0};
+      config.points[2] = {0.0, 50.0};
+      config.points[3] = {-15.0, 65.0};
     }
 
     float interpolate(float x, float x1, float y1, float x2, float y2) {
@@ -79,8 +79,8 @@ class HeatingLogic {
       // 1. Summer/winter (global, also for linear if desired,
       // but usually linear already uses tMin. Keep it active for 4-point mode.)
       if (config.active) {
-        float limitOff = config.p1_out + (config.hysteresis / 2.0);
-        float limitOn = config.p1_out - (config.hysteresis / 2.0);
+        float limitOff = config.points[0].out + (config.hysteresis / 2.0);
+        float limitOn = config.points[0].out - (config.hysteresis / 2.0);
         
         if (_isSummerMode && calcTemp < limitOn) _isSummerMode = false;
         else if (!_isSummerMode && calcTemp > limitOff) _isSummerMode = true;
@@ -100,11 +100,16 @@ class HeatingLogic {
         target = config.baseTemp + config.linearSlope * shaped + config.linearOffset;
       } else {
         // --- 4-PUNKT ---
-        if (calcTemp >= config.p1_out) target = config.p1_flow; 
-        else if (calcTemp <= config.p4_out) target = config.p4_flow;
-        else if (calcTemp > config.p2_out) target = interpolate(calcTemp, config.p1_out, config.p1_flow, config.p2_out, config.p2_flow);
-        else if (calcTemp > config.p3_out) target = interpolate(calcTemp, config.p2_out, config.p2_flow, config.p3_out, config.p3_flow);
-        else target = interpolate(calcTemp, config.p3_out, config.p3_flow, config.p4_out, config.p4_flow);
+        const auto &p1 = config.points[0];
+        const auto &p2 = config.points[1];
+        const auto &p3 = config.points[2];
+        const auto &p4 = config.points[3];
+
+        if (calcTemp >= p1.out) target = p1.flow; 
+        else if (calcTemp <= p4.out) target = p4.flow;
+        else if (calcTemp > p2.out) target = interpolate(calcTemp, p1.out, p1.flow, p2.out, p2.flow);
+        else if (calcTemp > p3.out) target = interpolate(calcTemp, p2.out, p2.flow, p3.out, p3.flow);
+        else target = interpolate(calcTemp, p3.out, p3.flow, p4.out, p4.flow);
       }
 
       // 3. Limits
