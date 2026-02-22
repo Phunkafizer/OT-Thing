@@ -4,16 +4,16 @@
 #include <Arduino.h>
 
 struct HeatingConfig {
-  bool active;        // True = 4-Punkt, False = Linear
-  float linearSlope;  // Steigung
-  float baseTemp;     // Basis Raumtemp (Drehpunkt)
-  float linearOffset; // NEU: Parallelverschiebung (Niveau)
-  float exponent;     // Heizkoerper-Exponent fuer Kurvenform
+  bool active;        // True = 4-point, false = linear
+  float linearSlope;  // Slope
+  float baseTemp;     // Base room temp (pivot)
+  float linearOffset; // NEW: vertical shift (level)
+  float exponent;     // Radiator exponent for curve shape
   
-  float tMin;         // Globale Minimaltemperatur
-  float tMax;         // Globale Maximaltemperatur
+  float tMin;         // Global minimum temperature
+  float tMax;         // Global maximum temperature
 
-  // 4-Punkt Definition
+  // 4-point definition
   float p1_out, p1_flow; 
   float p2_out, p2_flow; 
   float p3_out, p3_flow; 
@@ -36,14 +36,14 @@ class HeatingLogic {
       config.active = false; 
       config.linearSlope = 1.2;
       config.baseTemp = 20.0;
-      config.linearOffset = 0.0; // Standard: Kein Offset
+      config.linearOffset = 0.0; // Default: no offset
       config.exponent = 1.0;
       
       config.tMin = 25.0; 
       config.tMax = 75.0;
       config.hysteresis = 2.0; 
       
-      // Viessmann-ähnliche Kurve
+      // Viessmann-like curve
       config.p1_out = 18.0; config.p1_flow = 20.0; 
       config.p2_out = 10.0; config.p2_flow = 38.0; 
       config.p3_out = 0.0;  config.p3_flow = 50.0; 
@@ -58,14 +58,14 @@ class HeatingLogic {
     void updateOutdoorTemp(float currentRaw) {
       if (currentRaw < -50 || currentRaw > 60) return;
       
-      // Zeitbremse: Nur alle 10 Sekunden updaten für Trägheit
+      // Rate limit: update only every 10 seconds for inertia
       if (millis() - _lastUpdate < 10000 && _smoothedTemp > -900) return;
       _lastUpdate = millis();
 
       if (_smoothedTemp <= -900.0) {
         _smoothedTemp = currentRaw; 
       } else {
-        float alpha = 0.1; // Trägheit
+        float alpha = 0.1; // Inertia
         _smoothedTemp = (alpha * currentRaw) + ((1.0 - alpha) * _smoothedTemp);
       }
     }
@@ -76,9 +76,8 @@ class HeatingLogic {
       float calcTemp = _smoothedTemp;
       float target = config.tMin;
 
-      // 1. Sommer/Winter (gilt global, auch für Linear wenn gewünscht, 
-      // aber meistens ist das in Linear einfach durch tMin abgedeckt. 
-      // Wir lassen es hier für den 4-Punkt Modus aktiv)
+      // 1. Summer/winter (global, also for linear if desired,
+      // but usually linear already uses tMin. Keep it active for 4-point mode.)
       if (config.active) {
         float limitOff = config.p1_out + (config.hysteresis / 2.0);
         float limitOn = config.p1_out - (config.hysteresis / 2.0);
@@ -89,10 +88,10 @@ class HeatingLogic {
         if (_isSummerMode) return 0.0; 
       }
 
-      // 2. Kurven-Berechnung
+      // 2. Curve calculation
       if (!config.active) {
         // --- LINEAR ---
-        // Formel: Basis + Steigung*(Basis - Außen)^(1/exponent) + OFFSET
+        // Formula: base + slope*(base - outdoor)^(1/exponent) + offset
         float delta = config.baseTemp - calcTemp;
         float shaped = delta;
         if (delta > 0.0f && config.exponent > 0.0f) {
