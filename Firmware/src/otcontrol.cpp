@@ -415,6 +415,12 @@ double OTControl::getFlow(const uint8_t channel) {
     flow += hctrl.piCtrl.deltaT;
     clip(flow, hc.tMin, hc.tMax);
 
+    //Add adaptiveMinFlow to stabilize min flow handling
+
+    // Introduce adaptiveMinFlow as a dedicated component to compute an effective minimum
+    // flow based on runtime signal(s) and configuration. This centralizes min-flow
+    // logic, improves robustness against invalid inputs, and enables future tuning.
+
     double adaptiveMinFlow = hc.tMin;
     if ((heatingCtrl[channel].mode == CTRLMODE_AUTO) && hasOutside) {
         double rt;
