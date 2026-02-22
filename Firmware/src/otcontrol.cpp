@@ -433,47 +433,9 @@ double OTControl::getFlow(const uint8_t channel) {
         }
     }
 
-    if (retLimit.enabled && (flow > 0)) {
-        double retTemp;
-        if (getReturnTemp(retTemp)) {
-            static bool retLimitActive = false;
-            if (retLimitActive) {
-                if (retTemp < retLimit.maxReturn - retLimit.hysteresis * 0.5)
-                    retLimitActive = false;
-            }
-            else {
-                if (retTemp > retLimit.maxReturn + retLimit.hysteresis * 0.5)
-                    retLimitActive = true;
-            }
-
-            if (retLimitActive) {
-                double reduction = (retTemp - retLimit.maxReturn) * retLimit.gain;
-                if (reduction > 0) {
-                    flow -= reduction;
-                    if (flow < retLimit.minFlow)
-                        flow = retLimit.minFlow;
-                }
-            }
-        }
-    }
     clip(flow, adaptiveMinFlow, hc.tMax);
 
     return flow;
-}
-
-bool OTControl::getReturnTemp(double &retTemp) {
-    OTValue *val = OTValue::getSlaveValue(Tret);
-    if ((val == nullptr) || !val->isSet())
-        return false;
-
-    uint16_t raw = val->getValue();
-    int8_t i = raw >> 8;
-    if (i >= 0)
-        retTemp = i + (raw & 0xFF) / 256.0;
-    else
-        retTemp = i - (raw & 0xFF) / 256.0;
-
-    return true;
 }
 
 void OTControl::hwYield() {
@@ -1548,13 +1510,6 @@ void OTControl::setConfig(JsonObject &config) {
     boilerConfig.otc = boiler[F("otc")] | false;
     boilerConfig.summerMode = boiler[F("summerMode")] | false;
     boilerConfig.dhwBlocking = boiler[F("dhwBlocking")] | false;
-    JsonObject retObj = boiler[F("returnLimit")];
-    retLimit.enabled = retObj[F("enabled")] | false;
-    retLimit.maxReturn = retObj[F("maxReturn")] | 57.0;
-    retLimit.minFlow = retObj[F("minFlow")] | 0.0;
-    retLimit.gain = retObj[F("gain")] | 1.0;
-    retLimit.hysteresis = retObj[F("hysteresis")] | 0.5;
-
     masterMemberId = config[F("masterMemberId")] | 22;
 
     slaveApp = (SlaveApplication) ((int) config[F("slaveApp")] | 0);

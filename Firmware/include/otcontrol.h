@@ -46,7 +46,6 @@ private:
     void masterPinIrq();
     void slavePinIrq();
     double getFlow(const uint8_t channel);
-    bool getReturnTemp(double &retTemp);
     uint16_t tmpToData(const double tmpf);
     void hwYield();
     unsigned long buildBrandResponse(const OpenThermMessageID id, const String &str, const uint8_t idx);
@@ -97,13 +96,6 @@ private:
         bool summerMode;
         bool dhwBlocking;
     } boilerConfig;
-    struct {
-        bool enabled;
-        double maxReturn;
-        double minFlow;
-        double gain;
-        double hysteresis;
-    } retLimit;
     struct {
         bool dhwOn;
         double dhwTemp;
