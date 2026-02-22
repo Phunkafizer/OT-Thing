@@ -1,7 +1,9 @@
 #include "heatinglogic.h"
+#include <math.h>
 
 HeatingLogic::HeatingLogic() {
   // Defaults
+  config.chOn = false;
   config.active = false;
   config.linearSlope = 1.2;
   config.baseTemp = 20.0;
@@ -10,7 +12,13 @@ HeatingLogic::HeatingLogic() {
 
   config.tMin = 25.0;
   config.tMax = 75.0;
+  config.flow = 35.0;
+  config.enableHyst = false;
   config.hysteresis = 2.0;
+  config.roomComp.enabled = false;
+  config.roomComp.p = 0.0;
+  config.roomComp.i = 0.0;
+  config.roomComp.boost = 3.0;
 
   // Viessmann-like curve
   config.points[0] = {18.0, 20.0};
@@ -19,12 +27,12 @@ HeatingLogic::HeatingLogic() {
   config.points[3] = {-15.0, 65.0};
 }
 
-float HeatingLogic::interpolate(float x, float x1, float y1, float x2, float y2) {
-  if (abs(x2 - x1) < 0.001) return y1;
+double HeatingLogic::interpolate(double x, double x1, double y1, double x2, double y2) {
+  if (fabs(x2 - x1) < 0.001) return y1;
   return y1 + (x - x1) * (y2 - y1) / (x2 - x1);
 }
 
-void HeatingLogic::updateOutdoorTemp(float currentRaw) {
+void HeatingLogic::updateOutdoorTemp(double currentRaw) {
   if (currentRaw < -50 || currentRaw > 60) return;
 
   // Rate limit: update only every 10 seconds for inertia
@@ -34,22 +42,22 @@ void HeatingLogic::updateOutdoorTemp(float currentRaw) {
   if (_smoothedTemp <= -900.0) {
     _smoothedTemp = currentRaw;
   } else {
-    float alpha = 0.1; // Inertia
+    double alpha = 0.1; // Inertia
     _smoothedTemp = (alpha * currentRaw) + ((1.0 - alpha) * _smoothedTemp);
   }
 }
 
-float HeatingLogic::getCalculatedSetpoint() {
+double HeatingLogic::getCalculatedSetpoint() {
   if (_smoothedTemp <= -900.0) return config.tMin;
 
-  float calcTemp = _smoothedTemp;
-  float target = config.tMin;
+  double calcTemp = _smoothedTemp;
+  double target = config.tMin;
 
   // 1. Summer/winter (global, also for linear if desired,
   // but usually linear already uses tMin. Keep it active for 4-point mode.)
   if (config.active) {
-    float limitOff = config.points[0].out + (config.hysteresis / 2.0);
-    float limitOn = config.points[0].out - (config.hysteresis / 2.0);
+    double limitOff = config.points[0].out + (config.hysteresis / 2.0);
+    double limitOn = config.points[0].out - (config.hysteresis / 2.0);
 
     if (_isSummerMode && calcTemp < limitOn) _isSummerMode = false;
     else if (!_isSummerMode && calcTemp > limitOff) _isSummerMode = true;
@@ -61,14 +69,14 @@ float HeatingLogic::getCalculatedSetpoint() {
   if (!config.active) {
     // --- LINEAR ---
     // Formula: base + slope*(base - outdoor)^(1/exponent) + offset
-    float delta = config.baseTemp - calcTemp;
-    float shaped = delta;
-    if (delta > 0.0f && config.exponent > 0.0f) {
-      shaped = powf(delta, 1.0f / config.exponent);
+    double delta = config.baseTemp - calcTemp;
+    double shaped = delta;
+    if (delta > 0.0 && config.exponent > 0.0) {
+      shaped = pow(delta, 1.0 / config.exponent);
     }
     target = config.baseTemp + config.linearSlope * shaped + config.linearOffset;
   } else {
-    // --- 4-PUNKT ---
+    // --- 4-POINT ---
     const auto &p1 = config.points[0];
     const auto &p2 = config.points[1];
     const auto &p3 = config.points[2];
@@ -88,7 +96,7 @@ float HeatingLogic::getCalculatedSetpoint() {
   return target;
 }
 
-float HeatingLogic::getSmoothedTemp() {
+double HeatingLogic::getSmoothedTemp() {
   return _smoothedTemp;
 }
 

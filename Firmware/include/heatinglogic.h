@@ -4,28 +4,37 @@
 #include <Arduino.h>
 
 struct HeatingConfig {
+  bool chOn;
   bool active;        // True = 4-point, false = linear
-  float linearSlope;  // Slope
-  float baseTemp;     // Base room temp (pivot)
-  float linearOffset; // NEW: vertical shift (level)
-  float exponent;     // Radiator exponent for curve shape
+  double linearSlope;  // Slope
+  double baseTemp;     // Base room temp (pivot)
+  double linearOffset; // NEW: vertical shift (level)
+  double exponent;     // Radiator exponent for curve shape
   
-  float tMin;         // Global minimum temperature
-  float tMax;         // Global maximum temperature
+  double tMin;         // Global minimum temperature
+  double tMax;         // Global maximum temperature
 
   // 4-point definition
   struct CurvePoint {
-    float out;
-    float flow;
+    double out;
+    double flow;
   } points[4];
-  
-  float hysteresis;      
+
+  double flow; // Default flow temperature
+  bool enableHyst;
+  double hysteresis;
+  struct {
+    bool enabled;
+    double p;
+    double i;
+    double boost;
+  } roomComp;
 };
 
 class HeatingLogic {
   private:
     bool _isSummerMode = false;
-    float _smoothedTemp = -999.0; 
+    double _smoothedTemp = -999.0; 
     unsigned long _lastUpdate = 0;
 
   public:
@@ -33,10 +42,10 @@ class HeatingLogic {
 
     HeatingLogic();
 
-    float interpolate(float x, float x1, float y1, float x2, float y2);
-    void updateOutdoorTemp(float currentRaw);
-    float getCalculatedSetpoint();
-    float getSmoothedTemp();
+    double interpolate(double x, double x1, double y1, double x2, double y2);
+    void updateOutdoorTemp(double currentRaw);
+    double getCalculatedSetpoint();
+    double getSmoothedTemp();
     bool isSummer();
 };
 

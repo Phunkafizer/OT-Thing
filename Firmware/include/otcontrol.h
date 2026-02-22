@@ -65,30 +65,6 @@ private:
         SLAVEAPP_VENT = 1,
         SLAVEAPP_SOLAR = 2
     } slaveApp;
-    struct HeatingConfig {
-        bool chOn;
-        double roomSet; // default room set point
-        double minFlow;
-        double flowMax;
-        double exponent;
-        double gradient;
-        double offset;
-        CurveMode curveMode {CURVE_LINEAR};
-        struct CurvePoint {
-            double outside;
-            double flow;
-        } curvePoints[4];
-        double flow; // default flow temperature 
-        bool enableHyst;
-        double hysteresis;
-        double suspOffset;
-        struct {
-            bool enabled;
-            double p; // Kp K/K
-            double i; // Ki 1/h
-            double boost; // Kb K/K
-        } roomComp;
-    } heatingConfig[NUM_HEATCIRCUITS];
     HeatingLogic heatingLogic[NUM_HEATCIRCUITS];
     struct HeatingControl {
         bool chOn;

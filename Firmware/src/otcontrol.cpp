@@ -370,9 +370,12 @@ void OTControl::setBypass(const bool bypass) {
 }
 
 double OTControl::getFlow(const uint8_t channel) {
-    HeatingConfig &hc = heatingConfig[channel];
+    HeatingConfig &hc = heatingLogic[channel].config;
     HeatingControl &hctrl = heatingCtrl[channel];
     double flow = hc.flow;
+    double outTmp = 0.0;
+    bool hasOutside = false;
+    double roomSet = hc.baseTemp;
 
     switch (hctrl.mode) {
     case CTRLMODE_ON:
@@ -387,22 +390,13 @@ double OTControl::getFlow(const uint8_t channel) {
             lastOutsideTemp[channel] = outTemp;
             lastOutsideValid[channel] = true;
         }
-
         if (lastOutsideValid[channel]) {
-            double roomSet = hc.roomSet; // default room set point
+            outTmp = lastOutsideTemp[channel];
+            hasOutside = true;
             roomSetPoint[channel].get(roomSet);
-
-            HeatingLogic &hl = heatingLogic[channel];
-            hl.config.active = (hc.curveMode == CURVE_FOUR_POINT);
-            hl.config.linearSlope = hc.gradient;
-            hl.config.baseTemp = roomSet;
-            hl.config.linearOffset = hc.offset;
-            hl.config.exponent = hc.exponent;
-            hl.config.tMin = hc.minFlow;
-            hl.config.tMax = hc.flowMax;
-            hl.config.hysteresis = hc.hysteresis;
-            hl.updateOutdoorTemp(lastOutsideTemp[channel]);
-            flow = hl.getCalculatedSetpoint();
+            hc.baseTemp = roomSet;
+            heatingLogic[channel].updateOutdoorTemp(outTmp);
+            flow = heatingLogic[channel].getCalculatedSetpoint();
         }
         break;
     }
@@ -419,9 +413,27 @@ double OTControl::getFlow(const uint8_t channel) {
 
     // room temperature compensation
     flow += hctrl.piCtrl.deltaT;
-    clip(flow, hc.minFlow, hc.flowMax);
+    clip(flow, hc.tMin, hc.tMax);
 
-    if (retLimit.enabled) {
+    double adaptiveMinFlow = hc.tMin;
+    if ((heatingCtrl[channel].mode == CTRLMODE_AUTO) && hasOutside) {
+        double rt;
+        if (roomTemp[channel].get(rt)) {
+            double warmFactor = 0.0;
+            if (outTmp > 10.0)
+                warmFactor = (outTmp - 10.0) / 10.0;
+            if (warmFactor > 1.0)
+                warmFactor = 1.0;
+
+            double nearSetFactor = (rt >= (roomSet - 0.2)) ? 1.0 : 0.0;
+            double reduce = warmFactor * nearSetFactor * 10.0;
+            adaptiveMinFlow = hc.tMin - reduce;
+            if (adaptiveMinFlow < 0.0)
+                adaptiveMinFlow = 0.0;
+        }
+    }
+
+    if (retLimit.enabled && (flow > 0)) {
         double retTemp;
         if (getReturnTemp(retTemp)) {
             static bool retLimitActive = false;
@@ -444,6 +456,7 @@ double OTControl::getFlow(const uint8_t channel) {
             }
         }
     }
+    clip(flow, adaptiveMinFlow, hc.tMax);
 
     return flow;
 }
@@ -588,9 +601,9 @@ void OTControl::loop() {
             }
 
             if (setMaxCh) {
-                double maxCh = heatingConfig[0].flowMax;
-                if (hasCh2 && (heatingConfig[1].flowMax > maxCh))
-                    maxCh = heatingConfig[1].flowMax;
+                double maxCh = heatingLogic[0].config.tMax;
+                if (hasCh2 && (heatingLogic[1].config.tMax > maxCh))
+                    maxCh = heatingLogic[1].config.tMax;
                 setMaxCh.sendFloat(maxCh);
             }
 
@@ -646,11 +659,10 @@ void OTControl::loopPiCtrl() {
         setBoilerRequest[i].force();
 
         HeatingControl::PiCtrl &pictrl = heatingCtrl[i].piCtrl;
-        
+        HeatingConfig &hc = heatingLogic[i].config;
         double rt, rsp; // roomtemp, roomsetpoint
-        const HeatingConfig& hconf = heatingConfig[i];
 
-        if (!hconf.enableHyst)
+        if (!hc.enableHyst)
             heatingCtrl[i].suspended = false;
 
         pictrl.deltaT = 0;
@@ -670,13 +682,13 @@ void OTControl::loopPiCtrl() {
         pictrl.init = true;
 
 
-        if (hconf.enableHyst) {
+        if (hc.enableHyst) {
             if (heatingCtrl[i].suspended) {
-                if (rt < rsp - hconf.hysteresis + hconf.suspOffset)
+                if (rt < rsp - hc.hysteresis)
                     heatingCtrl[i].suspended = false;
             }
             else {
-                if (rt > rsp + hconf.hysteresis + hconf.suspOffset)
+                if (rt > rsp + hc.hysteresis)
                     heatingCtrl[i].suspended = true;
             }
         }
@@ -692,16 +704,16 @@ void OTControl::loopPiCtrl() {
             e = 0;
 
         // proportional part of PI controller
-        double p = hconf.roomComp.p * e; // Kp * e
+        double p = hc.roomComp.p * e; // Kp * e
         
         // integral part of PI controller
         pictrl.integState += rsp - pictrl.rspPrev;
         pictrl.rspPrev = rsp;
         if ( (ots != nullptr) && ots->getChActive(i) && !heatingCtrl[i].suspended ) {
             if (e > 0)
-                pictrl.integState += heatingConfig[i].roomComp.i * e * PI_INTERVAL / 3600.0; // Ki * e * ts, ts = 60 s
+                pictrl.integState += hc.roomComp.i * e * PI_INTERVAL / 3600.0; // Ki * e * ts, ts = 60 s
             else
-                pictrl.integState += heatingConfig[i].roomComp.i * e * 0.3 * PI_INTERVAL / 3600.0; // slower as cooling takes more time
+                pictrl.integState += hc.roomComp.i * e * 0.3 * PI_INTERVAL / 3600.0; // slower as cooling takes more time
         }
         else
             pictrl.integState = pictrl.integState * 0.95; // decay
@@ -711,7 +723,7 @@ void OTControl::loopPiCtrl() {
 
         double boost = 0;
         if (e > 1.0)
-            boost = e * hconf.roomComp.boost; // e * Kb
+            boost = e * hc.roomComp.boost; // e * Kb
 
         pictrl.deltaT = p + pictrl.integState + boost;
         // clipping
@@ -1158,7 +1170,7 @@ void OTControl::getJson(JsonObject &obj) {
         if (roomTemp[i].get(d))
             hc[F("roomtemp")] = d;
 
-        const float smoothed = heatingLogic[i].getSmoothedTemp();
+        const double smoothed = heatingLogic[i].getSmoothedTemp();
         if (smoothed > -900.0)
             hc[F("outsideTempSmoothed")] = smoothed;
         hc[F("summerMode")] = heatingLogic[i].isSummer();
@@ -1166,9 +1178,7 @@ void OTControl::getJson(JsonObject &obj) {
         hc[F("ovrdFlow")] = hctrl.overrideFlow;
         hc[F("mode")] = (int) hctrl.mode;
         hc[F("integState")] = round(hctrl.piCtrl.integState * 100) / 100.0;
-        hc[F("flowMin")] = hctrl.flowMin;
-
-        if (heatingConfig[i].enableHyst)
+        if (heatingLogic[i].config.enableHyst)
             hc[F("suspended")] = hctrl.suspended;
     }
 
@@ -1291,7 +1301,7 @@ bool OTControl::sendChDiscoveries(const uint8_t ch, const bool en) {
     String str = replace(PSTR("flow temperature #"), ch + 1, 1);
     Mqtt::MqttTopic tp = topic(Mqtt::TOPIC_CHSETTEMP1, ch);
     haDisc.createClima(str, Mqtt::getTopicString(tp), mqtt.getCmdTopic(tp));
-    haDisc.setMinMaxTemp(20, heatingConfig[ch].flowMax, 0.5);
+    haDisc.setMinMaxTemp(20, heatingLogic[ch].config.tMax, 0.5);
     str = replace(PSTR("{{ value_json.slave.flow_t# ? }}"), ch + 1, 1);
     haDisc.setCurrentTemperatureTemplate(str);
     haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
@@ -1357,7 +1367,7 @@ bool OTControl::sendChDiscoveries(const uint8_t ch, const bool en) {
     str = replace(PSTR("{{ value_json.heatercircuit[#].integState ? }}"), ch);
     haDisc.setValueTemplate(str);
     haDisc.setUnit(FPSTR(HA_UNIT_KELVIN));
-    if (!haDisc.publish((heatingConfig[ch].roomComp.enabled) && en))
+    if (!haDisc.publish((heatingLogic[ch].config.roomComp.enabled) && en))
         return false;
 
     str = replace(PSTR("suspend CH #"), ch + 1, 1);
@@ -1365,7 +1375,7 @@ bool OTControl::sendChDiscoveries(const uint8_t ch, const bool en) {
     haDisc.createBinarySensor(str, id, "");
     str = replace(PSTR("{{ None if value_json.heatercircuit[#].suspended is not defined else 'ON' if value_json.heatercircuit[#].suspended else 'OFF' }}"), ch);
     haDisc.setValueTemplate(str);
-    if (!haDisc.publish(heatingConfig[ch].enableHyst && en))
+    if (!haDisc.publish(heatingLogic[ch].config.enableHyst && en))
         return false;
 
     str = replace(PSTR("min. flow temperature #"), ch + 1, 1);
@@ -1444,31 +1454,31 @@ void OTControl::setConfig(JsonObject &config) {
 
     for (int i=0; i<NUM_HEATCIRCUITS; i++) {
         JsonObject hpObj = config[F("heating")][i];
-        HeatingConfig &hc = heatingConfig[i];
+        HeatingConfig &hc = heatingLogic[i].config;
         HeatingControl &hctrl = heatingCtrl[i];
         hc.chOn = hpObj[F("chOn")];
-        hc.roomSet = hpObj[F("roomsetpoint")][F("temp")] | 21.0; // default room set point
-        hc.minFlow = hpObj[F("minFlow")] | 20.0;
-        hc.flowMax = hpObj[F("flowMax")] | 40;
+        hc.baseTemp = hpObj[F("roomsetpoint")][F("temp")] | 21.0; // default room set point
+        hc.tMin = hpObj[F("minFlow")] | 20.0;
+        hc.tMax = hpObj[F("flowMax")] | 40;
         hc.exponent = hpObj[F("exponent")] | 1.0;
-        hc.gradient = hpObj[F("gradient")] | 1.0;
-        hc.offset = hpObj[F("offset")] | hpObj[F("linearOffset")] | 0.0;
-        hc.curveMode = (CurveMode) ((int) hpObj[F("curveMode")] | (int) CURVE_LINEAR);
+        hc.linearSlope = hpObj[F("gradient")] | 1.0;
+        hc.linearOffset = hpObj[F("offset")] | hpObj[F("linearOffset")] | 0.0;
+        CurveMode curveMode = (CurveMode) ((int) hpObj[F("curveMode")] | (int) CURVE_LINEAR);
+        hc.active = (curveMode == CURVE_FOUR_POINT);
         hc.flow = hpObj[F("flow")] | 35;
 
-        if (hc.minFlow > hc.flowMax)
-            hc.minFlow = hc.flowMax;
+        if (hc.tMin > hc.tMax)
+            hc.tMin = hc.tMax;
         JsonObject roomComp = hpObj[F("roomComp")];
         hc.roomComp.enabled = roomComp[F("enabled")] | false;
         hc.roomComp.p = roomComp[F("p")] | 0.0;
         hc.roomComp.i = roomComp[F("i")] | 0.0;
         hc.roomComp.boost = roomComp[F("boost")] | 3.0;
         hc.hysteresis = hpObj[F("hysteresis")] | 0.1;
-        hc.suspOffset = hpObj[F("suspOffset")] | 0.0;
         hc.enableHyst = hpObj[F("enableHyst")] | false;
         
         hctrl.flowTemp = hc.flow;
-        hctrl.flowMin = hc.minFlow;
+        hctrl.flowMin = hc.tMin;
         hctrl.chOn = hc.chOn;
         hctrl.overrideFlow = hpObj[F("overrideFlow")] | false;
         hctrl.piCtrl.enabled = hc.roomComp.enabled;
@@ -1476,17 +1486,18 @@ void OTControl::setConfig(JsonObject &config) {
             hctrl.piCtrl.integState = 0;
 
         if (!roomSetPoint[i]) {
-            roomSetPoint[i].set(hc.roomSet, Sensor::SOURCE_NA);
-            heatingCtrl[i].piCtrl.rspPrev = hc.roomSet;
+            roomSetPoint[i].set(hc.baseTemp, Sensor::SOURCE_NA);
+            heatingCtrl[i].piCtrl.rspPrev = hc.baseTemp;
         }
 
         const double outsideDefaults[4] = {20.0, 10.0, -5.0, -15.0};
         auto calcLinearFlow = [&](const double outTemp) {
-            double ft = hc.roomSet + hc.gradient * (hc.roomSet - outTemp) + hc.offset;
-            clip(ft, hc.minFlow, hc.flowMax);
+            double ft = hc.baseTemp + hc.linearSlope * (hc.baseTemp - outTemp) + hc.linearOffset;
+            clip(ft, hc.tMin, hc.tMax);
             return ft;
         };
 
+        HeatingConfig::CurvePoint curvePoints[4];
         bool hasCurve = hpObj[F("curvePoints")].is<JsonArray>();
         JsonArray cp = hpObj[F("curvePoints")].as<JsonArray>();
         for (int p = 0; p < 4; p++) {
@@ -1497,42 +1508,28 @@ void OTControl::setConfig(JsonObject &config) {
                 outTemp = obj[F("out")] | outTemp;
                 flowTemp = obj[F("flow")] | flowTemp;
             }
-            hc.curvePoints[p].outside = outTemp;
-            hc.curvePoints[p].flow = flowTemp;
+            curvePoints[p].out = outTemp;
+            curvePoints[p].flow = flowTemp;
         }
 
         for (int a = 0; a < 3; a++) {
             for (int b = 0; b < 3 - a; b++) {
-                if (hc.curvePoints[b].outside > hc.curvePoints[b + 1].outside) {
-                    auto tmp = hc.curvePoints[b];
-                    hc.curvePoints[b] = hc.curvePoints[b + 1];
-                    hc.curvePoints[b + 1] = tmp;
+                if (curvePoints[b].out > curvePoints[b + 1].out) {
+                    auto tmp = curvePoints[b];
+                    curvePoints[b] = curvePoints[b + 1];
+                    curvePoints[b + 1] = tmp;
                 }
             }
         }
 
         for (int p = 1; p < 4; p++) {
-            if (hc.curvePoints[p].flow > hc.curvePoints[p - 1].flow)
-                hc.curvePoints[p].flow = hc.curvePoints[p - 1].flow;
+            if (curvePoints[p].flow > curvePoints[p - 1].flow)
+                curvePoints[p].flow = curvePoints[p - 1].flow;
         }
-
-        auto &hlc = heatingLogic[i].config;
-        hlc.active = (hc.curveMode == CURVE_FOUR_POINT);
-        hlc.linearSlope = hc.gradient;
-        hlc.baseTemp = hc.roomSet;
-        hlc.linearOffset = hc.offset;
-        hlc.exponent = hc.exponent;
-        hlc.tMin = hc.minFlow;
-        hlc.tMax = hc.flowMax;
-        hlc.hysteresis = hc.hysteresis;
-        hlc.points[0].out = hc.curvePoints[3].outside;
-        hlc.points[0].flow = hc.curvePoints[3].flow;
-        hlc.points[1].out = hc.curvePoints[2].outside;
-        hlc.points[1].flow = hc.curvePoints[2].flow;
-        hlc.points[2].out = hc.curvePoints[1].outside;
-        hlc.points[2].flow = hc.curvePoints[1].flow;
-        hlc.points[3].out = hc.curvePoints[0].outside;
-        hlc.points[3].flow = hc.curvePoints[0].flow;
+        hc.points[0] = curvePoints[3];
+        hc.points[1] = curvePoints[2];
+        hc.points[2] = curvePoints[1];
+        hc.points[3] = curvePoints[0];
     }
 
     JsonObject ventObj = config[F("vent")];
@@ -1584,7 +1581,7 @@ void OTControl::setChCtrlMode(const CtrlMode mode, const uint8_t channel) {
     heatingCtrl[channel].mode = mode;
     switch (mode) {
     case CTRLMODE_AUTO:
-        heatingCtrl[channel].chOn = heatingConfig[channel].chOn;
+        heatingCtrl[channel].chOn = heatingLogic[channel].config.chOn;
         break;
     case CTRLMODE_OFF:
         heatingCtrl[channel].chOn = false;
