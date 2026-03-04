@@ -5,6 +5,7 @@
 #include "otcontrol.h"
 #include "sensors.h"
 #include "httpUpdate.h"
+#include "auxInput.h"
 #include <NimBLEDevice.h>
 
 DevStatus devstatus;
@@ -80,4 +81,6 @@ void DevStatus::unlock() {
 
     JsonObject ble = doc[F("BLE")].to<JsonObject>();
     BLESensor::writeJsonAll(ble);
+
+    auxInput.getJson(doc);
 }

@@ -112,26 +112,37 @@ private:
         bool overrideDhw;
         uint8_t maxModulation;
     } boilerCtrl;
-    struct FlameRatio {
+    struct FlameStats {
         void loop();
         uint8_t getDuty() const;
         double getFreq() const;
+        double getOnTime() const;
+        double getOffTime() const;
+        void writeJson(JsonObject &obj) const;
     private:
-        static const uint8_t FLAMERAT_BUFSIZE = 180;
+        static const uint8_t BUFSIZE_MINUTES = 180; // 3 h
+        static const uint8_t BUFSIZE_CYCLES = 10;
         void update();
         void set(const bool flame);
-        bool init {false};
         bool currentFlame {false};
         uint32_t lastEdge {0};
-        uint32_t lastInc {0};
-        uint8_t idx {0};
+        uint32_t lastLoop {0};
+        uint8_t idxMinutes {0};
+        uint8_t idxCycles {0};
+        bool onTimesInit {false};
+        bool offTimesInit {false};
+        template <typename T1, size_t T2>
         struct Ringbuf {
             void update(const uint8_t idx);
-            uint8_t current {0};
-            uint8_t buf[FLAMERAT_BUFSIZE];
+            T1 current {0};
+            T1 buf[T2];
             uint32_t sum {0};
-        } on, cycles;
-    } flameRatio;
+        };
+        Ringbuf<uint8_t, BUFSIZE_MINUTES> on; // number of on minutes per minute
+        Ringbuf<uint8_t, BUFSIZE_MINUTES> cycles; // number of cycles per minute
+        Ringbuf<uint32_t, BUFSIZE_CYCLES> onTimes; // on times per cycle in seconds
+        Ringbuf<uint32_t, BUFSIZE_CYCLES> offTimes; // on times per cycle in seconds
+    } flameStats;
     bool discFlag {true};
     OTWRSetDhw setDhwRequest;
     OTWRSetBoilerTemp setBoilerRequest[NUM_HEATCIRCUITS];

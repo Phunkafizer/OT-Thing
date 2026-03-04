@@ -192,62 +192,104 @@ void OTControl::OTInterface::sendResponse(const unsigned long msg, const char so
 }
 
 
-void OTControl::FlameRatio::set(const bool flame) {
+void OTControl::FlameStats::set(const bool flame) {
     if (currentFlame != flame) {
-        if (!init) {
+        if (lastLoop == 0) {
             // this is first flame on within 1st minute
-            init = true;
             memset(on.buf, 60, sizeof(on.buf));
-            on.sum = FLAMERAT_BUFSIZE * 60UL;
+            on.sum = BUFSIZE_MINUTES * 60UL;
         }
 
-        if (flame)
+        if (flame) {
             cycles.current++;
+            offTimes.current = (millis() - lastEdge) / 1000;
+            if ((lastEdge > 0) && !offTimesInit) {
+                // this is first flame on after 1st flame off, initialize off times buffer
+                for (int i=0; i<BUFSIZE_CYCLES; i++)
+                    offTimes.buf[i] = offTimes.current;
+                offTimes.sum = offTimes.current * BUFSIZE_CYCLES;
+                offTimesInit = true;
+            }
+            offTimes.update(idxCycles);
+        }
+        else {
+            onTimes.current = (millis() - lastEdge) / 1000;
+            if ((lastEdge > 0) && !onTimesInit) {
+                // this is first flame off after 1st flame on, initialize on times buffer
+                for (int i=0; i<BUFSIZE_CYCLES; i++)
+                    onTimes.buf[i] = onTimes.current;
+                onTimes.sum = onTimes.current * BUFSIZE_CYCLES;
+                onTimesInit = true;
+            }
+            onTimes.update(idxCycles);
+            idxCycles = (idxCycles + 1) % BUFSIZE_CYCLES;
+        }
         
         update();
+        lastEdge = millis();
         currentFlame = flame;
     }
 }
 
-uint8_t OTControl::FlameRatio::getDuty() const {
-    return 100 * on.sum / FLAMERAT_BUFSIZE / 60;
-}
-
-double OTControl::FlameRatio::getFreq() const {
-    return round(cycles.sum / (FLAMERAT_BUFSIZE / 60.0) * 10) / 10.0;
-}
-
-void OTControl::FlameRatio::update() {
+void OTControl::FlameStats::update() {
     if (currentFlame) {
         uint8_t diff = 0;
-        diff = (millis() - lastEdge) / 1000;
+        if (lastEdge > lastLoop)
+            diff = (millis() - lastEdge) / 1000;
+        else
+            diff = (millis() - lastLoop) / 1000;
         on.current += diff;
     }
-    lastEdge = millis();
 }
 
-void OTControl::FlameRatio::loop() {
+uint8_t OTControl::FlameStats::getDuty() const {
+    return 100 * on.sum / BUFSIZE_MINUTES / 60;
+}
+
+double OTControl::FlameStats::getFreq() const {
+    return round(cycles.sum / (BUFSIZE_MINUTES / 60.0) * 10) / 10.0;
+}
+
+double OTControl::FlameStats::getOnTime() const {
+    return round(onTimes.sum / BUFSIZE_CYCLES / 60.0 * 10) / 10.0;
+}
+
+double OTControl::FlameStats::getOffTime() const {
+    return round(offTimes.sum / BUFSIZE_CYCLES / 60.0 * 10) / 10.0;
+}
+
+void OTControl::FlameStats::loop() {
     OTValueStatus *ots = static_cast<OTValueStatus*>(OTValue::getSlaveValue(Status));
     if (ots)
         set(ots->getFlame());
 
-    if (millis() >= lastInc + 60000) {
+    if (millis() >= lastLoop + 60000) {
         update();
 
-        on.update(idx);
-        cycles.update(idx);
+        on.update(idxMinutes);
+        cycles.update(idxMinutes);
         
-        idx = (idx + 1) % FLAMERAT_BUFSIZE;
-        lastInc = millis();
-        init = true;
+        idxMinutes = (idxMinutes + 1) % BUFSIZE_MINUTES;
+        lastLoop = millis();
     }
 }
 
-void OTControl::FlameRatio::Ringbuf::update(const uint8_t idx) {
+template <typename T1, size_t T2>
+void OTControl::FlameStats::Ringbuf<T1, T2>::update(const uint8_t idx) {
     sum -= buf[idx]; // remove old value
     buf[idx] = current;
     sum += current;
     current = 0;
+}
+
+void OTControl::FlameStats::writeJson(JsonObject &obj) const {
+    JsonObject fs = obj[F("flameStats")].to<JsonObject>();
+    fs["duty"] = getDuty();
+    fs["freq"] = getFreq();
+    if (onTimesInit)
+        fs["onTime"] = getOnTime();
+    if (offTimesInit)
+        fs["offTime"] = getOffTime();
 }
 
 
@@ -360,6 +402,8 @@ double OTControl::getFlow(const uint8_t channel) {
     
     clip(flow, 0, hc.flowMax);
 
+    flow = round(flow);
+
     return flow;
 }
 
@@ -390,7 +434,7 @@ void OTControl::loop() {
     if (!discFlag)
         discFlag = sendDiscovery();
 
-    flameRatio.loop();
+    flameStats.loop();
 
     SemMaster sem(10);
     if (!sem)
@@ -1027,10 +1071,9 @@ void OTControl::getJson(JsonObject &obj) {
     jSlave[F("rxCount")] = master.rxCount;
     if ( (otMode == OTMODE_MASTER) || (otMode == OTMODE_LOOPBACKTEST) )
         jSlave[F("timeouts")] = master.timeoutCount;
-    if (OTValue::getSlaveValue(Status)->isSet()) {
-        jSlave[F("flameRatio")] = flameRatio.getDuty();
-        jSlave[F("flameFreq")] = flameRatio.getFreq();
-    }
+    
+    if (OTValue::getSlaveValue(Status)->isSet())
+        flameStats.writeJson(jSlave);
 
     JsonObject thermostat = obj[F("thermostat")].to<JsonObject>();
     for (auto *valobj: thermostatValues)
@@ -1127,14 +1170,24 @@ bool OTControl::sendDiscovery() {
     discFlag &= haDisc.publish();
 
     haDisc.createSensor(F("flame ratio"), F("flame_ratio"));
-    haDisc.setValueTemplate(F("{{ value_json.slave.flameRatio | default(None) }}"));
+    haDisc.setValueTemplate(F("{{ value_json.slave.flameStats.ratio | default(None) }}"));
     haDisc.setDeviceClass(F("power_factor"));
     haDisc.setUnit(FPSTR(HA_UNIT_PERCENT));
     discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
 
     haDisc.createSensor(F("burner starts /h"), F("flame_freq"));
-    haDisc.setValueTemplate(F("{{ value_json.slave.flameFreq | default(None) }}"));
+    haDisc.setValueTemplate(F("{{ value_json.slave.flameStats.freq | default(None) }}"));
     haDisc.setUnit(F("/h"));
+    discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
+
+    haDisc.createSensor(F("flametime per cycle"), F("flame_on"));
+    haDisc.setValueTemplate(F("{{ value_json.slave.flameStats.onTime | default(None) }}"));
+    haDisc.setUnit(F("min"));
+    discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
+
+    haDisc.createSensor(F("pausetime per cycle"), F("flame_off"));
+    haDisc.setValueTemplate(F("{{ value_json.slave.flameStats.offTime | default(None) }}"));
+    haDisc.setUnit(F("min"));
     discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
 
     return discFlag;

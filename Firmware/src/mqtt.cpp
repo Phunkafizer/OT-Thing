@@ -6,6 +6,7 @@
 #include "sensors.h"
 #include "HADiscLocal.h"
 #include "hwdef.h"
+#include "auxInput.h"
 
 static struct {
     Mqtt::MqttTopic topic;
@@ -139,6 +140,7 @@ void Mqtt::loop() {
             discFlag &= otcontrol.sendDiscovery();
             discFlag &= OneWireNode::sendDiscoveryAll();
             discFlag &= BLESensor::sendDiscoveryAll();
+            discFlag &= auxInput.sendDiscovery();
         }
 
         if ((millis() - lastStatus) > 5000) {

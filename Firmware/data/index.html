@@ -619,7 +619,7 @@
                     </div>
                     <div class="statusfield">
                         <h5>flame ratio (3 h)</h5>
-                        <span class="statusvalue" field="slave.flameRatio" unit="%"></span>
+                        <span class="statusvalue" field="slave.flameStats.duty" unit="%"></span>
                     </div>
                     <div class="statusfield">
                         <h5>DHW flow rate</h5>
@@ -644,6 +644,14 @@
                     <div class="statusfield">
                         <h5>DHW pump/valve op. hours</h5>
                         <span class="statusvalue" field="slave.dhwpump_op_hours" unit="h"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>flametime (10 cycles)</h5>
+                        <span class="statusvalue" field="slave.flameStats.onTime" unit="min"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>pausetime (10 cycles)</h5>
+                        <span class="statusvalue" field="slave.flameStats.offTime" unit="min"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Burner starts</h5>
@@ -715,7 +723,7 @@
                     </div>
                     <div class="statusfield">
                         <h5>burner starts (3 h)</h5>
-                        <span class="statusvalue" field="slave.flameFreq" unit="/h"></span>
+                        <span class="statusvalue" field="slave.flameStats.freq" unit="/h"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Frames sent</h5>
@@ -1131,23 +1139,6 @@
                         <input type="range" min="0.1" max="2" step="0.1">
                     </div>
                 </div>
-            </div>
-
-            <h3 style="display: none">Scheduler</h3>
-            <div class="group" style="display: none">
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="days">days</th>
-                            <th class="time">time</th>
-                            <th class="ft">room set temperature</th>
-                            <th class="rem"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="schedulerbody1">
-                    </tbody>
-                </table>
-                <button id="addscheduler1" channel="1">+</button>
             </div>
 
             <h3>Heating curve</h3>
@@ -1804,6 +1795,13 @@
 
             <h3>System</h3>
             <div class="group">
+                <h5>aux input</h5>
+                <select id="selAuxInput" field="auxInput.mode">
+                    <option value="0">unused</option>
+                    <option value="1">digital</option>
+                    <option value="3">analog</option>
+                </select>
+                
                 <h4>Timezone</h4>
                 <select id="selTimezone" field="timezone">
                     <option value="0">UTC</option>
@@ -1933,7 +1931,10 @@
             },
             mqtt: {
             },
-            masterMemberId: 8
+            masterMemberId: 8,
+            auxInput: {
+                mode: 0
+            }
         },
         statuscache = {},
         roomsetpoint = [21, 21]; // used for drawing curve
@@ -1969,11 +1970,14 @@
             //eventhandler for save button
             _("#save").onclick = () => {
                 config.timezone = parseInt(_("#selTimezone").value);
+                config.auxInput = {
+                    mode: parseInt(_("#selAuxInput").value)
+                };
                 config.hostname = _("#hostname").value;
                 config.haPrefix = _("#haPrefix").value;
                 config.slaveApp = parseInt(_("#slaveapp").value);
                 config.enableSlave = _("#enableslave").checked;
-                config.otMode = (_('input[name="otMode"]:checked') !== undefined) ? parseInt(_('input[name="otMode"]:checked').value) : null;
+                config.otMode = (_('input[name="otMode"]:checked') != undefined) ? parseInt(_('input[name="otMode"]:checked').value) : null;
                 config.outsideTemp = {
                     source: parseInt(_('#selectOutsideTempSource').value),
                     apikey: _("#inpapikey").value,
@@ -2069,10 +2073,6 @@
                 addMarker(2);
             };
 
-            _("#addscheduler1").onclick = (ev) => {
-                addScheduler(1);
-            };
-
             // eventhandler for scan button
             _("#scan").onclick = (ev) => {
                 _("#scanResults").hidden = true;
@@ -2137,19 +2137,6 @@
                 _("#comment" + hk).value = "";
                 drawMarkerTable(hk);
                 drawCurve(hk);
-            }
-
-            function addScheduler(channel) {
-                hcfg = config.heating[channel -1];
-                if (!("scheduler" in hcfg))
-                    hcfg["scheduler"] = [];
-                hcfg.scheduler.push({
-                    "days": [],
-                    "time": "8:00",
-                    "temp": 21
-                });
-
-                drawSchedulerTable(channel);
             }
 
             let xhrWiFiScan = new XMLHttpRequest();
@@ -2264,38 +2251,6 @@
                 });
             }
 
-            function drawSchedulerTable(channel) {
-                if (channel === undefined) {
-                    drawSchedulerTable(1);
-                    drawSchedulerTable(2);
-                    return;
-                }
-                _("#schedulerbody" + channel).innerHTML = "";
-                
-                var i = 0;
-                config.heating[channel - 1].scheduler.forEach(function (item) {
-                    _(`#schedulerbody${channel}`).append(
-                        _$("tr", {}, 
-                            _$("td", {}),
-                            _$("td", {textContent: item.time}),
-                            _$("td", {textContent: item.temp + " °C"}),
-                            _$("td", {},
-                                _$("button", {
-                                    className: "rmscheduler", 
-                                    textContent: "-",
-                                    onclick: (ev) => {
-                                        config.heating[channel - 1].scheduler.splice(ev.target.getAttribute("index"), 1);
-                                        drawSchedulerTable(channel);
-                                    }
-                                })
-                            )
-                        )
-                    );
-
-                    _(`#schedulerbody${channel} tr:last-child button`).setAttribute("index", i++);
-                });
-            }
-
             function setParam(name, val) {
                 var slider = _('#' + name + " input[type=range]");
                 if (val !== undefined)
@@ -2351,6 +2306,7 @@
             function configToUi() {
                 _("#hostname").value = config.hostname || "otthing";
                 _("#haPrefix").value = config.haPrefix || "homeassistant";
+                _("#selAuxInput").value = config.auxInput?.mode || 0;
                 _("#selTimezone").value = config.timezone || 3600;
                 let otradio = _('input[name="otMode"][value="' + config.otMode + '"]');
                 if (otradio !== undefined) {

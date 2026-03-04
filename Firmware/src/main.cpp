@@ -14,6 +14,7 @@
 #include "time.h"
 #include "main.h"
 #include "esp_task_wdt.h"
+#include "auxInput.h"
 
 #ifdef DEBUG
     #include <ArduinoOTA.h>
@@ -125,4 +126,5 @@ void loop() {
     Sensor::loopAll();
     devconfig.loop();
     OneWireNode::loop();
+    auxInput.loop();
 }
