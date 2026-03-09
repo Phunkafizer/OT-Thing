@@ -41,6 +41,7 @@ private:
     void masterPinIrq();
     void slavePinIrq();
     double getFlow(const uint8_t channel);
+    bool getChannelOn(const uint8_t channel);
     uint16_t tmpToData(const double tmpf);
     void hwYield();
     unsigned long buildBrandResponse(const OpenThermMessageID id, const String &str, const uint8_t idx);
@@ -53,7 +54,7 @@ private:
         OTMODE_REPEATER = 2,
         OTMODE_LOOPBACKTEST = 4
     } otMode;
-    void setOTMode(const OTMode mode, const bool enableSlave = false);
+    void setOTMode(const OTMode mode);
     enum SlaveApplication: uint8_t {
         SLAVEAPP_HEATCOOL = 0,
         SLAVEAPP_VENT = 1,
@@ -79,6 +80,7 @@ private:
     struct HeatingControl {
         bool chOn;
         double flowTemp;
+        double flowMin;
         CtrlMode mode {CTRLMODE_AUTO};
         bool overrideFlow;
         struct PiCtrl {
@@ -172,7 +174,8 @@ private:
         void onReceive(const char source, const unsigned long msg);
         void sendResponse(const unsigned long msg, const char source = 0);
     } master, slave;
-    bool slaveEnabled {false};
+    bool enableSlave {false};
+    bool bypass {false};
     uint16_t statusReqOvl {0}; // will be or'ed to status request as this is needed by some boilers
 public:
     OTControl();
@@ -194,8 +197,8 @@ public:
     void setOverrideDhw(const bool ovrd);
     void setMaxMod(const int mm);
     void setRoomComp(const bool en, const uint8_t channel);
-    void bypass();
+    void setFlowMin(const double flowMin, const uint8_t channel);
+    void setBypass(const bool bypass);
 };
-
 
 extern OTControl otcontrol;

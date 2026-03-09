@@ -76,7 +76,6 @@ void setup() {
     WiFi.begin();
     
     AddressableSensor::begin();
-    OneWireNode::begin();
     BLESensor::begin();
     haDisc.begin();
     mqtt.begin();
@@ -126,5 +125,7 @@ void loop() {
     Sensor::loopAll();
     devconfig.loop();
     OneWireNode::loop();
-    auxInput.loop();
+
+    for (int i=0; i<sizeof(auxInput) / sizeof(auxInput[0]); i++)
+        auxInput[i].loop();
 }

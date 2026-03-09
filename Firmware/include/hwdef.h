@@ -11,7 +11,7 @@
 #define GPIO_OTSLAVE_OUT 7
 #define GPIO_OTMASTER_IN 3
 #define GPIO_OTMASTER_OUT 1
-#define GPIO_AUX_IN = 5
+#define GPIO_AUX_IN 5
 
 inline void setLedOTRed(const bool on) {
     digitalWrite(GPIO_OTRED_LED, !on);

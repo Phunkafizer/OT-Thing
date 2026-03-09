@@ -22,6 +22,6 @@ public:
     int getTimezone() const;
 } devconfig;
 
-extern const char CFG_FILENAME[];
+extern const char CFG_FILENAME[] PROGMEM;
 
 #endif

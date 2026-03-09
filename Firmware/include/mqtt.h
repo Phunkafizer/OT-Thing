@@ -28,13 +28,15 @@ private:
     String statusTopic;
     bool discFlag {false}; // discovery flag; set after MQTT (re-) connect
     bool conFlag;
-    OTControl::CtrlMode strToCtrlMode(String &str);
+    OTControl::CtrlMode strToCtrlMode(const String &str);
 public:
     enum MqttTopic: uint8_t {
         TOPIC_OUTSIDETEMP,
         TOPIC_DHWSETTEMP,
         TOPIC_CHSETTEMP1,
         TOPIC_CHSETTEMP2,
+        TOPIC_CHMINTEMP1,
+        TOPIC_CHMINTEMP2,
         TOPIC_DHWMODE,
         TOPIC_CHMODE1,
         TOPIC_CHMODE2,
@@ -53,6 +55,7 @@ public:
         TOPIC_AUTOBYPASS,
         TOPIC_FREEVENTENABLE,
         TOPIC_MAXMODULATION,
+        TOPIC_BYPASS,
         TOPIC_UNKNOWN // has to be at end of list!
     };
     Mqtt();
@@ -62,6 +65,7 @@ public:
     void setConfig(const MqttConfig conf);
     bool publish(String topic, JsonDocument &payload, const bool retain);
     void onMessage(const char *topic, String &payload);
+    bool setValue(const String &key, const String &value);
     String getBaseTopic();
     static String getTopicString(const MqttTopic topic);
     String getCmdTopic(const MqttTopic topic);

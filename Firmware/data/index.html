@@ -970,7 +970,7 @@
                             <span class="value"></span>
                             <span class="unit">&deg;C</span>
                         </div>
-                        <input type="range" min="30" max="90" step="1">
+                        <input class="curveparam" type="range" min="30" max="90" step="1">
                     </div>
                     <div class="infobox">
                         Gängige Systemtemperaturen Vorlauf/R&uuml;cklauf:
@@ -991,7 +991,7 @@
                         <div class="valunit">
                             <span class="value"></span>
                         </div>
-                        <input type="range" min="1.0" max="1.5" step="0.05">
+                        <input type="range" class="curveparam" min="1.0" max="1.5" step="0.05">
                     </div>
                     <div class="infobox">
                         Je nach Anteil von Leitung, Konvektion und Strahlung ist das Verhältnis von Vorlauftemperatur
@@ -1018,7 +1018,18 @@
                             <span class="value"></span>
                             <span class="unit">&deg;C</span>
                         </div>
-                        <input type="range" min="25" max="90" step="1" />
+                        <input type="range" class="curveparam" min="25" max="90" step="1" />
+                    </div>
+                </div>
+
+                <div id="flowmin1" class="param">
+                    <h5>Min. flow temperature</h5>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input type="range" class="curveparam" min="10" max="40" step="1">
                     </div>
                 </div>
 
@@ -1029,7 +1040,7 @@
                             <span class="value"></span>
                             <span class="unit">&deg;C</span>
                         </div>
-                        <input type="range" min="17" max="23" step="0.1">
+                        <input type="range" class="curveparam" min="17" max="23" step="0.1">
                     </div>
                 </div>
 
@@ -1083,7 +1094,7 @@
                     <h5>enable</h5>
                     <div>
                         <label class="switch">
-                            <input id="roomCompEnable1" type="checkbox" hideele="roomCompP1 roomCompI1 roomCompBoost1" />
+                            <input id="roomCompEnable1" class="curveparam" type="checkbox" hideele="roomCompP1 roomCompI1 roomCompBoost1" />
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -1095,7 +1106,7 @@
                             <span class="value"></span>
                             <span class="unit">K/K</span>
                         </div>
-                        <input type="range" min="0" max="4" step="0.1">
+                        <input type="range" class="curveparam" min="0" max="4" step="0.1">
                     </div>
                 </div>
                 <div id="roomCompI1" class="param">
@@ -1115,7 +1126,7 @@
                             <span class="value"></span>
                             <span class="unit">K/K</span>
                         </div>
-                        <input type="range" min="0" max="4" step="0.1">
+                        <input type="range" class="curveparam" min="0" max="4" step="0.1">
                     </div>
                 </div>
 
@@ -1149,7 +1160,7 @@
                         <div class="valunit">
                             <span class="value"></span>
                         </div>
-                        <input type="range" min="0.1" max="3" step="0.05">
+                        <input type="range" class="curveparam" min="0.1" max="3" step="0.05">
                     </div>
                     <div class="infobox">
                         <p>
@@ -1165,7 +1176,7 @@
                             <span class="value"></span>
                             <span class="unit">&deg;C</span>
                         </div>
-                        <input type="range" min="-15" max="15" step="0.5">
+                        <input type="range" class="curveparam" min="-15" max="15" step="0.5">
                     </div>
                 </div>
 
@@ -1228,7 +1239,7 @@
                             <span class="value"></span>
                             <span class="unit">&deg;C</span>
                         </div>
-                        <input type="range" min="30" max="90" step="1">
+                        <input type="range" class="curveparam" min="30" max="90" step="1">
                     </div>
                     <div class="infobox">
                         Gängige Systemtemperaturen Vorlauf/R&uuml;cklauf:
@@ -1249,7 +1260,7 @@
                         <div class="valunit">
                             <span class="value"></span>
                         </div>
-                        <input type="range" min="1.0" max="1.5" step="0.05">
+                        <input type="range" class="curveparam" min="1.0" max="1.5" step="0.05">
                     </div>
                     <div class="infobox">
                         Je nach Anteil von Leitung, Konvektion und Strahlung ist das Verhältnis von Vorlauftemperatur und Wärmeabgabe überlinear:
@@ -1274,7 +1285,18 @@
                             <span class="value"></span>
                             <span class="unit">&deg;C</span>
                         </div>
-                        <input type="range" min="25" max="90" step="1" />
+                        <input type="range" class="curveparam" min="25" max="90" step="1" />
+                    </div>
+                </div>
+
+                <div id="flowmin2" class="param">
+                    <h5>Min. flow temperature</h5>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input type="range" class="curveparam" min="10" max="40" step="1">
                     </div>
                 </div>
 
@@ -1285,7 +1307,7 @@
                             <span class="value"></span>
                             <span class="unit">&deg;C</span>
                         </div>
-                        <input type="range" min="17" max="23" step="0.1">
+                        <input type="range" class="curveparam" min="17" max="23" step="0.1">
                     </div>
                     <div class="infobox">
                     </div>
@@ -1339,7 +1361,7 @@
                     <h5>enable</h5>
                     <div>
                         <label class="switch">
-                            <input id="roomCompEnable2" type="checkbox" hideele="roomCompP2 roomCompI2 roomCompBoost2" />
+                            <input id="roomCompEnable2" type="checkbox" class="curveparam" hideele="roomCompP2 roomCompI2 roomCompBoost2" />
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -1351,7 +1373,7 @@
                             <span class="value"></span>
                             <span class="unit">K/K</span>
                         </div>
-                        <input type="range" min="0" max="5" step="0.1">
+                        <input type="range" class="curveparam" min="0" max="5" step="0.1">
                     </div>
                 </div>
                 <div id="roomCompI2" class="param">
@@ -1372,7 +1394,7 @@
                             <span class="value"></span>
                             <span class="unit">K/K</span>
                         </div>
-                        <input type="range" min="0" max="4" step="0.1">
+                        <input type="range" class="curveparam" min="0" max="4" step="0.1">
                     </div>
                 </div>
 
@@ -1406,7 +1428,7 @@
                         <div class="valunit">
                             <span class="value"></span>
                         </div>
-                        <input type="range" min="0.1" max="3" step="0.05">
+                        <input type="range" class="curveparam" min="0.1" max="3" step="0.05">
                     </div>
                     <div class="infobox">
                         <p>
@@ -1422,7 +1444,7 @@
                             <span class="value"></span>
                             <span class="unit">&deg;C</span>
                         </div>
-                        <input type="range" min="-15" max="15" step="0.5">
+                        <input type="range" class="curveparam" min="-15" max="15" step="0.5">
                     </div>
                 </div>
 
@@ -1795,11 +1817,19 @@
 
             <h3>System</h3>
             <div class="group">
-                <h5>aux input</h5>
-                <select id="selAuxInput" field="auxInput.mode">
+                <h5>aux 1 (DQ)</h5>
+                <select id="selAux1" field="aux.0.mode">
                     <option value="0">unused</option>
                     <option value="1">digital</option>
                     <option value="3">analog</option>
+                    <option value="4">1wire</option>
+                </select>
+
+                <h5>aux. 2 (DI)</h5>
+                <select id="selAux2" field="aux.1.mode">
+                    <option value="0">unused</option>
+                    <option value="1">digital</option>
+                    <option value="4">1wire</option>
                 </select>
                 
                 <h4>Timezone</h4>
@@ -1878,6 +1908,7 @@
                     },
                     chOn: true,
                     flowMax: 60,
+                    flowMin: 10,
                     exponent: 1.3,
                     gradient: 1.0,
                     offset: 0,
@@ -1903,6 +1934,7 @@
                     },
                     chOn: false,
                     flowMax: 40,
+                    flowMin: 10,
                     exponent: 1.3,
                     gradient: 1.0,
                     offset: 0,
@@ -1932,9 +1964,14 @@
             mqtt: {
             },
             masterMemberId: 8,
-            auxInput: {
-                mode: 0
-            }
+            aux: [
+                {
+                    mode: 4 // 1wire
+                },
+                {
+                    mode: 0 // not used
+                }
+            ]
         },
         statuscache = {},
         roomsetpoint = [21, 21]; // used for drawing curve
@@ -1970,9 +2007,14 @@
             //eventhandler for save button
             _("#save").onclick = () => {
                 config.timezone = parseInt(_("#selTimezone").value);
-                config.auxInput = {
-                    mode: parseInt(_("#selAuxInput").value)
-                };
+                config.aux = [
+                    {
+                        mode: parseInt(_("#selAux1").value)
+                    },
+                    {
+                        mode: parseInt(_("#selAux2").value)
+                    }
+                ];
                 config.hostname = _("#hostname").value;
                 config.haPrefix = _("#haPrefix").value;
                 config.slaveApp = parseInt(_("#slaveapp").value);
@@ -2285,7 +2327,6 @@
                         else
                             cfgVal[p[i]] = parseFloat(ev.target.value);
                     };
-                    drawCurve();
                 });
             }
 
@@ -2306,13 +2347,15 @@
             function configToUi() {
                 _("#hostname").value = config.hostname || "otthing";
                 _("#haPrefix").value = config.haPrefix || "homeassistant";
-                _("#selAuxInput").value = config.auxInput?.mode || 0;
                 _("#selTimezone").value = config.timezone || 3600;
                 let otradio = _('input[name="otMode"][value="' + config.otMode + '"]');
                 if (otradio !== undefined) {
                     otradio.checked = true;
                     otradio.dispatchEvent(new Event('click'));
                 }
+
+                for (let i=0; i<2; i++)
+                    _(`#selAux${i+1}`).value = config.aux?.[i]?.mode ?? 0;
 
                 _("#slaveapp").value = config.slaveApp || 0;
                 _("#slaveapp").dispatchEvent(new Event('change'));
@@ -2362,6 +2405,7 @@
                     initRangeParam(`chset${ch}`, `heating.${idx}.flow`);
                     initRangeParam(`roomset${ch}`, `heating.${idx}.roomsetpoint.temp`);
                     initRangeParam(`flowmax${ch}`, `heating.${idx}.flowMax`);
+                    initRangeParam(`flowmin${ch}`, `heating.${idx}.flowMin`);
                     initRangeParam(`exponent${ch}`, `heating.${idx}.exponent`);
                     initRangeParam(`gradient${ch}`, `heating.${idx}.gradient`);
                     initRangeParam(`offset${ch}`, `heating.${idx}.offset`);
@@ -2392,6 +2436,12 @@
                 drawCurve();
                 __('input[type="checkbox"][hideele]').forEach(cb => {
                     cb.dispatchEvent(new Event("change"));
+                });
+
+                __(".curveparam").forEach(ele => {
+                    ele.addEventListener("input", (ev) => {
+                        drawCurve();
+                    });
                 });
             }
 
@@ -2513,9 +2563,9 @@
                         }
                     });
 
-                    var i = 1;
-                    for (adr in statuscache["1wire"]) {
-                        if (_("#oneWireSensors").childElementCount < Object.keys(statuscache["1wire"]).length) {
+                    if (_("#oneWireSensors").childElementCount != Object.keys(statuscache["1wire"]).length) {
+                        _("#oneWireSensors").innerHTML = "";
+                        for (adr in statuscache["1wire"]) {
                             _("#oneWireSensors").append(
                                 _$("div", {className: "statusfield"},
                                     _$("h5", {textContent: adr}),
@@ -2523,6 +2573,10 @@
                                 )
                             );
                         }
+                    }
+
+                    let i = 1;
+                    for (adr in statuscache["1wire"]) {
                         _("#oneWireSensors div:nth-child(" + i + ") span").innerText = statuscache["1wire"][adr] + " °C";
                         i++;
                     }
@@ -2748,6 +2802,10 @@
             return rs + c1 * (rs - ot) ** (1.0 / n) + s;
         }
 
+        function clip(value, max, min = -Infinity) {
+            return Math.min(Math.max(value, min), max);
+        }
+
         function drawCurve(hk) {
             if (hk === undefined) {
                 drawCurve(1);
@@ -2755,7 +2813,8 @@
                 return;
             }
             var canvas = document.getElementById(`canvas${hk}`);
-            let flowmax = parseFloat(_("#flowmax" + hk + " input").value);
+            let flowmax = parseFloat(_(`#flowmax${hk} input`).value);
+            let flowmin = parseFloat(_(`#flowmin${hk} input`).value);
             let fmg = Math.ceil(flowmax / 10) * 10 + 5; // flowmax for graph
 
             canvas.height = 20 + (fmg - 20) * 4.5;
@@ -2845,12 +2904,19 @@
             ctx.restore();
 
             let roomset = roomsetpoint[hk - 1];
-            let roomdelta = 0;
-            let rc = config.heating?.[hk-1]?.roomComp;
-            if (rc?.enabled === true) {
+            let roomcomp = 0;
+            let rc = _(`#roomCompEnable${hk}`).checked;
+            if (rc) {
                 const hcs = statuscache?.heatercircuit?.[hk - 1];
-                if (hcs?.roomtemp !== undefined)
-                    roomdelta = (rc.p ?? 0) * (roomset - (hcs.roomtemp ?? 0)) + hcs.integState ?? 0;
+                if (hcs?.roomtemp !== undefined) {
+                    const roomtemp = hcs.roomtemp;
+                    const e = roomset - roomtemp;
+                    roomcomp = (config.heating?.[hk-1]?.roomComp?.p ?? 0) * e + hcs?.integState ?? 0;
+                    // boost
+                    if (e > 1.0)
+                        roomcomp += (config.heating?.[hk-1]?.roomComp?.boost ?? 0) * e;
+                    roomcomp = clip(roomcomp, 12, -5);
+                }
             }
 
             let gradient = parseFloat(_("#gradient" + hk + " input").value);
@@ -2871,20 +2937,21 @@
 
             let otStart = Math.min(roomset, xaxis.min);
             let ft = getFlowTemperature(otStart, roomset, flowmax, exponent, gradient, offset);
+            ft = clip(ft, 100, flowmin);
             let p1 = getPoint(otStart, ft); //foot
-
-            drawMarkerPoint(p1, '#A33');
 
             function drawFlowCurve(color, delta) {
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 3;
                 let ft = getFlowTemperature(otStart, roomset, flowmax, exponent, gradient, offset) + delta;
+                ft = clip(ft, 100, flowmin);
                 let p = getPoint(otStart, ft);
                 ctx.beginPath();
                 ctx.moveTo(p.x, p.y);
                 let otf = false;
                 for (var ot = otStart; ot >= xaxis.max; ot -= 0.5) {
                     ft = getFlowTemperature(ot, roomset, flowmax, exponent, gradient, offset) + delta;
+                    ft = clip(ft, 100, flowmin);
 
                     if ((ft >= flowmax) && !otf) {
                         ctx.stroke();
@@ -2903,17 +2970,16 @@
                 ctx.stroke();
             }
             drawFlowCurve("#F00", 0);
-            if (roomdelta != 0)
-                drawFlowCurve("#0F0", roomdelta);
+            if (roomcomp != 0)
+                drawFlowCurve("#0F0", roomcomp);
 
             //draw curve's basepoint
             drawMarkerPoint(p1, '#F00');
 
             if (statuscache.outsideTemp !== undefined) {
                 //draw outsidetemp & it's flowtemperature
-                let ftsensor = getFlowTemperature(statuscache.outsideTemp, roomset, flowmax, exponent, gradient, offset) + roomdelta;
-                if (ftsensor > flowmax)
-                    ftsensor = flowmax;
+                let ftsensor = getFlowTemperature(statuscache.outsideTemp, roomset, flowmax, exponent, gradient, offset) + roomcomp;
+                ftsensor = clip(ftsensor, flowmax, flowmin);
                 let psensor = getPoint(statuscache.outsideTemp, ftsensor);
                 drawMarkerPoint(psensor, '#F83');
                 ctx.strokeStyle = "#F83";

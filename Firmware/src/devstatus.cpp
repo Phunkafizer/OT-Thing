@@ -82,5 +82,6 @@ void DevStatus::unlock() {
     JsonObject ble = doc[F("BLE")].to<JsonObject>();
     BLESensor::writeJsonAll(ble);
 
-    auxInput.getJson(doc);
+    for (int i=0; i<sizeof(auxInput) / sizeof(auxInput[0]); i++)
+        auxInput[i].getJson(doc);
 }

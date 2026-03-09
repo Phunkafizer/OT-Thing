@@ -14,7 +14,7 @@ const char CFGKEY_HAPREFIX[] PROGMEM = "haPrefix";
 const char CFGKEY_MQTT[] PROGMEM = "mqtt";
 const char CFGKEY_OUTSIDETEMP[] PROGMEM = "outsideTemp";
 const char CFGKEY_HEATING[] PROGMEM = "heating";
-const char CFGKEY_AUXINPUT[] PROGMEM = "auxInput";
+const char *CFGKEY_AUX PROGMEM = "aux";
 
 DevConfig devconfig;
 
@@ -61,13 +61,15 @@ void DevConfig::update() {
             mqtt.setConfig(mc);
         }
 
+        OneWireNode::clear();
+        for (int i=0; i<sizeof(auxInput) / sizeof(auxInput[0]); i++) {
+            JsonObject obj = doc[FPSTR(CFGKEY_AUX)][i];
+            auxInput[i].setConfig(obj);
+        }   
+
         if (doc[FPSTR(CFGKEY_OUTSIDETEMP)].is<JsonObject>()) {
             JsonObject obj = doc[FPSTR(CFGKEY_OUTSIDETEMP)];
             outsideTemp.setConfig(obj);
-        }
-
-        if (doc[FPSTR(CFGKEY_AUXINPUT)].is<JsonObject>()) {
-            auxInput.setConfig(doc[FPSTR(CFGKEY_AUXINPUT)]);
         }
 
         for (int i=0; i<2; i++) {

@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <AsyncTCP.h>
+#include <OneWire.h>
 #include <NimBLEDevice.h>
 #include "util.h"
 
@@ -55,7 +56,8 @@ protected:
     bool sendDiscovery() override;
 public:
     OneWireNode(uint8_t *addr);
-    static void begin();
+    static void begin(const uint8_t gpio);
+    static void clear();
     static OneWireNode* find(String adr);
     static void loop();
     static void writeJsonAll(JsonObject &status);

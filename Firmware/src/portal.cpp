@@ -248,6 +248,17 @@ void Portal::begin(bool configMode) {
         }
         request->send(200, F("text/plain"), list);
     });
+
+    websrv.on(PSTR("/set"), HTTP_GET, [this](AsyncWebServerRequest *request) {
+        for (int i=0; i<request->params(); i++) {
+            const AsyncWebParameter* par = request->getParam(i);
+            String key = par->name();
+            String value = par->value();
+            if (!mqtt.setValue(key, value))
+                request->send(503);
+        }
+        request->send(200);
+    });
 }
 
 void Portal::loop() {

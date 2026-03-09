@@ -1,5 +1,4 @@
 #include "sensors.h"
-#include <OneWire.h>
 #include <DallasTemperature.h>
 #include "HADiscLocal.h"
 
@@ -11,7 +10,7 @@ SemaphoreHandle_t AddressableSensor::mutex;
 Sensor* Sensor::lastSensor = nullptr;
 BLESensor* BLESensor::last = nullptr;
 OneWireNode *OneWireNode::last = nullptr;
-static OneWire oneWire(4);
+static OneWire oneWire;
 
 class SensorLock: public SemHelper {
 public:
@@ -261,16 +260,29 @@ OneWireNode::OneWireNode(uint8_t *addr):
     temp = DEVICE_DISCONNECTED_C;
 }
 
-void OneWireNode::begin() {
+void OneWireNode::begin(const uint8_t gpio) {
+    oneWire.begin(gpio);
     oneWire.reset_search();
+
     uint8_t addr[8];
     while (oneWire.search(addr))
         new OneWireNode(addr);
     loop();
 }
 
+void OneWireNode::clear() {
+    // free all nodes
+    while (last) {
+        auto node = static_cast<OneWireNode*>(last->next);
+        free(last);
+        last = node;
+    }
+}
+
 void OneWireNode::loop() {
     static uint32_t next = 0;
+    if (last == nullptr)
+        return;
     if (millis() > next) {
         OneWireNode *node = last;
         DallasTemperature ds(&oneWire);
@@ -287,6 +299,7 @@ void OneWireNode::loop() {
             }
             node = static_cast<OneWireNode*>(node->next);
         }
+
         next = millis() + 5000;
     }
 }

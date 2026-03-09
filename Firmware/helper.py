@@ -29,6 +29,7 @@ CONFIG = {
             "roomtempcomp": 0,
             "chOn": True,
             "flowMax": 60,
+            "flowMin": 20,
             "exponent": 1.3,
             "gradient": 1.4,
             "offset": 0,
@@ -55,6 +56,7 @@ CONFIG = {
             "roomtempcomp": 0,
             "chOn": True,
             "flowMax": 60,
+            "flowMin": 20,
             "exponent": 1.3,
             "gradient": 1.4,
             "offset": 0,
@@ -102,7 +104,14 @@ CONFIG = {
     "timezone": 3600,
     "hostname": "otthing",
     "haPrefix": "homeassistant",
-    "haName": "OTthing"
+    "aux": [
+        {
+            "mode": 4 # DQ: 1wire
+        },
+        {
+            "mode": 0 # DI: not used
+        }
+    ]
 }
 
 
