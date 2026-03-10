@@ -37,9 +37,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 0.762,
-          "height": 1.524,
-          "width": 1.524
+          "drill": 0.0,
+          "height": 1.45,
+          "width": 1.0
         },
         "silk_line_width": 0.12,
         "silk_text_italic": false,
@@ -501,6 +501,24 @@
         "via_diameter": 0.8,
         "via_drill": 0.4,
         "wire_width": 6
+      },
+      {
+        "name": "GND",
+        "pcb_color": "rgb(93, 89, 89)",
+        "priority": 1,
+        "schematic_color": "rgb(93, 89, 89)"
+      },
+      {
+        "name": "Supply",
+        "pcb_color": "rgb(187, 23, 2)",
+        "priority": 2,
+        "schematic_color": "rgb(187, 23, 2)"
+      },
+      {
+        "name": "USB",
+        "pcb_color": "rgb(90, 196, 193)",
+        "priority": 0,
+        "schematic_color": "rgb(62, 134, 132)"
       }
     ],
     "meta": {
@@ -508,7 +526,24 @@
     },
     "net_colors": null,
     "netclass_assignments": null,
-    "netclass_patterns": []
+    "netclass_patterns": [
+      {
+        "netclass": "GND",
+        "pattern": "GND"
+      },
+      {
+        "netclass": "USB",
+        "pattern": "/USBCD*"
+      },
+      {
+        "netclass": "Supply",
+        "pattern": "+*"
+      },
+      {
+        "netclass": "USB",
+        "pattern": "USBD*"
+      }
+    ]
   },
   "pcbnew": {
     "last_paths": {
