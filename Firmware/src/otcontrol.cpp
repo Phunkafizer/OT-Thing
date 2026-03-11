@@ -353,7 +353,6 @@ void OTControl::setOTMode(const OTMode mode) {
     digitalWrite(GPIO_BYPASS_RELAY, (mode != OTMODE_BYPASS) && !bypass);
 
     // set +24V stepup up
-    enableSlave &= (mode == OTMODE_REPEATER) || (mode == OTMODE_LOOPBACKTEST);
     digitalWrite(GPIO_STEPUP_ENABLE, enableSlave && !bypass);
 
     for (auto *valobj: slaveValues)
@@ -1436,6 +1435,7 @@ void OTControl::setConfig(JsonObject &config) {
     slaveApp = (SlaveApplication) ((int) config[F("slaveApp")] | 0);
 
     enableSlave = config[F("enableSlave")] | false;
+    enableSlave |= (mode == OTMODE_REPEATER) || (mode == OTMODE_LOOPBACKTEST);
     setOTMode(mode);
 
     setDhwRequest.force();
