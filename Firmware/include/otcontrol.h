@@ -70,12 +70,14 @@ private:
         double flow; // default flow temperature 
         bool enableHyst;
         double hysteresis;
+        double suspOffset;
         struct {
             bool enabled;
             double p; // Kp K/K
             double i; // Ki 1/h
             double boost; // Kb K/K
         } roomComp;
+        bool minSuspend;
     } heatingConfig[NUM_HEATCIRCUITS];
     struct HeatingControl {
         bool chOn;

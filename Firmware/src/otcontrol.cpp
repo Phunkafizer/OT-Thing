@@ -404,6 +404,9 @@ double OTControl::getFlow(const uint8_t channel) {
         // room temperature compensation
         flow += heatingCtrl->piCtrl.deltaT;
     }
+
+    if (hconf.minSuspend && (flow < hctrl.flowMin))
+        return 0;
     
     clip(flow, hctrl.flowMin, hconf.flowMax);
 
@@ -411,6 +414,8 @@ double OTControl::getFlow(const uint8_t channel) {
 }
 
 bool OTControl::getChannelOn(const uint8_t channel) {
+    if (getFlow(channel) == 0)
+        return false;
     return heatingCtrl[channel].chOn && !(heatingConfig[channel].enableHyst && heatingCtrl[channel].suspended);
 }
 
@@ -593,8 +598,9 @@ void OTControl::loopPiCtrl() {
         HeatingControl::PiCtrl &pictrl = heatingCtrl[i].piCtrl;
         
         double rt, rsp; // roomtemp, roomsetpoint
+        const HeatingConfig& hconf = heatingConfig[i];
 
-        if (!heatingConfig[i].enableHyst)
+        if (!hconf.enableHyst)
             heatingCtrl[i].suspended = false;
 
         pictrl.deltaT = 0;
@@ -614,13 +620,13 @@ void OTControl::loopPiCtrl() {
         pictrl.init = true;
 
 
-        if (heatingConfig[i].enableHyst) {
+        if (hconf.enableHyst) {
             if (heatingCtrl[i].suspended) {
-                if (rt < rsp - heatingConfig[i].hysteresis)
+                if (rt < rsp - hconf.hysteresis + hconf.suspOffset)
                     heatingCtrl[i].suspended = false;
             }
             else {
-                if (rt > rsp + heatingConfig[i].hysteresis)
+                if (rt > rsp + hconf.hysteresis + hconf.suspOffset)
                     heatingCtrl[i].suspended = true;
             }
         }
@@ -636,7 +642,7 @@ void OTControl::loopPiCtrl() {
             e = 0;
 
         // proportional part of PI controller
-        double p = heatingConfig[i].roomComp.p * e; // Kp * e
+        double p = hconf.roomComp.p * e; // Kp * e
         
         // integral part of PI controller
         pictrl.integState += rsp - pictrl.rspPrev;
@@ -655,7 +661,7 @@ void OTControl::loopPiCtrl() {
 
         double boost = 0;
         if (e > 1.0)
-            boost = e * heatingConfig[i].roomComp.boost; // e * Kb
+            boost = e * hconf.roomComp.boost; // e * Kb
 
         pictrl.deltaT = p + pictrl.integState + boost;
         // clipping
@@ -1397,7 +1403,9 @@ void OTControl::setConfig(JsonObject &config) {
         hconf.roomComp.i = roomComp[F("i")] | 0.0;
         hconf.roomComp.boost = roomComp[F("boost")] | 3.0;
         hconf.hysteresis = hpObj[F("hysteresis")] | 0.1;
+        hconf.suspOffset = hpObj[F("suspOffset")] | 0.0;
         hconf.enableHyst = hpObj[F("enableHyst")] | false;
+        hconf.minSuspend = hpObj[F("minSuspend")] | false;
         
         hctrl.flowTemp = hconf.flow;
         hctrl.flowMin = hpObj[F("flowMin")] | 20;

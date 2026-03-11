@@ -1033,6 +1033,16 @@
                     </div>
                 </div>
 
+                <div class="param">
+                    <h5>suspend below min. flow</h5>
+                    <div>
+                        <label class="switch">
+                            <input id="minSuspend1" type="checkbox" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
                 <div id="roomset1" class="param">
                     <h5>Room set temperature (default)</h5>
                     <div class="flexline">
@@ -1135,7 +1145,7 @@
                     <h5>enable</h5>
                     <div>
                         <label class="switch">
-                            <input id="enableHyst1" type="checkbox" hideele="hyst1" />
+                            <input id="enableHyst1" type="checkbox" hideele="hyst1 suspOffset1" />
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -1148,6 +1158,16 @@
                             <span class="unit">K</span>
                         </div>
                         <input type="range" min="0.1" max="2" step="0.1">
+                    </div>
+                </div>
+                <div id="suspOffset1" class="param">
+                    <h5>suspend offset</h5>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">K</span>
+                        </div>
+                        <input type="range" min="0.0" max="10" step="0.1">
                     </div>
                 </div>
             </div>
@@ -1300,6 +1320,16 @@
                     </div>
                 </div>
 
+                <div class="param">
+                    <h5>suspend below min. flow</h5>
+                    <div>
+                        <label class="switch">
+                            <input id="minSuspend2" type="checkbox" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
                 <div id="roomset2" class="param">
                     <h5>Room set temperature (default)</h5>
                     <div class="flexline">
@@ -1403,7 +1433,7 @@
                     <h5>enable</h5>
                     <div>
                         <label class="switch">
-                            <input id="enableHyst2" type="checkbox" hideele="hyst2" />
+                            <input id="enableHyst2" type="checkbox" hideele="hyst2 suspOffset2" />
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -1416,6 +1446,16 @@
                             <span class="unit">K</span>
                         </div>
                         <input type="range" min="0.1" max="2" step="0.1">
+                    </div>
+                </div>
+                <div id="suspOffset2" class="param">
+                    <h5>suspend offset</h5>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">K</span>
+                        </div>
+                        <input type="range" min="0.0" max="10" step="0.1">
                     </div>
                 </div>
             </div>
@@ -1922,7 +1962,9 @@
                     },
                     overrideFlow: false,
                     enableHyst: false,
-                    hysteresis: 0.5
+                    hysteresis: 0.5,
+                    minSuspend: false,
+                    suspOffset: 0.0
                 },
                 {
                     flow: 30,
@@ -1948,7 +1990,9 @@
                     },
                     overrideFlow: false,
                     enableHyst: false,
-                    hysteresis: 0.5
+                    hysteresis: 0.5,
+                    minSuspend: false,
+                    suspOffset: 0.0
                 }
             ],
             vent: {
@@ -2054,6 +2098,7 @@
                         ...(heating.roomComp ?? {}),
                         enabled: _(`#roomCompEnable${ch}`).checked
                     }
+                    heating.minSuspend = _(`#minSuspend${ch}`).checked;
                 });
 
                 config.boiler = {
@@ -2413,6 +2458,7 @@
                     initRangeParam(`roomCompI${ch}`, `heating.${idx}.roomComp.i`);
                     initRangeParam(`roomCompBoost${ch}`, `heating.${idx}.roomComp.boost`);
                     initRangeParam(`hyst${ch}`, `heating.${idx}.hysteresis`);
+                    initRangeParam(`suspOffset${ch}`, `heating.${idx}.suspOffset`);
 
                      if ('roomtemp' in hcfg) {
                         _(`#selectRoomTempSource${ch}`).value = hcfg.roomtemp.source;
@@ -2424,6 +2470,8 @@
                     if ('roomsetpoint' in hcfg)
                         _(`#selectRoomSetpointSource${ch}`).value = hcfg.roomsetpoint.source;
                     _(`#selectRoomSetpointSource${ch}`).dispatchEvent(new Event('change'));
+
+                    _(`#minSuspend${ch}`).checked = hcfg.minSuspend || false;
                 });
 
                 _("#ventEnable").checked = config.vent?.ventEnable ?? false;
@@ -2949,14 +2997,20 @@
                 ctx.beginPath();
                 ctx.moveTo(p.x, p.y);
                 let otf = false;
-                for (var ot = otStart; ot >= xaxis.max; ot -= 0.5) {
+                for (var ot = otStart; ot >= xaxis.max; ot -= 0.25) {
                     ft = getFlowTemperature(ot, roomset, flowmax, exponent, gradient, offset) + delta;
                     ft = clip(ft, 100, flowmin);
 
                     if ((ft >= flowmax) && !otf) {
+                        p = getPoint(ot, flowmax);
+                        ctx.lineTo(p.x, p.y);
+                        p = getPoint(xaxis.max, flowmax);
+                        ctx.lineTo(p.x, p.y);
                         ctx.stroke();
+
                         ctx.strokeStyle = "#888";
                         ctx.beginPath();
+                        p = getPoint(ot, ft);
                         ctx.moveTo(p.x, p.y);
                         otf = true;
                     }
