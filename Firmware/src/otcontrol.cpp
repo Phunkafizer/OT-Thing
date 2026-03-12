@@ -1187,7 +1187,7 @@ bool OTControl::sendDiscovery() {
     discFlag &= haDisc.publish();
 
     haDisc.createSensor(F("flame ratio"), F("flame_ratio"));
-    haDisc.setValueTemplate(F("{{ value_json.slave.flameStats.ratio | default(None) }}"));
+    haDisc.setValueTemplate(F("{{ value_json.slave.flameStats.duty | default(None) }}"));
     haDisc.setDeviceClass(F("power_factor"));
     haDisc.setUnit(FPSTR(HA_UNIT_PERCENT));
     discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
