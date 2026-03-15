@@ -6,6 +6,7 @@
 struct HeatingConfig {
   bool chOn;
   bool active;        // True = 6-point, false = linear
+  bool curveSmooth;   // Smooth 6-point curve (Catmull-Rom)
   double linearSlope;  // Slope
   double baseTemp;     // Base room temp (pivot)
   double linearOffset; // NEW: vertical shift (level)
@@ -38,6 +39,8 @@ class HeatingLogic {
     bool _isSummerMode = false;
     double _smoothedTemp = -999.0; 
     unsigned long _lastUpdate = 0;
+
+    double catmullRom(double t, double p0, double p1, double p2, double p3);
 
   public:
     HeatingConfig config;

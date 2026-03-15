@@ -5,6 +5,7 @@ HeatingLogic::HeatingLogic() {
   // Defaults
   config.chOn = false;
   config.active = false;
+  config.curveSmooth = false;
   config.linearSlope = 1.2;
   config.baseTemp = 20.0;
   config.linearOffset = 0.0; // Default: no offset
@@ -34,6 +35,17 @@ HeatingLogic::HeatingLogic() {
 double HeatingLogic::interpolate(double x, double x1, double y1, double x2, double y2) {
   if (fabs(x2 - x1) < 0.001) return y1;
   return y1 + (x - x1) * (y2 - y1) / (x2 - x1);
+}
+
+double HeatingLogic::catmullRom(double t, double p0, double p1, double p2, double p3) {
+  const double t2 = t * t;
+  const double t3 = t2 * t;
+  return 0.5 * (
+    (2.0 * p1) +
+    (-p0 + p2) * t +
+    (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t2 +
+    (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * t3
+  );
 }
 
 void HeatingLogic::updateOutdoorTemp(double currentRaw) {
@@ -89,13 +101,27 @@ double HeatingLogic::getCalculatedSetpoint() {
     } else {
       for (int i = 0; i < numPoints - 1; i++) {
         if (calcTemp <= config.points[i].out && calcTemp > config.points[i + 1].out) {
-          target = interpolate(
-            calcTemp,
-            config.points[i].out,
-            config.points[i].flow,
-            config.points[i + 1].out,
-            config.points[i + 1].flow
-          );
+          if (config.curveSmooth) {
+            const double x1 = config.points[i].out;
+            const double x2 = config.points[i + 1].out;
+            const double t = (calcTemp - x1) / (x2 - x1);
+            const double p0 = (i == 0) ? config.points[0].flow : config.points[i - 1].flow;
+            const double p1 = config.points[i].flow;
+            const double p2 = config.points[i + 1].flow;
+            const double p3 = (i + 2 < numPoints) ? config.points[i + 2].flow : config.points[numPoints - 1].flow;
+            const double smooth = catmullRom(t, p0, p1, p2, p3);
+            const double lo = fmin(p1, p2);
+            const double hi = fmax(p1, p2);
+            target = fmin(fmax(smooth, lo), hi);
+          } else {
+            target = interpolate(
+              calcTemp,
+              config.points[i].out,
+              config.points[i].flow,
+              config.points[i + 1].out,
+              config.points[i + 1].flow
+            );
+          }
           break;
         }
       }

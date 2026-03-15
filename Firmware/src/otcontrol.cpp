@@ -1410,6 +1410,7 @@ void OTControl::setConfig(JsonObject &config) {
         hc.linearOffset = hpObj[F("offset")] | hpObj[F("linearOffset")] | 0.0;
         CurveMode curveMode = (CurveMode) ((int) hpObj[F("curveMode")] | (int) CURVE_LINEAR);
         hc.active = (curveMode == CURVE_FOUR_POINT);
+        hc.curveSmooth = hpObj[F("curveSmooth")] | false;
         hc.flow = hpObj[F("flow")] | 35;
         hc.minSuspend = hpObj[F("minSuspend")] | false;
         hc.suspOffset = hpObj[F("suspOffset")] | 0.0;
@@ -1469,7 +1470,10 @@ void OTControl::setConfig(JsonObject &config) {
             }
         }
 
+        const double minOutSpacing = 1.0;
         for (int p = 1; p < 6; p++) {
+            if (curvePoints[p].out - curvePoints[p - 1].out < minOutSpacing)
+                curvePoints[p].out = curvePoints[p - 1].out + minOutSpacing;
             if (curvePoints[p].flow > curvePoints[p - 1].flow)
                 curvePoints[p].flow = curvePoints[p - 1].flow;
         }

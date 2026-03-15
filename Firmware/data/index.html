@@ -1191,6 +1191,17 @@
                     </div>
                 </div>
 
+                <div class="param curve-only">
+                    <h5>Smooth curve</h5>
+                    <div class="flexline">
+                        <label class="switch">
+                            <input id="curveSmooth1" type="checkbox" />
+                            <span class="slider"></span>
+                        </label>
+                        <div class="valunit">Catmull-Rom</div>
+                    </div>
+                </div>
+
                 <div id="curvePoints1" class="param" hidden>
                     <h5>Curve points</h5>
                     <table>
@@ -1265,6 +1276,13 @@
                 <div class="curve">
                     <canvas id="canvas1" height="375px" width="375px">
                     </canvas>
+                </div>
+
+                <div class="param">
+                    <h5>Clamp range</h5>
+                    <div class="valunit">
+                        <span id="curveClamp1"></span>
+                    </div>
                 </div>
 
                 <div class="flexline">
@@ -1535,6 +1553,17 @@
                     </div>
                 </div>
 
+                <div class="param curve-only">
+                    <h5>Smooth curve</h5>
+                    <div class="flexline">
+                        <label class="switch">
+                            <input id="curveSmooth2" type="checkbox" />
+                            <span class="slider"></span>
+                        </label>
+                        <div class="valunit">Catmull-Rom</div>
+                    </div>
+                </div>
+
                 <div id="curvePoints2" class="param" hidden>
                     <h5>Curve points</h5>
                     <table>
@@ -1609,6 +1638,13 @@
                 <div class="curve">
                     <canvas id="canvas2" height="375px" width="375px">
                     </canvas>
+                </div>
+
+                <div class="param">
+                    <h5>Clamp range</h5>
+                    <div class="valunit">
+                        <span id="curveClamp2"></span>
+                    </div>
                 </div>
 
                 <div class="flexline">
@@ -2071,6 +2107,7 @@
                     gradient: 1.0,
                     offset: 0,
                     curveMode: 0,
+                    curveSmooth: false,
                     curvePoints: [],
                     marker: [],
                     roomsetpoint: {
@@ -2101,6 +2138,7 @@
                     gradient: 1.0,
                     offset: 0,
                     curveMode: 0,
+                    curveSmooth: false,
                     curvePoints: [],
                     marker: [],
                     roomsetpoint: {
@@ -2601,6 +2639,15 @@
                     };
                     curveModeInput.dispatchEvent(new Event('change'));
 
+                    let curveSmoothInput = _(`#curveSmooth${ch}`);
+                    if (curveSmoothInput) {
+                        curveSmoothInput.checked = hcfg.curveSmooth || false;
+                        curveSmoothInput.onchange = (ev) => {
+                            hcfg.curveSmooth = ev.target.checked;
+                            drawCurve(ch);
+                        };
+                    }
+
                     let points = ensureCurvePoints(hcfg, roomsetpoint[idx]);
                     const pointIds = [
                         { out: `#curve${ch}p1out`, flow: `#curve${ch}p1flow`, idx: 0 },
@@ -3055,9 +3102,12 @@
 
         function normalizeCurvePoints(points) {
             const result = points.map((p) => ({ ...p }));
+            const minOutSpacing = 1.0;
             for (let i = 1; i < result.length; i++) {
                 if (result[i].out > result[i - 1].out)
                     result[i].out = result[i - 1].out;
+                if (result[i - 1].out - result[i].out < minOutSpacing)
+                    result[i].out = result[i - 1].out - minOutSpacing;
             }
             for (let i = 1; i < result.length; i++) {
                 if (result[i].flow < result[i - 1].flow)
@@ -3069,6 +3119,9 @@
         function toggleCurveModeUi(ch, isFourPoint) {
             __(`#heatingcurve${ch} .linear-only`).forEach((el) => {
                 el.hidden = isFourPoint;
+            });
+            __(`#heatingcurve${ch} .curve-only`).forEach((el) => {
+                el.hidden = !isFourPoint;
             });
         }
 
@@ -3098,7 +3151,9 @@
             let flowmax = hcfg.flowMax ?? 40;
             let minFlow = hcfg.flowMin ?? hcfg.minFlow ?? 20;
             const points = ensureCurvePoints(hcfg, roomset);
-            let ft = getFourPointFlow(outTemp, points);
+            let ft = (hcfg.curveSmooth === true)
+                ? getFourPointFlowSmooth(outTemp, points)
+                : getFourPointFlow(outTemp, points);
             if (ft === null)
                 return null;
             return clamp(ft, minFlow, flowmax);
@@ -3283,6 +3338,11 @@
             let flowmax = parseFloat(_(`#flowmax${hk} input`).value);
             let flowmin = parseFloat(_(`#flowmin${hk} input`).value);
             let fmg = Math.ceil(flowmax / 10) * 10 + 5; // flowmax for graph
+
+            const clampInfo = _(`#curveClamp${hk}`);
+            if (clampInfo) {
+                clampInfo.textContent = `${flowmin.toFixed(1)} °C to ${flowmax.toFixed(1)} °C`;
+            }
 
             canvas.height = 20 + (fmg - 20) * 4.5;
             var ctx = canvas.getContext("2d");
