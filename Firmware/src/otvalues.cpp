@@ -564,6 +564,8 @@ bool OTValueMasterStatus::sendDiscovery() {
         if (!sendDiscFlag(&flagTable[i], enb))
             return false;
     }
+
+    return true;
 }
 
 void OTValueMasterStatus::getValue(JsonVariant var) const {

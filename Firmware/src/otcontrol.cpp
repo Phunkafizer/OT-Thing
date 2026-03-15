@@ -374,7 +374,6 @@ double OTControl::getFlow(const uint8_t channel) {
     HeatingControl &hctrl = heatingCtrl[channel];
     double flow = hc.flow;
     double outTmp = 0.0;
-    bool hasOutside = false;
     double roomSet = hc.baseTemp;
 
     switch (hctrl.mode) {
@@ -392,7 +391,6 @@ double OTControl::getFlow(const uint8_t channel) {
         }
         if (lastOutsideValid[channel]) {
             outTmp = lastOutsideTemp[channel];
-            hasOutside = true;
             roomSetPoint[channel].get(roomSet);
             hc.baseTemp = roomSet;
             heatingLogic[channel].updateOutdoorTemp(outTmp);
