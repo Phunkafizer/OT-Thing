@@ -3358,6 +3358,10 @@
                     roomdelta = (rc.p ?? 0) * (roomset - (hcs.roomtemp ?? 0)) + (hcs.integState ?? 0);
             }
 
+            let gradient = parseFloat(_("#gradient" + hk + " input").value);
+            let exponent = parseFloat(_("#exponent" + hk + " input").value);
+            let offset = parseFloat(_("#offset" + hk + " input").value);
+
             let curveMode = hcfg.curveMode ?? 0;
             let curvePoints = null;
             if (curveMode === 1)
