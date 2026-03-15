@@ -13,6 +13,8 @@ struct HeatingConfig {
   
   double tMin;         // Global minimum temperature
   double tMax;         // Global maximum temperature
+  bool minSuspend;     // Suspend if flow below tMin
+  double suspOffset;   // Offset for room-setpoint suspend
 
   // 4-point definition
   struct CurvePoint {

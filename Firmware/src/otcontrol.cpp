@@ -413,33 +413,11 @@ double OTControl::getFlow(const uint8_t channel) {
 
     // room temperature compensation
     flow += hctrl.piCtrl.deltaT;
-    clip(flow, hc.tMin, hc.tMax);
 
-    //Add adaptiveMinFlow to stabilize min flow handling
+    if (hc.minSuspend && (flow <= hctrl.flowMin))
+        return 0;
 
-    // Introduce adaptiveMinFlow as a dedicated component to compute an effective minimum
-    // flow based on runtime signal(s) and configuration. This centralizes min-flow
-    // logic, improves robustness against invalid inputs, and enables future tuning.
-
-    double adaptiveMinFlow = hc.tMin;
-    if ((heatingCtrl[channel].mode == CTRLMODE_AUTO) && hasOutside) {
-        double rt;
-        if (roomTemp[channel].get(rt)) {
-            double warmFactor = 0.0;
-            if (outTmp > 10.0)
-                warmFactor = (outTmp - 10.0) / 10.0;
-            if (warmFactor > 1.0)
-                warmFactor = 1.0;
-
-            double nearSetFactor = (rt >= (roomSet - 0.2)) ? 1.0 : 0.0;
-            double reduce = warmFactor * nearSetFactor * 10.0;
-            adaptiveMinFlow = hc.tMin - reduce;
-            if (adaptiveMinFlow < 0.0)
-                adaptiveMinFlow = 0.0;
-        }
-    }
-
-    clip(flow, adaptiveMinFlow, hc.tMax);
+    clip(flow, hctrl.flowMin, hc.tMax);
 
     return flow;
 }
@@ -656,7 +634,7 @@ void OTControl::loopPiCtrl() {
                     heatingCtrl[i].suspended = false;
             }
             else {
-                if (rt > rsp + hc.hysteresis)
+                if (rt > rsp + hc.hysteresis + hc.suspOffset)
                     heatingCtrl[i].suspended = true;
             }
         }
@@ -1144,6 +1122,7 @@ void OTControl::getJson(JsonObject &obj) {
         hc[F("summerMode")] = heatingLogic[i].isSummer();
 
         hc[F("ovrdFlow")] = hctrl.overrideFlow;
+        hc[F("flowMin")] = hctrl.flowMin;
         hc[F("mode")] = (int) hctrl.mode;
         hc[F("integState")] = round(hctrl.piCtrl.integState * 100) / 100.0;
         if (heatingLogic[i].config.enableHyst)
@@ -1426,7 +1405,7 @@ void OTControl::setConfig(JsonObject &config) {
         HeatingControl &hctrl = heatingCtrl[i];
         hc.chOn = hpObj[F("chOn")];
         hc.baseTemp = hpObj[F("roomsetpoint")][F("temp")] | 21.0; // default room set point
-        hc.tMin = hpObj[F("minFlow")] | 20.0;
+        hc.tMin = hpObj[F("flowMin")] | hpObj[F("minFlow")] | 20.0;
         hc.tMax = hpObj[F("flowMax")] | 40;
         hc.exponent = hpObj[F("exponent")] | 1.0;
         hc.linearSlope = hpObj[F("gradient")] | 1.0;
@@ -1434,6 +1413,8 @@ void OTControl::setConfig(JsonObject &config) {
         CurveMode curveMode = (CurveMode) ((int) hpObj[F("curveMode")] | (int) CURVE_LINEAR);
         hc.active = (curveMode == CURVE_FOUR_POINT);
         hc.flow = hpObj[F("flow")] | 35;
+        hc.minSuspend = hpObj[F("minSuspend")] | false;
+        hc.suspOffset = hpObj[F("suspOffset")] | 0.0;
 
         if (hc.tMin > hc.tMax)
             hc.tMin = hc.tMax;
@@ -1584,7 +1565,10 @@ void OTControl::setChTemp(const double temp, const uint8_t channel) {
 }
 
 void OTControl::setFlowMin(const double flowMin, const uint8_t channel) {
-    heatingCtrl[channel].flowMin = flowMin;
+    heatingLogic[channel].config.tMin = flowMin;
+    if (heatingLogic[channel].config.tMin > heatingLogic[channel].config.tMax)
+        heatingLogic[channel].config.tMin = heatingLogic[channel].config.tMax;
+    heatingCtrl[channel].flowMin = heatingLogic[channel].config.tMin;
     setBoilerRequest[channel].force();
 }
 

@@ -10,15 +10,17 @@ HeatingLogic::HeatingLogic() {
   config.linearOffset = 0.0; // Default: no offset
   config.exponent = 1.0;
 
-  config.tMin = 25.0;
-  config.tMax = 75.0;
-  config.flow = 35.0;
+  config.tMin = 10.0;
+  config.tMax = 60.0;
+  config.minSuspend = false;
+  config.suspOffset = 0.0;
+  config.flow = 45.0;
   config.enableHyst = false;
-  config.hysteresis = 2.0;
+  config.hysteresis = 0.5;
   config.roomComp.enabled = false;
-  config.roomComp.p = 0.0;
-  config.roomComp.i = 0.0;
-  config.roomComp.boost = 3.0;
+  config.roomComp.p = 1.5;
+  config.roomComp.i = 0.5;
+  config.roomComp.boost = 0.0;
 
   // Viessmann-like curve
   config.points[0] = {18.0, 20.0};

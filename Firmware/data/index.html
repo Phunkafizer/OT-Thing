@@ -3074,7 +3074,7 @@
             if ((hcfg.curveMode ?? 0) !== 1)
                 return null;
             let flowmax = hcfg.flowMax ?? 40;
-            let minFlow = hcfg.minFlow ?? 20;
+            let minFlow = hcfg.flowMin ?? hcfg.minFlow ?? 20;
             const points = ensureCurvePoints(hcfg, roomset);
             let ft = getFourPointFlow(outTemp, points);
             if (ft === null)
@@ -3087,7 +3087,7 @@
             if (base === null)
                 return null;
             let flowmax = hcfg.flowMax ?? 40;
-            let minFlow = hcfg.minFlow ?? 20;
+            let minFlow = hcfg.flowMin ?? hcfg.minFlow ?? 20;
             return clamp(base + roomdelta, minFlow, flowmax);
         }
 
