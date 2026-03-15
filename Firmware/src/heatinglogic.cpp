@@ -22,11 +22,13 @@ HeatingLogic::HeatingLogic() {
   config.roomComp.i = 0.5;
   config.roomComp.boost = 0.0;
 
-  // Viessmann-like curve
-  config.points[0] = {18.0, 20.0};
+  // Viessmann-like curve (6 points)
+  config.points[0] = {20.0, 20.0};
   config.points[1] = {10.0, 38.0};
   config.points[2] = {0.0, 50.0};
-  config.points[3] = {-15.0, 65.0};
+  config.points[3] = {-10.0, 58.0};
+  config.points[4] = {-20.0, 65.0};
+  config.points[5] = {-30.0, 70.0};
 }
 
 double HeatingLogic::interpolate(double x, double x1, double y1, double x2, double y2) {
@@ -78,17 +80,26 @@ double HeatingLogic::getCalculatedSetpoint() {
     }
     target = config.baseTemp + config.linearSlope * shaped + config.linearOffset;
   } else {
-    // --- 4-POINT ---
-    const auto &p1 = config.points[0];
-    const auto &p2 = config.points[1];
-    const auto &p3 = config.points[2];
-    const auto &p4 = config.points[3];
-
-    if (calcTemp >= p1.out) target = p1.flow;
-    else if (calcTemp <= p4.out) target = p4.flow;
-    else if (calcTemp > p2.out) target = interpolate(calcTemp, p1.out, p1.flow, p2.out, p2.flow);
-    else if (calcTemp > p3.out) target = interpolate(calcTemp, p2.out, p2.flow, p3.out, p3.flow);
-    else target = interpolate(calcTemp, p3.out, p3.flow, p4.out, p4.flow);
+    // --- 6-POINT ---
+    const int numPoints = sizeof(config.points) / sizeof(config.points[0]);
+    if (calcTemp >= config.points[0].out) {
+      target = config.points[0].flow;
+    } else if (calcTemp <= config.points[numPoints - 1].out) {
+      target = config.points[numPoints - 1].flow;
+    } else {
+      for (int i = 0; i < numPoints - 1; i++) {
+        if (calcTemp <= config.points[i].out && calcTemp > config.points[i + 1].out) {
+          target = interpolate(
+            calcTemp,
+            config.points[i].out,
+            config.points[i].flow,
+            config.points[i + 1].out,
+            config.points[i + 1].flow
+          );
+          break;
+        }
+      }
+    }
   }
 
   // 3. Limits

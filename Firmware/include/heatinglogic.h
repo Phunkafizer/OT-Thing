@@ -5,7 +5,7 @@
 
 struct HeatingConfig {
   bool chOn;
-  bool active;        // True = 4-point, false = linear
+  bool active;        // True = 6-point, false = linear
   double linearSlope;  // Slope
   double baseTemp;     // Base room temp (pivot)
   double linearOffset; // NEW: vertical shift (level)
@@ -16,11 +16,11 @@ struct HeatingConfig {
   bool minSuspend;     // Suspend if flow below tMin
   double suspOffset;   // Offset for room-setpoint suspend
 
-  // 4-point definition
+  // 6-point definition
   struct CurvePoint {
     double out;
     double flow;
-  } points[4];
+  } points[6];
 
   double flow; // Default flow temperature
   bool enableHyst;

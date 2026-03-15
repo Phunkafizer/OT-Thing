@@ -1222,6 +1222,16 @@
                                 <td><input id="curve1p4out" type="number" step="0.5" /></td>
                                 <td><input id="curve1p4flow" type="number" step="0.5" /></td>
                             </tr>
+                            <tr>
+                                <td>P5</td>
+                                <td><input id="curve1p5out" type="number" step="0.5" /></td>
+                                <td><input id="curve1p5flow" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td>P6</td>
+                                <td><input id="curve1p6out" type="number" step="0.5" /></td>
+                                <td><input id="curve1p6flow" type="number" step="0.5" /></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -1555,6 +1565,16 @@
                                 <td>P4</td>
                                 <td><input id="curve2p4out" type="number" step="0.5" /></td>
                                 <td><input id="curve2p4flow" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td>P5</td>
+                                <td><input id="curve2p5out" type="number" step="0.5" /></td>
+                                <td><input id="curve2p5flow" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td>P6</td>
+                                <td><input id="curve2p6out" type="number" step="0.5" /></td>
+                                <td><input id="curve2p6flow" type="number" step="0.5" /></td>
                             </tr>
                         </tbody>
                     </table>
@@ -2586,7 +2606,9 @@
                         { out: `#curve${ch}p1out`, flow: `#curve${ch}p1flow`, idx: 0 },
                         { out: `#curve${ch}p2out`, flow: `#curve${ch}p2flow`, idx: 1 },
                         { out: `#curve${ch}p3out`, flow: `#curve${ch}p3flow`, idx: 2 },
-                        { out: `#curve${ch}p4out`, flow: `#curve${ch}p4flow`, idx: 3 }
+                        { out: `#curve${ch}p4out`, flow: `#curve${ch}p4flow`, idx: 3 },
+                        { out: `#curve${ch}p5out`, flow: `#curve${ch}p5flow`, idx: 4 },
+                        { out: `#curve${ch}p6out`, flow: `#curve${ch}p6flow`, idx: 5 }
                     ];
                     pointIds.forEach((entry) => {
                         const outInput = _(entry.out);
@@ -3014,11 +3036,11 @@
         }
 
         function ensureCurvePoints(hcfg, roomset) {
-            const defaults = [20, 10, -5, -15];
+            const defaults = [20, 10, 0, -10, -20, -30];
             if (!Array.isArray(hcfg.curvePoints))
                 hcfg.curvePoints = [];
             let points = [];
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < defaults.length; i++) {
                 const current = hcfg.curvePoints[i] || {};
                 const outTemp = (current.out ?? defaults[i]);
                 const flowTemp = (current.flow ?? calcLinearFlow(outTemp, hcfg, roomset));
@@ -3051,12 +3073,12 @@
         }
 
         function getFourPointFlow(outTemp, points) {
-            if (!Array.isArray(points) || points.length < 4)
+            if (!Array.isArray(points) || points.length < 2)
                 return null;
             const sorted = [...points].sort((a, b) => b.out - a.out);
             if (outTemp >= sorted[0].out) return sorted[0].flow;
-            if (outTemp <= sorted[3].out) return sorted[3].flow;
-            for (let i = 0; i < 3; i++) {
+            if (outTemp <= sorted[sorted.length - 1].out) return sorted[sorted.length - 1].flow;
+            for (let i = 0; i < sorted.length - 1; i++) {
                 if (outTemp < sorted[i].out && outTemp >= sorted[i + 1].out) {
                     const x1 = sorted[i].out;
                     const y1 = sorted[i].flow;
@@ -3067,7 +3089,7 @@
                     return y1 + (outTemp - x1) * (y2 - y1) / (x2 - x1);
                 }
             }
-            return sorted[3].flow;
+            return sorted[sorted.length - 1].flow;
         }
 
         function calcHeatingLogicBaseFlow(outTemp, hcfg, roomset) {
@@ -3103,13 +3125,13 @@
         }
 
         function getFourPointFlowSmooth(outTemp, points) {
-            if (!Array.isArray(points) || points.length < 4)
+            if (!Array.isArray(points) || points.length < 2)
                 return null;
             const sorted = [...points].sort((a, b) => b.out - a.out);
             if (outTemp >= sorted[0].out) return sorted[0].flow;
-            if (outTemp <= sorted[3].out) return sorted[3].flow;
+            if (outTemp <= sorted[sorted.length - 1].out) return sorted[sorted.length - 1].flow;
 
-            for (let i = 0; i < 3; i++) {
+            for (let i = 0; i < sorted.length - 1; i++) {
                 const x1 = sorted[i].out;
                 const x2 = sorted[i + 1].out;
                 if (outTemp < x1 && outTemp >= x2) {
@@ -3117,11 +3139,11 @@
                     const p0 = (i === 0) ? sorted[0].flow : sorted[i - 1].flow;
                     const p1 = sorted[i].flow;
                     const p2 = sorted[i + 1].flow;
-                    const p3 = (i + 2 <= 3) ? sorted[i + 2].flow : sorted[3].flow;
+                    const p3 = (i + 2 < sorted.length) ? sorted[i + 2].flow : sorted[sorted.length - 1].flow;
                     return catmullRom(t, p0, p1, p2, p3);
                 }
             }
-            return sorted[3].flow;
+            return sorted[sorted.length - 1].flow;
         }
 
         function getCurveAxes(hk, canvas) {

@@ -1437,17 +1437,17 @@ void OTControl::setConfig(JsonObject &config) {
             heatingCtrl[i].piCtrl.rspPrev = hc.baseTemp;
         }
 
-        const double outsideDefaults[4] = {20.0, 10.0, -5.0, -15.0};
+        const double outsideDefaults[6] = {20.0, 10.0, 0.0, -10.0, -20.0, -30.0};
         auto calcLinearFlow = [&](const double outTemp) {
             double ft = hc.baseTemp + hc.linearSlope * (hc.baseTemp - outTemp) + hc.linearOffset;
             clip(ft, hc.tMin, hc.tMax);
             return ft;
         };
 
-        HeatingConfig::CurvePoint curvePoints[4];
+        HeatingConfig::CurvePoint curvePoints[6];
         bool hasCurve = hpObj[F("curvePoints")].is<JsonArray>();
         JsonArray cp = hpObj[F("curvePoints")].as<JsonArray>();
-        for (int p = 0; p < 4; p++) {
+        for (int p = 0; p < 6; p++) {
             double outTemp = outsideDefaults[p];
             double flowTemp = calcLinearFlow(outTemp);
             if (hasCurve && p < (int) cp.size()) {
@@ -1459,8 +1459,8 @@ void OTControl::setConfig(JsonObject &config) {
             curvePoints[p].flow = flowTemp;
         }
 
-        for (int a = 0; a < 3; a++) {
-            for (int b = 0; b < 3 - a; b++) {
+        for (int a = 0; a < 5; a++) {
+            for (int b = 0; b < 5 - a; b++) {
                 if (curvePoints[b].out > curvePoints[b + 1].out) {
                     auto tmp = curvePoints[b];
                     curvePoints[b] = curvePoints[b + 1];
@@ -1469,14 +1469,16 @@ void OTControl::setConfig(JsonObject &config) {
             }
         }
 
-        for (int p = 1; p < 4; p++) {
+        for (int p = 1; p < 6; p++) {
             if (curvePoints[p].flow > curvePoints[p - 1].flow)
                 curvePoints[p].flow = curvePoints[p - 1].flow;
         }
-        hc.points[0] = curvePoints[3];
-        hc.points[1] = curvePoints[2];
-        hc.points[2] = curvePoints[1];
-        hc.points[3] = curvePoints[0];
+        hc.points[0] = curvePoints[5];
+        hc.points[1] = curvePoints[4];
+        hc.points[2] = curvePoints[3];
+        hc.points[3] = curvePoints[2];
+        hc.points[4] = curvePoints[1];
+        hc.points[5] = curvePoints[0];
     }
 
     JsonObject ventObj = config[F("vent")];
