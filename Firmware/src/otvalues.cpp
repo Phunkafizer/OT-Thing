@@ -52,7 +52,6 @@ static const OTItem OTITEMS[] PROGMEM = {
     {TdhwSetUBTdhwSetLB,        PSTR("dhw_bounds")},
     {MaxTSetUBMaxTSetLB,        PSTR("ch_bounds")},
     {TdhwSet,                   PSTR("dhw_set_t")},
-    {MaxTSet,                   PSTR("max_set_t")},
     {StatusVentilationHeatRecovery, PSTR("vent_status")},
     {Vset,                      PSTR("rel_vent_set")},
     {ASFflagsOEMfaultCodeVentilationHeatRecovery, PSTR("vent_fault_flags")},
@@ -149,7 +148,7 @@ OTValue *slaveValues[55] = { // reply data collected (read) from slave (boiler /
 };
 
 
-OTValue *thermostatValues[19] = { // request data sent (written) from roomunit
+OTValue *thermostatValues[18] = { // request data sent (written) from roomunit
     new OTValueFloat(           TSet,                   -1),
     new OTValueFloat(           TsetCH2,                -1),
     new OTValueFloat(           Tr,                     -1),
@@ -167,8 +166,7 @@ OTValue *thermostatValues[19] = { // request data sent (written) from roomunit
     new OTValueDate(),
     new OTValueu16(             Year,                   -1),
     new OTValueu16(             Vset,                   -1),
-    new OTValueFloat(           Toutside,               -1),
-    new OTValueFloat(           MaxTSet,                -1)
+    new OTValueFloat(           Toutside,               -1)
 };
 
 const char* getOTname(OpenThermMessageID id) {
@@ -566,6 +564,7 @@ bool OTValueMasterStatus::sendDiscovery() {
         if (!sendDiscFlag(&flagTable[i], enb))
             return false;
     }
+
     return true;
 }
 
