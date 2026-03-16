@@ -25,6 +25,14 @@ void HeatingCurve::setConfig(JsonObject &hpObj) {
     std::sort(points.begin(), points.end(), [](const CurvePoint &a, const CurvePoint &b) {
         return a.outside > b.outside;
     });
+
+    // Clamp/normalize points from external config to avoid invalid curves.
+    for (size_t i = 0; i < points.size(); i++) {
+        if (points[i].flow > flowMax)
+            points[i].flow = flowMax;
+        if (i > 0 && points[i].flow < points[i - 1].flow)
+            points[i].flow = points[i - 1].flow;
+    }
 }
 
 double HeatingCurve::getFlowMax() const {
