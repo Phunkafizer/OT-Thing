@@ -76,7 +76,7 @@ public:
         SOURCE_AUTO = 5 // has to be last item in this list!
     };
     OneWireNode *own; // points to a OneWireNode if configured
-    Sensor();
+    Sensor(const double alpha);
     virtual void set(const double val, const Source src);
     bool get(double &val);
     virtual void setConfig(JsonObject &obj);
@@ -87,12 +87,16 @@ public:
 protected:
     Source src;
     double value;
+    double smoothed;
     bool setFlag;
     virtual void loop() {}
 private:
+    void updateSmooth();
+    static uint32_t lastSmooth;
     static Sensor *lastSensor;
     Sensor *prevSensor;
     uint8_t adr[6];
+    double alpha;
 };
 
 class AutoSensor: public Sensor {

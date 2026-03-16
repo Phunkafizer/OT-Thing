@@ -603,20 +603,13 @@ void OTControl::loopPiCtrl() {
 
         pictrl.deltaT = 0;
 
-        if (!roomTemp[i].get(rt))
+        if (!roomTemp[i].get(rt) || !roomSetPoint[i].get(rsp))
             continue;
 
-        if (!roomSetPoint[i].get(rsp))
-            continue;
-
-        if (pictrl.init)
-            pictrl.roomTempFilt = 0.1 * rt + 0.9 * pictrl.roomTempFilt;
-        else {
-            pictrl.roomTempFilt = rt;
+        if (!pictrl.init) {
             pictrl.rspPrev = rsp;
+            pictrl.init = true;
         }
-        pictrl.init = true;
-
 
         if (hconf.enableHyst) {
             if (heatingCtrl[i].suspended) {
@@ -1116,10 +1109,8 @@ void OTControl::getJson(JsonObject &obj) {
         HeatingControl &hctrl = heatingCtrl[i];
         double d;
 
-        if (roomSetPoint[i].get(d)) {
+        if (roomSetPoint[i].get(d))
             hc[F("roomsetpoint")] = d;
-            hc[F("roomTempFilt")] = hctrl.piCtrl.roomTempFilt;
-        }
         
         if (roomTemp[i].get(d))
             hc[F("roomtemp")] = d;

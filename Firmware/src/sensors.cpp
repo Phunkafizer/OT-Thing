@@ -2,12 +2,16 @@
 #include <DallasTemperature.h>
 #include "HADiscLocal.h"
 
-Sensor roomTemp[2];
+Sensor roomTemp[2] = {
+    Sensor(0.2),
+    Sensor(0.2)
+};
 AutoSensor roomSetPoint[2];
 OutsideTemp outsideTemp;
 
 SemaphoreHandle_t AddressableSensor::mutex;
 Sensor* Sensor::lastSensor = nullptr;
+uint32_t Sensor::lastSmooth = 0;
 BLESensor* BLESensor::last = nullptr;
 OneWireNode *OneWireNode::last = nullptr;
 static OneWire oneWire;
@@ -18,18 +22,26 @@ public:
     }
 };
 
-Sensor::Sensor():
+Sensor::Sensor(const double alpha):
     src(SOURCE_NA),
-    setFlag(false) {
+    setFlag(false),
+    alpha(alpha) {
     prevSensor = lastSensor;
     lastSensor = this;
 }
 
 void Sensor::set(const double val, const Source src) {
     if ((src == this->src) || (src == SOURCE_NA)) {
-        this->value = round(val * 10) / 10;
-        setFlag = true;
+        value = val;
+        if (!setFlag)
+            smoothed = val;
+         setFlag = true;
     }
+}
+
+void Sensor::updateSmooth() {
+    smoothed = alpha * value + (1.0 - alpha) * smoothed;
+    Serial.println(smoothed);
 }
 
 bool Sensor::get(double &val) {
@@ -40,12 +52,11 @@ bool Sensor::get(double &val) {
 
         auto *sensor = BLESensor::find(adr);
         if (sensor != nullptr)
-            val = sensor->temp;
-        return true;
+            set(sensor->temp, SOURCE_BLE);
     }
 
     if (setFlag)
-        val = this->value;
+        val = round(this->smoothed * 10) / 10;
     
     return setFlag;
 }
@@ -76,14 +87,21 @@ bool Sensor::isOtSource() {
 }
 
 void Sensor::loopAll() {
+    const bool smooth = ((millis() - lastSmooth) >= 60000);
+    if (smooth)
+        lastSmooth = millis();
+    
     Sensor *item = lastSensor;
     while (item) {
         item->loop();
+        if (smooth)
+            item->updateSmooth();
         item = item->prevSensor;
     }
 }
 
-AutoSensor::AutoSensor() {
+AutoSensor::AutoSensor():
+    Sensor(1.0) {
     memset(values, 0, sizeof(values));
 }
 
@@ -99,6 +117,7 @@ void AutoSensor::set(const double val, const Source src) {
 }
 
 OutsideTemp::OutsideTemp():
+        Sensor(0.2),
         nextMillis(0),
         httpState(HTTP_IDLE) {
 

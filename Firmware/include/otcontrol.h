@@ -86,7 +86,6 @@ private:
         struct PiCtrl {
             bool enabled;
             bool init { false };
-            double roomTempFilt;
             double rspPrev; // previous room setpoint
             double integState {0}; // state of integrator / K
             double deltaT {0};
