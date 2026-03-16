@@ -24,6 +24,12 @@ Ticker statusLedTicker;
 volatile uint16_t statusLedData = 0x8000;
 bool configMode = false;
 
+#ifdef DEBUG
+// Required for DEBUG build: definitions for BLE externs referenced by command.cpp.
+NimBLECharacteristic *bleSerialTx = nullptr;
+volatile bool bleClientConnected = false;
+#endif
+
 
 void statusLedLoop() {
     static uint16_t mask = 0x8000;

@@ -985,7 +985,8 @@
                     </div>
                 </div>
 
-                <div id="exponent1" class="param">
+                <!-- Exponent is linear-only, hidden when 6-point curve is active. -->
+                <div id="exponent1" class="param linear-only">
                     <h5>Heating surface exponent</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -1174,7 +1175,67 @@
 
             <h3>Heating curve</h3>
             <div class="group">
-                <div id="gradient1" class="param">
+                <!-- Added curve mode switch to toggle between linear and 6-point curve. -->
+                <div class="param">
+                    <h5>Curve mode</h5>
+                    <div>
+                        <label class="switch">
+                            <input id="curveMode1" type="checkbox" />
+                            <span class="slider"></span>
+                        </label>
+                        <div class="valunit"></div>
+                    </div>
+                </div>
+                <!-- Added smooth option for the 6-point curve. -->
+                <div class="param curve-only">
+                    <h5>Smooth curve</h5>
+                    <div>
+                        <label class="switch">
+                            <input id="curveSmooth1" type="checkbox" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <!-- Added fixed 6-point inputs for multipoint curve mode. -->
+                <div id="curvePoints1" class="param curve-only">
+                    <h5>Curve points</h5>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="ot">outside</th>
+                                <th class="ft">flow</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input id="curve1p1out" class="curveparam" type="number" step="0.5" /></td>
+                                <td><input id="curve1p1flow" class="curveparam" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td><input id="curve1p2out" class="curveparam" type="number" step="0.5" /></td>
+                                <td><input id="curve1p2flow" class="curveparam" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td><input id="curve1p3out" class="curveparam" type="number" step="0.5" /></td>
+                                <td><input id="curve1p3flow" class="curveparam" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td><input id="curve1p4out" class="curveparam" type="number" step="0.5" /></td>
+                                <td><input id="curve1p4flow" class="curveparam" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td><input id="curve1p5out" class="curveparam" type="number" step="0.5" /></td>
+                                <td><input id="curve1p5flow" class="curveparam" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td><input id="curve1p6out" class="curveparam" type="number" step="0.5" /></td>
+                                <td><input id="curve1p6flow" class="curveparam" type="number" step="0.5" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Gradient/offset are linear-only to keep multipoint mode clean. -->
+                <div id="gradient1" class="param linear-only">
                     <h5>Gradient</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -1189,7 +1250,7 @@
                     </div>
                 </div>
 
-                <div id="offset1" class="param">
+                <div id="offset1" class="param linear-only">
                     <h5>Offset</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -1274,7 +1335,8 @@
                     </div>
                 </div>
 
-                <div id="exponent2" class="param">
+                <!-- Exponent is linear-only, hidden when 6-point curve is active. -->
+                <div id="exponent2" class="param linear-only">
                     <h5>Heating surface exponent</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -1462,7 +1524,67 @@
 
             <h3>Heating curve</h3>
             <div class="group">
-                <div id="gradient2" class="param">
+                <!-- Added curve mode switch to toggle between linear and 6-point curve. -->
+                <div class="param">
+                    <h5>Curve mode</h5>
+                    <div>
+                        <label class="switch">
+                            <input id="curveMode2" type="checkbox" />
+                            <span class="slider"></span>
+                        </label>
+                        <div class="valunit">6-point curve</div>
+                    </div>
+                </div>
+                <!-- Added smooth option for the 6-point curve. -->
+                <div class="param curve-only">
+                    <h5>Smooth curve</h5>
+                    <div>
+                        <label class="switch">
+                            <input id="curveSmooth2" type="checkbox" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <!-- Added fixed 6-point inputs for multipoint curve mode. -->
+                <div id="curvePoints2" class="param curve-only">
+                    <h5>Curve points</h5>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="ot">outside</th>
+                                <th class="ft">flow</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input id="curve2p1out" class="curveparam" type="number" step="0.5" /></td>
+                                <td><input id="curve2p1flow" class="curveparam" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td><input id="curve2p2out" class="curveparam" type="number" step="0.5" /></td>
+                                <td><input id="curve2p2flow" class="curveparam" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td><input id="curve2p3out" class="curveparam" type="number" step="0.5" /></td>
+                                <td><input id="curve2p3flow" class="curveparam" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td><input id="curve2p4out" class="curveparam" type="number" step="0.5" /></td>
+                                <td><input id="curve2p4flow" class="curveparam" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td><input id="curve2p5out" class="curveparam" type="number" step="0.5" /></td>
+                                <td><input id="curve2p5flow" class="curveparam" type="number" step="0.5" /></td>
+                            </tr>
+                            <tr>
+                                <td><input id="curve2p6out" class="curveparam" type="number" step="0.5" /></td>
+                                <td><input id="curve2p6flow" class="curveparam" type="number" step="0.5" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Gradient/offset are linear-only to keep multipoint mode clean. -->
+                <div id="gradient2" class="param linear-only">
                     <h5>Gradient</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -1477,7 +1599,7 @@
                     </div>
                 </div>
 
-                <div id="offset2" class="param">
+                <div id="offset2" class="param linear-only">
                     <h5>Offset</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -1939,6 +2061,17 @@
             },
             heating: [
                 {
+                    // Default to linear curve; 6-point defaults added for multipoint mode.
+                    type: 0,
+                    curveSmooth: false,
+                    points: [
+                        { outside: 20.0, flow: 20.0 },
+                        { outside: 10.0, flow: 38.0 },
+                        { outside: 0.0, flow: 50.0 },
+                        { outside: -10.0, flow: 58.0 },
+                        { outside: -20.0, flow: 65.0 },
+                        { outside: -30.0, flow: 70.0 }
+                    ],
                     flow: 45,
                     roomComp: {
                         enabled: false,
@@ -1967,6 +2100,17 @@
                     suspOffset: 0.0
                 },
                 {
+                    // Default to linear curve; 6-point defaults added for multipoint mode.
+                    type: 0,
+                    curveSmooth: false,
+                    points: [
+                        { outside: 20.0, flow: 20.0 },
+                        { outside: 10.0, flow: 38.0 },
+                        { outside: 0.0, flow: 50.0 },
+                        { outside: -10.0, flow: 58.0 },
+                        { outside: -20.0, flow: 65.0 },
+                        { outside: -30.0, flow: 70.0 }
+                    ],
                     flow: 30,
                     roomComp: {
                         enabled: false,
@@ -2035,6 +2179,230 @@
             return result;
         }
 
+        // Keep a fixed 6-point template so multipoint mode is stable by default.
+        const defaultCurvePoints = [
+            { outside: 20.0, flow: 20.0 },
+            { outside: 10.0, flow: 38.0 },
+            { outside: 0.0, flow: 50.0 },
+            { outside: -10.0, flow: 58.0 },
+            { outside: -20.0, flow: 65.0 },
+            { outside: -30.0, flow: 70.0 }
+        ];
+
+        // Normalize curve points to 6 entries, sorted by outside temp for safe interpolation.
+        function normalizeCurvePoints(points) {
+            const normalized = [];
+            for (let i = 0; i < 6; i++) {
+                const src = points?.[i] ?? defaultCurvePoints[i];
+                const out = parseFloat(src.outside ?? src.out);
+                const flow = parseFloat(src.flow);
+                normalized.push({
+                    outside: Number.isFinite(out) ? out : defaultCurvePoints[i].outside,
+                    flow: Number.isFinite(flow) ? flow : defaultCurvePoints[i].flow
+                });
+            }
+            normalized.sort((a, b) => b.outside - a.outside);
+            // Enforce monotonic flow so point1 flow is not greater than point2, etc.
+            for (let i = 1; i < normalized.length; i++) {
+                if (normalized[i].flow < normalized[i - 1].flow)
+                    normalized[i].flow = normalized[i - 1].flow;
+            }
+            return normalized;
+        }
+
+        // Clamp curve points to flowMax and keep monotonic ordering.
+        function clampCurvePointsToMax(hcfg, maxFlow) {
+            if (!Number.isFinite(maxFlow))
+                return;
+            hcfg.points = normalizeCurvePoints(hcfg.points).map((pt) => ({
+                outside: pt.outside,
+                flow: Math.min(pt.flow, maxFlow)
+            }));
+            for (let i = 1; i < hcfg.points.length; i++) {
+                if (hcfg.points[i].flow < hcfg.points[i - 1].flow)
+                    hcfg.points[i].flow = hcfg.points[i - 1].flow;
+            }
+        }
+
+        // Keep the 6 curve inputs in sync after normalization.
+        function syncCurvePointInputs(ch, points) {
+            const entries = [
+                { out: `#curve${ch}p1out`, flow: `#curve${ch}p1flow`, idx: 0 },
+                { out: `#curve${ch}p2out`, flow: `#curve${ch}p2flow`, idx: 1 },
+                { out: `#curve${ch}p3out`, flow: `#curve${ch}p3flow`, idx: 2 },
+                { out: `#curve${ch}p4out`, flow: `#curve${ch}p4flow`, idx: 3 },
+                { out: `#curve${ch}p5out`, flow: `#curve${ch}p5flow`, idx: 4 },
+                { out: `#curve${ch}p6out`, flow: `#curve${ch}p6flow`, idx: 5 }
+            ];
+            entries.forEach((entry) => {
+                const outInput = _(entry.out);
+                const flowInput = _(entry.flow);
+                if (!outInput || !flowInput)
+                    return;
+                outInput.value = points[entry.idx].outside;
+                flowInput.value = points[entry.idx].flow;
+            });
+        }
+
+        // Toggle UI sections so linear and 6-point settings do not mix.
+        function toggleCurveModeUi(ch, useCurve) {
+            __(`#heatingcurve${ch} .linear-only`).forEach((el) => {
+                el.hidden = useCurve;
+            });
+            __(`#heatingcurve${ch} .curve-only`).forEach((el) => {
+                el.hidden = !useCurve;
+            });
+        }
+
+        // Track drag state for curve point editing on the canvas.
+        const curveDrag = {
+            active: false,
+            hk: 0,
+            idx: -1,
+            origin: null,
+            xaxis: null,
+            yaxis: null,
+            flowmin: 0,
+            flowmax: 0
+        };
+
+        // Compute curve axes for a given canvas and current flow settings.
+        function getCurveAxes(hk, canvas) {
+            const flowmax = parseFloat(_(`#flowmax${hk} input`).value);
+            const fmg = Math.ceil(flowmax / 10) * 10 + 5; // flowmax for graph
+            const origin = {
+                x: 20,
+                y: canvas.height - 20
+            };
+            const xaxis = {
+                min: 20,
+                max: -30,
+                step: 5,
+                zoom: (canvas.width - origin.x * 2) / (20 - (-30))
+            };
+            const yaxis = {
+                min: 20,
+                max: fmg,
+                step: 10,
+                zoom: (canvas.height - (canvas.height - origin.y) * 2) / (fmg - 20)
+            };
+            return { origin, xaxis, yaxis };
+        }
+
+        // Convert a mouse/touch event to canvas coordinates.
+        function getCanvasPoint(canvas, ev) {
+            const rect = canvas.getBoundingClientRect();
+            const touch = ev.touches?.[0] ?? ev.changedTouches?.[0];
+            const clientX = touch ? touch.clientX : ev.clientX;
+            const clientY = touch ? touch.clientY : ev.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        // Enable drag & drop for the 6-point curve on the canvas.
+        function initCurveDrag(hk) {
+            const canvas = _(`#canvas${hk}`);
+            if (!canvas || canvas.dataset.dragInit === "1")
+                return;
+
+            canvas.dataset.dragInit = "1";
+
+            function findDragPoint(hcfg, origin, xaxis, yaxis, pos) {
+                let bestIdx = -1;
+                let bestDist = Infinity;
+                hcfg.points.forEach((pt, idx) => {
+                    const px = origin.x + (xaxis.min - pt.outside) * xaxis.zoom;
+                    const py = origin.y - (pt.flow - yaxis.min) * yaxis.zoom;
+                    const dx = pos.x - px;
+                    const dy = pos.y - py;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        bestIdx = idx;
+                    }
+                });
+                return (bestDist <= 12) ? bestIdx : -1;
+            }
+
+            function clampPointToNeighbors(hcfg, idx, outside, flow, maxFlow) {
+                // Prevent crossing in outside axis to keep point ordering stable while dragging.
+                if (idx > 0)
+                    outside = Math.min(outside, hcfg.points[idx - 1].outside);
+                if (idx < hcfg.points.length - 1)
+                    outside = Math.max(outside, hcfg.points[idx + 1].outside);
+                // Keep flow below max flow temperature.
+                if (Number.isFinite(maxFlow))
+                    flow = Math.min(flow, maxFlow);
+                // Keep flow monotonic: point1 flow must not exceed point2 flow, etc.
+                if (idx > 0)
+                    flow = Math.max(flow, hcfg.points[idx - 1].flow);
+                if (idx < hcfg.points.length - 1)
+                    flow = Math.min(flow, hcfg.points[idx + 1].flow);
+                // Keep outside within the visible axis bounds.
+                outside = clip(outside, 20, -30);
+                return { outside, flow };
+            }
+
+            function onDragStart(ev) {
+                const hcfg = config.heating[hk - 1] || {};
+                if ((hcfg.type ?? 0) !== 1)
+                    return;
+                hcfg.points = normalizeCurvePoints(hcfg.points);
+
+                const flowmin = parseFloat(_(`#flowmin${hk} input`).value);
+                const flowmax = parseFloat(_(`#flowmax${hk} input`).value);
+                const axes = getCurveAxes(hk, canvas);
+                const pos = getCanvasPoint(canvas, ev);
+                const idx = findDragPoint(hcfg, axes.origin, axes.xaxis, axes.yaxis, pos);
+                if (idx < 0)
+                    return;
+
+                curveDrag.active = true;
+                curveDrag.hk = hk;
+                curveDrag.idx = idx;
+                curveDrag.origin = axes.origin;
+                curveDrag.xaxis = axes.xaxis;
+                curveDrag.yaxis = axes.yaxis;
+                curveDrag.flowmin = flowmin;
+                curveDrag.flowmax = flowmax;
+                ev.preventDefault();
+            }
+
+            function onDragMove(ev) {
+                if (!curveDrag.active || curveDrag.hk !== hk)
+                    return;
+
+                const hcfg = config.heating[hk - 1] || {};
+                const pos = getCanvasPoint(canvas, ev);
+                const ot = curveDrag.xaxis.min - (pos.x - curveDrag.origin.x) / curveDrag.xaxis.zoom;
+                const ft = curveDrag.yaxis.min + (curveDrag.origin.y - pos.y) / curveDrag.yaxis.zoom;
+                let outside = Math.round(ot * 2) / 2;
+                let flow = Math.round(ft * 2) / 2;
+                flow = clip(flow, curveDrag.flowmax, curveDrag.flowmin);
+
+                const clamped = clampPointToNeighbors(hcfg, curveDrag.idx, outside, flow, curveDrag.flowmax);
+                hcfg.points[curveDrag.idx].outside = clamped.outside;
+                hcfg.points[curveDrag.idx].flow = clamped.flow;
+                hcfg.points = normalizeCurvePoints(hcfg.points);
+                syncCurvePointInputs(hk, hcfg.points);
+                drawCurve(hk);
+                ev.preventDefault();
+            }
+
+            function onDragEnd() {
+                curveDrag.active = false;
+            }
+
+            canvas.addEventListener("mousedown", onDragStart);
+            canvas.addEventListener("touchstart", onDragStart, { passive: false });
+            window.addEventListener("mousemove", onDragMove);
+            window.addEventListener("touchmove", onDragMove, { passive: false });
+            window.addEventListener("mouseup", onDragEnd);
+            window.addEventListener("touchend", onDragEnd);
+        }
+
         window.onload = () => {
             __("div.nav li").forEach(li => {
                 li.onclick = ev => {
@@ -2085,6 +2453,10 @@
                     heating.chOn = _(`#chOn${ch}`).checked;
                     heating.overrideFlow = _(`#overrideFlow${ch}`).checked;
                     heating.enableHyst = _(`#enableHyst${ch}`).checked;
+                    // Persist curve mode and points so firmware uses selected curve type.
+                    heating.type = _(`#curveMode${ch}`)?.checked ? 1 : 0;
+                    heating.curveSmooth = _(`#curveSmooth${ch}`)?.checked || false;
+                    heating.points = normalizeCurvePoints(heating.points);
                     delete heating.roomtemp["adr"];
                     switch (heating.roomtemp.source) {
                     case 2:
@@ -2204,13 +2576,11 @@
                     return;
                 }
                 let heatCfg = config.heating[hk - 1];
-                let ft = getFlowTemperature(
-                    statuscache.outsideTemp, 
-                    roomsetpoint[hk - 1], 
-                    heatCfg.flowMax, 
-                    heatCfg.exponent, 
-                    heatCfg.gradient, 
-                    heatCfg.offset
+                // Use selected curve mode to compute marker flow temperature.
+                let ft = getFlowTemperatureForConfig(
+                    statuscache.outsideTemp,
+                    roomsetpoint[hk - 1],
+                    heatCfg
                 );
                 let comment = _("#comment" + hk).value;
                 if (heatCfg.marker === undefined)
@@ -2472,6 +2842,84 @@
                     _(`#selectRoomSetpointSource${ch}`).dispatchEvent(new Event('change'));
 
                     _(`#minSuspend${ch}`).checked = hcfg.minSuspend || false;
+
+                    // Initialize curve mode UI and ensure we always have 6 points available.
+                    hcfg.type = hcfg.type ?? 0;
+                    hcfg.curveSmooth = hcfg.curveSmooth || false;
+                    hcfg.points = normalizeCurvePoints(hcfg.points);
+
+                    // Clamp any previously saved points that exceed flowMax so drag works immediately.
+                    const flowmaxValue = parseFloat(_(`#flowmax${ch} input`).value);
+                    clampCurvePointsToMax(hcfg, flowmaxValue);
+
+                    const curveModeInput = _(`#curveMode${ch}`);
+                    if (curveModeInput) {
+                        curveModeInput.checked = hcfg.type === 1;
+                        curveModeInput.onchange = (ev) => {
+                            hcfg.type = ev.target.checked ? 1 : 0;
+                            toggleCurveModeUi(ch, ev.target.checked);
+                            drawCurve(ch);
+                        };
+                        toggleCurveModeUi(ch, curveModeInput.checked);
+                    }
+
+                    const curveSmoothInput = _(`#curveSmooth${ch}`);
+                    if (curveSmoothInput) {
+                        curveSmoothInput.checked = hcfg.curveSmooth === true;
+                        curveSmoothInput.onchange = (ev) => {
+                            hcfg.curveSmooth = ev.target.checked;
+                            drawCurve(ch);
+                        };
+                    }
+
+                    syncCurvePointInputs(ch, hcfg.points);
+                    const flowmaxInput = _(`#flowmax${ch} input`);
+                    if (flowmaxInput) {
+                        flowmaxInput.addEventListener("input", (ev) => {
+                            const maxFlow = parseFloat(ev.target.value);
+                            // Keep curve points <= flowMax when the slider changes.
+                            clampCurvePointsToMax(hcfg, maxFlow);
+                            syncCurvePointInputs(ch, hcfg.points);
+                            drawCurve(ch);
+                        });
+                    }
+                    const curveInputs = [
+                        { out: `#curve${ch}p1out`, flow: `#curve${ch}p1flow`, idx: 0 },
+                        { out: `#curve${ch}p2out`, flow: `#curve${ch}p2flow`, idx: 1 },
+                        { out: `#curve${ch}p3out`, flow: `#curve${ch}p3flow`, idx: 2 },
+                        { out: `#curve${ch}p4out`, flow: `#curve${ch}p4flow`, idx: 3 },
+                        { out: `#curve${ch}p5out`, flow: `#curve${ch}p5flow`, idx: 4 },
+                        { out: `#curve${ch}p6out`, flow: `#curve${ch}p6flow`, idx: 5 }
+                    ];
+                    // Use oninput to keep curve graph responsive while editing points.
+                    curveInputs.forEach((entry) => {
+                        const outInput = _(entry.out);
+                        const flowInput = _(entry.flow);
+                        if (!outInput || !flowInput)
+                            return;
+                        outInput.oninput = (ev) => {
+                            hcfg.points[entry.idx].outside = parseFloat(ev.target.value);
+                            // Normalize to avoid point order inversions when editing outside values.
+                            hcfg.points = normalizeCurvePoints(hcfg.points);
+                            syncCurvePointInputs(ch, hcfg.points);
+                            drawCurve(ch);
+                        };
+                        flowInput.oninput = (ev) => {
+                            const maxFlow = parseFloat(_(`#flowmax${ch} input`).value);
+                            hcfg.points[entry.idx].flow = parseFloat(ev.target.value);
+                            // Clamp to max flow temperature so curve points never exceed flowMax.
+                            if (Number.isFinite(maxFlow))
+                                hcfg.points[entry.idx].flow = Math.min(hcfg.points[entry.idx].flow, maxFlow);
+                            // Enforce non-decreasing flow so point1 is not greater than point2.
+                            if (entry.idx > 0)
+                                hcfg.points[entry.idx].flow = Math.max(hcfg.points[entry.idx].flow, hcfg.points[entry.idx - 1].flow);
+                            if (entry.idx < hcfg.points.length - 1)
+                                hcfg.points[entry.idx].flow = Math.min(hcfg.points[entry.idx].flow, hcfg.points[entry.idx + 1].flow);
+                            hcfg.points = normalizeCurvePoints(hcfg.points);
+                            syncCurvePointInputs(ch, hcfg.points);
+                            drawCurve(ch);
+                        };
+                    });
                 });
 
                 _("#ventEnable").checked = config.vent?.ventEnable ?? false;
@@ -2491,6 +2939,10 @@
                         drawCurve();
                     });
                 });
+
+                // Enable drag & drop for curve points in both heating circuits.
+                initCurveDrag(1);
+                initCurveDrag(2);
             }
 
             var xhrStatus = new XMLHttpRequest();
@@ -2835,6 +3287,56 @@
             return rs - (mf - rs) / g; //minimal outside temperature at mf
         }
 
+        // Use multipoint curve interpolation to match firmware behavior.
+        function getFlowTemperatureMultipoint(ot, points, smooth) {
+            if (!Array.isArray(points) || points.length === 0)
+                return 0;
+
+            const sorted = normalizeCurvePoints(points);
+            if (sorted.length === 1 || ot >= sorted[0].outside)
+                return sorted[0].flow;
+
+            let i = 0;
+            while (i + 1 < sorted.length && ot < sorted[i + 1].outside)
+                i++;
+
+            if (i + 1 >= sorted.length)
+                return sorted[sorted.length - 1].flow;
+
+            const p1 = sorted[i];
+            const p2 = sorted[i + 1];
+            const denom = (p2.outside - p1.outside);
+            if (Math.abs(denom) < 0.001)
+                return p1.flow;
+
+            const t = (ot - p1.outside) / denom;
+            if (smooth) {
+                const p0 = (i > 0) ? sorted[i - 1] : p1;
+                const p3 = (i + 2 < sorted.length) ? sorted[i + 2] : p2;
+                const t2 = t * t;
+                const t3 = t2 * t;
+                let flow = 0.5 * (
+                    (2.0 * p1.flow) +
+                    (-p0.flow + p2.flow) * t +
+                    (2.0 * p0.flow - 5.0 * p1.flow + 4.0 * p2.flow - p3.flow) * t2 +
+                    (-p0.flow + 3.0 * p1.flow - 3.0 * p2.flow + p3.flow) * t3
+                );
+                const lo = Math.min(p1.flow, p2.flow);
+                const hi = Math.max(p1.flow, p2.flow);
+                flow = Math.min(Math.max(flow, lo), hi);
+                return flow;
+            }
+            return p1.flow + t * (p2.flow - p1.flow);
+        }
+
+        // Route flow temperature computation to linear or 6-point mode.
+        function getFlowTemperatureForConfig(ot, rs, hcfg) {
+            if ((hcfg?.type ?? 0) === 1) {
+                return getFlowTemperatureMultipoint(ot, hcfg.points, hcfg.curveSmooth === true);
+            }
+            return getFlowTemperature(ot, rs, hcfg.flowMax, hcfg.exponent, hcfg.gradient, hcfg.offset);
+        }
+
         /*
             ot: outside temperature
             rs: room set temperature
@@ -2875,9 +3377,9 @@
             };
             let xaxis = {
                 min: 20, // °C
-                max: -20, // °C
+                max: -30, // °C
                 step: 5,
-                zoom: (canvas.width - origin.x * 2) / (20 - (-20))
+                zoom: (canvas.width - origin.x * 2) / (20 - (-30))
             };
             let yaxis = {
                 min: 20, // °C
@@ -2951,6 +3453,9 @@
             ctx.fillText("flow / °C", -47, 30);
             ctx.restore();
 
+            // Keep a local handle to heating config for mode-aware curve drawing.
+            const hcfg = config.heating[hk - 1] || {};
+            hcfg.points = normalizeCurvePoints(hcfg.points);
             let roomset = roomsetpoint[hk - 1];
             let roomcomp = 0;
             let rc = _(`#roomCompEnable${hk}`).checked;
@@ -2967,9 +3472,7 @@
                 }
             }
 
-            let gradient = parseFloat(_("#gradient" + hk + " input").value);
-            let exponent = parseFloat(_("#exponent" + hk + " input").value);
-            let offset = parseFloat(_("#offset" + hk + " input").value);
+            // Linear parameters are read by getFlowTemperatureForConfig when linear mode is active.
 
             function getPoint(ot, ft) {
                 return {
@@ -2984,21 +3487,21 @@
             }
 
             let otStart = Math.min(roomset, xaxis.min);
-            let ft = getFlowTemperature(otStart, roomset, flowmax, exponent, gradient, offset);
+            let ft = getFlowTemperatureForConfig(otStart, roomset, hcfg);
             ft = clip(ft, 100, flowmin);
             let p1 = getPoint(otStart, ft); //foot
 
             function drawFlowCurve(color, delta) {
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 3;
-                let ft = getFlowTemperature(otStart, roomset, flowmax, exponent, gradient, offset) + delta;
+                let ft = getFlowTemperatureForConfig(otStart, roomset, hcfg) + delta;
                 ft = clip(ft, 100, flowmin);
                 let p = getPoint(otStart, ft);
                 ctx.beginPath();
                 ctx.moveTo(p.x, p.y);
                 let otf = false;
                 for (var ot = otStart; ot >= xaxis.max; ot -= 0.25) {
-                    ft = getFlowTemperature(ot, roomset, flowmax, exponent, gradient, offset) + delta;
+                    ft = getFlowTemperatureForConfig(ot, roomset, hcfg) + delta;
                     ft = clip(ft, 100, flowmin);
 
                     if ((ft >= flowmax) && !otf) {
@@ -3030,9 +3533,17 @@
             //draw curve's basepoint
             drawMarkerPoint(p1, '#F00');
 
+            // Draw configured curve points to verify 6-point input mapping.
+            if ((hcfg.type ?? 0) === 1) {
+                hcfg.points.forEach((pt) => {
+                    const p = getPoint(pt.outside, clip(pt.flow, flowmax, flowmin));
+                    drawMarkerPoint(p, '#0AF');
+                });
+            }
+
             if (statuscache.outsideTemp !== undefined) {
                 //draw outsidetemp & it's flowtemperature
-                let ftsensor = getFlowTemperature(statuscache.outsideTemp, roomset, flowmax, exponent, gradient, offset) + roomcomp;
+                let ftsensor = getFlowTemperatureForConfig(statuscache.outsideTemp, roomset, hcfg) + roomcomp;
                 ftsensor = clip(ftsensor, flowmax, flowmin);
                 let psensor = getPoint(statuscache.outsideTemp, ftsensor);
                 drawMarkerPoint(psensor, '#F83');
