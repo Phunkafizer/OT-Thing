@@ -386,9 +386,7 @@ double OTControl::getFlow(const uint8_t channel) {
         if (outsideTemp.get(outTmp)) {
             double roomSet = hconf.roomSet; // default room set point
             roomSetPoint[channel].get(roomSet);
-            double minOutside = roomSet - (hconf.flowMax - roomSet) / hconf.gradient;
-            double c1 = (hconf.flowMax - roomSet) / pow(roomSet - minOutside, 1.0 / hconf.exponent);
-            flow = roomSet + c1 * pow(roomSet - outTmp, 1.0 / hconf.exponent) + hconf.offset;
+            flow = curve[channel].getFlowTemp(outTmp, roomSet);
         }
         break;
     }
@@ -408,7 +406,7 @@ double OTControl::getFlow(const uint8_t channel) {
     if (hconf.minSuspend && (flow < hctrl.flowMin))
         return 0;
     
-    clip(flow, hctrl.flowMin, hconf.flowMax);
+    clip(flow, hctrl.flowMin, curve[channel].getFlowMax());
 
     return flow;
 }
@@ -538,9 +536,9 @@ void OTControl::loop() {
             }
 
             if (setMaxCh) {
-                double maxCh = heatingConfig[0].flowMax;
-                if (hasCh2 && (heatingConfig[1].flowMax > maxCh))
-                    maxCh = heatingConfig[1].flowMax;
+                double maxCh = curve[0].getFlowMax();
+                if (hasCh2 && (curve[1].getFlowMax() > maxCh))
+                    maxCh = curve[1].getFlowMax();
                 setMaxCh.sendFloat(maxCh);
             }
 
@@ -1234,7 +1232,7 @@ bool OTControl::sendChDiscoveries(const uint8_t ch, const bool en) {
     String str = replace(PSTR("flow temperature #"), ch + 1, 1);
     Mqtt::MqttTopic tp = topic(Mqtt::TOPIC_CHSETTEMP1, ch);
     haDisc.createClima(str, Mqtt::getTopicString(tp), mqtt.getCmdTopic(tp));
-    haDisc.setMinMaxTemp(20, heatingConfig[ch].flowMax, 0.5);
+    haDisc.setMinMaxTemp(20, curve[ch].getFlowMax(), 0.5);
     str = replace(PSTR("{{ value_json.slave.flow_t# ? }}"), ch + 1, 1);
     haDisc.setCurrentTemperatureTemplate(str);
     haDisc.setCurrentTemperatureTopic(haDisc.defaultStateTopic);
@@ -1392,10 +1390,9 @@ void OTControl::setConfig(JsonObject &config) {
 
         hconf.chOn = hpObj[F("chOn")];
         hconf.roomSet = hpObj[F("roomsetpoint")][F("temp")] | 21.0; // default room set point
-        hconf.flowMax = hpObj[F("flowMax")] | 40;
-        hconf.exponent = hpObj[F("exponent")] | 1.0;
-        hconf.gradient = hpObj[F("gradient")] | 1.0;
-        hconf.offset = hpObj[F("offset")] | 0.0;
+
+        curve[i].setConfig(hpObj);
+        
         hconf.flow = hpObj[F("flow")] | 35;
         JsonObject roomComp = hpObj[F("roomComp")];
         hconf.roomComp.enabled = roomComp[F("enabled")] | false;

@@ -4,6 +4,7 @@
 #include "ArduinoJson.h"
 #include "util.h"
 #include "masterrequests.h"
+#include "heatingcurve.h"
 
 const uint8_t NUM_HEATCIRCUITS = 2;
 
@@ -63,10 +64,6 @@ private:
     struct HeatingConfig {
         bool chOn;
         double roomSet; // default room set point
-        double flowMax;
-        double exponent;
-        double gradient;
-        double offset;
         double flow; // default flow temperature 
         bool enableHyst;
         double hysteresis;
@@ -79,6 +76,7 @@ private:
         } roomComp;
         bool minSuspend;
     } heatingConfig[NUM_HEATCIRCUITS];
+    HeatingCurve curve[NUM_HEATCIRCUITS];
     struct HeatingControl {
         bool chOn;
         double flowTemp;
