@@ -81,8 +81,11 @@
         }
 
         div.param {
-            padding-right: 1em;
-            padding-bottom: 0.3em;
+            padding: 0 10px 0.3em 0;
+        }
+
+        div.range {
+            min-width: 100%;
         }
 
         h3 {
@@ -104,7 +107,7 @@
 
         div.valunit {
             display: inline-block;
-            width: 25%;
+            width: 90px;
         }
 
         .statusvalue {
@@ -158,7 +161,7 @@
             background: #fd975a;
             height: 5px;
             margin: auto 0;
-            width: 75%;
+            width: 150px;
             cursor: pointer;
         }
 
@@ -413,6 +416,31 @@
             white-space: pre-wrap;
             max-height: 50vh;
             overflow: auto;
+        }
+
+        /* Responsive columns */
+        @media (min-width: 480px) {
+            div.statusfield {
+                min-width: 33.33%; /* 3 columns on tablets */
+            }
+            div.range {
+                min-width: 45%; /* 2 columns for range inputs on tablets */
+            }
+            #mainwrapper {
+                max-width: 600px; /* Slightly wider on tablets */
+            }
+        }
+
+        @media (min-width: 768px) {
+            div.statusfield {
+                min-width: 25%; /* 4 columns on desktops */
+            }
+            div.range {
+                min-width: 30%; /* 3 columns for range inputs on tablets */
+            }
+            #mainwrapper {
+                max-width: 800px; /* Wider on desktops */
+            }
         }
     </style>
 </head>
@@ -963,73 +991,77 @@
         <div class="tab" id="heatingcurve1">
             <h3>Dimensioning</h3>
             <div class="group">
-                <div id="flowmax1" class="param">
-                    <h5>Max. flow temperature</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">&deg;C</span>
+                <div class="flexline">
+                    <div id="flowmax1" class="param range">
+                        <h5>Max. flow temperature</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">&deg;C</span>
+                            </div>
+                            <input class="curveparam" type="range" min="30" max="90" step="1">
                         </div>
-                        <input class="curveparam" type="range" min="30" max="90" step="1">
+                        <div class="infobox">
+                            Gängige Systemtemperaturen Vorlauf/R&uuml;cklauf:
+                            <ul>
+                                <li>Alte Norm: 90 &deg;C / 70 &deg;C</li>
+                                <li>Neue Norm: 75 &deg;C / 65 &deg;C</li>
+                                <li>Niedertemperatur: 70 &deg;C / 50 &deg;C</li>
+                                <li>Brennwert: 60 &deg;C / 45 &deg;C</li>
+                                <li>Brennwert: 45 &deg;C / 35 &deg;C</li>
+                            </ul>
+                            <p>Quelle: <a href="www.bosy-online.de">www.bosy-online.de</a></p>
+                        </div>
                     </div>
-                    <div class="infobox">
-                        Gängige Systemtemperaturen Vorlauf/R&uuml;cklauf:
-                        <ul>
-                            <li>Alte Norm: 90 &deg;C / 70 &deg;C</li>
-                            <li>Neue Norm: 75 &deg;C / 65 &deg;C</li>
-                            <li>Niedertemperatur: 70 &deg;C / 50 &deg;C</li>
-                            <li>Brennwert: 60 &deg;C / 45 &deg;C</li>
-                            <li>Brennwert: 45 &deg;C / 35 &deg;C</li>
-                        </ul>
-                        <p>Quelle: <a href="www.bosy-online.de">www.bosy-online.de</a></p>
-                    </div>
-                </div>
 
-                <div id="exponent1" class="param">
-                    <h5>Heating surface exponent</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
+                    <div id="exponent1" class="param range">
+                        <h5>Heating surface exponent</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                            </div>
+                            <input type="range" class="curveparam" min="1.0" max="1.5" step="0.05">
                         </div>
-                        <input type="range" class="curveparam" min="1.0" max="1.5" step="0.05">
-                    </div>
-                    <div class="infobox">
-                        Je nach Anteil von Leitung, Konvektion und Strahlung ist das Verhältnis von Vorlauftemperatur
-                        und
-                        Wärmeabgabe überliniear:
-                        <ul>
-                            <li>Fußbodenheizung: 1,0 - 1,05</li>
-                            <li>Flachheizkörper: 1,26 - 1,33</li>
-                            <li>Handtuchradiatoren: 1,20 - 1,30</li>
-                            <li>Heizkörper nach DIN 4703: 1,3</li>
-                            <li>Konvektoren: 1,30 - 1,50</li>
-                        </ul>
-                        <p>Quelle: <a href="www.bosy-online.de">www.bosy-online.de</a></p>
+                        <div class="infobox">
+                            Je nach Anteil von Leitung, Konvektion und Strahlung ist das Verhältnis von Vorlauftemperatur
+                            und
+                            Wärmeabgabe überliniear:
+                            <ul>
+                                <li>Fußbodenheizung: 1,0 - 1,05</li>
+                                <li>Flachheizkörper: 1,26 - 1,33</li>
+                                <li>Handtuchradiatoren: 1,20 - 1,30</li>
+                                <li>Heizkörper nach DIN 4703: 1,3</li>
+                                <li>Konvektoren: 1,30 - 1,50</li>
+                            </ul>
+                            <p>Quelle: <a href="www.bosy-online.de">www.bosy-online.de</a></p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <h3>Setup</h3>
             <div class="group">
-                <div id="chset1" class="param">
-                    <h5>flow set temperature (default)</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">&deg;C</span>
+                <div class="flexline">
+                    <div id="chset1" class="param">
+                        <h5>flow set temperature (default)</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">&deg;C</span>
+                            </div>
+                            <input type="range" class="curveparam" min="25" max="90" step="1" />
                         </div>
-                        <input type="range" class="curveparam" min="25" max="90" step="1" />
                     </div>
-                </div>
 
-                <div id="flowmin1" class="param">
-                    <h5>Min. flow temperature</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">&deg;C</span>
+                    <div id="flowmin1" class="param">
+                        <h5>Min. flow temperature</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">&deg;C</span>
+                            </div>
+                            <input type="range" class="curveparam" min="10" max="40" step="1">
                         </div>
-                        <input type="range" class="curveparam" min="10" max="40" step="1">
                     </div>
                 </div>
 
@@ -1109,34 +1141,36 @@
                         </label>
                     </div>
                 </div>
-                <div id="roomCompP1" class="param">
-                    <h5>P gain</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">K/K</span>
+                <div class="flexline">
+                    <div id="roomCompP1" class="param range">
+                        <h5>P gain</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">K/K</span>
+                            </div>
+                            <input type="range" class="curveparam" min="0" max="4" step="0.1">
                         </div>
-                        <input type="range" class="curveparam" min="0" max="4" step="0.1">
                     </div>
-                </div>
-                <div id="roomCompI1" class="param">
-                    <h5>I gain</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">1/h</span>
+                    <div id="roomCompI1" class="param range">
+                        <h5>I gain</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">1/h</span>
+                            </div>
+                            <input type="range" min="0" max="1" step="0.1">
                         </div>
-                        <input type="range" min="0" max="1" step="0.1">
                     </div>
-                </div>
-                <div id="roomCompBoost1" class="param">
-                    <h5>Boost</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">K/K</span>
+                    <div id="roomCompBoost1" class="param range">
+                        <h5>Boost</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">K/K</span>
+                            </div>
+                            <input type="range" class="curveparam" min="0" max="4" step="0.1">
                         </div>
-                        <input type="range" class="curveparam" min="0" max="4" step="0.1">
                     </div>
                 </div>
 
@@ -1150,53 +1184,57 @@
                         </label>
                     </div>
                 </div>
-                <div id="hyst1" class="param">
-                    <h5>hysteresis</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">K</span>
+                <div class="flexline">
+                    <div id="hyst1" class="param range">
+                        <h5>hysteresis</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">K</span>
+                            </div>
+                            <input type="range" min="0.1" max="2" step="0.1">
                         </div>
-                        <input type="range" min="0.1" max="2" step="0.1">
                     </div>
-                </div>
-                <div id="suspOffset1" class="param">
-                    <h5>suspend offset</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">K</span>
+                    <div id="suspOffset1" class="param range">
+                        <h5>suspend offset</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">K</span>
+                            </div>
+                            <input type="range" min="0.0" max="10" step="0.1">
                         </div>
-                        <input type="range" min="0.0" max="10" step="0.1">
                     </div>
                 </div>
             </div>
 
             <h3>Heating curve</h3>
             <div class="group">
-                <div id="gradient1" class="param">
-                    <h5>Gradient</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
+                <div class="flexline">
+                    <div id="gradient1" class="param">
+                        <h5>Gradient</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                            </div>
+                            <input type="range" class="curveparam" min="0.1" max="3" step="0.05">
                         </div>
-                        <input type="range" class="curveparam" min="0.1" max="3" step="0.05">
+                        <div class="infobox">
+                            <p>
+                                Quelle: <a href="http://www.bosy-online.de/Heizkurve.htm">www.bosy-online.de</a>
+                            </p>
+                        </div>
                     </div>
-                    <div class="infobox">
-                        <p>
-                            Quelle: <a href="http://www.bosy-online.de/Heizkurve.htm">www.bosy-online.de</a>
-                        </p>
-                    </div>
-                </div>
 
-                <div id="offset1" class="param">
-                    <h5>Offset</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">&deg;C</span>
+                    <div id="offset1" class="param">
+                        <h5>Offset</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">&deg;C</span>
+                            </div>
+                            <input type="range" class="curveparam" min="-15" max="15" step="0.5">
                         </div>
-                        <input type="range" class="curveparam" min="-15" max="15" step="0.5">
                     </div>
                 </div>
 
@@ -1252,71 +1290,74 @@
         <div class="tab" id="heatingcurve2">
             <h3>Dimensioning</h3>
             <div class="group">
-                <div id="flowmax2" class="param">
-                    <h5>Max. flow temperature</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">&deg;C</span>
+                <div class="flexline">
+                    <div id="flowmax2" class="param range">
+                        <h5>Max. flow temperature</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">&deg;C</span>
+                            </div>
+                            <input type="range" class="curveparam" min="30" max="90" step="1">
                         </div>
-                        <input type="range" class="curveparam" min="30" max="90" step="1">
+                        <div class="infobox">
+                            Gängige Systemtemperaturen Vorlauf/R&uuml;cklauf:
+                            <ul>
+                                <li>Alte Norm: 90 &deg;C / 70 &deg;C</li>
+                                <li>Neue Norm: 75 &deg;C / 65 &deg;C</li>
+                                <li>Niedertemperatur: 70 &deg;C / 50 &deg;C</li>
+                                <li>Brennwert: 60 &deg;C / 45 &deg;C</li>
+                                <li>Brennwert: 45 &deg;C / 35 &deg;C</li>
+                            </ul>
+                            <p>Quelle: <a href="www.bosy-online.de">www.bosy-online.de</a></p>
+                        </div>
                     </div>
-                    <div class="infobox">
-                        Gängige Systemtemperaturen Vorlauf/R&uuml;cklauf:
-                        <ul>
-                            <li>Alte Norm: 90 &deg;C / 70 &deg;C</li>
-                            <li>Neue Norm: 75 &deg;C / 65 &deg;C</li>
-                            <li>Niedertemperatur: 70 &deg;C / 50 &deg;C</li>
-                            <li>Brennwert: 60 &deg;C / 45 &deg;C</li>
-                            <li>Brennwert: 45 &deg;C / 35 &deg;C</li>
-                        </ul>
-                        <p>Quelle: <a href="www.bosy-online.de">www.bosy-online.de</a></p>
-                    </div>
-                </div>
 
-                <div id="exponent2" class="param">
-                    <h5>Heating surface exponent</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
+                    <div id="exponent2" class="param range">
+                        <h5>Heating surface exponent</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                            </div>
+                            <input type="range" class="curveparam" min="1.0" max="1.5" step="0.05">
                         </div>
-                        <input type="range" class="curveparam" min="1.0" max="1.5" step="0.05">
-                    </div>
-                    <div class="infobox">
-                        Je nach Anteil von Leitung, Konvektion und Strahlung ist das Verhältnis von Vorlauftemperatur und Wärmeabgabe überlinear:
-                        <ul>
-                            <li>Fußbodenheizung: 1,0 - 1,05</li>
-                            <li>Flachheizkörper: 1,26 - 1,33</li>
-                            <li>Handtuchradiatoren: 1,20 - 1,30</li>
-                            <li>Heizkörper nach DIN 4703: 1,3</li>
-                            <li>Konvektoren: 1,30 - 1,50</li>
-                        </ul>
-                        <p>Quelle: <a href="www.bosy-online.de">www.bosy-online.de</a></p>
+                        <div class="infobox">
+                            Je nach Anteil von Leitung, Konvektion und Strahlung ist das Verhältnis von Vorlauftemperatur und Wärmeabgabe überlinear:
+                            <ul>
+                                <li>Fußbodenheizung: 1,0 - 1,05</li>
+                                <li>Flachheizkörper: 1,26 - 1,33</li>
+                                <li>Handtuchradiatoren: 1,20 - 1,30</li>
+                                <li>Heizkörper nach DIN 4703: 1,3</li>
+                                <li>Konvektoren: 1,30 - 1,50</li>
+                            </ul>
+                            <p>Quelle: <a href="www.bosy-online.de">www.bosy-online.de</a></p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <h3>Setup</h3>
             <div class="group">
-                <div id="chset2" class="param">
-                    <h5>flow set temperature (default)</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">&deg;C</span>
+                <div class="flexline">
+                    <div id="chset2" class="param">
+                        <h5>flow set temperature (default)</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">&deg;C</span>
+                            </div>
+                            <input type="range" class="curveparam" min="25" max="90" step="1" />
                         </div>
-                        <input type="range" class="curveparam" min="25" max="90" step="1" />
                     </div>
-                </div>
-
-                <div id="flowmin2" class="param">
-                    <h5>Min. flow temperature</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">&deg;C</span>
+                    <div id="flowmin2" class="param">
+                        <h5>Min. flow temperature</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">&deg;C</span>
+                            </div>
+                            <input type="range" class="curveparam" min="10" max="40" step="1">
                         </div>
-                        <input type="range" class="curveparam" min="10" max="40" step="1">
                     </div>
                 </div>
 
@@ -1396,35 +1437,37 @@
                         </label>
                     </div>
                 </div>
-                <div id="roomCompP2" class="param">
-                    <h5>P gain</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">K/K</span>
+                <div class="flexline">
+                    <div id="roomCompP2" class="param range">
+                        <h5>P gain</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">K/K</span>
+                            </div>
+                            <input type="range" class="curveparam" min="0" max="5" step="0.1">
                         </div>
-                        <input type="range" class="curveparam" min="0" max="5" step="0.1">
                     </div>
-                </div>
-                <div id="roomCompI2" class="param">
-                    <h5>I gain</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">1/h</span>
+                    <div id="roomCompI2" class="param range">
+                        <h5>I gain</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">1/h</span>
+                            </div>
+                            <input type="range" min="0" max="1" step="0.1">
                         </div>
-                        <input type="range" min="0" max="1" step="0.1">
                     </div>
-                </div>
 
-                <div id="roomCompBoost2" class="param">
-                    <h5>Boost</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">K/K</span>
+                    <div id="roomCompBoost2" class="param range">
+                        <h5>Boost</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">K/K</span>
+                            </div>
+                            <input type="range" class="curveparam" min="0" max="4" step="0.1">
                         </div>
-                        <input type="range" class="curveparam" min="0" max="4" step="0.1">
                     </div>
                 </div>
 
@@ -1438,53 +1481,57 @@
                         </label>
                     </div>
                 </div>
-                <div id="hyst2" class="param">
-                    <h5>hysteresis</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">K</span>
+                <div class="flexline">
+                    <div id="hyst2" class="param range">
+                        <h5>hysteresis</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">K</span>
+                            </div>
+                            <input type="range" min="0.1" max="2" step="0.1">
                         </div>
-                        <input type="range" min="0.1" max="2" step="0.1">
                     </div>
-                </div>
-                <div id="suspOffset2" class="param">
-                    <h5>suspend offset</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">K</span>
+                    <div id="suspOffset2" class="param range">
+                        <h5>suspend offset</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">K</span>
+                            </div>
+                            <input type="range" min="0.0" max="10" step="0.1">
                         </div>
-                        <input type="range" min="0.0" max="10" step="0.1">
                     </div>
                 </div>
             </div>
 
             <h3>Heating curve</h3>
             <div class="group">
-                <div id="gradient2" class="param">
-                    <h5>Gradient</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
+                <div class="flexline">
+                    <div id="gradient2" class="param">
+                        <h5>Gradient</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                            </div>
+                            <input type="range" class="curveparam" min="0.1" max="3" step="0.05">
                         </div>
-                        <input type="range" class="curveparam" min="0.1" max="3" step="0.05">
+                        <div class="infobox">
+                            <p>
+                                Quelle: <a href="http://www.bosy-online.de/Heizkurve.htm">www.bosy-online.de</a>
+                            </p>
+                        </div>
                     </div>
-                    <div class="infobox">
-                        <p>
-                            Quelle: <a href="http://www.bosy-online.de/Heizkurve.htm">www.bosy-online.de</a>
-                        </p>
-                    </div>
-                </div>
 
-                <div id="offset2" class="param">
-                    <h5>Offset</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">&deg;C</span>
+                    <div id="offset2" class="param">
+                        <h5>Offset</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">&deg;C</span>
+                            </div>
+                            <input type="range" class="curveparam" min="-15" max="15" step="0.5">
                         </div>
-                        <input type="range" class="curveparam" min="-15" max="15" step="0.5">
                     </div>
                 </div>
 
@@ -1857,20 +1904,22 @@
 
             <h3>System</h3>
             <div class="group">
-                <h5>aux 1 (DQ)</h5>
-                <select id="selAux1" field="aux.0.mode">
-                    <option value="0">unused</option>
-                    <option value="1">digital</option>
-                    <option value="3">analog</option>
-                    <option value="4">1wire</option>
-                </select>
-
-                <h5>aux. 2 (DI)</h5>
-                <select id="selAux2" field="aux.1.mode">
-                    <option value="0">unused</option>
-                    <option value="1">digital</option>
-                    <option value="4">1wire</option>
-                </select>
+                <h4>aux inputs</h4>
+                <div class="flexline">
+                    <h5>aux 1 (DQ)</h5>
+                    <select id="selAux1" field="aux.0.mode">
+                        <option value="0">unused</option>
+                        <option value="1">digital</option>
+                        <option value="3">analog</option>
+                        <option value="4">1wire</option>
+                    </select>
+                    <h5>aux. 2 (DI)</h5>
+                    <select id="selAux2" field="aux.1.mode">
+                        <option value="0">unused</option>
+                        <option value="1">digital</option>
+                        <option value="4">1wire</option>
+                    </select>
+                </div>
                 
                 <h4>Timezone</h4>
                 <select id="selTimezone" field="timezone">
