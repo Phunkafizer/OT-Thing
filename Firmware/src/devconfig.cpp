@@ -73,11 +73,16 @@ void DevConfig::update() {
         }
 
         for (int i=0; i<2; i++) {
-            JsonObject obj = doc[FPSTR(CFGKEY_HEATING)][i][F("roomtemp")];
+            JsonObject hcfg = doc[FPSTR(CFGKEY_HEATING)][i]; 
+            
+            JsonObject obj = hcfg[F("roomtemp")];
             roomTemp[i].setConfig(obj);
 
-            obj = doc[FPSTR(CFGKEY_HEATING)][i][F("roomsetpoint")];
+            obj = hcfg[F("roomsetpoint")];
             roomSetPoint[i].setConfig(obj);
+
+            obj = hcfg[F("returnLimit")];
+            returnTemp[i].setConfig(obj);
         }
 
         JsonObject cfg = doc.as<JsonObject>();

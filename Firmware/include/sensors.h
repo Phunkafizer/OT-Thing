@@ -84,6 +84,7 @@ public:
     bool isOtSource();
     static void loopAll();
     explicit operator bool() const;
+    static Sensor* findByOwn(const OneWireNode *own);
 protected:
     Source src;
     double value;
@@ -131,4 +132,5 @@ private:
 extern Sensor roomTemp[2];
 extern AutoSensor roomSetPoint[2];
 extern OutsideTemp outsideTemp;
+extern Sensor returnTemp[2];
 

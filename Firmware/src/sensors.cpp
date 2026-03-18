@@ -8,6 +8,10 @@ Sensor roomTemp[2] = {
 };
 AutoSensor roomSetPoint[2];
 OutsideTemp outsideTemp;
+Sensor returnTemp[2] = {
+    Sensor(0.4),
+    Sensor(0.4)
+};
 
 SemaphoreHandle_t AddressableSensor::mutex;
 Sensor* Sensor::lastSensor = nullptr;
@@ -62,6 +66,16 @@ bool Sensor::get(double &val) {
 
 Sensor::operator bool() const {
     return setFlag;
+}
+
+Sensor* Sensor::findByOwn(const OneWireNode *own) {
+    Sensor *item = lastSensor;
+    while (item) {
+        if (item->own == own)
+            break;
+        item = item->prevSensor;
+    }
+    return item;
 }
 
 void Sensor::setConfig(JsonObject &obj) {
@@ -319,16 +333,12 @@ void OneWireNode::loop() {
         while (node) {
             node->temp = round(ds.getTempC(node->adr) * 10) / 10;
             if (node->temp != DEVICE_DISCONNECTED_C) {
-                for (int i=0; i<sizeof(roomTemp) / sizeof(roomTemp[0]); i++) {
-                    if (roomTemp[i].own == node)
-                        roomTemp[i].set(node->temp, Sensor::SOURCE_1WIRE);
-                }
-                if (outsideTemp.own == node)
-                    outsideTemp.set(node->temp, Sensor::SOURCE_1WIRE);
+                Sensor *item = Sensor::findByOwn(node);
+                if (item)
+                    item->set(node->temp, Sensor::SOURCE_1WIRE);
             }
             node = static_cast<OneWireNode*>(node->next);
         }
-
         next = millis() + 5000;
     }
 }

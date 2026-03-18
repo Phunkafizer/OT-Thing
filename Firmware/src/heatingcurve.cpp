@@ -27,11 +27,15 @@ void HeatingCurve::setConfig(JsonObject &hpObj) {
     });
 
     // Clamp/normalize points from external config to avoid invalid curves.
-    for (size_t i = 0; i < points.size(); i++) {
-        if (points[i].flow > flowMax)
-            points[i].flow = flowMax;
-        if (i > 0 && points[i].flow < points[i - 1].flow)
-            points[i].flow = points[i - 1].flow;
+    for (auto it=points.begin(); it<points.end(); it++) {
+        if (it->flow > flowMax)
+            it->flow = flowMax;
+
+        if (it > points.begin()) {
+            auto prev = it - 1;
+            if (it->flow < prev->flow)
+                it->flow = prev->flow;
+        }
     }
 }
 

@@ -1133,6 +1133,21 @@
                     </div>
                 </div>
 
+                <div class="param">
+                    <h5>Return temp. source</h5>
+                    <select id="selectReturnSource1" field="heating.0.returnLimit.source">
+                        <option value="1">OT roomunit</option>
+                        <option value="3">1wire</option>
+                    </select>
+                    <div class="selopt">
+                    </div>
+                    <div class="selopt">
+                        <h5>address</h5>
+                        <select id="oneWireReturnTempAdr1" class="oneWireAdr">
+                        </select>
+                    </div>
+                </div>
+
                 <h4>Room compensation (PI controller)</h4>
                 <div class="param">
                     <h5>enable</h5>
@@ -1490,6 +1505,22 @@
                         </select>
                     </div>
                 </div>
+
+                <div class="param">
+                    <h5>Return temp. source</h5>
+                    <select id="selectReturnSource2" field="heating.1.returnLimit.source">
+                        <option value="1">OT roomunit</option>
+                        <option value="3">1wire</option>
+                    </select>
+                    <div class="selopt">
+                    </div>
+                    <div class="selopt">
+                        <h5>address</h5>
+                        <select id="oneWireReturnTempAdr2" class="oneWireAdr">
+                        </select>
+                    </div>
+                </div>
+
                 <h4>Room compensation (PI controller)</h4>
                 <div class="param">
                     <h5>enable</h5>
@@ -2155,7 +2186,10 @@
                     enableHyst: false,
                     hysteresis: 0.5,
                     minSuspend: false,
-                    suspOffset: 0.0
+                    suspOffset: 0.0,
+                    returnLimit: {
+                        source: 1
+                    }
                 },
                 {
                     // Default to linear curve; 6-point defaults added for multipoint mode.
@@ -2194,7 +2228,10 @@
                     enableHyst: false,
                     hysteresis: 0.5,
                     minSuspend: false,
-                    suspOffset: 0.0
+                    suspOffset: 0.0,
+                    returnLimit: {
+                        source: 1
+                    }
                 }
             ],
             vent: {
@@ -2515,7 +2552,7 @@
                     heating.type = _(`#curveMode${ch}`)?.checked ? 1 : 0;
                     heating.curveSmooth = _(`#curveSmooth${ch}`)?.checked || false;
                     heating.points = normalizeCurvePoints(heating.points);
-                    delete heating.roomtemp["adr"];
+                    
                     switch (heating.roomtemp.source) {
                     case 2:
                         heating.roomtemp["adr"] = _(`#bleRoomTempAdr${ch}`).value;
@@ -2523,7 +2560,25 @@
                     case 3:
                         heating.roomtemp["adr"] = _(`#oneWireRoomTempAdr${ch}`).value;
                         break;
+                    default:
+                        delete heating.roomtemp["adr"];
+                        break;
                     }
+
+                    switch (heating.returnLimit?.source) {
+                    case 3:
+                        heating.returnLimit = {
+                            ...(heating.returnLimit ?? {}),
+                            adr: _(`#oneWireReturnTempAdr${ch}`).value
+                        }
+                        break;
+                    default:
+                        if (heating.returnLimit) {
+                            delete heating.returnLimit["adr"];
+                        }
+                        break;
+                    }
+
                     heating.roomComp = {
                         ...(heating.roomComp ?? {}),
                         enabled: _(`#roomCompEnable${ch}`).checked
@@ -2899,6 +2954,10 @@
                         _(`#selectRoomSetpointSource${ch}`).value = hcfg.roomsetpoint.source;
                     _(`#selectRoomSetpointSource${ch}`).dispatchEvent(new Event('change'));
 
+                    if ('returnLimit' in hcfg)
+                       _(`#selectReturnSource${ch}`).value = hcfg.returnLimit.source;
+                    _(`#selectReturnSource${ch}`).dispatchEvent(new Event('change'));
+                     
                     _(`#minSuspend${ch}`).checked = hcfg.minSuspend || false;
 
                     // Initialize curve mode UI and ensure we always have 6 points available.
@@ -3623,16 +3682,30 @@
             // draw current flow temp
             let flow = (hk == 1) ? statuscache.slave?.flow_t : statuscache.slave?.flow_t2;
             if (flow !== undefined && flow !== null) {
-                let pf = getPoint(xaxis.min, (hk == 1) ? statuscache?.slave.flow_t : statuscache?.slave.flow_t2);
+                let pf = getPoint(xaxis.min, flow);
                 let flame = statuscache.slave?.status?.flame;
-                ctx.fillStyle = (flame === true) ? "#fa0" : "#13f";
-                ctx.strokeStyle = "#000";
+                ctx.strokeStyle = (flame === true) ? "#fa0" : "#866";
+                ctx.fillStyle = ctx.strokeStyle;
                 ctx.beginPath();
-                ctx.moveTo(pf.x - 4 , pf.y);
-                ctx.lineTo(pf.x + 5, pf.y + 4);
-                ctx.lineTo(pf.x + 5, pf.y - 4);
+                ctx.moveTo(pf.x , pf.y);
+                ctx.lineTo(pf.x + 9, pf.y + 4);
+                ctx.lineTo(pf.x + 9, pf.y - 4);
                 ctx.closePath();
-                ctx.stroke();
+                //ctx.stroke();
+                ctx.fill();
+            }
+
+            let ret = statuscache.heatercircuit?.[hk -1]?.returnTemp;
+            if (ret !== undefined && ret !== null) {
+                let p = getPoint(xaxis.min, ret);
+                ctx.strokeStyle = "#58f";
+                ctx.fillStyle = ctx.strokeStyle;
+                ctx.beginPath();
+                ctx.moveTo(p.x , p.y);
+                ctx.lineTo(p.x + 9, p.y + 4);
+                ctx.lineTo(p.x + 9, p.y - 4);
+                ctx.closePath();
+                //ctx.stroke();
                 ctx.fill();
             }
         }

@@ -732,19 +732,22 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         case OpenThermMessageType::READ_ACK:
             switch (id) {
             case Toutside:
-                outsideTemp.set(OpenTherm::getFloat(msg), OutsideTemp::SOURCE_OT);
+                outsideTemp.set(OpenTherm::getFloat(msg), Sensor::SOURCE_OT);
                 break;
             case Tr:
-                roomTemp[0].set(OpenTherm::getFloat(msg), OutsideTemp::SOURCE_OT);
+                roomTemp[0].set(OpenTherm::getFloat(msg), Sensor::SOURCE_OT);
                 break;
             case TrCH2:
-                roomTemp[1].set(OpenTherm::getFloat(msg), OutsideTemp::SOURCE_OT);
+                roomTemp[1].set(OpenTherm::getFloat(msg), Sensor::SOURCE_OT);
                 break;
             case TrSet:
-                roomSetPoint[0].set(OpenTherm::getFloat(msg), OutsideTemp::SOURCE_OT);
+                roomSetPoint[0].set(OpenTherm::getFloat(msg), Sensor::SOURCE_OT);
                 break;
             case TrSetCH2:
-                roomSetPoint[1].set(OpenTherm::getFloat(msg), OutsideTemp::SOURCE_OT);
+                roomSetPoint[1].set(OpenTherm::getFloat(msg), Sensor::SOURCE_OT);
+                break;
+            case Tret:
+                returnTemp[0].set(OpenTherm::getFloat(msg), Sensor::SOURCE_OT);
                 break;
             default:
                 break;
@@ -1122,6 +1125,9 @@ void OTControl::getJson(JsonObject &obj) {
 
         if (heatingConfig[i].enableHyst)
             hc[F("suspended")] = hctrl.suspended;
+
+        if (returnTemp[i].get(d))
+            hc[F("returnTemp")] = d;
     }
 
     obj[F("bypass")] = bypass;
