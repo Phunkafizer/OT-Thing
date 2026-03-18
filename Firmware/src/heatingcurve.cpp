@@ -1,4 +1,6 @@
 #include "heatingcurve.h"
+#include <algorithm>
+#include <math.h>
 
 void HeatingCurve::setConfig(JsonObject &hpObj) {
     flowMax = hpObj[F("flowMax")] | 40;
@@ -7,7 +9,8 @@ void HeatingCurve::setConfig(JsonObject &hpObj) {
     offset = hpObj[F("offset")] | 0.0;
     smooth = hpObj[F("curveSmooth")] | false;
 
-    curveType = (CurveType) ((int) hpObj[F("type")] | CURVE_SIMPLE);
+    // Use ArduinoJson default operator to ensure a valid curve type when missing.
+    curveType = static_cast<CurveType>(hpObj[F("type")] | static_cast<int>(CURVE_SIMPLE));
 
     points.clear();
     JsonArray pointsArr = hpObj[F("points")].as<JsonArray>();
@@ -16,6 +19,19 @@ void HeatingCurve::setConfig(JsonObject &hpObj) {
         pt.outside = pointObj[F("outside")];
         pt.flow = pointObj[F("flow")];
         points.push_back(pt);
+    }
+
+    // Keep points sorted to ensure deterministic interpolation behavior.
+    std::sort(points.begin(), points.end(), [](const CurvePoint &a, const CurvePoint &b) {
+        return a.outside > b.outside;
+    });
+
+    // Clamp/normalize points from external config to avoid invalid curves.
+    for (size_t i = 0; i < points.size(); i++) {
+        if (points[i].flow > flowMax)
+            points[i].flow = flowMax;
+        if (i > 0 && points[i].flow < points[i - 1].flow)
+            points[i].flow = points[i - 1].flow;
     }
 }
 
@@ -69,8 +85,13 @@ double HeatingCurve::getFlowTempMultipoint(const double outsideTemp, const doubl
         if (it3 != points.end() - 1)
             it3++;
 
-        // Centripetal Catmull–Rom spline
-        const double t = (outsideTemp - it1->outside) / (it2->outside - it1->outside);
+        // Catmull-Rom spline
+        // Guard against duplicate outside values to avoid division by zero.
+        const double denom = (it2->outside - it1->outside);
+        if (fabs(denom) < 0.001)
+            return it1->flow;
+
+        const double t = (outsideTemp - it1->outside) / denom;
         const double t2 = t * t;
         const double t3 = t2 * t;
 
@@ -87,7 +108,12 @@ double HeatingCurve::getFlowTempMultipoint(const double outsideTemp, const doubl
     }
     else {
         // interpolate
-        const double ratio = (outsideTemp - it1->outside) / (it2->outside - it1->outside);
+        // Guard against duplicate outside values to avoid division by zero.
+        const double denom = (it2->outside - it1->outside);
+        if (fabs(denom) < 0.001)
+            return it1->flow;
+
+        const double ratio = (outsideTemp - it1->outside) / denom;
         return it1->flow + ratio * (it2->flow - it1->flow);
     }    
 }
