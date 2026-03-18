@@ -84,7 +84,7 @@
             padding: 0 10px 0.3em 0;
         }
 
-        div.range {
+        div.param.range {
             min-width: 100%;
         }
 
@@ -161,7 +161,8 @@
             background: #fd975a;
             height: 5px;
             margin: auto 0;
-            width: 150px;
+            flex: 1;
+            max-width: 300px;
             cursor: pointer;
         }
 
@@ -423,7 +424,7 @@
             div.statusfield {
                 min-width: 33.33%; /* 3 columns on tablets */
             }
-            div.range {
+            div.param.range {
                 min-width: 45%; /* 2 columns for range inputs on tablets */
             }
             #mainwrapper {
@@ -435,7 +436,7 @@
             div.statusfield {
                 min-width: 25%; /* 4 columns on desktops */
             }
-            div.range {
+            div.param.range {
                 min-width: 30%; /* 3 columns for range inputs on tablets */
             }
             #mainwrapper {
@@ -1211,25 +1212,26 @@
 
             <h3>Heating curve</h3>
             <div class="group">
-                <!-- Added curve mode switch to toggle between linear and 6-point curve. -->
-                <div class="param">
-                    <h5>Curve mode</h5>
-                    <div>
-                        <label class="switch">
-                            <input id="curveMode1" type="checkbox" />
-                            <span class="slider"></span>
-                        </label>
-                        <div class="valunit"></div>
+                <div class="flexline">
+                    <!-- Added curve mode switch to toggle between linear and 6-point curve. -->
+                    <div class="param">
+                        <h5>Multipoint</h5>
+                        <div>
+                            <label class="switch">
+                                <input id="curveMode1" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
-                </div>
-                <!-- Added smooth option for the 6-point curve. -->
-                <div class="param curve-only">
-                    <h5>Smooth curve</h5>
-                    <div>
-                        <label class="switch">
-                            <input id="curveSmooth1" type="checkbox" />
-                            <span class="slider"></span>
-                        </label>
+                    <!-- Added smooth option for the 6-point curve. -->
+                    <div class="param curve-only">
+                        <h5>Smooth curve</h5>
+                        <div>
+                            <label class="switch">
+                                <input id="curveSmooth1" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <!-- Added fixed 6-point inputs for multipoint curve mode. -->
@@ -1569,24 +1571,25 @@
             <h3>Heating curve</h3>
             <div class="group">
                 <!-- Added curve mode switch to toggle between linear and 6-point curve. -->
-                <div class="param">
-                    <h5>Curve mode</h5>
-                    <div>
-                        <label class="switch">
-                            <input id="curveMode2" type="checkbox" />
-                            <span class="slider"></span>
-                        </label>
-                        <div class="valunit">6-point curve</div>
+                    <div class="flexline">
+                    <div class="param">
+                        <h5>Multipoint</h5>
+                        <div>
+                            <label class="switch">
+                                <input id="curveMode2" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
-                </div>
-                <!-- Added smooth option for the 6-point curve. -->
-                <div class="param curve-only">
-                    <h5>Smooth curve</h5>
-                    <div>
-                        <label class="switch">
-                            <input id="curveSmooth2" type="checkbox" />
-                            <span class="slider"></span>
-                        </label>
+                    <!-- Added smooth option for the 6-point curve. -->
+                    <div class="param curve-only">
+                        <h5>Smooth curve</h5>
+                        <div>
+                            <label class="switch">
+                                <input id="curveSmooth2" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <!-- Added fixed 6-point inputs for multipoint curve mode. -->
@@ -1825,24 +1828,26 @@
                             </label>
                         </div>
                     </div>
-                    <div id="maxModulation" class="param">
-                        <h5>Max. modulation</h5>
-                        <div class="flexline">
-                            <div class="valunit">
-                                <span class="value"></span>
-                                <span class="unit">%</span>
+                    <div class="flexline">
+                        <div id="maxModulation" class="param range">
+                            <h5>Max. modulation</h5>
+                            <div class="flexline">
+                                <div class="valunit">
+                                    <span class="value"></span>
+                                    <span class="unit">%</span>
+                                </div>
+                                <input type="range" min="0" max="100" step="1" />
                             </div>
-                            <input type="range" min="0" max="100" step="1" />
                         </div>
-                    </div>
-                    <div id="dhwtemp" class="param DHW">
-                        <h5>DHW set temperature</h5>
-                        <div class="flexline">
-                            <div class="valunit">
-                                <span class="value"></span>
-                                <span class="unit">&deg;C</span>
+                        <div id="dhwtemp" class="param DHW range">
+                            <h5>DHW set temperature</h5>
+                            <div class="flexline">
+                                <div class="valunit">
+                                    <span class="value"></span>
+                                    <span class="unit">&deg;C</span>
+                                </div>
+                                <input type="range" min="30" max="70" step="1" />
                             </div>
-                            <input type="range" min="30" max="70" step="1" />
                         </div>
                     </div>
                 </div>
@@ -2028,19 +2033,23 @@
             <div class="group">
                 <h4>aux inputs</h4>
                 <div class="flexline">
-                    <h5>aux 1 (DQ)</h5>
-                    <select id="selAux1" field="aux.0.mode">
-                        <option value="0">unused</option>
-                        <option value="1">digital</option>
-                        <option value="3">analog</option>
-                        <option value="4">1wire</option>
-                    </select>
-                    <h5>aux. 2 (DI)</h5>
-                    <select id="selAux2" field="aux.1.mode">
-                        <option value="0">unused</option>
-                        <option value="1">digital</option>
-                        <option value="4">1wire</option>
-                    </select>
+                    <div class="param">
+                        <h5>aux 1 (DQ)</h5>
+                        <select id="selAux1" field="aux.0.mode">
+                            <option value="0">unused</option>
+                            <option value="1">digital</option>
+                            <option value="3">analog</option>
+                            <option value="4">1wire</option>
+                        </select>
+                    </div>
+                    <div class="param">
+                        <h5>aux. 2 (DI)</h5>
+                        <select id="selAux2" field="aux.1.mode">
+                            <option value="0">unused</option>
+                            <option value="1">digital</option>
+                            <option value="4">1wire</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <h4>Timezone</h4>
