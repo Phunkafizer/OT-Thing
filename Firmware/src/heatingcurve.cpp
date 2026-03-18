@@ -79,10 +79,10 @@ double HeatingCurve::getFlowTempMultipoint(const double outsideTemp, const doubl
 
     if (smooth) {
         auto it0 = it1;
-        if (it0 != points.begin())
+        if (it0 > points.begin())
             it0--;
         auto it3 = it2;
-        if (it3 != points.end() - 1)
+        if (it3 < points.end() - 1)
             it3++;
 
         // Catmull-Rom spline

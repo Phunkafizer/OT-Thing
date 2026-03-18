@@ -35,13 +35,12 @@ void Sensor::set(const double val, const Source src) {
         value = val;
         if (!setFlag)
             smoothed = val;
-         setFlag = true;
+        setFlag = true;
     }
 }
 
 void Sensor::updateSmooth() {
     smoothed = alpha * value + (1.0 - alpha) * smoothed;
-    Serial.println(smoothed);
 }
 
 bool Sensor::get(double &val) {
@@ -66,15 +65,26 @@ Sensor::operator bool() const {
 }
 
 void Sensor::setConfig(JsonObject &obj) {
-    src = (Source) (obj["source"] | (int) SOURCE_NA);
-    setFlag = false;
-    own = nullptr;
-    if (src == SOURCE_1WIRE) {
-        own = OneWireNode::find(String(obj["adr"]));
+    auto newSrc = (Source) (obj["source"] | (int) SOURCE_NA);
+    if (src != newSrc) {
+        setFlag = false;
+        src = newSrc;
     }
-    else if (src == SOURCE_BLE) {
+    
+    own = nullptr;
+    switch (src) {
+    case SOURCE_1WIRE:
+        own = OneWireNode::find(String(obj["adr"]));
+        setFlag = false;
+        break;
+
+    case SOURCE_BLE:
         for (int i=0; i<6; i++)
             adr[i] = strtol(String(obj[F("adr")]).substring(i * 2, i * 2 + 2).c_str(), 0, 16);
+        break;
+
+    default:
+        break;
     }
 }
 
@@ -94,7 +104,7 @@ void Sensor::loopAll() {
     Sensor *item = lastSensor;
     while (item) {
         item->loop();
-        if (smooth)
+        if (smooth && item->setFlag)
             item->updateSmooth();
         item = item->prevSensor;
     }
