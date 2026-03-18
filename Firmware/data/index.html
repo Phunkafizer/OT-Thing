@@ -177,6 +177,10 @@
             margin-bottom: 0.5em;
         }
 
+        canvas {
+            width: 350px;
+        }
+
         div.toolbar {
             text-align: center;
             padding: 0.3em 0;
@@ -427,6 +431,9 @@
             div.param.range {
                 min-width: 45%; /* 2 columns for range inputs on tablets */
             }
+            canvas {
+                width: 450px;
+            }
             #mainwrapper {
                 max-width: 600px; /* Slightly wider on tablets */
             }
@@ -438,6 +445,9 @@
             }
             div.param.range {
                 min-width: 30%; /* 3 columns for range inputs on tablets */
+            }
+            canvas {
+                width: 700px;
             }
             #mainwrapper {
                 max-width: 800px; /* Wider on desktops */
@@ -1316,8 +1326,7 @@
                 </div>
 
                 <div class="curve">
-                    <canvas id="canvas1" height="375px" width="375px">
-                    </canvas>
+                    <canvas id="canvas1"></canvas>
                 </div>
 
                 <div class="flexline">
@@ -1691,8 +1700,7 @@
                 </div>
 
                 <div class="curve">
-                    <canvas id="canvas2" height="375px" width="375px">
-                    </canvas>
+                    <canvas id="canvas2"></canvas>
                 </div>
 
                 <div class="flexline">
@@ -3484,6 +3492,7 @@
             let flowmin = parseFloat(_(`#flowmin${hk} input`).value);
             let fmg = Math.ceil(flowmax / 10) * 10 + 5; // flowmax for graph
 
+            canvas.width = parseInt(getComputedStyle(canvas).width);
             canvas.height = 20 + (fmg - 20) * 4.5;
             var ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
