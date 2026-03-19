@@ -2367,14 +2367,14 @@
 
         // Keep the 6 curve inputs in sync after normalization.
         function syncCurvePointInputs(ch, points) {
-            const entries = [
-                { out: `#curve${ch}p1out`, flow: `#curve${ch}p1flow`, idx: 0 },
-                { out: `#curve${ch}p2out`, flow: `#curve${ch}p2flow`, idx: 1 },
-                { out: `#curve${ch}p3out`, flow: `#curve${ch}p3flow`, idx: 2 },
-                { out: `#curve${ch}p4out`, flow: `#curve${ch}p4flow`, idx: 3 },
-                { out: `#curve${ch}p5out`, flow: `#curve${ch}p5flow`, idx: 4 },
-                { out: `#curve${ch}p6out`, flow: `#curve${ch}p6flow`, idx: 5 }
-            ];
+            const entries = [];
+            for (let i = 0; i < 6; i++) {
+                entries.push({
+                    out: `#curve${ch}p${i+1}out`,
+                    flow: `#curve${ch}p${i+1}flow`,
+                    idx: i
+                });
+            }
             entries.forEach((entry) => {
                 const outInput = _(entry.out);
                 const flowInput = _(entry.flow);
@@ -3697,7 +3697,7 @@
             if ((hcfg.type ?? 0) === 1) {
                 hcfg.points.forEach((pt) => {
                     const p = getPoint(pt.outside, clip(pt.flow, flowmax, flowmin));
-                    drawMarkerPoint(p, '#0AF');
+                    drawMarkerPoint(p, '#FFF');
                 });
             }
 
@@ -3715,6 +3715,21 @@
                 ctx.lineTo(psensor.x, origin.y);
                 ctx.stroke();
                 ctx.fillText(Math.round(ftsensor * 10) / 10, origin.x + 30, psensor.y - 8);
+            }
+
+            if ((hcfg?.type ?? 0) === 0 && (hcfg.returnLimit.spread !== 0 || hcfg.returnLimit.offset !== 0)) {
+                // draw return limit
+                let ftsensor = getFlowTemperatureForConfig(statuscache.outsideTemp, roomset, hcfg, true);
+                let psensor = getPoint(statuscache.outsideTemp, ftsensor);
+                drawMarkerPoint(psensor, '#68F');
+                ctx.strokeStyle = "#68F";
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(origin.x, psensor.y);
+                ctx.lineTo(psensor.x, psensor.y);
+                ctx.lineTo(psensor.x, origin.y);
+                ctx.stroke();
+                ctx.fillText(Math.round(ftsensor * 10) / 10, origin.x + 30, psensor.y + 8);
             }
 
             //draw markers
