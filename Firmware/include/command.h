@@ -1,16 +1,8 @@
-#ifndef _command_h
-#define _command_h
+#pragma once
 
 #include <Arduino.h>
-#ifdef ESP32
 #include <AsyncTCP.h>
-#endif
-#ifdef ESP8266
-#include <ESPAsyncTCP.h>
-#endif
 #include <vector>
-
-
 
 extern class OtGwCommand {
 private:
@@ -32,6 +24,3 @@ public:
     
 } command;
 
-
-
-#endif
