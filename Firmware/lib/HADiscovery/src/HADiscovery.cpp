@@ -1,54 +1,64 @@
 #include "HADiscovery.h"
 
-const char *HA_DEVICE_CLASS_RUNNING PROGMEM = "running";
-const char *HA_DEVICE_CLASS_PROBLEM PROGMEM = "problem";
-const char *HA_DEVICE_CLASS_OPENING PROGMEM = "opening";
-const char *HA_DEVICE_CLASS_TEMPERATURE PROGMEM = "temperature";
+PGM_P HA_DEVICE_CLASS_RUNNING PROGMEM = "running";
+PGM_P HA_DEVICE_CLASS_PROBLEM PROGMEM = "problem";
+PGM_P HA_DEVICE_CLASS_OPENING PROGMEM = "opening";
+PGM_P HA_DEVICE_CLASS_TEMPERATURE PROGMEM = "temperature";
+PGM_P HA_DEVICE_CLASS_CARBON_DIOXIDE PROGMEM = "carbon_dioxide";
+PGM_P HA_DEVICE_CLASS_HUMIDITY PROGMEM = "humidity";
+PGM_P HA_DEVICE_CLASS_VOLUME_FLOW_RATE PROGMEM = "volume_flow_rate";
+PGM_P HA_DEVICE_CLASS_CURRENT PROGMEM = "current";
 
-const char *HA_UNIT_PPM PROGMEM = "ppm";
-const char *HA_UNIT_RPM PROGMEM = "rpm";
-const char *HA_UNIT_HZ PROGMEM = "Hz";
-const char *HA_UNIT_PERCENT PROGMEM = "%";
-const char *HA_UNIT_CELSIUS PROGMEM = "°C";
-const char *HA_UNIT_KELVIN PROGMEM = "K";
+PGM_P HA_UNIT_PPM PROGMEM = "ppm";
+PGM_P HA_UNIT_RPM PROGMEM = "rpm";
+PGM_P HA_UNIT_HZ PROGMEM = "Hz";
+PGM_P HA_UNIT_PERCENT PROGMEM = "%";
+PGM_P HA_UNIT_CELSIUS PROGMEM = "°C";
+PGM_P HA_UNIT_KELVIN PROGMEM = "K";
+PGM_P HA_UNIT_L_MIN PROGMEM = "L/min";
 
-const char HA_AVAILABILITY[]                    PROGMEM = "availability";
-const char HA_TOPIC[]                           PROGMEM = "t";
-const char HA_UNIQUE_ID[]                       PROGMEM = "uniq_id";
-const char HA_OBJECT_ID[]                       PROGMEM = "obj_id";
-const char HA_ENTITY_CATEGORY[]                 PROGMEM = "ent_cat";
-const char HA_ENTITY_CATEGORY_CONFIG[]          PROGMEM = "config";
-const char HA_VALUE_TEMPLATE[]                  PROGMEM = "val_tpl";
-const char HA_ENTITY_SWITCH[]                   PROGMEM = "switch";
-const char HA_DEVICE[]                          PROGMEM = "dev";
-const char HA_IDENTIFIERS[]                     PROGMEM = "ids";
-const char HA_SW_VERSION[]                      PROGMEM = "sw";
-const char HA_NAME[]                            PROGMEM = "name";
-const char HA_STATE_TOPIC[]                     PROGMEM = "stat_t";
-const char HA_COMMAND_TOPIC[]                   PROGMEM = "cmd_t";
-const char HA_STATE_CLASS[]                     PROGMEM = "stat_cla";
-const char HA_DEVICE_CLASS[]                    PROGMEM = "dev_cla";
-const char HA_UNIT_OF_MEASUREMENT[]             PROGMEM = "unit_of_meas";
-const char HA_STATE_CLASS_MEASUREMENT[]         PROGMEM = "measurement";
-const char HA_ICON[]                            PROGMEM = "ic";
-const char HA_MANUFACTURER[]                    PROGMEM = "mf";
-const char HA_PLATFORM[]                        PROGMEM = "p";
-const char HA_MIN[]                             PROGMEM = "min";
-const char HA_MAX[]                             PROGMEM = "max";
-const char HA_STEP[]                            PROGMEM = "step";
-const char HA_TEMPERATURE_COMMAND_TOPIC[]       PROGMEM = "temp_cmd_t";
-const char HA_MODES[]                           PROGMEM = "modes";
-const char HA_MAX_TEMP[]                        PROGMEM = "max_temp";
-const char HA_MIN_TEMP[]                        PROGMEM = "min_temp";
-const char HA_TEMP_STEP[]                       PROGMEM = "temp_step";
-const char HA_TEMPERATURE_STATE_TOPIC[]         PROGMEM = "temp_stat_t";
-const char HA_TEMPERATURE_STATE_TEMPLATE[]      PROGMEM = "temp_stat_tpl";
-const char HA_CURRENT_TEMPERATURE_TEMPLATE[]    PROGMEM = "curr_temp_tpl";
-const char HA_CURRENT_TEMPERATURE_TOPIC[]       PROGMEM = "curr_temp_t";
-const char HA_INITIAL[]                         PROGMEM = "initial";
-const char HA_MODE_COMMAND_TOPIC[]              PROGMEM = "mode_cmd_t";
-const char HA_OPTIMISTIC[]                      PROGMEM = "optimistic";
-const char HA_RETAIN[]                          PROGMEM = "retain";
+PGM_P HA_ENTITY_CATEGORY_CONFIG = "config";
+PGM_P HA_ENTITY_CATEGORY_DIAGNOSTIC = "diagnostic";
+
+PGM_P HA_AVAILABILITY                    PROGMEM = "avty";
+PGM_P HA_TOPIC                           PROGMEM = "t";
+PGM_P HA_UNIQUE_ID                       PROGMEM = "uniq_id";
+PGM_P HA_OBJECT_ID                       PROGMEM = "obj_id";
+PGM_P HA_ENTITY_CATEGORY                 PROGMEM = "ent_cat";
+PGM_P HA_VALUE_TEMPLATE                  PROGMEM = "val_tpl";
+PGM_P HA_ENTITY_SWITCH                   PROGMEM = "switch";
+PGM_P HA_DEVICE                          PROGMEM = "dev";
+PGM_P HA_IDENTIFIERS                     PROGMEM = "ids";
+PGM_P HA_SW_VERSION                      PROGMEM = "sw";
+PGM_P HA_NAME                            PROGMEM = "name";
+PGM_P HA_STATE_TOPIC                     PROGMEM = "stat_t";
+PGM_P HA_COMMAND_TOPIC                   PROGMEM = "cmd_t";
+PGM_P HA_STATE_CLASS                     PROGMEM = "stat_cla";
+PGM_P HA_DEVICE_CLASS                    PROGMEM = "dev_cla";
+PGM_P HA_UNIT_OF_MEASUREMENT             PROGMEM = "unit_of_meas";
+PGM_P HA_STATE_CLASS_MEASUREMENT         PROGMEM = "measurement";
+PGM_P HA_ICON                            PROGMEM = "ic";
+PGM_P HA_MANUFACTURER                    PROGMEM = "mf";
+PGM_P HA_PLATFORM                        PROGMEM = "p";
+PGM_P HA_MIN                             PROGMEM = "min";
+PGM_P HA_MAX                             PROGMEM = "max";
+PGM_P HA_STEP                            PROGMEM = "step";
+PGM_P HA_TEMPERATURE_COMMAND_TOPIC       PROGMEM = "temp_cmd_t";
+PGM_P HA_MODES                           PROGMEM = "modes";
+PGM_P HA_MAX_TEMP                        PROGMEM = "max_temp";
+PGM_P HA_MIN_TEMP                        PROGMEM = "min_temp";
+PGM_P HA_TEMP_STEP                       PROGMEM = "temp_step";
+PGM_P HA_TEMPERATURE_STATE_TOPIC         PROGMEM = "temp_stat_t";
+PGM_P HA_TEMPERATURE_STATE_TEMPLATE      PROGMEM = "temp_stat_tpl";
+PGM_P HA_CURRENT_TEMPERATURE_TEMPLATE    PROGMEM = "curr_temp_tpl";
+PGM_P HA_CURRENT_TEMPERATURE_TOPIC       PROGMEM = "curr_temp_t";
+PGM_P HA_INITIAL                         PROGMEM = "init";
+PGM_P HA_MODE_COMMAND_TOPIC              PROGMEM = "mode_cmd_t";
+PGM_P HA_OPTIMISTIC                      PROGMEM = "opt";
+PGM_P HA_RETAIN                          PROGMEM = "ret";
+PGM_P HA_MODE_STATE_TOPIC                PROGMEM = "mode_stat_t";
+PGM_P HA_MODE_STATE_TEMPLATE             PROGMEM = "mode_stat_tpl";
+
 
 String HADiscovery::ha_prefix = F("homeassistant");
 String HADiscovery::devName;
@@ -94,12 +104,20 @@ void HADiscovery::setTemperatureStateTopic(String topic) {
     doc[FPSTR(HA_TEMPERATURE_STATE_TOPIC)] = topic;
 }
 
+void HADiscovery::setTemperatureStateTopic() {
+    setTemperatureStateTopic(defaultStateTopic);
+}
+
 void HADiscovery::setTemperatureStateTemplate(String stateTemplate) {
     doc[FPSTR(HA_TEMPERATURE_STATE_TEMPLATE)] = stateTemplate;
 }
 
 void HADiscovery::setCurrentTemperatureTopic(String topic) {
     doc[FPSTR(HA_CURRENT_TEMPERATURE_TOPIC)] = topic;
+}
+
+void HADiscovery::setCurrentTemperatureTopic() {
+    setCurrentTemperatureTopic(defaultStateTopic);
 }
 
 void HADiscovery::setCurrentTemperatureTemplate(String templ) {
@@ -132,6 +150,18 @@ void HADiscovery::setInitial(double initial) {
 
 void HADiscovery::setModeCommandTopic(String topic) {
     doc[FPSTR(HA_MODE_COMMAND_TOPIC)] = topic;
+}
+
+void HADiscovery::setModeStateTopic(String topic) {
+    doc[FPSTR(HA_MODE_STATE_TOPIC)] = topic;
+}
+
+void HADiscovery::setModeStateTopic() {
+    setModeStateTopic(defaultStateTopic);
+}
+
+void HADiscovery::setModeStateTemplate(String templ) {
+    doc[FPSTR(HA_MODE_STATE_TEMPLATE)] = templ;
 }
 
 void HADiscovery::setOptimistic(const bool opt) {
@@ -171,6 +201,13 @@ void HADiscovery::setStateClass(const String sc) {
         doc.remove(FPSTR(HA_STATE_CLASS));
     else
         doc[FPSTR(HA_STATE_CLASS)] = sc;
+}
+
+void HADiscovery::setEntityCategory(PGM_P cat) {
+    if (cat != nullptr)
+        doc[FPSTR(HA_ENTITY_CATEGORY)] = FPSTR(cat);
+    else
+        doc.remove(FPSTR(HA_ENTITY_CATEGORY));
 }
 
 void HADiscovery::createSensor(String name, String id) {

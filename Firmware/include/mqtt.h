@@ -14,21 +14,6 @@ struct MqttConfig {
 };
 
 class Mqtt {
-private:
-    void onConnect();
-    void onDisconnect(AsyncMqttClientDisconnectReason reason);
-    friend void mqttConnectCb(bool sessionPresent);
-    friend void mqttDisconnectCb(AsyncMqttClientDisconnectReason reason);
-    AsyncMqttClient cli;
-    uint32_t lastConTry;
-    uint32_t lastStatus;
-    MqttConfig config;
-    bool configSet;
-    String baseTopic;
-    String statusTopic;
-    bool discFlag {false}; // discovery flag; set after MQTT (re-) connect
-    bool conFlag;
-    OTControl::CtrlMode strToCtrlMode(const String &str);
 public:
     enum MqttTopic: uint8_t {
         TOPIC_OUTSIDETEMP,
@@ -58,6 +43,12 @@ public:
         TOPIC_BYPASS,
         TOPIC_UNKNOWN // has to be at end of list!
     };
+    enum ValueTemplateType {
+        VALTMPL_ROOT,
+        VALTMPL_SLAVE,
+        VALTMPL_THERMOSTAT,
+        VALTMPL_HEATING_CIRCUIT
+    };
     Mqtt();
     void begin();
     void loop();
@@ -70,6 +61,25 @@ public:
     static String getTopicString(const MqttTopic topic);
     String getCmdTopic(const MqttTopic topic);
     uint32_t getNumDisc() const;
+    String getValueTemplate(const ValueTemplateType vt, PGM_P field, const uint8_t ch=-1, const uint8_t ommit=-1);
+    String getValueTemplateBool(const ValueTemplateType vt, PGM_P field, const uint8_t ch=-1, const uint8_t ommit=-1);
+    String getValueTemplateClimateMode(const ValueTemplateType vt, PGM_P field, const uint8_t ch=-1, const uint8_t ommit=-1);
+private:
+    void onConnect();
+    void onDisconnect(AsyncMqttClientDisconnectReason reason);
+    friend void mqttConnectCb(bool sessionPresent);
+    friend void mqttDisconnectCb(AsyncMqttClientDisconnectReason reason);
+    AsyncMqttClient cli;
+    uint32_t lastConTry;
+    uint32_t lastStatus;
+    MqttConfig config;
+    bool configSet;
+    String baseTopic;
+    String statusTopic;
+    bool discFlag {false}; // discovery flag; set after MQTT (re-) connect
+    bool conFlag;
+    OTControl::CtrlMode strToCtrlMode(const String &str);
+    String getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit);
 };
 
 extern Mqtt mqtt;

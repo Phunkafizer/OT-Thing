@@ -190,7 +190,10 @@ void Mqtt::onMessage(const char *topic, String &payload) {
     log += payload;
     portal.textAll(log);
 
-    setValue(topicStr, payload);
+    if (setValue(topicStr, payload)) {
+        if ((millis() - lastStatus) < 4500)
+            lastStatus = millis() - 4500;
+    }
 }
 
 bool Mqtt::setValue(const String &key, const String &value) {
@@ -201,14 +204,14 @@ bool Mqtt::setValue(const String &key, const String &value) {
             break;
         }
 
-    if (etop == TOPIC_UNKNOWN) {
+    switch (etop) {
+    case TOPIC_UNKNOWN: {
         String log = F("MQTT unknown topic: ");
         log += key;
         portal.textAll(log);
         return false;
     }
 
-    switch (etop) {
     case TOPIC_OUTSIDETEMP: {
         double d = value.toFloat();
         outsideTemp.set(d, Sensor::SOURCE_MQTT);
@@ -325,4 +328,74 @@ String Mqtt::getTopicString(const MqttTopic topic) {
         if (topicList[i].topic == topic)
             return FPSTR(topicList[i].str);
     return "";
+}
+
+String Mqtt::getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit) {
+    String result = F("{% set tmp=(((value_json");
+
+    switch (vt) {
+    case VALTMPL_ROOT:
+        result += F(")");
+        break;
+        
+    case VALTMPL_SLAVE:
+        result += F(".get('slave') or {})");
+        break;
+
+    case VALTMPL_THERMOSTAT:
+        result += F(".get('thermostat') or {})");
+        break;
+
+    case VALTMPL_HEATING_CIRCUIT:
+        result += F(".get('heatercircuit') or [])[#]");
+        break;
+    }
+
+    int numbrak = 2;
+
+    String ftmp = FPSTR(field);
+    while (true) {
+        auto pidx = ftmp.indexOf('.');
+
+        if (pidx > -1) {
+            result += F(".get('");
+            result += ftmp.substring(0, pidx);
+            result += F("') or {})");
+            ftmp.remove(0, pidx + 1);
+            numbrak--;
+        }
+        else
+            break;
+    }
+    for (int i=0; i<numbrak; i++)
+        result += ')';
+
+    result += F(".get('");
+    result += ftmp;
+    result += F("') %}");
+
+    if (ch == ommit)
+        result.replace("#", "");
+    else
+        result.replace("#", String(ch));
+
+    return result;
+}
+
+String Mqtt::getValueTemplate(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit) {
+    String result = getValuePath(vt, field, ch, ommit);
+    result += F("{{ tmp | default(None) }}");
+    return result;
+}
+
+String Mqtt::getValueTemplateBool(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit) {
+    String result = getValuePath(vt, field, ch, ommit);
+    result += F("{{ none if tmp is none else 'ON' if tmp else 'OFF' }}");
+    return result;
+}
+
+String Mqtt::getValueTemplateClimateMode(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit) {
+    String result = getValuePath(vt, field, ch, ommit);
+    result += F("{{ none if tmp is none else 'auto' if tmp == 2 else 'heat' if tmp == 1 else 'off' }}");
+    return result;
 }

@@ -4,9 +4,10 @@
 
 class HeatingCurve {
 public:
-    double getFlowTemp(const double outsideTemp, const double roomSet) const;
+    double getFlowTemp(const double roomSet) const;
     void setConfig(JsonObject &config);
     double getFlowMax() const;
+    double getReturnLimit(const double roomSet) const;
 private:
     struct CurvePoint {
         double outside;
@@ -21,6 +22,10 @@ private:
     double exponent;
     double gradient;
     double offset;
+    struct {
+        double deltaT;
+    } retLimit;
+    
     bool smooth;
     std::vector<CurvePoint> points; // must be sorted by outsideTemp, highest outsideTemp first!
 

@@ -142,7 +142,7 @@ private:
 protected:
     virtual bool sendDiscovery();
     bool sendDiscovery(String field);
-    const char* getName() const;
+    PGM_P getName() const;
     const OpenThermMessageID id;
     uint16_t value;
     bool enabled;
@@ -150,9 +150,10 @@ protected:
     bool setFlag;
     uint32_t numSet;
     OpenThermMessageType lastMsgType;
-    const char *haName;
+    PGM_P haName;
+    PGM_P entityCategory;
 public:
-    OTValue(const OpenThermMessageID id, const int interval, const char *haName = nullptr);
+    OTValue(const OpenThermMessageID id, const int interval, PGM_P haName = nullptr);
     virtual bool process();
     OpenThermMessageID getId() const;
     virtual void setValue(const OpenThermMessageType ty, const uint16_t val);
@@ -175,21 +176,21 @@ class OTValueu16: public OTValue {
 private:
     void getValue(JsonVariant var) const override;
 public:
-    OTValueu16(const OpenThermMessageID id, const int interval, const char *haName = nullptr);
+    OTValueu16(const OpenThermMessageID id, const int interval, PGM_P haName = nullptr);
 };
 
 class OTValueOperatingHours: public OTValueu16 {
 private:
     bool sendDiscovery() override;
 public:
-    OTValueOperatingHours(const OpenThermMessageID id, const char *haName);
+    OTValueOperatingHours(const OpenThermMessageID id, PGM_P haName);
 };
 
 class OTValuei16: public OTValue {
 private:
     void getValue(JsonVariant var) const override;
 public:
-    OTValuei16(const OpenThermMessageID id, const int interval);
+    OTValuei16(const OpenThermMessageID id, const int interval, PGM_P haName);
 };
 
 
@@ -204,7 +205,7 @@ class OTValueFloat: public OTValue {
 private:
     void getValue(JsonVariant var) const override;
 public:
-    OTValueFloat(const OpenThermMessageID id, const int interval);
+    OTValueFloat(const OpenThermMessageID id, const int interval, PGM_P haName=nullptr);
 };
 
 
@@ -212,7 +213,7 @@ class OTValueFloatTemp: public OTValueFloat {
 private:
     bool sendDiscovery() override;
 public:
-    OTValueFloatTemp(const OpenThermMessageID id, const char *haName);
+    OTValueFloatTemp(const OpenThermMessageID id, PGM_P haName);
 };
 
 class OTValueFlags: public OTValue {
@@ -236,17 +237,19 @@ class OTValueStatus: public OTValueFlags {
 private:
     const char *CH2_MODE PROGMEM = "ch2_mode";
     const char *DHW_MODE PROGMEM = "dhw_mode";
+    const char *COOLING PROGMEM = "cooling";
     const Flag flags[7] PROGMEM = {
         {0, "fault",        "fault",        HA_DEVICE_CLASS_PROBLEM},
         {1, "ch_mode",      "heating",      HA_DEVICE_CLASS_RUNNING},
         {2, DHW_MODE,       "DHW",          HA_DEVICE_CLASS_RUNNING},
         {3, "flame",        "flame",        HA_DEVICE_CLASS_RUNNING},
-        {4, "cooling",      "cooling",      HA_DEVICE_CLASS_RUNNING},
+        {4, COOLING,        "cooling",      HA_DEVICE_CLASS_RUNNING},
         {5, CH2_MODE,       "heating 2",    HA_DEVICE_CLASS_RUNNING},
         {6, "diagnostic",   "diagnostic",   HA_DEVICE_CLASS_PROBLEM}
     };
 protected:
     void getValue(JsonVariant var) const override;
+    bool sendDiscovery() override;
 public:    
     OTValueStatus();
     bool getChActive(const uint8_t channel) const;
@@ -258,10 +261,11 @@ class OTValueMasterStatus: public OTValueFlags {
 private:
     const char *DHW_ENABLE PROGMEM = "dhw_enable";
     const char *CH2_ENABLE PROGMEM = "ch2_enable";
+    const char *COOLING_ENABLE PROGMEM = "cooling_enable";
     const Flag flags[5] PROGMEM = {
         {8, "ch_enable",        "CH enable",        nullptr},
         {9, DHW_ENABLE,         "DHW enable",       nullptr},
-        {10, "cooling_enable",  "cooling enable",   nullptr},
+        {10, COOLING_ENABLE,    "cooling enable",   nullptr},
         {11, "otc_active",      "OTC active",       nullptr},
         {12, CH2_ENABLE,        "CH2 enable",       nullptr}
     };
@@ -317,6 +321,7 @@ public:
     OTValueSlaveConfigMember();
     bool hasDHW() const;
     bool hasCh2() const;
+    bool hasCooling() const;
 };
 
 
@@ -358,7 +363,7 @@ private:
     void getValue(JsonVariant var) const override;
     bool sendDiscovery() override;
 public:    
-    OTValueProductVersion(const OpenThermMessageID id, const int interval, const char *haName);
+    OTValueProductVersion(const OpenThermMessageID id, const int interval, PGM_P haName);
 };
 
 class OTValueCapacityModulation: public OTValue {

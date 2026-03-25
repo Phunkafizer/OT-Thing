@@ -65,7 +65,7 @@ private:
         bool chOn;
         double roomSet; // default room set point
         double flow; // default flow temperature 
-        bool enableHyst;
+        bool enableHyst; // suspend on roomsetpoint
         double hysteresis;
         double suspOffset;
         struct {
@@ -84,15 +84,21 @@ private:
         CtrlMode mode {CTRLMODE_AUTO};
         bool overrideFlow;
         struct PiCtrl {
-            bool enabled;
+            bool enabled; // enables PI controller
             bool init { false };
             double rspPrev; // previous room setpoint
             double integState {0}; // state of integrator / K
             double deltaT {0};
-        } piCtrl;
-        bool suspended {false};
+            bool suspended {false};
+        } roomComp;
+        struct {
+            double integState {0}; // state of integrator / K
+            double reduction {0};
+        } retLimit;
+        bool minSuspended {false};
     } heatingCtrl[NUM_HEATCIRCUITS];
-    void loopPiCtrl();
+    void loopRoomComp(const uint8_t ch);
+    void loopRetLimit(const uint8_t ch);
     unsigned long nextPiCtrl { 0 };
     struct {
         bool ventEnable;
@@ -119,6 +125,7 @@ private:
         double getFreq() const;
         double getOnTime() const;
         double getOffTime() const;
+        int getCurrentOnTime() const;
         void writeJson(JsonObject &obj) const;
     private:
         static const uint8_t BUFSIZE_MINUTES = 180; // 3 h

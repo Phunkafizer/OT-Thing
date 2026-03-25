@@ -148,6 +148,7 @@
 
         input[type=text],
         input[type=password],
+        input[type=number],
         select {
             background-color: #111;
             margin: 5px 0;
@@ -1003,7 +1004,7 @@
             <h3>Dimensioning</h3>
             <div class="group">
                 <div class="flexline">
-                    <div id="flowmax1" class="param range" field="heating.0.flowMax">
+                    <div class="param range" field="heating.0.flowMax">
                         <h5>Max. flow temperature</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1026,7 +1027,7 @@
                     </div>
 
                 <!-- Exponent is linear-only, hidden when 6-point curve is active. -->
-                    <div id="exponent1" class="param linear-only range" field="heating.0.exponent">
+                    <div class="param linear-only range" field="heating.0.exponent">
                         <h5>Heating surface exponent</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1054,7 +1055,7 @@
             <h3>Setup</h3>
             <div class="group">
                 <div class="flexline">
-                    <div id="chset1" class="param range" field="heating.0.flow">
+                    <div class="param range" field="heating.0.flow">
                         <h5>flow set temperature (default)</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1065,7 +1066,7 @@
                         </div>
                     </div>
 
-                    <div id="flowmin1" class="param range" field="heating.0.flowMin">
+                    <div class="param range" field="heating.0.flowMin">
                         <h5>Min. flow temperature</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1081,13 +1082,13 @@
                     <h5>suspend below min. flow</h5>
                     <div>
                         <label class="switch">
-                            <input id="minSuspend1" type="checkbox" field="heating.0.minSuspend" />
+                            <input type="checkbox" field="heating.0.minSuspend" />
                             <span class="slider"></span>
                         </label>
                     </div>
                 </div>
 
-                <div id="roomset1" class="param range" field="heating.0.roomsetpoint.temp">
+                <div class="param range" field="heating.0.roomsetpoint.temp">
                     <h5>Room set temperature (default)</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -1163,13 +1164,13 @@
                     <h5>enable</h5>
                     <div>
                         <label class="switch">
-                            <input id="roomCompEnable1" class="curveparam" type="checkbox" hideele="roomCompP1 roomCompI1 roomCompBoost1" field="heating.0.roomComp.enabled" />
+                            <input class="curveparam" type="checkbox" hideele="roomCompP1 roomCompI1 roomCompBoost1" field="heating.0.roomComp.enabled" />
                             <span class="slider"></span>
                         </label>
                     </div>
                 </div>
                 <div class="flexline">
-                    <div id="roomCompP1" class="param range" field="heating.0.roomComp.p">
+                    <div class="param range" field="heating.0.roomComp.p">
                         <h5>P gain</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1179,7 +1180,7 @@
                             <input type="range" class="curveparam" min="0" max="4" step="0.1">
                         </div>
                     </div>
-                    <div id="roomCompI1" class="param range" field="heating.0.roomComp.i">
+                    <div class="param range" field="heating.0.roomComp.i">
                         <h5>I gain</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1189,7 +1190,7 @@
                             <input type="range" min="0" max="1" step="0.1">
                         </div>
                     </div>
-                    <div id="roomCompBoost1" class="param range" field="heating.0.roomComp.boost">
+                    <div class="param range" field="heating.0.roomComp.boost">
                         <h5>Boost</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1206,13 +1207,13 @@
                     <h5>enable</h5>
                     <div>
                         <label class="switch">
-                            <input id="enableHyst1" type="checkbox" hideele="hyst1 suspOffset1" field="heating.0.enableHyst" />
+                            <input type="checkbox" hideele="hyst1 suspOffset1" field="heating.0.enableHyst" />
                             <span class="slider"></span>
                         </label>
                     </div>
                 </div>
                 <div class="flexline">
-                    <div id="hyst1" class="param range" field="heating.0.hysteresis">
+                    <div class="param range" field="heating.0.hysteresis">
                         <h5>hysteresis</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1222,7 +1223,7 @@
                             <input type="range" min="0.1" max="2" step="0.1">
                         </div>
                     </div>
-                    <div id="suspOffset1" class="param range" field="heating.0.suspOffset">
+                    <div class="param range" field="heating.0.suspOffset">
                         <h5>suspend offset</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1244,16 +1245,6 @@
                         <div>
                             <label class="switch">
                                 <input id="curveMode1" type="checkbox" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                    <!-- Added smooth option for the 6-point curve. -->
-                    <div class="param curve-only">
-                        <h5>Smooth curve</h5>
-                        <div>
-                            <label class="switch">
-                                <input id="curveSmooth1" type="checkbox" field="heating.0.curveSmooth" />
                                 <span class="slider"></span>
                             </label>
                         </div>
@@ -1299,7 +1290,7 @@
                 </div>
                 <div class="flexline">
                     <!-- Gradient/offset are linear-only to keep multipoint mode clean. -->
-                    <div id="gradient1" class="param linear-only range" field="heating.0.gradient">
+                    <div class="param linear-only range" field="heating.0.gradient">
                         <h5>Gradient</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1313,7 +1304,7 @@
                             </p>
                         </div>
                     </div>
-                    <div id="offset1" class="param linear-only range" field="heating.0.offset">
+                    <div class="param linear-only range" field="heating.0.offset">
                         <h5>Offset</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1323,23 +1314,14 @@
                             <input type="range" class="curveparam" min="-15" max="15" step="0.5">
                         </div>
                     </div>
-                    <div id="retLimitSpread1" class="param linear-only range" field="heating.0.returnLimit.spread">
-                        <h5>Returnlimit spread</h5>
-                        <div class="flexline">
-                            <div class="valunit">
-                                <span class="value"></span>
-                            </div>
-                            <input type="range" class="curveparam" min="0" max="0.5" step="0.05">
-                        </div>
-                    </div>
-                    <div id="retLimitOffset1" class="param linear-only range" field="heating.0.returnLimit.offset">
-                        <h5>Returnlimit offset</h5>
+                    <div class="param range" field="heating.0.returnLimit.deltaT">
+                        <h5>Returnlimit &Delta;T</h5>
                         <div class="flexline">
                             <div class="valunit">
                                 <span class="value"></span>
                                 <span class="unit">K</span>
                             </div>
-                            <input type="range" class="curveparam" min="0" max="10" step="0.5">
+                            <input type="range" class="curveparam" min="0" max="15" step="1">
                         </div>
                     </div>
                 </div>
@@ -1366,8 +1348,12 @@
                         <span class="statusvalue" field="heatercircuit.0.suspended"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Integrator state</h5>
+                        <h5>room comp. integrator</h5>
                         <span class="statusvalue" field="heatercircuit.0.integState" unit="K"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>ret. limit reduction</h5>
+                        <span class="statusvalue" field="heatercircuit.0.reduction" unit="K"></span>
                     </div>
                 </div>
             </div>
@@ -1396,7 +1382,7 @@
             <h3>Dimensioning</h3>
             <div class="group">
                 <div class="flexline">
-                    <div id="flowmax2" class="param range" field="heating.1.flowMax">
+                    <div class="param range" field="heating.1.flowMax">
                         <h5>Max. flow temperature</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1419,7 +1405,7 @@
                     </div>
 
                 <!-- Exponent is linear-only, hidden when 6-point curve is active. -->
-                    <div id="exponent2" class="param linear-only range" field="heating.1.exponent">
+                    <div class="param linear-only range" field="heating.1.exponent">
                         <h5>Heating surface exponent</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1445,7 +1431,7 @@
             <h3>Setup</h3>
             <div class="group">
                 <div class="flexline">
-                    <div id="chset2" class="param range" field="heating.1.flow">
+                    <div class="param range" field="heating.1.flow">
                         <h5>flow set temperature (default)</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1455,7 +1441,7 @@
                             <input type="range" class="curveparam" min="25" max="90" step="1" />
                         </div>
                     </div>
-                    <div id="flowmin2" class="param range" field="heating.1.flowMin">
+                    <div class="param range" field="heating.1.flowMin">
                         <h5>Min. flow temperature</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1471,13 +1457,13 @@
                     <h5>suspend below min. flow</h5>
                     <div>
                         <label class="switch">
-                            <input id="minSuspend2" type="checkbox" field="heating.1.minSuspend" />
+                            <input type="checkbox" field="heating.1.minSuspend" />
                             <span class="slider"></span>
                         </label>
                     </div>
                 </div>
 
-                <div id="roomset2" class="param range" field="heating.1.roomsetpoint.temp">
+                <div class="param range" field="heating.1.roomsetpoint.temp">
                     <h5>Room set temperature (default)</h5>
                     <div class="flexline">
                         <div class="valunit">
@@ -1551,13 +1537,13 @@
                     <h5>enable</h5>
                     <div>
                         <label class="switch">
-                            <input id="roomCompEnable2" type="checkbox" class="curveparam" hideele="roomCompP2 roomCompI2 roomCompBoost2" field="heating.1.roomComp.enabled" />
+                            <input type="checkbox" class="curveparam" hideele="roomCompP2 roomCompI2 roomCompBoost2" field="heating.1.roomComp.enabled" />
                             <span class="slider"></span>
                         </label>
                     </div>
                 </div>
                 <div class="flexline">
-                    <div id="roomCompP2" class="param range" field="heating.1.roomComp.p">
+                    <div class="param range" field="heating.1.roomComp.p">
                         <h5>P gain</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1567,7 +1553,7 @@
                             <input type="range" class="curveparam" min="0" max="5" step="0.1">
                         </div>
                     </div>
-                    <div id="roomCompI2" class="param range" field="heating.1.roomComp.i">
+                    <div class="param range" field="heating.1.roomComp.i">
                         <h5>I gain</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1578,7 +1564,7 @@
                         </div>
                     </div>
 
-                    <div id="roomCompBoost2" class="param range" field="heating.1.roomComp.boost">
+                    <div class="param range" field="heating.1.roomComp.boost">
                         <h5>Boost</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1595,13 +1581,13 @@
                     <h5>enable</h5>
                     <div>
                         <label class="switch">
-                            <input id="enableHyst2" type="checkbox" hideele="hyst2 suspOffset2" field="heating.1.enableHyst"/>
+                            <input type="checkbox" hideele="hyst2 suspOffset2" field="heating.1.enableHyst"/>
                             <span class="slider"></span>
                         </label>
                     </div>
                 </div>
                 <div class="flexline">
-                    <div id="hyst2" class="param range" field="heating.1.hysteresis">
+                    <div class="param range" field="heating.1.hysteresis">
                         <h5>hysteresis</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1611,7 +1597,7 @@
                             <input type="range" min="0.1" max="2" step="0.1">
                         </div>
                     </div>
-                    <div id="suspOffset2" class="param range" field="heating.1.suspOffset">
+                    <div class="param range" field="heating.1.suspOffset">
                         <h5>suspend offset</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1633,16 +1619,6 @@
                         <div>
                             <label class="switch">
                                 <input id="curveMode2" type="checkbox" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                    <!-- Added smooth option for the 6-point curve. -->
-                    <div class="param curve-only">
-                        <h5>Smooth curve</h5>
-                        <div>
-                            <label class="switch">
-                                <input id="curveSmooth2" type="checkbox" field="heating.1.curveSmooth" />
                                 <span class="slider"></span>
                             </label>
                         </div>
@@ -1688,7 +1664,7 @@
                 </div>
                 <div class="flexline">
                     <!-- Gradient/offset are linear-only to keep multipoint mode clean. -->
-                    <div id="gradient2" class="param linear-only range" field="heating.1.gradient">
+                    <div class="param linear-only range" field="heating.1.gradient">
                         <h5>Gradient</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1702,7 +1678,7 @@
                             </p>
                         </div>
                     </div>
-                    <div id="offset2" class="param linear-only range" field="heating.1.offset">
+                    <div class="param linear-only range" field="heating.1.offset">
                         <h5>Offset</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1712,23 +1688,14 @@
                             <input type="range" class="curveparam" min="-15" max="15" step="0.5">
                         </div>
                     </div>
-                    <div id="retLimitSpread2" class="param linear-only range" field="heating.1.returnLimit.spread">
-                        <h5>Returnlimit spread</h5>
-                        <div class="flexline">
-                            <div class="valunit">
-                                <span class="value"></span>
-                            </div>
-                            <input type="range" class="curveparam" min="0" max="0.5" step="0.05">
-                        </div>
-                    </div>
-                    <div id="retLimitOffset2" class="param linear-only range" field="heating.1.returnLimit.offset">
-                        <h5>Returnlimit offset</h5>
+                    <div class="param range" field="heating.1.returnLimit.deltaT">
+                        <h5>Returnlimit &Delta;T</h5>
                         <div class="flexline">
                             <div class="valunit">
                                 <span class="value"></span>
                                 <span class="unit">K</span>
                             </div>
-                            <input type="range" class="curveparam" min="0" max="10" step="0.5">
+                            <input type="range" class="curveparam" min="0" max="0.5" step="0.05">
                         </div>
                     </div>
                 </div>
@@ -1755,8 +1722,12 @@
                         <span class="statusvalue" field="heatercircuit.1.suspended"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Integrator state</h5>
+                        <h5>room comp. integrator</h5>
                         <span class="statusvalue" field="heatercircuit.1.integState" unit="K"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>ret. limit reduction</h5>
+                        <span class="statusvalue" field="heatercircuit.1.reduction" unit="K"></span>
                     </div>
                 </div>
             </div>
@@ -1787,7 +1758,7 @@
                 <div class="flexline">
                     <div class="param">
                         <h5>Hostname</h5>
-                        <input id="hostname" type="text" value="otthing" />
+                        <input type="text" value="otthing" field="hostname" />
                     </div>
                 </div>
                 <button id="scan">scan</button><span id="scanHint" hidden>Scan running...</span>
@@ -1854,55 +1825,55 @@
                         <div class="param">
                             <h5>Circuit 1</h5>
                             <label class="switch">
-                                <input id="chOn1" type="checkbox" field="heating.0.chOn" />
+                                <input type="checkbox" field="heating.0.chOn" />
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="param CH2">
                             <h5>Circuit 2</h5>
                             <label class="switch">
-                                <input id="chOn2" type="checkbox" field="heating.1.chOn" />
+                                <input type="checkbox" field="heating.1.chOn" />
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="param cool">
                             <h5>Cooling</h5>
                             <label class="switch">
-                                <input id="coolOn" type="checkbox" field="boiler.coolOn" />
+                                <input type="checkbox" field="boiler.coolOn" />
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="param DHW">
                             <h5>DHW</h5>
                             <label class="switch">
-                                <input id="dhwOn" type="checkbox" field="boiler.dhwOn" />
+                                <input type="checkbox" field="boiler.dhwOn" />
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="param">
                             <h5>OTC</h5>
                             <label class="switch">
-                                <input id="otc" type="checkbox" field="boiler.otc" />
+                                <input type="checkbox" field="boiler.otc" />
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="param">
                             <h5>summer mode</h5>
                             <label class="switch">
-                                <input id="summerMode" type="checkbox" field="boiler.summerMode" />
+                                <input type="checkbox" field="boiler.summerMode" />
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="param DHW">
                             <h5>DHW blocking</h5>
                             <label class="switch">
-                                <input id="dhwBlocking" type="checkbox" field="boiler.dhwBlocking" />
+                                <input type="checkbox" field="boiler.dhwBlocking" />
                                 <span class="slider"></span>
                             </label>
                         </div>
                     </div>
                     <div class="flexline">
-                        <div id="maxModulation" class="param range" field="boiler.maxModulation">
+                        <div class="param range" field="boiler.maxModulation">
                             <h5>Max. modulation</h5>
                             <div class="flexline">
                                 <div class="valunit">
@@ -1912,7 +1883,7 @@
                                 <input type="range" min="0" max="100" step="1" />
                             </div>
                         </div>
-                        <div id="dhwtemp" class="param DHW range" field="boiler.dhwTemperature">
+                        <div class="param DHW range" field="boiler.dhwTemperature">
                             <h5>DHW set temperature</h5>
                             <div class="flexline">
                                 <div class="valunit">
@@ -1931,33 +1902,33 @@
                         <div class="param">
                             <h5>vent. enable</h5>
                             <label class="switch">
-                                <input id="ventEnable" type="checkbox" field="vent,ventEnable" />
+                                <input type="checkbox" field="vent.ventEnable" />
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="param">
                             <h5>open bypass</h5>
                             <label class="switch">
-                                <input id="openBypass" type="checkbox" field="vent.openBypass" />
+                                <input type="checkbox" field="vent.openBypass" />
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="param">
                             <h5>auto bypass</h5>
                             <label class="switch">
-                                <input id="autoBypass" type="checkbox" field="vent.autoBypass" />
+                                <input type="checkbox" field="vent.autoBypass" />
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="param">
                             <h5>free vent. enable</h5>
                             <label class="switch">
-                                <input id="freeVentEnable" type="checkbox" field="vent.freeVentEnable" />
+                                <input type="checkbox" field="vent.freeVentEnable" />
                                 <span class="slider"></span>
                             </label>
                         </div>
                     </div>
-                    <div id="ventsetpoint" class="param" field="vent.setpoint">
+                    <div class="param" field="vent.setpoint">
                         <h5>ventilation set point</h5>
                         <div class="flexline">
                             <div class="valunit">
@@ -1980,21 +1951,21 @@
                         <div class="param">
                             <h5>flow temp. 1</h5>
                             <label class="switch">
-                                <input id="overrideFlow1" type="checkbox" field="heating.0.overrideFlow" />
+                                <input type="checkbox" field="heating.0.overrideFlow" />
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="param CH2">
                             <h5>flow temp. 2</h5>
                             <label class="switch">
-                                <input id="overrideFlow2" type="checkbox" field="heating.1.overrideFlow" />
+                                <input type="checkbox" field="heating.1.overrideFlow" />
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="param">
                             <h5>DHW set temp</h5>
                             <label class="switch">
-                                <input id="overrideDhw" type="checkbox" />
+                                <input type="checkbox" field="boiler.overrideDhw" />
                                 <span class="slider"></span>
                             </label>
                         </div>
@@ -2027,11 +1998,11 @@
                 <div class="flexline">
                     <div class="param">
                         <h5>Host</h5>
-                        <input id="mqttHost" type="text" />
+                        <input type="text" field="mqtt.host"/>
                     </div>
                     <div class="param">
                         <h5>Port</h5>
-                        <input id="mqttPort" type="text" />
+                        <input id="mqttPort" type="text"/>
                     </div>
                     <div class="param">
                         <h5>Keep alive</h5>
@@ -2039,13 +2010,13 @@
                     </div>
                     <div class="param">
                         <h5>HA disc. prefix</h5>
-                        <input id="haPrefix" type="text" />
+                        <input type="text" field="haPrefix"/>
                     </div>
                     <div class="param">
                         <h5>TLS</h5>
                         <div>
                             <label class="switch">
-                                <input id="mqttTls" type="checkbox" field="mqtt.tls" />
+                                <input type="checkbox" field="mqtt.tls" />
                                 <span class="slider"></span>
                             </label>
                         </div>
@@ -2054,11 +2025,11 @@
                 <div class="flexline">
                     <div class="param">
                         <h5>Username</h5>
-                        <input id="mqttUser" type="text" />
+                        <input type="text" field="mqtt.user"/>
                     </div>
                     <div class="param">
                         <h5>Password</h5>
-                        <input id="mqttPass" type="password" />
+                        <input type="password" field="mqtt.pass"/>
                     </div>
                 </div>                
             </div>
@@ -2141,6 +2112,7 @@
                         <progress id="updprogress" max="100" value="0"></progress>
                     </div>
                 </form>
+                <input id="restore_file" type="file" accept=".json" style="display: none;">
                 <div>
                     <button id="checkbtn">Check for update</button>
                     <button id="installbtn" disabled>-</button>
@@ -2159,6 +2131,8 @@
         </div>
         <div class="toolbar">
             <button id="save">save</button>
+            <button id="backupconfig">backup config</button>
+            <button id="restoreconfig">restore config</button>
             <button id="reboot">reboot</button>
         </div>
         <div class="footer"><a href="http://www.seegel-systeme.de" target="_blank">www.seegel-systeme.de</a></div>
@@ -2175,8 +2149,9 @@
         </div>
     </div>
     <script>
-        var config = {
+        const defaultConfig = {
             hostname: "otthing",
+            haPrefix: "homeassistant",
             slaveApp: 0, // 0 = heat/cool, 1 = ventilation, 2 = solar storage
             otMode: 4,
             enableSlave: false,
@@ -2194,7 +2169,6 @@
                 {
                     // Default to linear curve; 6-point defaults added for multipoint mode.
                     type: 0,
-                    curveSmooth: false,
                     points: [
                         { outside: 20.0, flow: 20.0 },
                         { outside: 10.0, flow: 38.0 },
@@ -2231,14 +2205,12 @@
                     suspOffset: 0.0,
                     returnLimit: {
                         source: 1,
-                        spread: 0.0,
-                        offset: 0.0
+                        deltaT: 0.0
                     }
                 },
                 {
                     // Default to linear curve; 6-point defaults added for multipoint mode.
                     type: 0,
-                    curveSmooth: false,
                     points: [
                         { outside: 20.0, flow: 20.0 },
                         { outside: 10.0, flow: 38.0 },
@@ -2275,8 +2247,7 @@
                     suspOffset: 0.0,
                     returnLimit: {
                         source: 1,
-                        spread: 0.0,
-                        offset: 0.0
+                        deltaT: 0.0
                     }
                 }
             ],
@@ -2291,6 +2262,12 @@
                 source: 0
             },
             mqtt: {
+                host: "",
+                tls: false,
+                port: 1883,
+                user: "",
+                pass: "",
+                keepAlive: 15
             },
             masterMemberId: 8,
             aux: [
@@ -2301,7 +2278,8 @@
                     mode: 0 // not used
                 }
             ]
-        },
+        };
+        var config = defaultConfig,
         statuscache = {},
         roomsetpoint = [21, 21]; // used for drawing curve
 
@@ -2568,8 +2546,6 @@
                         mode: parseInt(_("#selAux2").value)
                     }
                 ];
-                config.hostname = _("#hostname").value;
-                config.haPrefix = _("#haPrefix").value;
                 config.slaveApp = parseInt(_("#slaveapp").value);
                 config.otMode = (_('input[name="otMode"]:checked') != undefined) ? parseInt(_('input[name="otMode"]:checked').value) : null;
                 config.outsideTemp = {
@@ -2623,9 +2599,7 @@
 
                 config.mqtt = {
                     ...(config.mqtt ?? {}),
-                    host: _("#mqttHost").value,
                     port: parseInt(_("#mqttPort").value),
-                    user: _("#mqttUser").value,
                     pass: _("#mqttPass").value,
                     keepAlive: parseInt(_("#mqttKeepAlive").value)
                 };
@@ -2707,7 +2681,7 @@
                 }
                 let heatCfg = config.heating[hk - 1];
                 // Use selected curve mode to compute marker flow temperature.
-                let ft = getFlowTemperatureForConfig(
+                let ft = getFlowTemperature(
                     statuscache.outsideTemp,
                     roomsetpoint[hk - 1],
                     heatCfg
@@ -2838,6 +2812,20 @@
                 });
             }
 
+            function getConfigValFromPath(path, cfg=config) {
+                var cfgVal = cfg;
+                let p = path.split('.');
+                for (var i=0, len = p.length; i<len; i++) {
+                    if ( (cfgVal[p[i]] === undefined) && (i<len-1) )
+                        cfgVal[p[i]] = {};
+                    cfgVal = cfgVal[p[i]];
+                };
+
+                if (cfgVal != null)
+                    return cfgVal;
+                return getConfigValFromPath(path, defaultConfig);
+            }
+
             function setParam(name, val) {
                 var slider = _('#' + name + " input[type=range]");
                 if (val !== undefined)
@@ -2847,24 +2835,17 @@
                 _("#" + name + " span.value").innerHTML = val;
             }
 
-            function initRangeParam(name, configPath) {
-                var cfgVal = config;
-                let p = configPath.split('.');
-                for (var i=0, len = p.length; i<len; i++) {
-                    if ( (cfgVal[p[i]] === undefined) && (i<len-1) )
-                        cfgVal[p[i]] = {};
-                    cfgVal = cfgVal[p[i]];
-                };
+            function initRangeParam(name, configPath, defVal) {
+                var cfgVal = getConfigValFromPath(configPath);
 
                 setParam(name, cfgVal);
 
                 var slider = _('#' + name + " input[type=range]");
-                var path = configPath;
                 slider.addEventListener("input", (ev) => {
                     setParam(name, ev.target.value);
 
                     var cfgVal = config;
-                    var p = path.split('.')
+                    var p = configPath.split('.')
                     for (var i=0, len = p.length; i<len; i++) {
                         if (i<len-1) {
                             cfgVal = cfgVal[p[i]];
@@ -2890,8 +2871,6 @@
             xhrConfig.open("GET", "config");
             xhrConfig.send();
             function configToUi() {
-                _("#hostname").value = config.hostname || "otthing";
-                _("#haPrefix").value = config.haPrefix || "homeassistant";
                 _("#selTimezone").value = config.timezone || 3600;
                 let otradio = _('input[name="otMode"][value="' + config.otMode + '"]');
                 if (otradio !== undefined) {
@@ -2915,30 +2894,40 @@
                 _("#inpinterval").value = config.outsideTemp.interval || null;
                 _("#oneWireOutsideTempAdr").value = config.outsideTemp.adr || "";
 
-                _("#mqttHost").value = config.mqtt.host || null;
                 _("#mqttPort").value = config.mqtt.port || 1883;
-                _("#mqttUser").value = config.mqtt.user || null;
                 _("#mqttPass").value = config.mqtt.pass || null;
                 _("#mqttKeepAlive").value = config.mqtt.keepAlive || 15;
 
-                _("#overrideDhw").checked = config.boiler.overrideDhw;
+                __('input[type="text"]').forEach(ele => {
+                    if (!ele.hasAttribute('field'))
+                        return;
+
+                    let path = ele.getAttribute('field');
+                    var cfgVal = getConfigValFromPath(path);
+                    ele.value = cfgVal;
+
+                    ele.addEventListener("input", (ev) => {
+                        var cfgVal = config;
+                        var p = path.split('.')
+                        for (var i=0, len = p.length; i<len; i++) {
+                            if (i<len-1) {
+                                cfgVal = cfgVal[p[i]];
+                            }
+                            else
+                                cfgVal[p[i]] = ev.target.value;
+                        };
+                    });
+                });
 
                 __('input[type="checkbox"]').forEach(ele => {
                     if (!ele.hasAttribute('field'))
                         return;
 
-                    let configPath = ele.getAttribute('field');
-                    var cfgVal = config;
-                    let p = configPath.split('.');
-                    for (var i=0, len = p.length; i<len; i++) {
-                        if ( (cfgVal[p[i]] === undefined) && (i<len-1) )
-                            cfgVal[p[i]] = {};
-                        cfgVal = cfgVal[p[i]];
-                    };
+                    let path = ele.getAttribute('field');
+                    var cfgVal = getConfigValFromPath(path);
                     ele.checked = cfgVal;
 
-                    var path = configPath;
-                    ele.addEventListener("change", (ev) => {
+                    ele.addEventListener("input", (ev) => {
                         var cfgVal = config;
                         var p = path.split('.')
                         for (var i=0, len = p.length; i<len; i++) {
@@ -2952,10 +2941,8 @@
                 });
 
                 __(".range").forEach(ele => {
-                    if (!ele.hasAttribute('field'))
-                        return;
-
-                    initRangeParam(ele.id, ele.getAttribute("field"));
+                    if (ele.hasAttribute('field'))
+                        initRangeParam(ele.id, ele.getAttribute("field"), ele.getAttribute("defVal"));
                 });
 
                 if (config.heating === undefined)
@@ -3000,15 +2987,6 @@
                             drawCurve(ch);
                         };
                         toggleCurveModeUi(ch, curveModeInput.checked);
-                    }
-
-                    const curveSmoothInput = _(`#curveSmooth${ch}`);
-                    if (curveSmoothInput) {
-                        curveSmoothInput.checked = hcfg.curveSmooth === true;
-                        curveSmoothInput.onchange = (ev) => {
-                            hcfg.curveSmooth = ev.target.checked;
-                            drawCurve(ch);
-                        };
                     }
 
                     syncCurvePointInputs(ch, hcfg.points);
@@ -3276,6 +3254,54 @@
                 xhr.send("");
             };
 
+            _("#backupconfig").onclick = (ev) => {
+                const configJson = JSON.stringify(config, null, 2);
+                const blob = new Blob([configJson], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'otthing_config.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
+
+            _("#restoreconfig").onclick = (ev) => {
+                _("#restore_file").click();
+            };
+
+            _("#restore_file").onchange = (ev) => {
+                const file = ev.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const restoredConfig = JSON.parse(e.target.result);
+                            // Update the global config object
+                            Object.assign(config, restoredConfig);
+                            
+                            // Send the restored config via AJAX like the save button
+                            const xhrRestore = new XMLHttpRequest();
+                            xhrRestore.open("POST", "config");
+                            xhrRestore.setRequestHeader("Content-Type", "application/json");
+                            xhrRestore.send(JSON.stringify(config));
+                            xhrRestore.onload = (ev) => {
+                                alert("Configuration restored successfully");
+                                // Optionally reload the page to reflect the changes in the UI
+                                location.reload();
+                            };
+                            xhrRestore.onerror = (ev) => {
+                                alert("Error restoring configuration");
+                            };
+                        } catch (error) {
+                            alert("Invalid JSON file: " + error.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+
             var xhrUpl = new XMLHttpRequest();
             _("#form_upload").onsubmit = (ev) =>{
                 ev.preventDefault();
@@ -3421,7 +3447,7 @@
         }
 
         // Use multipoint curve interpolation to match firmware behavior.
-        function getFlowTemperatureMultipoint(ot, points, smooth) {
+        function getFlowTemperatureMultipoint(ot, points) {
             if (!Array.isArray(points) || points.length === 0)
                 return 0;
 
@@ -3443,38 +3469,34 @@
                 return p1.flow;
 
             const t = (ot - p1.outside) / denom;
-            if (smooth) {
-                const p0 = (i > 0) ? sorted[i - 1] : p1;
-                const p3 = (i + 2 < sorted.length) ? sorted[i + 2] : p2;
-                const t2 = t * t;
-                const t3 = t2 * t;
-                let flow = 0.5 * (
-                    (2.0 * p1.flow) +
-                    (-p0.flow + p2.flow) * t +
-                    (2.0 * p0.flow - 5.0 * p1.flow + 4.0 * p2.flow - p3.flow) * t2 +
-                    (-p0.flow + 3.0 * p1.flow - 3.0 * p2.flow + p3.flow) * t3
-                );
-                const lo = Math.min(p1.flow, p2.flow);
-                const hi = Math.max(p1.flow, p2.flow);
-                flow = Math.min(Math.max(flow, lo), hi);
-                return flow;
-            }
-            return p1.flow + t * (p2.flow - p1.flow);
+            const p0 = (i > 0) ? sorted[i - 1] : p1;
+            const p3 = (i + 2 < sorted.length) ? sorted[i + 2] : p2;
+            const t2 = t * t;
+            const t3 = t2 * t;
+            let flow = 0.5 * (
+                (2.0 * p1.flow) +
+                (-p0.flow + p2.flow) * t +
+                (2.0 * p0.flow - 5.0 * p1.flow + 4.0 * p2.flow - p3.flow) * t2 +
+                (-p0.flow + 3.0 * p1.flow - 3.0 * p2.flow + p3.flow) * t3
+            );
+            const lo = Math.min(p1.flow, p2.flow);
+            const hi = Math.max(p1.flow, p2.flow);
+            flow = Math.min(Math.max(flow, lo), hi);
+            return flow;
+
         }
 
         // Route flow temperature computation to simple or multipoint mode.
-        function getFlowTemperatureForConfig(ot, rs, hcfg, ret = false) {
-            if ((hcfg?.type ?? 0) === 1) {
-                return getFlowTemperatureMultipoint(ot, hcfg.points, hcfg.curveSmooth === true);
-            }
+        function getFlowTemperature(ot, rs, hcfg) {
+            switch (hcfg?.type ?? 0) {
+            case 0: // simple curve
+                return getFlowTemperatureSimple(ot, rs, hcfg.flowMax, hcfg.exponent, hcfg.gradient, hcfg.offset);
 
-            let grad = hcfg.gradient;
-            let offset = hcfg.offset;
-            if (ret === true) {
-                grad -= hcfg.returnLimit.spread;
-                offset -= hcfg.returnLimit.offset;
+            case 1: // multipoint curve
+                return getFlowTemperatureMultipoint(ot, hcfg.points);
+            default:
+                return 0.0;
             }
-            return getFlowTemperature(ot, rs, hcfg.flowMax, hcfg.exponent, grad, offset);
         }
 
         /*
@@ -3485,7 +3507,7 @@
             g: gradient
             s: shift
         */
-        function getFlowTemperature(ot, rs, mf, n, g, s) {
+        function getFlowTemperatureSimple(ot, rs, mf, n, g, s, r) {
             let am = getMinOutsideTemp(rs, mf, g);
             //calculate c1
             let c1 = (mf - rs) / ((rs - am) ** (1.0 / n));
@@ -3595,19 +3617,18 @@
             ctx.restore();
 
             // Keep a local handle to heating config for mode-aware curve drawing.
-            const hcfg = config.heating[hk - 1] || {};
+            const hcfg = config.heating?.[hk - 1] ?? {};
             hcfg.points = normalizeCurvePoints(hcfg.points);
             let roomset = roomsetpoint[hk - 1];
             let roomcomp = 0;
-            if (config.heating?.roomComp?.enabled ?? false) {
-                const hcs = statuscache?.heatercircuit?.[hk - 1];
+            if (hcfg.roomComp?.enabled ?? false) {
+                const hcs = statuscache?.heatercircuit?.[hk - 1] ?? {};
                 if (hcs?.roomtemp !== undefined) {
-                    const roomtemp = hcs.roomtemp;
-                    const e = roomset - roomtemp;
-                    roomcomp = (config.heating?.[hk-1]?.roomComp?.p ?? 0) * e + hcs?.integState ?? 0;
+                    const e = roomset - hcs.roomtemp;
+                    roomcomp = (hcfg.roomComp?.p ?? 0) * e + hcs.integState ?? 0;
                     // boost
                     if (e > 1.0)
-                        roomcomp += (config.heating?.[hk-1]?.roomComp?.boost ?? 0) * e;
+                        roomcomp += (hcfg.roomComp?.boost ?? 0) * e;
                     roomcomp = clip(roomcomp, 12, -5);
                 }
             }
@@ -3626,14 +3647,14 @@
             }
 
             let otStart = Math.min(roomset, xaxis.min);
-            let ft = getFlowTemperatureForConfig(otStart, roomset, hcfg);
+            let ft = getFlowTemperature(otStart, roomset, hcfg);
             ft = clip(ft, 100, flowmin);
             let p1 = getPoint(otStart, ft); //foot
 
-            function drawFlowCurve(color, delta = 0.0, ret=false, minLimit=true) {
+            function drawFlowCurve(color, delta = 0.0, minLimit=true) {
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 3;
-                let ft = getFlowTemperatureForConfig(otStart, roomset, hcfg, ret) + delta;
+                let ft = getFlowTemperature(otStart, roomset, hcfg) + delta;
                 let p = getPoint(otStart, ft); 
                 ctx.beginPath();
                 ctx.moveTo(p.x, p.y);
@@ -3645,7 +3666,7 @@
                 }
 
                 for (var ot = otStart; ot >= xaxis.max; ot -= 0.25) {
-                    ft = getFlowTemperatureForConfig(ot, roomset, hcfg, ret) + delta;
+                    ft = getFlowTemperature(ot, roomset, hcfg) + delta;
 
                     if ((ft >= flowmax) && !otf) {
                         p = getPoint(ot, flowmax);
@@ -3684,7 +3705,9 @@
                 ctx.stroke();
             }
 
-            drawFlowCurve("#58F", 0, true, false); // draw return limit curve
+            if (hcfg.returnLimit.deltaT !== 0)
+                drawFlowCurve("#58F", -hcfg.returnLimit.deltaT, false); // draw return limit curve
+
             if (roomcomp != 0)
                 drawFlowCurve("#0F0", roomcomp);
 
@@ -3703,7 +3726,7 @@
 
             if (statuscache.outsideTemp !== undefined) {
                 //draw outsidetemp & it's flowtemperature
-                let ftsensor = getFlowTemperatureForConfig(statuscache.outsideTemp, roomset, hcfg) + roomcomp;
+                let ftsensor = getFlowTemperature(statuscache.outsideTemp, roomset, hcfg) + roomcomp;
                 ftsensor = clip(ftsensor, flowmax, flowmin);
                 let psensor = getPoint(statuscache.outsideTemp, ftsensor);
                 drawMarkerPoint(psensor, '#F83');
@@ -3717,9 +3740,9 @@
                 ctx.fillText(Math.round(ftsensor * 10) / 10, origin.x + 30, psensor.y - 8);
             }
 
-            if ((hcfg?.type ?? 0) === 0 && (hcfg.returnLimit.spread !== 0 || hcfg.returnLimit.offset !== 0)) {
+            if (hcfg.returnLimit.deltaT !== 0) {
                 // draw return limit
-                let ftsensor = getFlowTemperatureForConfig(statuscache.outsideTemp, roomset, hcfg, true);
+                let ftsensor = getFlowTemperature(statuscache.outsideTemp, roomset, hcfg) - hcfg.returnLimit.deltaT;
                 let psensor = getPoint(statuscache.outsideTemp, ftsensor);
                 drawMarkerPoint(psensor, '#68F');
                 ctx.strokeStyle = "#68F";

@@ -24,7 +24,6 @@ void OTThingHADiscovery::begin() {
 
 void OTThingHADiscovery::createSwitch(String name, Mqtt::MqttTopic topic) {
     HADiscovery::createSwitch(name, Mqtt::getTopicString(topic), mqtt.getCmdTopic(topic));
-    haDisc.setOptimistic(true);
     haDisc.setRetain(true);
 }
 

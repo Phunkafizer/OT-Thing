@@ -61,14 +61,14 @@ bool AuxInput::sendDiscovery() {
     switch (mode) {
     case MODE_BINARY: {
         haDisc.createBinarySensor(F("digital input"), FPSTR(name), "");
-        String str = F("{{ None if value_json.#.state is not defined else 'ON' if value_json.#.state else 'OFF' }}");
+        String str = F("{% set tmp=(value_json.get('#') or {}).get('state') %}{{ none if tmp is none else 'ON' if tmp else 'OFF' }}");
         str.replace("#", FPSTR(name));
         haDisc.setValueTemplate(str);
         return haDisc.publish();
     }
     case MODE_ANALOG: {
         haDisc.createSensor(F("analog input"), FPSTR(name));
-        String str = F("{{ value_json.#.value | default(None) }}");
+        String str = F("{% set tmp=(value_json.get('#') or {}).get('value') %}} {{ tmp | default(none) }}");
         str.replace("#", FPSTR(name));
         haDisc.setValueTemplate(str);
         return haDisc.publish();

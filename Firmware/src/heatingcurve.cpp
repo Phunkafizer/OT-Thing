@@ -1,6 +1,7 @@
 #include "heatingcurve.h"
 #include <algorithm>
 #include <math.h>
+#include "sensors.h"
 
 void HeatingCurve::setConfig(JsonObject &hpObj) {
     flowMax = hpObj[F("flowMax")] | 40;
@@ -8,6 +9,9 @@ void HeatingCurve::setConfig(JsonObject &hpObj) {
     gradient = hpObj[F("gradient")] | 1.0;
     offset = hpObj[F("offset")] | 0.0;
     smooth = hpObj[F("curveSmooth")] | false;
+
+    JsonObject jrl = hpObj[F("returnLimit")];
+    retLimit.deltaT = jrl[F("deltaT")] | 0.0;
 
     // Use ArduinoJson default operator to ensure a valid curve type when missing.
     curveType = static_cast<CurveType>(hpObj[F("type")] | static_cast<int>(CURVE_SIMPLE));
@@ -43,14 +47,26 @@ double HeatingCurve::getFlowMax() const {
     return flowMax;
 }
 
-double HeatingCurve::getFlowTemp(const double outsideTemp, const double roomSet) const {
+double HeatingCurve::getFlowTemp(const double roomSet) const {
+    double ot;
+    if (!outsideTemp.get(ot))
+        return 0.0;
+
     switch (curveType) {
     case CURVE_SIMPLE:
-        return getFlowTempSimple(outsideTemp, roomSet);
+        return getFlowTempSimple(ot, roomSet);
+
     case CURVE_MULTIPOINT:
-        return getFlowTempMultipoint(outsideTemp, roomSet);
+        return getFlowTempMultipoint(ot, roomSet);
     }
     return 0;
+}
+
+double HeatingCurve::getReturnLimit(const double roomSet) const {
+    double tmp = getFlowTemp(roomSet);
+    if (tmp != 0.0)
+        tmp -= retLimit.deltaT;
+    return tmp;
 }
 
 double HeatingCurve::getFlowTempSimple(const double outsideTemp, const double roomSet) const {
