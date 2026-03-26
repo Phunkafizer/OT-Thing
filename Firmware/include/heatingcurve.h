@@ -13,10 +13,10 @@ private:
         double outside;
         double flow;
     };
-    enum CurveType {
+    enum CurveMode {
         CURVE_SIMPLE = 0,
         CURVE_MULTIPOINT = 1
-    } curveType;
+    } curveMode;
 
     double flowMax;
     double exponent;
@@ -26,7 +26,6 @@ private:
         double deltaT;
     } retLimit;
     
-    bool smooth;
     std::vector<CurvePoint> points; // must be sorted by outsideTemp, highest outsideTemp first!
 
     double getFlowTempSimple(const double outsideTemp, const double roomSet) const;

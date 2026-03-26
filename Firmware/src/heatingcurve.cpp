@@ -8,13 +8,12 @@ void HeatingCurve::setConfig(JsonObject &hpObj) {
     exponent = hpObj[F("exponent")] | 1.0;
     gradient = hpObj[F("gradient")] | 1.0;
     offset = hpObj[F("offset")] | 0.0;
-    smooth = hpObj[F("curveSmooth")] | false;
 
     JsonObject jrl = hpObj[F("returnLimit")];
     retLimit.deltaT = jrl[F("deltaT")] | 0.0;
 
-    // Use ArduinoJson default operator to ensure a valid curve type when missing.
-    curveType = static_cast<CurveType>(hpObj[F("type")] | static_cast<int>(CURVE_SIMPLE));
+    // Use ArduinoJson default operator to ensure a valid curveMode when missing.
+    curveMode = static_cast<CurveMode>(hpObj[F("curveMode")] | static_cast<int>(CURVE_SIMPLE));
 
     points.clear();
     JsonArray pointsArr = hpObj[F("points")].as<JsonArray>();
@@ -52,7 +51,7 @@ double HeatingCurve::getFlowTemp(const double roomSet) const {
     if (!outsideTemp.get(ot))
         return 0.0;
 
-    switch (curveType) {
+    switch (curveMode) {
     case CURVE_SIMPLE:
         return getFlowTempSimple(ot, roomSet);
 
@@ -97,43 +96,32 @@ double HeatingCurve::getFlowTempMultipoint(const double outsideTemp, const doubl
             return it1->flow;
     }
 
-    if (smooth) {
-        auto it0 = it1;
-        if (it0 > points.begin())
-            it0--;
-        auto it3 = it2;
-        if (it3 < points.end() - 1)
-            it3++;
 
-        // Catmull-Rom spline
-        // Guard against duplicate outside values to avoid division by zero.
-        const double denom = (it2->outside - it1->outside);
-        if (fabs(denom) < 0.001)
-            return it1->flow;
+    auto it0 = it1;
+    if (it0 > points.begin())
+        it0--;
+    auto it3 = it2;
+    if (it3 < points.end() - 1)
+        it3++;
 
-        const double t = (outsideTemp - it1->outside) / denom;
-        const double t2 = t * t;
-        const double t3 = t2 * t;
+    // Catmull-Rom spline
+    // Guard against duplicate outside values to avoid division by zero.
+    const double denom = (it2->outside - it1->outside);
+    if (fabs(denom) < 0.001)
+        return it1->flow;
 
-        const double flow = 0.5 * (
-            (2.0 * it1->flow) +
-            (-it0->flow + it2->flow) * t +
-            (2.0 * it0->flow - 5.0 * it1->flow + 4.0 * it2->flow - it3->flow) * t2 +
-            (-it0->flow + 3.0 * it1->flow - 3.0 * it2->flow + it3->flow) * t3
-        );
+    const double t = (outsideTemp - it1->outside) / denom;
+    const double t2 = t * t;
+    const double t3 = t2 * t;
 
-        const double lo = fmin(it1->flow, it2->flow);
-        const double hi = fmax(it1->flow, it2->flow);
-        return fmin(fmax(flow, lo), hi);
-    }
-    else {
-        // interpolate
-        // Guard against duplicate outside values to avoid division by zero.
-        const double denom = (it2->outside - it1->outside);
-        if (fabs(denom) < 0.001)
-            return it1->flow;
+    const double flow = 0.5 * (
+        (2.0 * it1->flow) +
+        (-it0->flow + it2->flow) * t +
+        (2.0 * it0->flow - 5.0 * it1->flow + 4.0 * it2->flow - it3->flow) * t2 +
+        (-it0->flow + 3.0 * it1->flow - 3.0 * it2->flow + it3->flow) * t3
+    );
 
-        const double ratio = (outsideTemp - it1->outside) / denom;
-        return it1->flow + ratio * (it2->flow - it1->flow);
-    }    
+    const double lo = fmin(it1->flow, it2->flow);
+    const double hi = fmax(it1->flow, it2->flow);
+    return fmin(fmax(flow, lo), hi);
 }
