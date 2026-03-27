@@ -1146,7 +1146,7 @@
 
                 <div class="param">
                     <h5>Return temp. source</h5>
-                    <select field="heating.$.returnLimit.source">
+                    <select field="heating.$.returnLimit.source" intval>
                         <option value="1">OT roomunit</option>
                         <option value="3">1wire</option>
                     </select>
@@ -1640,7 +1640,7 @@
             <h3>Outside temperature</h3>
             <div class="group">
                 <h5>Source</h5>
-                <select id="selectOutsideTempSource" field="outsideTemp.source">
+                <select id="selectOutsideTempSource" field="outsideTemp.source" intval>
                     <option value="0">MQTT</option>
                     <option value="1">OT boiler</option>
                     <option value="2">Bluetooth</option>
@@ -1682,7 +1682,7 @@
                 <div class="flexline">
                     <div class="param">
                         <h5>aux 1 (DQ)</h5>
-                        <select class=".selAux" field="aux.0.mode">
+                        <select field="aux.0.mode" intval>
                             <option value="0">unused</option>
                             <option value="1">digital</option>
                             <option value="3">analog</option>
@@ -1691,7 +1691,7 @@
                     </div>
                     <div class="param">
                         <h5>aux. 2 (DI)</h5>
-                        <select class=".selAux" field="aux.1.mode">
+                        <select field="aux.1.mode" intval>
                             <option value="0">unused</option>
                             <option value="1">digital</option>
                             <option value="4">1wire</option>
@@ -1899,14 +1899,19 @@
 
         // Normalize curve points to x entries, sorted by outside temp for safe interpolation.
         function normalizeCurvePoints(points) {
-            const normalized = [];
-            for (let i = 0; i < getNumCurvePoints(); i++) {
-                const src = points?.[i]; 
+            let normalized = [];
+            let i = 0;
+            while (true) {
+                const src = points?.[i++]; 
+                if (src == null)
+                    break;
+
                 normalized.push({
                     outside: parseFloat(src.outside),
                     flow: parseFloat(src.flow)
                 });
             }
+
             normalized.sort((a, b) => b.outside - a.outside);
             // Enforce monotonic flow so point1 flow is not greater than point2, etc.
             for (let i = 1; i < normalized.length; i++) {
@@ -2004,23 +2009,23 @@
 
             function clampPointToNeighbors(hcfg, idx, outside, flow) {
                 // Prevent crossing in outside axis to keep point ordering stable while dragging.
-                if (idx > 0)
-                    outside = Math.min(outside, hcfg.points[idx - 1].outside);
-                if (idx < hcfg.points.length - 1)
-                    outside = Math.max(outside, hcfg.points[idx + 1].outside);
-                // Keep flow below max flow temperature.
+                const axes = getCurveAxes();
+                const MIN_X_DIST = 2.0; // °C
+                flow = clip(flow, axes.yaxis.max, axes.yaxis.min);
+                outside = clip(outside, axes.xaxis.min - idx * MIN_X_DIST, axes.xaxis.max + (hcfg.points.length - idx - 1) * MIN_X_DIST);
 
+                // Keep flow between flowMax & flowMin
                 flow = clip(flow, hcfg.flowMax, hcfg.flowMin);
 
-                // Keep flow monotonic: point1 flow must not exceed point2 flow, etc.
-                if (idx > 0)
-                    flow = Math.max(flow, hcfg.points[idx - 1].flow);
-                if (idx < hcfg.points.length - 1)
-                    flow = Math.min(flow, hcfg.points[idx + 1].flow);
-                // Keep outside within the visible axis bounds.
-                const axes = getCurveAxes();
-                outside = clip(outside, axes.xaxis.min, axes.xaxis.max);
-                flow = clip(flow, axes.yaxis.max, axes.yaxis.min);
+                for (let i = 0; i < idx; i++) {
+                    hcfg.points[i].flow = Math.min(hcfg.points[i].flow, flow);
+                    hcfg.points[i].outside = Math.max(hcfg.points[i].outside, outside + (idx - i) * MIN_X_DIST);
+                }
+
+                for (let i = idx + 1; i < hcfg.points.length; i++) {
+                    hcfg.points[i].flow = Math.max(hcfg.points[i].flow, flow);
+                    hcfg.points[i].outside = Math.min(hcfg.points[i].outside, outside - (i - idx) * MIN_X_DIST);
+                }
 
                 return { outside, flow };
             }
@@ -2059,7 +2064,8 @@
                 let flow = Math.round(ft * 2) / 2;
                 flow = clip(flow, curveDrag.flowmax, curveDrag.flowmin);
 
-                const clamped = clampPointToNeighbors(hcfg, curveDrag.idx, outside, flow, curveDrag.flowmax);
+                const clamped = clampPointToNeighbors(hcfg, curveDrag.idx, outside, flow, curveDrag.flowmax)
+
                 hcfg.points[curveDrag.idx].outside = clamped.outside;
                 hcfg.points[curveDrag.idx].flow = clamped.flow;
                 hcfg.points = normalizeCurvePoints(hcfg.points);
@@ -2069,6 +2075,7 @@
 
             function onDragEnd() {
                 curveDrag.active = false;
+                drawCurve();
             }
 
             canvas.addEventListener("mousedown", onDragStart);
@@ -2158,10 +2165,11 @@
         }
 
         function drawCurve() {
-            var canvas = document.getElementById(`canvas`);
+            let canvas = document.getElementById(`canvas`);
             let flowmax = config.heating[currentCh].flowMax;
             let flowmin = config.heating[currentCh].flowMin;
             let fmg = Math.ceil(flowmax / 10) * 10 + 5; // flowmax for graph
+            let p;
 
             canvas.width = parseInt(getComputedStyle(canvas).width);
             canvas.height = 20 + (fmg - 20) * canvas.width / 100;
@@ -2180,41 +2188,41 @@
             ctx.textAlign = "center";
             ctx.font = '11px sans-serif';
 
+            function drawLine(x1, y1, x2, y2) {
+                let p = getPoint(x1, y1);
+                ctx.moveTo(p.x, p.y);
+                p = getPoint(x2, y2);
+                ctx.lineTo(p.x, p.y);
+            }
+
             //draw horizontal grid
             ctx.beginPath();
-            for (var i = yaxis.min; i <= yaxis.max; i += yaxis.step) {
-                let y = origin.y - (i - yaxis.min) * yaxis.zoom;
-                ctx.moveTo(origin.x, y);
-                ctx.lineTo(origin.x + (xaxis.min - xaxis.max) * xaxis.zoom, y);
-                ctx.fillText(i, origin.x - 10, y);
+            for (let y = yaxis.min; y <= yaxis.max; y += yaxis.step) {
+                drawLine(xaxis.min, y, xaxis.max, y);
+                p = getPoint(0, y);
+                ctx.fillText(y, origin.x - 10, p.y);
             }
             ctx.stroke();
-            ctx.strokeStyle = "#333";
+            ctx.strokeStyle = "#222";
             ctx.beginPath();
-            for (var i = yaxis.min + yaxis.step / 2; i <= yaxis.max; i += yaxis.step) {
-                let y = origin.y - (i - yaxis.min) * yaxis.zoom;
-                ctx.moveTo(origin.x, y);
-                ctx.lineTo(origin.x + (xaxis.min - xaxis.max) * xaxis.zoom, y);
+            for (let y = yaxis.min + yaxis.step / 2; y <= yaxis.max; y += yaxis.step) {
+                drawLine(xaxis.min, y, xaxis.max, y)
             }
             ctx.stroke();
 
             ctx.strokeStyle = "#666";
             //draw vertical grid
             ctx.beginPath();
-            for (var i = xaxis.min; i >= xaxis.max; i -= xaxis.step) {
-                let x = origin.x + (xaxis.min - i) * xaxis.zoom;
-                ctx.moveTo(x, origin.y);
-                ctx.lineTo(x, origin.y - (yaxis.max - yaxis.min) * yaxis.zoom);
-                ctx.fillText(i, x, origin.y + 10);
+            for (let x = xaxis.min; x >= xaxis.max; x -= xaxis.step) {
+                drawLine(x, yaxis.min, x, yaxis.max);
+                p = getPoint(x, 0);
+                ctx.fillText(x, p.x, origin.y + 10);
             }
             ctx.stroke();
-            ctx.strokeStyle = "#333";
+            ctx.strokeStyle = "#222";
             ctx.beginPath();
-            for (var i = xaxis.min - xaxis.step / 2; i >= xaxis.max; i -= xaxis.step) {
-                let x = origin.x + (xaxis.min - i) * xaxis.zoom;
-                ctx.moveTo(x, origin.y);
-                ctx.lineTo(x, origin.y - (yaxis.max - yaxis.min) * yaxis.zoom);
-                ctx.stroke();
+            for (var x = xaxis.min - xaxis.step / 2; x >= xaxis.max; x -= xaxis.step) {
+                drawLine(x, yaxis.min, x, yaxis.max);
             }
             ctx.stroke();
 
@@ -2223,15 +2231,13 @@
 
             //draw x-axis
             ctx.beginPath();
-            ctx.moveTo(origin.x, origin.y);
-            ctx.lineTo(origin.x + (xaxis.min - xaxis.max) * xaxis.zoom, origin.y);
+            drawLine(xaxis.min, yaxis.min, xaxis.max, yaxis.min);
             ctx.stroke();
             ctx.fillText("outside / °C", canvas.width - 55, origin.y - 10);
 
             //draw y-axis
             ctx.beginPath();
-            ctx.moveTo(origin.x, origin.y);
-            ctx.lineTo(origin.x, origin.y - (yaxis.max - yaxis.min) * yaxis.zoom);
+            drawLine(xaxis.min, yaxis.min, xaxis.min, yaxis.max);
             ctx.stroke();
             ctx.save();
             ctx.rotate(-Math.PI / 2);
@@ -2366,6 +2372,14 @@
                 ctx.fillText(Math.round(ftsensor * 10) / 10, origin.x + 30, psensor.y - 8);
             }
 
+            if (curveDrag.active) {
+                let point = config.heating?.[currentCh]?.points?.[curveDrag.idx];
+                let p = getPoint(point.outside ?? 0, point.flow ?? 0);
+                let text = `${point.outside} °C / ${point.flow} °C`;
+                ctx.strokeStyle = "#FFF";
+                ctx.fillText(text, p.x, p.y - 13);
+            }
+
             if (hcfg.returnLimit.deltaT !== 0) {
                 // draw return limit
                 let ftsensor = getFlowTemperature(statuscache.outsideTemp, roomset, hcfg) - hcfg.returnLimit.deltaT;
@@ -2491,7 +2505,7 @@
             const url = URL.createObjectURL(blob);
             const a = _$("a"); //  document.createElement('a');
             a.href = url;
-            a.download = 'otthing_config.json';
+            a.download = getSaveFilename("config", "json");
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -2583,7 +2597,7 @@
             let url = URL.createObjectURL(blob);
             let link = document.createElement("a");
             link.href = url;
-            link.download = "log_otthing.txt";
+            link.download = getSaveFilename("log", "txt");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -2597,6 +2611,13 @@
 
         function closeModal() {
             _("#dlgSlaveRequest").hidden = true;
+        }
+
+        function getSaveFilename(item, ext) {
+            let result = "otthing_";
+            result += statuscache?.wifi?.mac ?? "";
+            result += `_${item}.${ext}`;
+            return result.replace(/:/g, '');
         }
 
 

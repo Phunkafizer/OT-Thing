@@ -82,7 +82,7 @@ private:
         double flowTemp;
         double flowMin;
         CtrlMode mode {CTRLMODE_AUTO};
-        bool overrideFlow;
+        bool override;
         struct PiCtrl {
             bool enabled; // enables PI controller
             bool init { false };

@@ -234,46 +234,63 @@ protected:
 };
 
 class OTValueStatus: public OTValueFlags {
-private:
-    const char *CH2_MODE PROGMEM = "ch2_mode";
-    const char *DHW_MODE PROGMEM = "dhw_mode";
-    const char *COOLING PROGMEM = "cooling";
-    const Flag flags[7] PROGMEM = {
-        {0, "fault",        "fault",        HA_DEVICE_CLASS_PROBLEM},
-        {1, "ch_mode",      "heating",      HA_DEVICE_CLASS_RUNNING},
-        {2, DHW_MODE,       "DHW",          HA_DEVICE_CLASS_RUNNING},
-        {3, "flame",        "flame",        HA_DEVICE_CLASS_RUNNING},
-        {4, COOLING,        "cooling",      HA_DEVICE_CLASS_RUNNING},
-        {5, CH2_MODE,       "heating 2",    HA_DEVICE_CLASS_RUNNING},
-        {6, "diagnostic",   "diagnostic",   HA_DEVICE_CLASS_PROBLEM}
+public:
+    enum {
+        BIT_FAULT = 0,
+        BIT_CH_MODE = 1,
+        BIT_DHW_MODE = 2,
+        BIT_FLAME = 3,
+        BIT_COOLING = 4,
+        BIT_CH2_MODE = 5,
+        BIT_DIAGNOSTIC = 6
     };
-protected:
-    void getValue(JsonVariant var) const override;
-    bool sendDiscovery() override;
-public:    
     OTValueStatus();
     bool getChActive(const uint8_t channel) const;
     bool getFlame() const;
     bool getDhwActive() const;
+private:
+    const char *CH2_MODE PROGMEM = "ch2_mode";
+    const char *DHW_MODE PROGMEM = "dhw_mode";
+    const char *COOLING PROGMEM = "cooling";
+    const char *DIAGNOSTIC PROGMEM = "diagnostic";
+    const char *FAULT PROGMEM = "fault";
+    const Flag flags[7] PROGMEM = {
+        {BIT_FAULT,         FAULT,          FAULT,          HA_DEVICE_CLASS_PROBLEM},
+        {BIT_CH_MODE,       "ch_mode",      "heating",      HA_DEVICE_CLASS_RUNNING},
+        {BIT_DHW_MODE,      DHW_MODE,       "DHW",          HA_DEVICE_CLASS_RUNNING},
+        {BIT_FLAME,         "flame",        "flame",        HA_DEVICE_CLASS_RUNNING},
+        {BIT_COOLING,       COOLING,        COOLING,        HA_DEVICE_CLASS_RUNNING},
+        {BIT_CH2_MODE,      CH2_MODE,       "heating 2",    HA_DEVICE_CLASS_RUNNING},
+        {BIT_DIAGNOSTIC,    DIAGNOSTIC,     DIAGNOSTIC,     HA_DEVICE_CLASS_PROBLEM}
+    };
+protected:
+    void getValue(JsonVariant var) const override;
+    bool sendDiscovery() override;
 };
 
 class OTValueMasterStatus: public OTValueFlags {
+public:    
+    enum {
+        BIT_CH_ENABLE = 8,
+        BIT_DHW_ENABLE = 9,
+        BIT_COOLING_ENABLE = 10,
+        BIT_CH2_ENABLE = 12
+    };
+    OTValueMasterStatus();
 private:
     const char *DHW_ENABLE PROGMEM = "dhw_enable";
     const char *CH2_ENABLE PROGMEM = "ch2_enable";
     const char *COOLING_ENABLE PROGMEM = "cooling_enable";
     const Flag flags[5] PROGMEM = {
-        {8, "ch_enable",        "CH enable",        nullptr},
-        {9, DHW_ENABLE,         "DHW enable",       nullptr},
-        {10, COOLING_ENABLE,    "cooling enable",   nullptr},
-        {11, "otc_active",      "OTC active",       nullptr},
-        {12, CH2_ENABLE,        "CH2 enable",       nullptr}
+        {BIT_CH_ENABLE,         "ch_enable",        "CH enable",        nullptr},
+        {BIT_DHW_ENABLE,        DHW_ENABLE,         "DHW enable",       nullptr},
+        {BIT_COOLING_ENABLE,    COOLING_ENABLE,     "cooling enable",   nullptr},
+        {11,                    "otc_active",       "OTC active",       nullptr},
+        {12,                    CH2_ENABLE,         "CH2 enable",       nullptr}
     };
 protected:
     void getValue(JsonVariant var) const override;
     bool sendDiscovery() override;
-public:    
-    OTValueMasterStatus();
 };
 
 class OTValueVentStatus: public OTValueFlags {
@@ -291,17 +308,23 @@ public:
 };
 
 class OTValueVentMasterStatus: public OTValueFlags {
+public:    
+    enum {
+        BIT_VENT_ENABLE = 8,
+        BIT_OPEN_BYPASS = 9,
+        BIT_AUTO_BYPASS = 10,
+        BIT_FREE_VENT_ENABLE = 11
+    };
+    OTValueVentMasterStatus();
 private:
     const Flag flags[4] PROGMEM = {
-        {8, "vent_enable"},
-        {9, "open_bypass"},
-        {10, "auto_bypass"},
-        {11, "free_vent_enable"}
+        {BIT_VENT_ENABLE,       "vent_enable"},
+        {BIT_OPEN_BYPASS,       "open_bypass"},
+        {BIT_AUTO_BYPASS,       "auto_bypass"},
+        {BIT_FREE_VENT_ENABLE,  "free_vent_enable"}
     };
 protected:
     bool sendDiscovery() override;
-public:    
-    OTValueVentMasterStatus();
 };
 
 class OTValueSlaveConfigMember: public OTValueFlags {

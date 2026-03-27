@@ -564,12 +564,22 @@ bool OTValueStatus::sendDiscovery() {
 
     for (uint8_t i=0; i<numFlags; i++) {
         bool enb = enabled;
-        if (flagTable[i].field == CH2_MODE)
+        switch (flagTable[i].bit){
+        case BIT_CH2_MODE:
             enb &= sc->hasCh2();
-        else if (flagTable[i].field == DHW_MODE)
+            break;
+
+        case BIT_DHW_MODE:
             enb &= sc->hasDHW();
-        else if (flagTable[i].field == COOLING)
+            break;
+
+        case BIT_COOLING:
             enb &= sc->hasCooling();
+            break;
+
+        default:
+            break;
+        }
         
         if (!sendDiscFlag(&flagTable[i], enb))
             return false;
@@ -589,13 +599,23 @@ bool OTValueMasterStatus::sendDiscovery() {
 
     for (uint8_t i=0; i<numFlags; i++) {
         bool enb = enabled;
-        if (flagTable[i].field == CH2_ENABLE)
-            enb &= sc->hasCh2();
-        else if (flagTable[i].field == DHW_ENABLE)
+        switch (flagTable[i].bit) {
+        case BIT_DHW_ENABLE:
             enb &= sc->hasDHW();
-        else if (flagTable[i].field == COOLING_ENABLE)
+            break;
+
+        case BIT_COOLING_ENABLE:
             enb &= sc->hasCooling();
-        
+            break;
+
+        case BIT_CH2_ENABLE:
+            enb &= sc->hasCh2();
+            break;
+
+        default:
+            break;
+        }
+
         if (!sendDiscFlag(&flagTable[i], enb))
             return false;
     }

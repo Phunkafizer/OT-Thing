@@ -48,8 +48,9 @@ double HeatingCurve::getFlowMax() const {
 
 double HeatingCurve::getFlowTemp(const double roomSet) const {
     double ot;
-    if (!outsideTemp.get(ot))
+    if (!outsideTemp.get(ot)) {
         return 0.0;
+    }
 
     switch (curveMode) {
     case CURVE_SIMPLE:
@@ -58,7 +59,7 @@ double HeatingCurve::getFlowTemp(const double roomSet) const {
     case CURVE_MULTIPOINT:
         return getFlowTempMultipoint(ot, roomSet);
     }
-    return 0;
+    return 0.0;
 }
 
 double HeatingCurve::getReturnLimit(const double roomSet) const {
@@ -123,5 +124,6 @@ double HeatingCurve::getFlowTempMultipoint(const double outsideTemp, const doubl
 
     const double lo = fmin(it1->flow, it2->flow);
     const double hi = fmax(it1->flow, it2->flow);
+
     return fmin(fmax(flow, lo), hi);
 }

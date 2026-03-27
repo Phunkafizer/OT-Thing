@@ -393,6 +393,10 @@ double OTControl::getFlow(const uint8_t channel) {
     HeatingControl &hctrl = heatingCtrl[channel];
     double flow = hconf.flow;
 
+    if ((otMode == OTMODE_MASTER) && hctrl.override) {
+        return hctrl.flowTemp;
+    }
+
     switch (hctrl.mode) {
     case CTRLMODE_ON:
         flow = hctrl.flowTemp;
@@ -403,7 +407,7 @@ double OTControl::getFlow(const uint8_t channel) {
         roomSetPoint[channel].get(roomSet);
         flow = curve[channel].getFlowTemp(roomSet);
         if (flow == 0.0)
-            flow = hconf.flow;
+            flow = hctrl.flowTemp;
         break;
     }
 
@@ -428,16 +432,20 @@ double OTControl::getFlow(const uint8_t channel) {
     else
         if (flow < (hctrl.flowMin - 0.3))
             hctrl.minSuspended = true;
+
     hctrl.minSuspended &= hconf.minSuspend;
     
     clip(flow, hctrl.flowMin, curve[channel].getFlowMax());
-
     return flow;
 }
 
 bool OTControl::getChannelOn(const uint8_t channel) {
     if (getFlow(channel) == 0)
         return false;
+
+    if ((otMode == OTMODE_MASTER) && heatingCtrl[channel].override)
+        return heatingCtrl[channel].chOn;
+
     return heatingCtrl[channel].chOn && 
         !(heatingConfig[channel].enableHyst && heatingCtrl[channel].roomComp.suspended) &&
         !(heatingConfig[channel].minSuspend && heatingCtrl[channel].minSuspended);
@@ -614,21 +622,20 @@ void OTControl::loop() {
 
             if (millis() > lastVentStatus + 800) {
                 lastVentStatus = millis();
-                uint8_t hb = 0;
+                uint16_t data = 0;
                 if (ventCtrl.ventEnable)
-                    hb |= 1<<0;
+                    data |= 1<<OTValueVentMasterStatus::BIT_VENT_ENABLE;
                 if (ventCtrl.openBypass)
-                    hb |= 1<<1;
+                    data |= 1<<OTValueVentMasterStatus::BIT_OPEN_BYPASS;
                 if (ventCtrl.autoBypass)
-                    hb |= 1<<2;
+                    data |= 1<<OTValueVentMasterStatus::BIT_AUTO_BYPASS;
                 if (ventCtrl.freeVentEnable)
-                    hb |= 1<<3;
-                unsigned long req = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, StatusVentilationHeatRecovery, hb << 8);
+                    data |= 1<<OTValueVentMasterStatus::BIT_FREE_VENT_ENABLE;
+                unsigned long req = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, StatusVentilationHeatRecovery, data);
                 sendRequest('T', req);
                 return;
             }
         }
-
         break;
 
     default:
@@ -925,6 +932,22 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 break;
             }
 
+            case Status: {
+                // respond with masterstatus from roomunit and slavestatus from boiler
+                uint16_t data = (msg & 0xFF00) | (otval->getValue() & 0x00FF);
+                resp = OpenTherm::buildResponse(otval->getLastMsgType(), id, data);
+
+                if (heatingCtrl[0].override)
+                    heatingCtrl[0].chOn = (msg & (1<<OTValueMasterStatus::BIT_CH_ENABLE)) != 0;
+
+                if (heatingCtrl[1].override)
+                    heatingCtrl[1].chOn = (msg & (1<<OTValueMasterStatus::BIT_CH2_ENABLE)) != 0;
+
+                if (boilerCtrl.overrideDhw)
+                    boilerCtrl.dhwOn = (msg & (1<<OTValueMasterStatus::BIT_DHW_ENABLE)) != 0;
+                break;
+            }
+
             default:
                 if ((otval != nullptr) && otval->hasReply())
                     resp = OpenTherm::buildResponse(otval->getLastMsgType(), id, otval->getValue());
@@ -939,12 +962,26 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
 
             switch (id) {
             case TSet:
-                if (heatingCtrl[0].overrideFlow) {
-                    heatingCtrl[0].mode = CTRLMODE_ON;
+                if (heatingCtrl[0].override) {
                     heatingCtrl[0].flowTemp = OpenTherm::getFloat(msg);
                     setBoilerRequest[0].force();
                 }
                 break;
+
+            case TsetCH2:
+                if (heatingCtrl[1].override) {
+                    heatingCtrl[1].flowTemp = OpenTherm::getFloat(msg);
+                    setBoilerRequest[1].force();
+                }
+                break;
+
+            case TdhwSet:
+                if (boilerCtrl.overrideDhw) {
+                    boilerCtrl.dhwTemp = OpenTherm::getFloat(msg);
+                    setDhwRequest.force();
+                }
+                break;
+
             default:
                 break;
             }
@@ -961,12 +998,12 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
 
         switch (id) {
         case TSet:
-            if ( (heatingCtrl[0].overrideFlow) && (mt == OpenThermMessageType::WRITE_DATA) )
+            if ( (heatingCtrl[0].override) && (mt == OpenThermMessageType::WRITE_DATA) )
                 newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(getFlow(0)));
             break;
 
         case TsetCH2:
-            if ( (heatingCtrl[1].overrideFlow) && (mt == OpenThermMessageType::WRITE_DATA) )
+            if ( (heatingCtrl[1].override) && (mt == OpenThermMessageType::WRITE_DATA) )
                 newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(getFlow(1)));
             break;
 
@@ -977,27 +1014,20 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
 
         case Status:
             for (int i=0; i<NUM_HEATCIRCUITS; i++) {
-                if (heatingCtrl[i].overrideFlow) {
-                    const uint8_t bit = (i == 0) ? 8 : 12;
+                if (heatingCtrl[i].override) {
+                    const uint8_t bit = (i == 0) ? OTValueMasterStatus::BIT_CH_ENABLE : OTValueMasterStatus::BIT_CH2_ENABLE;
                     if (getChannelOn(i))
                         newMsg |= 1<<bit; // CHx enable
                     else
                         newMsg &= ~(1<<bit); // CHx disable
                 }
             }
-
-            if (heatingCtrl[1].overrideFlow) {
-                if (heatingCtrl[1].mode == CtrlMode::CTRLMODE_OFF)
-                    newMsg &= ~(1<<12); // CH2 disable
-                else
-                    newMsg |= 1<<12; // CH2 enable
-            }
             
             if (boilerCtrl.overrideDhw) {
                 if (boilerCtrl.dhwOn)
-                    newMsg |= 1<<9; // DHW enable
+                    newMsg |= 1<<OTValueMasterStatus::BIT_DHW_ENABLE; // DHW enable
                 else
-                    newMsg &= ~(1<<9); // DHW disable
+                    newMsg &= ~(1<<OTValueMasterStatus::BIT_DHW_ENABLE); // DHW disable
             }                            
             
             newMsg = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, id, newMsg & 0xFFFF);
@@ -1031,14 +1061,14 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 uint8_t temp = millis() / 206723;
                 uint8_t x = ((temp % 3) == 0) ? 0 : 1;
                 uint16_t data = x<<3; // flame on
-                if ((msg & (1<<8)) != 0)
-                    data |= 1<<1; // CH1 enable -> CH1 active
-                if ((msg & (1<<9)) != 0)
-                    data |= 1<<2;  // DHW enable -> DHW active
-                if ((msg & (1<<10)) != 0)
-                    data |= 1<<4;  // Cooling enable -> cooling active
-                if ((msg & (1<<12)) != 0)
-                    data |= 1<<5;  // CH2 enable -> CH2 active
+                if ((msg & (1<<OTValueMasterStatus::BIT_CH_ENABLE)) != 0)
+                    data |= 1<<OTValueStatus::BIT_CH_MODE; // CH1 enable -> CH1 active
+                if ((msg & (1<<OTValueMasterStatus::BIT_DHW_ENABLE)) != 0)
+                    data |= 1<<OTValueStatus::BIT_DHW_MODE;  // DHW enable -> DHW active
+                if ((msg & (1<<OTValueMasterStatus::BIT_COOLING_ENABLE)) != 0)
+                    data |= 1<<OTValueStatus::BIT_COOLING;  // Cooling enable -> cooling active
+                if ((msg & (1<<OTValueMasterStatus::BIT_CH2_ENABLE)) != 0)
+                    data |= 1<<OTValueStatus::BIT_CH2_MODE;  // CH2 enable -> CH2 active
                 reply = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, data);
                 break;
             }
@@ -1187,7 +1217,7 @@ void OTControl::getJson(JsonObject &obj) {
         if (roomTemp[i].get(d))
             hc[F("roomtemp")] = d;
 
-        hc[F("ovrdFlow")] = hctrl.overrideFlow;
+        hc[F("ovrdFlow")] = hctrl.override;
         hc[F("mode")] = (int) hctrl.mode;
         hc[F("integState")] = round(hctrl.roomComp.integState * 10) / 10.0;
         hc[F("flowMin")] = hctrl.flowMin;
@@ -1475,7 +1505,7 @@ void OTControl::setConfig(JsonObject &config) {
         hctrl.flowTemp = hconf.flow;
         hctrl.flowMin = hpObj[F("flowMin")] | 20;
         hctrl.chOn = hconf.chOn;
-        hctrl.overrideFlow = hpObj[F("overrideFlow")] | false;
+        hctrl.override = hpObj[F("overrideFlow")] | false;
         hctrl.roomComp.enabled = hconf.roomComp.enabled;
         if (hconf.roomComp.i == 0)
             hctrl.roomComp.integState = 0;
@@ -1527,6 +1557,11 @@ void OTControl::setConfig(JsonObject &config) {
 
 void OTControl::setChCtrlMode(const CtrlMode mode, const uint8_t channel) {
     heatingCtrl[channel].mode = mode;
+    setBoilerRequest[channel].force();
+
+    if ((otMode == OTMODE_MASTER) && heatingCtrl[channel].override)
+        return;
+
     switch (mode) {
     case CTRLMODE_AUTO:
         heatingCtrl[channel].chOn = heatingConfig[channel].chOn;
@@ -1539,11 +1574,10 @@ void OTControl::setChCtrlMode(const CtrlMode mode, const uint8_t channel) {
     default:
         break;
     }
-    setBoilerRequest[channel].force();
 }
 
 void OTControl::setOverrideCh(const bool ovrd, const uint8_t channel) {
-    heatingCtrl[channel].overrideFlow = ovrd;
+    heatingCtrl[channel].override = ovrd;
     setBoilerRequest[channel].force();
 }
 
