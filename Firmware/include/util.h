@@ -11,3 +11,5 @@ public:
     ~SemHelper();
     operator bool();
 };
+
+extern void clip(double &d, const double min, const double max);

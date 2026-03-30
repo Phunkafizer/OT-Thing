@@ -44,15 +44,12 @@ public:
     void setMinMax(double min, double max, double step);
     void setMinMaxTemp(double min, double max, double step = 0);
     void setTemperatureStateTopic(String topic);
-    void setTemperatureStateTopic();
     void setTemperatureStateTemplate(String stateTemplate);
     void setCurrentTemperatureTopic(String topic);
-    void setCurrentTemperatureTopic();
     void setCurrentTemperatureTemplate(String templ);
     void setInitial(double initial);
     void setModeCommandTopic(String topic);
     void setModeStateTopic(String topic);
-    void setModeStateTopic();
     void setModeStateTemplate(String templ);
     void setOptimistic(const bool opt);
     void setRetain(const bool retain);

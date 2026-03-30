@@ -119,7 +119,8 @@ platform = env.PioPlatform()
 board = env.BoardConfig()
 mcu = board.get("build.mcu", "esp32") # works for ESP8266 and ESP32
 
-def copy_html(source, target, env):
+def copy_html():
+    print("Creating html.h from index.html");
     with open(os.path.join(env["PROJECT_DATA_DIR"], "index.html"), "r") as fin:
         with open(os.path.join(env["PROJECT_DIR"], "include/html.h"), "w") as fout:
             fout.write('const char html[] PROGMEM = R"html(')
@@ -140,10 +141,10 @@ def before_upload(source, target, env):
             break
 
 def after_upload(source, target, env):
-    upload_port = env.get("UPLOAD_PORT", None)
+    upload_port = env.get("UPLOAD_PORT")
     if upload_port == None:
         env.AutodetectUploadPort()
-        upload_port = env.get("UPLOAD_PORT", "none")
+        upload_port = env.get("UPLOAD_PORT")
     print("Upload port", upload_port)
     with esptool.cmds.detect_chip(port=upload_port) as esp:
         mac = esp.read_mac()
@@ -165,7 +166,7 @@ def after_upload(source, target, env):
         print("OT mode:", conf['otMode'])
 
 
-env.AddPreAction("$BUILD_DIR/src/portal.cpp.o", copy_html)
+copy_html()
 env.AddPreAction("upload", before_upload)
 env.AddPostAction("buildprog", post_build)
 env.AddPostAction("upload", after_upload)

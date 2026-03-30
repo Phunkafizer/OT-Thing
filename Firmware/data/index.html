@@ -112,6 +112,7 @@
 
         .statusvalue {
             color: #fff;
+            font-size: 0.8em;
         }
 
         .statusvalue.bool-ok::before {
@@ -183,8 +184,12 @@
         }
 
         div.toolbar {
-            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             padding: 0.3em 0;
+            gap: 1em;
+            flex-wrap: wrap;
         }
 
         button,
@@ -884,107 +889,107 @@
                 <div class="flexline">
                     <div class="statusfield">
                         <h5>Heater circuit 1 enabled</h5>
-                        <span class="statusvalue" field="thermostat.status.ch_enable"></span>
+                        <span class="statusvalue" field="master.status.ch_enable"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Heater circuit 2 enabled</h5>
-                        <span class="statusvalue" field="thermostat.status.ch2_enable"></span>
+                        <span class="statusvalue" field="master.status.ch2_enable"></span>
                     </div>
                     <div class="statusfield">
                         <h5>DHW enabled</h5>
-                        <span class="statusvalue" field="thermostat.status.dhw_enable"></span>
+                        <span class="statusvalue" field="master.status.dhw_enable"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Outside temp. compensation</h5>
-                        <span class="statusvalue" field="thermostat.status.otc_active"></span>
+                        <span class="statusvalue" field="master.status.otc_active"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Flow set temperature</h5>
-                        <span class="statusvalue" field="thermostat.ch_set_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.ch_set_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Flow set temperature 2</h5>
-                        <span class="statusvalue" field="thermostat.ch_set_t2" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.ch_set_t2" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>DHW set temperature</h5>
-                        <span class="statusvalue" field="thermostat.dhw_set_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.dhw_set_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>max. CH setpoint</h5>
-                        <span class="statusvalue" field="thermostat.max_set_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.max_set_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room temperature</h5>
-                        <span class="statusvalue" field="thermostat.room_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.room_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room set temperature</h5>
-                        <span class="statusvalue" field="thermostat.room_set_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.room_set_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room temperature 2</h5>
-                        <span class="statusvalue" field="thermostat.room_t2" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.room_t2" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room set temperature 2</h5>
-                        <span class="statusvalue" field="thermostat.room_set_t2" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.room_set_t2" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>outside temp.</h5>
-                        <span class="statusvalue" field="thermostat.outside_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.outside_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Max. rel. modulation</h5>
-                        <span class="statusvalue" field="thermostat.max_rel_mod" unit="%"></span>
+                        <span class="statusvalue" field="master.max_rel_mod" unit="%"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Product version</h5>
-                        <span class="statusvalue" field="thermostat.master_prod_version"></span>
+                        <span class="statusvalue" field="master.master_prod_version"></span>
                     </div>
                     <div class="statusfield">
                         <h5>OT version</h5>
-                        <span class="statusvalue" field="thermostat.master_ot_version"></span>
+                        <span class="statusvalue" field="master.master_ot_version"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Member ID</h5>
-                        <span class="statusvalue" field="thermostat.master_config_member.memberId"></span>
+                        <span class="statusvalue" field="master.master_config_member.memberId"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Smart power</h5>
-                        <span class="statusvalue" field="thermostat.smartPower"></span>
+                        <span class="statusvalue" field="master.smartPower"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Smart power implemented</h5>
-                        <span class="statusvalue" field="thermostat.master_config_member.smartPowerImplemented"></span>
+                        <span class="statusvalue" field="master.master_config_member.smartPowerImplemented"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Frames sent</h5>
-                        <span class="statusvalue" field="thermostat.txCount"></span>
+                        <span class="statusvalue" field="master.txCount"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Frames received</h5>
-                        <span class="statusvalue" field="thermostat.rxCount"></span>
+                        <span class="statusvalue" field="master.rxCount"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Ventilation set point</h5>
-                        <span class="statusvalue" field="thermostat.rel_vent_set" unit="%"></span>
+                        <span class="statusvalue" field="master.rel_vent_set" unit="%"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Vent. enable</h5>
-                        <span class="statusvalue" field="thermostat.vent_status.vent_enable"></span>
+                        <span class="statusvalue" field="master.vent_status.vent_enable"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Vent. open bypass</h5>
-                        <span class="statusvalue" field="thermostat.vent_status.open_bypass"></span>
+                        <span class="statusvalue" field="master.vent_status.open_bypass"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Vent. bypass auto</h5>
-                        <span class="statusvalue" field="thermostat.vent_status.auto_bypass"></span>
+                        <span class="statusvalue" field="master.vent_status.auto_bypass"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Free vent. enable</h5>
-                        <span class="statusvalue" field="thermostat.vent_status.free_vent_enable"></span>
+                        <span class="statusvalue" field="master.vent_status.free_vent_enable"></span>
                     </div>
                 </div>
             </div>
@@ -1101,7 +1106,7 @@
 
                 <div class="param">
                     <h5>Room setpoint source</h5>
-                    <select field="heating.$.roomsetpoint.source" inval>
+                    <select field="heating.$.roomsetpoint.source" intval>
                         <option value="0">MQTT</option>
                         <option value="1">OT roomunit</option>
                         <option value="5">auto</option>
@@ -1326,7 +1331,7 @@
                     </div>
                     <div class="statusfield">
                         <h5>room comp. integrator</h5>
-                        <span class="statusvalue" field="heatercircuit.$.integState" unit="K"></span>
+                        <span class="statusvalue" field="heatercircuit.$.roomcompInteg" unit="K"></span>
                     </div>
                     <div class="statusfield">
                         <h5>ret. limit reduction</h5>
@@ -1552,14 +1557,28 @@
                     <h4>override values</h4>
                     <div class="flexline">
                         <div class="param">
-                            <h5>Circuit 1</h5>
+                            <h5>CH1 on</h5>
+                            <label class="switch">
+                                <input type="checkbox" field="heating.0.overrideOn" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="param">
+                            <h5>CH1 flow</h5>
                             <label class="switch">
                                 <input type="checkbox" field="heating.0.overrideFlow" />
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="param CH2">
-                            <h5>Circuit 2</h5>
+                            <h5>CH2 on</h5>
+                            <label class="switch">
+                                <input type="checkbox" field="heating.1.overrideOn" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="param CH2">
+                            <h5>CH2 flow</h5>
                             <label class="switch">
                                 <input type="checkbox" field="heating.1.overrideFlow" />
                                 <span class="slider"></span>
@@ -1728,14 +1747,21 @@
             <div id="logstatus"></div>
             <div class="toolbar">
                 <button onclick="clearLog()">clear log</button>
-                <button onclick="saveLog()">save log</button>
                 <button onclick="toggleAutoScroll(event)">autoscroll</button>
             </div>
         </div>
         <div class="toolbar">
             <button onclick="saveConfig()">save</button>
-            <button onclick="exportConfig()">export config</button>
             <button onclick="importConfig()">import config</button>
+            <div>
+                <button onclick="exportItem()">export</button>
+                <select id="selExport">
+                    <option>config</option>
+                    <option>status</option>
+                    <option>log</option>
+                    <option>OT items</option>
+                </select> 
+            </div>
             <button onclick="reboot()">reboot</button>
         </div>
         <div class="footer"><a href="http://www.seegel-systeme.de" target="_blank">www.seegel-systeme.de</a></div>
@@ -1921,19 +1947,6 @@
             return normalized;
         }
 
-        // Clamp curve points to flowMax and keep monotonic ordering.
-        function clampCurvePointsToMinMax() {
-            let hcfg = config.heating[currentCh];
-            hcfg.points = normalizeCurvePoints(hcfg.points).map((pt) => ({
-                outside: pt.outside,
-                flow: Math.max(Math.min(pt.flow, hcfg.flowMax), hcfg.flowMin)
-            }));
-            for (let i = 1; i < hcfg.points.length; i++) {
-                if (hcfg.points[i].flow < hcfg.points[i - 1].flow)
-                    hcfg.points[i].flow = hcfg.points[i - 1].flow;
-            }
-        }
-
         // Track drag state for curve point editing on the canvas.
         const curveDrag = {
             active: false,
@@ -2007,15 +2020,12 @@
                 return (bestDist <= 12) ? bestIdx : -1;
             }
 
-            function clampPointToNeighbors(hcfg, idx, outside, flow) {
+            function clampAndSyncNeighbors(hcfg, idx, outside, flow) {
                 // Prevent crossing in outside axis to keep point ordering stable while dragging.
                 const axes = getCurveAxes();
                 const MIN_X_DIST = 2.0; // °C
                 flow = clip(flow, axes.yaxis.max, axes.yaxis.min);
                 outside = clip(outside, axes.xaxis.min - idx * MIN_X_DIST, axes.xaxis.max + (hcfg.points.length - idx - 1) * MIN_X_DIST);
-
-                // Keep flow between flowMax & flowMin
-                flow = clip(flow, hcfg.flowMax, hcfg.flowMin);
 
                 for (let i = 0; i < idx; i++) {
                     hcfg.points[i].flow = Math.min(hcfg.points[i].flow, flow);
@@ -2062,9 +2072,7 @@
                 const ft = curveDrag.yaxis.min + (curveDrag.origin.y - pos.y) / curveDrag.yaxis.zoom;
                 let outside = Math.round(ot * 2) / 2;
                 let flow = Math.round(ft * 2) / 2;
-                flow = clip(flow, curveDrag.flowmax, curveDrag.flowmin);
-
-                const clamped = clampPointToNeighbors(hcfg, curveDrag.idx, outside, flow, curveDrag.flowmax)
+                const clamped = clampAndSyncNeighbors(hcfg, curveDrag.idx, outside, flow)
 
                 hcfg.points[curveDrag.idx].outside = clamped.outside;
                 hcfg.points[curveDrag.idx].flow = clamped.flow;
@@ -2182,7 +2190,6 @@
             const yaxis = axes.yaxis;
 
             ctx.lineWidth = 1;
-            ctx.strokeStyle = "#666";
             ctx.fillStyle = "#FFF";
             ctx.textBaseline = "middle";
             ctx.textAlign = "center";
@@ -2196,6 +2203,7 @@
             }
 
             //draw horizontal grid
+            ctx.strokeStyle = "#444";
             ctx.beginPath();
             for (let y = yaxis.min; y <= yaxis.max; y += yaxis.step) {
                 drawLine(xaxis.min, y, xaxis.max, y);
@@ -2203,15 +2211,16 @@
                 ctx.fillText(y, origin.x - 10, p.y);
             }
             ctx.stroke();
-            ctx.strokeStyle = "#222";
+
+            ctx.strokeStyle = "#111";
             ctx.beginPath();
             for (let y = yaxis.min + yaxis.step / 2; y <= yaxis.max; y += yaxis.step) {
                 drawLine(xaxis.min, y, xaxis.max, y)
             }
             ctx.stroke();
 
-            ctx.strokeStyle = "#666";
             //draw vertical grid
+            ctx.strokeStyle = "#444";
             ctx.beginPath();
             for (let x = xaxis.min; x >= xaxis.max; x -= xaxis.step) {
                 drawLine(x, yaxis.min, x, yaxis.max);
@@ -2219,17 +2228,16 @@
                 ctx.fillText(x, p.x, origin.y + 10);
             }
             ctx.stroke();
-            ctx.strokeStyle = "#222";
+            ctx.strokeStyle = "#111";
             ctx.beginPath();
             for (var x = xaxis.min - xaxis.step / 2; x >= xaxis.max; x -= xaxis.step) {
                 drawLine(x, yaxis.min, x, yaxis.max);
             }
             ctx.stroke();
 
+            //draw x-axis
             ctx.lineWidth = 2;
             ctx.strokeStyle = "#fff";
-
-            //draw x-axis
             ctx.beginPath();
             drawLine(xaxis.min, yaxis.min, xaxis.max, yaxis.min);
             ctx.stroke();
@@ -2254,7 +2262,7 @@
                 const hcs = statuscache?.heatercircuit?.[currentCh] ?? {};
                 if (hcs?.roomtemp !== undefined) {
                     const e = roomset - hcs.roomtemp;
-                    roomcomp = (hcfg.roomComp?.p ?? 0) * e + hcs.integState ?? 0;
+                    roomcomp = (hcfg.roomComp?.p ?? 0) * e + hcs.roomcompInteg ?? 0;
                     // boost
                     if (e > 1.0)
                         roomcomp += (hcfg.roomComp?.boost ?? 0) * e;
@@ -2279,7 +2287,7 @@
             ft = clip(ft, 100, flowmin);
             let p1 = getPoint(otStart, ft); //foot
 
-            function drawFlowCurve(color, delta = 0.0, minLimit=true) {
+            function drawFlowCurve(color, delta=0.0, DeltaPostLimit=false) {
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 3;
                 let ft = getFlowTemperature(otStart, roomset, hcfg) + delta;
@@ -2288,18 +2296,20 @@
                 ctx.moveTo(p.x, p.y);
                 let otf = false;
                 let utf = false;
-                if ((ft < flowmin) && minLimit) {
+                let fmax = flowmax + (DeltaPostLimit ? delta : 0);
+                let fmin = flowmin + (DeltaPostLimit ? delta : 0);
+                if (ft < fmin) {
                     utf = true;
                     ctx.strokeStyle = "#888";
                 }
 
                 for (var ot = otStart; ot >= xaxis.max; ot -= 0.25) {
-                    ft = getFlowTemperature(ot, roomset, hcfg) + delta;
+                    ft = getFlowTemperature(ot, roomset, hcfg) + delta ;
 
-                    if ((ft > flowmax) && !otf) {
-                        p = getPoint(ot, flowmax);
+                    if ((ft > fmax) && !otf) {
+                        p = getPoint(ot, fmax);
                         ctx.lineTo(p.x, p.y);
-                        p = getPoint(xaxis.max, flowmax);
+                        p = getPoint(xaxis.max, fmax);
                         ctx.lineTo(p.x, p.y);
                         ctx.stroke();
 
@@ -2317,15 +2327,15 @@
                     else
                         ctx.lineTo(p.x, p.y);
 
-                    if ((ft >= flowmin) && utf) {
+                    if ((ft >= fmin) && utf) {
                         utf = false;
                         ctx.stroke();
                         
                         ctx.strokeStyle = color;
                         ctx.beginPath();
-                        p = getPoint(otStart, flowmin);
+                        p = getPoint(otStart, fmin);
                         ctx.moveTo(p.x, p.y);
-                        p = getPoint(ot, flowmin);
+                        p = getPoint(ot, fmin);
                         ctx.lineTo(p.x, p.y);   
                         continue;
                     }
@@ -2337,7 +2347,7 @@
             }
 
             if (hcfg.returnLimit.deltaT !== 0)
-                drawFlowCurve("#58F", -hcfg.returnLimit.deltaT, false); // draw return limit curve
+                drawFlowCurve("#58F", -hcfg.returnLimit.deltaT, true); // draw return limit curve
 
             if (roomcomp != 0)
                 drawFlowCurve("#0F0", roomcomp);
@@ -2351,7 +2361,7 @@
             // Draw configured curve points to verify multipoint input mapping.
             if ((hcfg.curveMode ?? 0) === CURVE_MODE_MULTIPOINT) {
                 hcfg.points.forEach((pt) => {
-                    const p = getPoint(pt.outside, clip(pt.flow, flowmax, flowmin));
+                    const p = getPoint(pt.outside, pt.flow);
                     drawMarkerPoint(p, '#FFF');
                 });
             }
@@ -2368,16 +2378,28 @@
                 ctx.moveTo(origin.x, psensor.y);
                 ctx.lineTo(psensor.x, psensor.y);
                 ctx.lineTo(psensor.x, origin.y);
+                ctx.fillText(Math.round(ftsensor * 10) / 10, psensor.x - 20, psensor.y - 12);
                 ctx.stroke();
-                ctx.fillText(Math.round(ftsensor * 10) / 10, origin.x + 30, psensor.y - 8);
             }
 
             if (curveDrag.active) {
+                ctx.beginPath();
                 let point = config.heating?.[currentCh]?.points?.[curveDrag.idx];
                 let p = getPoint(point.outside ?? 0, point.flow ?? 0);
                 let text = `${point.outside} °C / ${point.flow} °C`;
-                ctx.strokeStyle = "#FFF";
+                ctx.fillStyle = "#FFF";
                 ctx.fillText(text, p.x, p.y - 13);
+                ctx.stroke();
+
+                ctx.strokeStyle = "#933";
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+
+                ctx.moveTo(origin.x, p.y);
+                ctx.lineTo(p.x, p.y);
+                ctx.lineTo(p.x, origin.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
             }
 
             if (hcfg.returnLimit.deltaT !== 0) {
@@ -2391,8 +2413,8 @@
                 ctx.moveTo(origin.x, psensor.y);
                 ctx.lineTo(psensor.x, psensor.y);
                 ctx.lineTo(psensor.x, origin.y);
+                ctx.fillText(Math.round(ftsensor * 10) / 10, psensor.x + 20, psensor.y + 8);
                 ctx.stroke();
-                ctx.fillText(Math.round(ftsensor * 10) / 10, origin.x + 30, psensor.y + 8);
             }
 
             //draw markers
@@ -2417,10 +2439,10 @@
 
             let ret = statuscache.heatercircuit?.[currentCh]?.returnTemp;
             if (ret !== undefined && ret !== null) {
-                let p = getPoint(xaxis.min, ret);
                 ctx.strokeStyle = "#58f";
                 ctx.fillStyle = ctx.strokeStyle;
                 ctx.beginPath();
+                let p = getPoint(xaxis.min, ret);
                 ctx.moveTo(p.x , p.y);
                 ctx.lineTo(p.x + 9, p.y + 4);
                 ctx.lineTo(p.x + 9, p.y - 4);
@@ -2499,17 +2521,69 @@
             drawCurve();
         }
 
-        function exportConfig() {
-            const jsonStr = JSON.stringify(config, null, 2);
+        function exportItem() {
+            switch (_("#selExport").value) {
+            case "config":
+                exportJson(config, "config");
+                break;
+
+            case "status":
+                exportJson(statuscache, "status");
+                break;
+
+            case "log":
+                exportLog();
+                break;
+
+            case "OT items":
+                exportOtItems();
+                break;
+            }
+        }
+
+        function exportLog() {
+            let logContent = "";
+            _("#console").childNodes.forEach((child) => {
+                if (child.textContent) {
+                    logContent += child.textContent + "\n";
+                }
+            });
+            let blob = new Blob([logContent], { type: "text/plain" });
+            let url = URL.createObjectURL(blob);
+            let link = document.createElement("a");
+            link.href = url;
+            link.download = getSaveFilename("log", "txt");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        };
+
+        function exportJson(obj, name) {
+            const jsonStr = JSON.stringify(obj, null, 2);
             const blob = new Blob([jsonStr], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
-            const a = _$("a"); //  document.createElement('a');
+            const a = _$("a");
             a.href = url;
-            a.download = getSaveFilename("config", "json");
+            a.download = getSaveFilename(name, "json");
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+        }
+
+        function exportOtItems() {
+            fetch("/otitems")
+                .then(resp => {
+                    if (!resp.ok) throw new Error("HTTP " + resp.status);
+                    return resp.json();
+                })
+                .then(data => {
+                    exportJson(data, "ot_items");
+                })
+                .catch(err => {
+                    alert("Error exporting OT items:\n" + err.message);
+                });
         }
 
         function importConfig() {
@@ -2564,16 +2638,12 @@
             const numPoints = getNumCurvePoints();
             const rs = roomsetpoint[currentCh];
             const outmin = getCurveAxes().xaxis.min;
-            const outmax = getCurveAxes().xaxis.max; //getMinOutsideTemp(rs, hcfg.flowMax, hcfg.gradient);
+            const outmax = getCurveAxes().xaxis.max;
 
             const step = (outmax - outmin) / (numPoints-1);
             for (let i=0; i<numPoints; i++) {
                 let ot = outmin + i * step;
                 let flow = getFlowTemperatureSimple(ot, rs, hcfg);
-                if (flow > hcfg.flowMax)
-                    flow = hcfg.flowMax;
-                if (flow < hcfg.flowMin)
-                    flow = hcfg.flowMin;
                 hcfg.points.push({
                     outside: Math.round(ot * 10) / 10.0,
                     flow: Math.round(flow * 10) / 10.0
@@ -2584,24 +2654,6 @@
 
         function clearLog() {
             _("#console").innerHTML = "";
-        };
-
-        function saveLog() {
-            let logContent = "";
-            _("#console").childNodes.forEach((child) => {
-                if (child.textContent) {
-                    logContent += child.textContent + "\n";
-                }
-            });
-            let blob = new Blob([logContent], { type: "text/plain" });
-            let url = URL.createObjectURL(blob);
-            let link = document.createElement("a");
-            link.href = url;
-            link.download = getSaveFilename("log", "txt");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
         };
 
         function toggleAutoScroll(ev) {
@@ -2615,9 +2667,44 @@
 
         function getSaveFilename(item, ext) {
             let result = "otthing_";
-            result += statuscache?.wifi?.mac ?? "";
+            result += (statuscache?.wifi?.mac ?? "").slice(8);
             result += `_${item}.${ext}`;
             return result.replace(/:/g, '');
+        }
+
+        function scanWiFi() {
+            let xhr = new XMLHttpRequest();
+            xhr.onload = (e) => {
+                let scanObj = JSON.parse(e.target.responseText);
+                if (scanObj.status < 0) {
+                    setTimeout(scanWiFi, 2000);
+                    return;
+                }
+
+                _("#scanResults").hidden= false;
+                _("#scanHint").hidden = true;
+
+                scanObj.results.forEach(element => {
+                    _("#scanbody").append(
+                        _$("tr", {},
+                            _$("td", {},
+                                _$("input", {
+                                    type: "radio", 
+                                    name: "ssid", 
+                                    value: element.ssid, 
+                                    onclick: (ev) => {_("#wifissid").value = ev.target.value;}
+                                })
+                            ),
+                            _$("td", {textContent: element.ssid}),
+                            _$("td", {textContent: element.channel}),
+                            _$("td", {textContent: element.rssi})
+                        )
+                    );
+                });
+            };
+            
+            xhr.open("GET", "scan");    
+            xhr.send();
         }
 
 
@@ -2664,41 +2751,6 @@
                     reader.readAsText(file);
                 }
             };
-
-            function scanWiFi() {
-                let xhr = new XMLHttpRequest();
-                xhr.onload = (e) => {
-                    let scanObj = JSON.parse(e.target.responseText);
-                    if (scanObj.status < 0) {
-                        setTimeout(scanWiFi, 2000);
-                        return;
-                    }
-
-                    _("#scanResults").hidden= false;
-                    _("#scanHint").hidden = true;
-
-                    scanObj.results.forEach(element => {
-                        _("#scanbody").append(
-                            _$("tr", {},
-                                _$("td", {},
-                                    _$("input", {
-                                        type: "radio", 
-                                        name: "ssid", 
-                                        value: element.ssid, 
-                                        onclick: (ev) => {_("#wifissid").value = ev.target.value;}
-                                    })
-                                ),
-                                _$("td", {textContent: element.ssid}),
-                                _$("td", {textContent: element.channel}),
-                                _$("td", {textContent: element.rssi})
-                            )
-                        );
-                    });
-                };
-                
-                xhr.open("GET", "scan");    
-                xhr.send();
-            }
 
             _("#selectOutsideTempSource").addEventListener("change", (ev) => {
                 _("#owdiv").hidden = (ev.target.value != 4);
@@ -2985,14 +3037,6 @@
                     });
                     drawCurve();
                 }
-
-                __(`#flowmax, #flowmin`).forEach(ele => {
-                    ele.addEventListener("input", (ev) => {
-                        // Keep curve points <= flowMax when the slider changes.
-                        clampCurvePointsToMinMax();
-                        drawCurve();
-                    });
-                });
 
                 __('input[type="checkbox"][hideele]').forEach(ele => {
                     ele.dispatchEvent(new Event("change"));

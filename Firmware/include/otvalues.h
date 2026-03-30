@@ -164,7 +164,7 @@ public:
     virtual void init(const bool enabled);
     void setTimeout();
     static OTValue* getSlaveValue(const OpenThermMessageID id);
-    static OTValue* getThermostatValue(const OpenThermMessageID id);
+    static OTValue* getMasterValue(const OpenThermMessageID id);
     static class OTValueSlaveConfigMember* getSlaveConfig();
     void refreshDisc();
     bool isSet() const;
@@ -510,5 +510,5 @@ public:
 
 
 extern OTValue *slaveValues[55];
-extern OTValue *thermostatValues[19];
+extern OTValue *masterValues[19];
 extern const char* getOTname(OpenThermMessageID id);

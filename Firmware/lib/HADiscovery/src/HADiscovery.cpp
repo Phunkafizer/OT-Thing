@@ -104,24 +104,22 @@ void HADiscovery::setTemperatureStateTopic(String topic) {
     doc[FPSTR(HA_TEMPERATURE_STATE_TOPIC)] = topic;
 }
 
-void HADiscovery::setTemperatureStateTopic() {
-    setTemperatureStateTopic(defaultStateTopic);
-}
-
 void HADiscovery::setTemperatureStateTemplate(String stateTemplate) {
     doc[FPSTR(HA_TEMPERATURE_STATE_TEMPLATE)] = stateTemplate;
+
+    if (!doc.containsKey(FPSTR(HA_CURRENT_TEMPERATURE_TOPIC)))
+        doc[FPSTR(HA_TEMPERATURE_STATE_TOPIC)] = defaultStateTopic;
 }
 
 void HADiscovery::setCurrentTemperatureTopic(String topic) {
     doc[FPSTR(HA_CURRENT_TEMPERATURE_TOPIC)] = topic;
 }
 
-void HADiscovery::setCurrentTemperatureTopic() {
-    setCurrentTemperatureTopic(defaultStateTopic);
-}
-
 void HADiscovery::setCurrentTemperatureTemplate(String templ) {
     doc[FPSTR(HA_CURRENT_TEMPERATURE_TEMPLATE)] = templ;
+
+    if (!doc.containsKey(FPSTR(HA_CURRENT_TEMPERATURE_TOPIC)))
+        doc[FPSTR(HA_CURRENT_TEMPERATURE_TOPIC)] = defaultStateTopic;
 }
 
 void HADiscovery::setStateTopic(String stateTopic) {
@@ -156,12 +154,11 @@ void HADiscovery::setModeStateTopic(String topic) {
     doc[FPSTR(HA_MODE_STATE_TOPIC)] = topic;
 }
 
-void HADiscovery::setModeStateTopic() {
-    setModeStateTopic(defaultStateTopic);
-}
-
 void HADiscovery::setModeStateTemplate(String templ) {
     doc[FPSTR(HA_MODE_STATE_TEMPLATE)] = templ;
+
+    if (!doc.containsKey(FPSTR(HA_MODE_STATE_TOPIC)))
+        doc[FPSTR(HA_MODE_STATE_TOPIC)] = defaultStateTopic;
 }
 
 void HADiscovery::setOptimistic(const bool opt) {

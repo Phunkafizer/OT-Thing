@@ -3,6 +3,7 @@
 #include "otcontrol.h"
 #include "mqtt.h"
 #include "sensors.h"
+#include "devstatus.h"
 
 struct OTItem {
     OpenThermMessageID id;
@@ -148,7 +149,7 @@ OTValue *slaveValues[55] = { // reply data collected (read) from slave (boiler /
 };
 
 
-OTValue *thermostatValues[19] = { // request data sent (written) from roomunit
+OTValue *masterValues[19] = { // request data sent (written) from roomunit
     new OTValueFloat(           TSet,                   -1),
     new OTValueFloat(           TsetCH2,                -1),
     new OTValueFloat(           Tr,                     -1),
@@ -210,8 +211,8 @@ OTValueSlaveConfigMember* OTValue::getSlaveConfig() {
     return static_cast<OTValueSlaveConfigMember*>(getSlaveValue(SConfigSMemberIDcode));
 }
 
-OTValue* OTValue::getThermostatValue(const OpenThermMessageID id) {
-    for (auto *val: thermostatValues) {
+OTValue* OTValue::getMasterValue(const OpenThermMessageID id) {
+    for (auto *val: masterValues) {
         if (val->id == id) {
             return val;
         }
@@ -337,7 +338,7 @@ bool OTValue::sendDiscovery(String field) {
         fn += '.';
         fn += field;
     }
-    String valTmpl = mqtt.getValueTemplate(inSlave ? Mqtt::VALTMPL_SLAVE : Mqtt::VALTMPL_THERMOSTAT, fn.c_str());
+    String valTmpl = mqtt.getValueTemplate(inSlave ? Mqtt::VALTMPL_SLAVE : Mqtt::VALTMPL_MASTER, fn.c_str());
 
     /*
     String valTempl = F("{{ (value_json.");
@@ -508,7 +509,7 @@ bool OTValueFlags::sendDiscFlag(const Flag *flag, const bool enb)  {
     haDisc.createBinarySensor(FPSTR(flag->discName), FPSTR(flag->field), dc);
     
     String valTmpl = F("{% set tmp = ((value_json.get('#0') or {}).get('#1') or {}).get('#2') %}{{ none if tmp is none else ('ON' if tmp else 'OFF') }}");
-    valTmpl.replace("#0", slave ? F("slave") : F("thermostat"));
+    valTmpl.replace("#0", slave ? FPSTR(STR_STATKEY_SLAVE) : FPSTR(STR_STATKEY_MASTER));
     valTmpl.replace("#1", getName());
     valTmpl.replace("#2", FPSTR(flag->field));
     haDisc.setValueTemplate(valTmpl);

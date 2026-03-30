@@ -4,7 +4,8 @@
 #include "ArduinoJson.h"
 #include "util.h"
 #include "masterrequests.h"
-#include "heatingcurve.h"
+#include "CHcontrol.h"
+#include "flamestats.h"
 
 const uint8_t NUM_HEATCIRCUITS = 2;
 
@@ -21,12 +22,6 @@ friend OTWriteRequest;
 friend class BrandInfo;
 friend class SemMaster;
 public:
-    enum CtrlMode: int8_t {
-        CTRLMODE_UNKNOWN = -1,
-        CTRLMODE_OFF = 0,
-        CTRLMODE_ON = 1,
-        CTRLMODE_AUTO = 2
-    };
     friend void otCbSlave(unsigned long response, OpenThermResponseStatus status);
     friend void otCbMaster(unsigned long response, OpenThermResponseStatus status);
     friend void IRAM_ATTR handleIrqMaster();
@@ -37,12 +32,10 @@ public:
 private:
     void OnRxMaster(const unsigned long msg, const OpenThermResponseStatus status);
     void OnRxSlave(const unsigned long msg, const OpenThermResponseStatus status);
-    bool setThermostatVal(const unsigned long msg);
+    bool setMasterVal(const unsigned long msg);
     void sendRequest(const char source, const unsigned long msg);
     void masterPinIrq();
     void slavePinIrq();
-    double getFlow(const uint8_t channel);
-    bool getChannelOn(const uint8_t channel);
     uint16_t tmpToData(const double tmpf);
     void hwYield();
     unsigned long buildBrandResponse(const OpenThermMessageID id, const String &str, const uint8_t idx);
@@ -61,42 +54,7 @@ private:
         SLAVEAPP_VENT = 1,
         SLAVEAPP_SOLAR = 2
     } slaveApp;
-    struct HeatingConfig {
-        bool chOn;
-        double roomSet; // default room set point
-        double flow; // default flow temperature 
-        bool enableHyst; // suspend on roomsetpoint
-        double hysteresis;
-        double suspOffset;
-        struct {
-            bool enabled;
-            double p; // Kp K/K
-            double i; // Ki 1/h
-            double boost; // Kb K/K
-        } roomComp;
-        bool minSuspend;
-    } heatingConfig[NUM_HEATCIRCUITS];
-    HeatingCurve curve[NUM_HEATCIRCUITS];
-    struct HeatingControl {
-        bool chOn;
-        double flowTemp;
-        double flowMin;
-        CtrlMode mode {CTRLMODE_AUTO};
-        bool override;
-        struct PiCtrl {
-            bool enabled; // enables PI controller
-            bool init { false };
-            double rspPrev; // previous room setpoint
-            double integState {0}; // state of integrator / K
-            double deltaT {0};
-            bool suspended {false};
-        } roomComp;
-        struct {
-            double integState {0}; // state of integrator / K
-            double reduction {0};
-        } retLimit;
-        bool minSuspended {false};
-    } heatingCtrl[NUM_HEATCIRCUITS];
+    CHcontrol chcontrol[NUM_HEATCIRCUITS];
     void loopRoomComp(const uint8_t ch);
     void loopRetLimit(const uint8_t ch);
     unsigned long nextPiCtrl { 0 };
@@ -116,41 +74,14 @@ private:
     struct {
         bool dhwOn;
         double dhwTemp;
-        bool overrideDhw;
         uint8_t maxModulation;
     } boilerCtrl;
-    struct FlameStats {
-        void loop();
-        uint8_t getDuty() const;
-        double getFreq() const;
-        double getOnTime() const;
-        double getOffTime() const;
-        int getCurrentOnTime() const;
-        void writeJson(JsonObject &obj) const;
-    private:
-        static const uint8_t BUFSIZE_MINUTES = 180; // 3 h
-        static const uint8_t BUFSIZE_CYCLES = 10;
-        void update();
-        void set(const bool flame);
-        bool currentFlame {false};
-        uint32_t lastEdge {0};
-        uint32_t lastLoop {0};
-        uint8_t idxMinutes {0};
-        uint8_t idxCycles {0};
-        bool onTimesInit {false};
-        bool offTimesInit {false};
-        template <typename T1, size_t T2>
-        struct Ringbuf {
-            void update(const uint8_t idx);
-            T1 current {0};
-            T1 buf[T2];
-            uint32_t sum {0};
-        };
-        Ringbuf<uint8_t, BUFSIZE_MINUTES> on; // number of on minutes per minute
-        Ringbuf<uint8_t, BUFSIZE_MINUTES> cycles; // number of cycles per minute
-        Ringbuf<uint32_t, BUFSIZE_CYCLES> onTimes; // on times per cycle in seconds
-        Ringbuf<uint32_t, BUFSIZE_CYCLES> offTimes; // on times per cycle in seconds
-    } flameStats;
+    struct {
+        bool active;
+        double temp;
+        double on;
+    } dhwOvrd;
+    FlameStats flameStats;
     bool discFlag {true};
     OTWRSetDhw setDhwRequest;
     OTWRSetBoilerTemp setBoilerRequest[NUM_HEATCIRCUITS];
@@ -183,6 +114,7 @@ private:
     bool enableSlave {false};
     bool bypass {false};
     uint16_t statusReqOvl {0}; // will be or'ed to status request as this is needed by some boilers
+    bool init {false};
 public:
     OTControl();
     void begin();
@@ -192,19 +124,21 @@ public:
     void setConfig(JsonObject &config);
     void setDhwTemp(const double temp);
     void setChTemp(const double temp, const uint8_t channel);
-    void setChCtrlMode(const CtrlMode mode, const uint8_t channel);
-    void setDhwCtrlMode(const CtrlMode mode);
+    void setChCtrlMode(const ChannelControlMode mode, const uint8_t channel);
+    void setDhwCtrlMode(const ChannelControlMode mode);
     bool sendDiscovery();
     bool sendCapDiscoveries();
     void forceFlowCalc(const uint8_t channel);
     void setVentSetpoint(const uint8_t v);
     void setVentEnable(const bool en);
-    void setOverrideCh(const bool ovrd, const uint8_t channel);
+    void setOverrideChOn(const bool ovrd, const uint8_t channel);
+    void setOverrideChFlow(const bool ovrd, const uint8_t channel);
     void setOverrideDhw(const bool ovrd);
     void setMaxMod(const int mm);
     void setRoomComp(const bool en, const uint8_t channel);
     void setFlowMin(const double flowMin, const uint8_t channel);
     void setBypass(const bool bypass);
+    bool getFlame() const;
 };
 
 extern OTControl otcontrol;

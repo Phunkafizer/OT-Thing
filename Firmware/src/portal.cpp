@@ -139,12 +139,12 @@ void Portal::begin(bool configMode) {
             return;
         }
         JsonDocument doc;
-        JsonObject jSlave = doc[F("slave")].to<JsonObject>();
+        JsonObject jSlave = doc[FPSTR(STR_STATKEY_SLAVE)].to<JsonObject>();
             for (auto *valobj: slaveValues)
                 valobj->getStatus(jSlave);
 
-        JsonObject jMaster = doc[F("master")].to<JsonObject>();
-            for (auto *valobj: thermostatValues)
+        JsonObject jMaster = doc[FPSTR(STR_STATKEY_MASTER)].to<JsonObject>();
+            for (auto *valobj: masterValues)
                 valobj->getStatus(jMaster);
 
         AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));

@@ -13,3 +13,11 @@ SemHelper::~SemHelper() {
 SemHelper::operator bool() {
     return result == pdTRUE;
 }
+
+
+void clip(double &d, const double min, const double max) {
+    if (d < min)
+        d = min;
+    if (d > max)
+        d = max;
+}

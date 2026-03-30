@@ -27,8 +27,10 @@ static struct {
     {Mqtt::TOPIC_ROOMCOMP2, "roomComp2"},
     {Mqtt::TOPIC_ROOMSETPOINT1, "roomSetpoint1"},
     {Mqtt::TOPIC_ROOMSETPOINT2, "roomSetpoint2"},
-    {Mqtt::TOPIC_OVERRIDECH1, "overrideCh1"},
-    {Mqtt::TOPIC_OVERRIDECH2, "overrideCh2"},
+    {Mqtt::TOPIC_OVERRIDECHFLOW1, "overrideChFlow1"},
+    {Mqtt::TOPIC_OVERRIDECHFLOW2, "overrideChFlow2"},
+    {Mqtt::TOPIC_OVERRIDECHON1, "overrideChOn1"},
+    {Mqtt::TOPIC_OVERRIDECHON2, "overrideChOn2"},
     {Mqtt::TOPIC_OVERRIDEDHW, "overrideDhw"},
     {Mqtt::TOPIC_VENTSETPOINT, "ventSetpoint"},
     {Mqtt::TOPIC_VENTENABLE, "ventEnable"},
@@ -158,14 +160,14 @@ void Mqtt::loop() {
     }
 }
 
-OTControl::CtrlMode Mqtt::strToCtrlMode(const String &str) {
+ChannelControlMode Mqtt::strToCtrlMode(const String &str) {
     if (str.compareTo("heat") == 0)
-        return OTControl::CTRLMODE_ON;
+        return CTRLMODE_ON;
     if (str.compareTo("auto") == 0)
-        return OTControl::CTRLMODE_AUTO;
+        return CTRLMODE_AUTO;
     if (str.compareTo("off") == 0)
-        return OTControl::CTRLMODE_OFF;
-    return OTControl::CTRLMODE_UNKNOWN;
+        return CTRLMODE_OFF;
+    return CTRLMODE_UNKNOWN;
 }
 
 bool Mqtt::publish(String topic, JsonDocument &payload, const bool retain) {
@@ -225,8 +227,8 @@ bool Mqtt::setValue(const String &key, const String &value) {
     }   
 
     case TOPIC_DHWMODE: {
-        OTControl::CtrlMode mode = strToCtrlMode(value);
-        if (mode != OTControl::CTRLMODE_UNKNOWN)
+        ChannelControlMode mode = strToCtrlMode(value);
+        if (mode != CTRLMODE_UNKNOWN)
             otcontrol.setDhwCtrlMode(mode);
         break;
     }
@@ -248,8 +250,8 @@ bool Mqtt::setValue(const String &key, const String &value) {
     case TOPIC_CHMODE1:
     case TOPIC_CHMODE2: {
         const uint8_t ch = (uint8_t) (etop - TOPIC_CHMODE1);
-        OTControl::CtrlMode mode = strToCtrlMode(value);
-        if (mode != OTControl::CTRLMODE_UNKNOWN)
+        ChannelControlMode mode = strToCtrlMode(value);
+        if (mode != CTRLMODE_UNKNOWN)
             otcontrol.setChCtrlMode(mode, ch);
         break;
     }
@@ -274,14 +276,19 @@ bool Mqtt::setValue(const String &key, const String &value) {
 
     case TOPIC_ROOMCOMP1:
     case TOPIC_ROOMCOMP2: {
-        OTControl::CtrlMode mode = strToCtrlMode(value);
-        otcontrol.setRoomComp(mode == OTControl::CTRLMODE_AUTO, (uint8_t) (etop - TOPIC_ROOMCOMP1));
+        ChannelControlMode mode = strToCtrlMode(value);
+        otcontrol.setRoomComp(mode == CTRLMODE_AUTO, (uint8_t) (etop - TOPIC_ROOMCOMP1));
         break;
     }
 
-    case TOPIC_OVERRIDECH1:
-    case TOPIC_OVERRIDECH2:
-        otcontrol.setOverrideCh(value == F("ON"), (uint8_t) (etop - TOPIC_OVERRIDECH1));
+    case TOPIC_OVERRIDECHON1:
+    case TOPIC_OVERRIDECHON2:
+        otcontrol.setOverrideChOn(value == F("ON"), (uint8_t) (etop - TOPIC_OVERRIDECHON1));
+        break;
+
+    case TOPIC_OVERRIDECHFLOW1:
+    case TOPIC_OVERRIDECHFLOW2:
+        otcontrol.setOverrideChFlow(value == F("ON"), (uint8_t) (etop - TOPIC_OVERRIDECHFLOW1));
         break;
 
     case TOPIC_OVERRIDEDHW:
@@ -342,8 +349,8 @@ String Mqtt::getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t
         result += F(".get('slave') or {})");
         break;
 
-    case VALTMPL_THERMOSTAT:
-        result += F(".get('thermostat') or {})");
+    case VALTMPL_MASTER:
+        result += F(".get('master') or {})");
         break;
 
     case VALTMPL_HEATING_CIRCUIT:

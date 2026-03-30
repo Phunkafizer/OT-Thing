@@ -31,8 +31,10 @@ public:
         TOPIC_ROOMSETPOINT2,
         TOPIC_ROOMCOMP1,
         TOPIC_ROOMCOMP2,
-        TOPIC_OVERRIDECH1,
-        TOPIC_OVERRIDECH2,
+        TOPIC_OVERRIDECHON1,
+        TOPIC_OVERRIDECHON2,
+        TOPIC_OVERRIDECHFLOW1,
+        TOPIC_OVERRIDECHFLOW2,
         TOPIC_OVERRIDEDHW,
         TOPIC_VENTSETPOINT,
         TOPIC_VENTENABLE,
@@ -46,7 +48,7 @@ public:
     enum ValueTemplateType {
         VALTMPL_ROOT,
         VALTMPL_SLAVE,
-        VALTMPL_THERMOSTAT,
+        VALTMPL_MASTER,
         VALTMPL_HEATING_CIRCUIT
     };
     Mqtt();
@@ -78,7 +80,7 @@ private:
     String statusTopic;
     bool discFlag {false}; // discovery flag; set after MQTT (re-) connect
     bool conFlag;
-    OTControl::CtrlMode strToCtrlMode(const String &str);
+    ChannelControlMode strToCtrlMode(const String &str);
     String getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit);
 };
 
