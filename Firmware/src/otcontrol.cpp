@@ -1041,7 +1041,7 @@ bool OTControl::sendChDiscoveries(const uint8_t ch, const bool en) {
     tp = topic(Mqtt::TOPIC_ROOMCOMP1, ch);
     haDisc.setModeCommandTopic(mqtt.getCmdTopic(tp));
     haDisc.setTemperatureStateTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMSETPOINT, ch));
-    haDisc.setModeStateTemplate(mqtt.getValueTemplateClimateMode(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_CTRLMODE, ch));
+    haDisc.setModeStateTemplate(mqtt.getValueTemplateClimateMode(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMCOMPCTRLMODE, ch));
     haDisc.setOptimistic(true);
     haDisc.setRetain(true);
     haDisc.setModes(0x06);
