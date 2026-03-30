@@ -37,7 +37,7 @@ Sensor::Sensor(const double alpha):
 void Sensor::set(const double val, const Source src) {
     if ((src == this->src) || (src == SOURCE_NA)) {
         value = val;
-        if (!setFlag)
+        if ((!setFlag) || (alpha == 1.0))
             smoothed = val;
         setFlag = true;
     }
