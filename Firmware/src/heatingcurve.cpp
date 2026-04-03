@@ -63,6 +63,9 @@ double HeatingCurve::getFlowTemp(const double roomSet) const {
 }
 
 double HeatingCurve::getReturnLimit(const double roomSet) const {
+    if (retLimit.deltaT == 0.0)
+        return 0.0;
+        
     double tmp = getFlowTemp(roomSet);
     if (tmp != 0.0)
         tmp -= retLimit.deltaT;

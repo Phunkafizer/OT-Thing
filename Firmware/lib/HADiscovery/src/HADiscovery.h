@@ -22,6 +22,15 @@ extern PGM_P HA_UNIT_L_MIN PROGMEM;
 extern PGM_P HA_ENTITY_CATEGORY_CONFIG PROGMEM;
 extern PGM_P HA_ENTITY_CATEGORY_DIAGNOSTIC PROGMEM;
 
+extern PGM_P HA_CLIMATE_MODE_OFF PROGMEM;
+extern PGM_P HA_CLIMATE_MODE_HEAT PROGMEM;
+extern PGM_P HA_CLIMATE_MODE_AUTO PROGMEM;
+
+extern PGM_P HA_ACTION_OFF PROGMEM;
+extern PGM_P HA_ACTION_HEATING PROGMEM;
+extern PGM_P HA_ACTION_COOLING PROGMEM;
+extern PGM_P HA_ACTION_IDLE PROGMEM;
+
 
 class HADiscovery {
 private:
@@ -31,6 +40,18 @@ protected:
     JsonDocument doc;
     String topic;
 public:
+    enum ClimateMode {
+        MODE_UNKNOWN = -1,
+        MODE_OFF,
+        MODE_HEAT,
+        MODE_AUTO
+    };
+    enum ClimateAction {
+        ACTION_OFF,
+        ACTION_HEATING,
+        ACTION_COOLING,
+        ACTION_IDLE
+    };
     HADiscovery();
     static String devName;
     PGM_P manufacturer;
@@ -59,6 +80,8 @@ public:
     void setDeviceClass(const String dc);
     void setStateClass(const String sc);
     void setEntityCategory(PGM_P cat);
+    void setActionTopic(const String topic);
+    void setActionTemplate(const String templ);
 
     void createTempSensor(String name, String id);
     void createPowerFactorSensor(String name, String id);
@@ -70,4 +93,8 @@ public:
     void createClima(String name, String id, String tmpCmdTopic);
     void createSwitch(String name, String id, String cmdTopic);
     void createrWaterHeater(String name, String id, String tmpCmdTopic);
+
+    PGM_P getClimateModeStr(const ClimateMode mode);
+    PGM_P getClimateActionStr(const ClimateAction action);
+    ClimateMode strToClimateMode(const String &str);
 };

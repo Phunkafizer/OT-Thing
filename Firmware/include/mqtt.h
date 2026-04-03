@@ -2,7 +2,6 @@
 
 #include <AsyncMqttClient.h>
 #include <ArduinoJson.h>
-#include "otcontrol.h"
 
 struct MqttConfig {
     String host;
@@ -29,8 +28,8 @@ public:
         TOPIC_ROOMTEMP2,
         TOPIC_ROOMSETPOINT1,
         TOPIC_ROOMSETPOINT2,
-        TOPIC_ROOMCOMP1,
-        TOPIC_ROOMCOMP2,
+        TOPIC_ROOMMODE1,
+        TOPIC_ROOMMODE2,
         TOPIC_OVERRIDECHON1,
         TOPIC_OVERRIDECHON2,
         TOPIC_OVERRIDECHFLOW1,
@@ -47,6 +46,7 @@ public:
     };
     enum ValueTemplateType {
         VALTMPL_ROOT,
+        VALTMPL_DHW,
         VALTMPL_SLAVE,
         VALTMPL_MASTER,
         VALTMPL_HEATING_CIRCUIT
@@ -65,7 +65,6 @@ public:
     uint32_t getNumDisc() const;
     String getValueTemplate(const ValueTemplateType vt, PGM_P field, const uint8_t ch=-1, const uint8_t ommit=-1);
     String getValueTemplateBool(const ValueTemplateType vt, PGM_P field, const uint8_t ch=-1, const uint8_t ommit=-1);
-    String getValueTemplateClimateMode(const ValueTemplateType vt, PGM_P field, const uint8_t ch=-1, const uint8_t ommit=-1);
 private:
     void onConnect();
     void onDisconnect(AsyncMqttClientDisconnectReason reason);
@@ -80,7 +79,7 @@ private:
     String statusTopic;
     bool discFlag {false}; // discovery flag; set after MQTT (re-) connect
     bool conFlag;
-    ChannelControlMode strToCtrlMode(const String &str);
+    bool strToBool(const String &str);
     String getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit);
 };
 

@@ -1,6 +1,7 @@
 #include "CHcontrol.h"
 #include "flamestats.h"
 #include "devstatus.h"
+#include "otcontrol.h"
 
 bool CHcontrol::overrideEnabled; // set if otMode is master
 
@@ -12,7 +13,7 @@ void CHcontrol::setConfig(JsonObject &obj, const bool init) {
     curve.setConfig(obj);
 
     bool chOn = obj[F("chOn")];
-    mode = chOn ? CTRLMODE_AUTO : CTRLMODE_OFF;
+    mode = chOn ? HADiscovery::MODE_AUTO : HADiscovery::MODE_OFF;
 
     config.roomSet = obj[F("roomsetpoint")][F("temp")] | 21.0; // default room set point
     config.flow = obj[F("flow")] | 35;
@@ -38,21 +39,35 @@ void CHcontrol::setConfig(JsonObject &obj, const bool init) {
         ovrdOn.value = chOn;
     }
 
-    roomComp.enabled = config.roomComp.enabled;
+    roomComp.mode = config.roomComp.enabled ? HADiscovery::ClimateMode::MODE_AUTO : HADiscovery::MODE_HEAT;
     if (config.roomComp.i == 0)
         roomComp.integState = 0;
-
     
     if (!roomSetPoint[channel])
         roomSetPoint[channel].set(config.roomSet, Sensor::SOURCE_NA);
 }
 
 void CHcontrol::getJson(JsonObject &obj) {
-    obj[FPSTR(STR_STATKEY_OVERRIDE_FLOW)] = ovrdTemp.active;
+    obj[FPSTR(STR_STATKEY_OVERRIDE_TEMP)] = ovrdTemp.active;
     obj[FPSTR(STR_STATKEY_OVERRIDE_ON)] = ovrdOn.active;
-    obj[FPSTR(STR_STATKEY_CTRLMODE)] = (int) mode;
+
+    PGM_P modeStr = haDisc.getClimateModeStr(static_cast<HADiscovery::ClimateMode>(mode));
+    if (modeStr != nullptr)
+        obj[FPSTR(STR_STATKEY_CTRLMODE)] = FPSTR(modeStr)
+;
     obj[FPSTR(STR_STATKEY_ROOMCOMPINTEGRATOR)] = round(roomComp.integState * 10) / 10.0;
+    obj[FPSTR(STR_STATKEY_RETURNLIMITINTEGRATOR)] = round(retLimit.integState * 10) / 10.0;
     obj[FPSTR(STR_STATKEY_FLOWMIN)] = flowMin;
+
+    HADiscovery::ClimateAction action;
+    if (getChOn())
+        if (otcontrol.getFlame() && otcontrol.getChActive(channel))
+            action = HADiscovery::ACTION_HEATING;
+        else
+            action = HADiscovery::ACTION_IDLE;
+    else
+        action = HADiscovery::ACTION_OFF;
+    obj[FPSTR(STR_STATKEY_ACTION)] = haDisc.getClimateActionStr(action);
 
     obj[F("suspended")] = roomSuspended || minSuspended;
 
@@ -61,7 +76,20 @@ void CHcontrol::getJson(JsonObject &obj) {
         obj[F("returnTemp")] = d;
         obj[F("reduction")] = round(retLimit.reduction * 10) / 10.0;
     }
-    obj[FPSTR(STR_STATKEY_ROOMCOMPCTRLMODE)] = (int) (roomComp.enabled ? ChannelControlMode::CTRLMODE_AUTO : ChannelControlMode::CTRLMODE_ON);
+
+    // calculate roomaction
+    HADiscovery::ClimateAction roomAction;
+    if (overrideEnabled && ovrdOn.active)
+        roomAction = ovrdOn.value ? HADiscovery::ACTION_HEATING : HADiscovery::ACTION_OFF;
+    else
+        if (config.roomSuspend.enabled && roomSuspended)
+            roomAction = HADiscovery::ACTION_IDLE;
+        else
+            if (otcontrol.getChActive(channel))
+                roomAction = HADiscovery::ACTION_HEATING;
+            else
+                roomAction = HADiscovery::ACTION_OFF;
+    obj[FPSTR(STR_STATKEY_ROOMACTION)] = haDisc.getClimateActionStr(roomAction);
 }
 
 double CHcontrol::getFlow() {
@@ -71,11 +99,11 @@ double CHcontrol::getFlow() {
         return ovrdTemp.value;
 
     switch (mode) {
-    case CTRLMODE_ON:
+    case HADiscovery::MODE_HEAT:
         result = flowTemp;
         break;
 
-    case CTRLMODE_AUTO: {
+    case HADiscovery::MODE_AUTO: {
         double rsp = config.roomSet; // default room set point
         roomSetPoint[channel].get(rsp);
         result = curve.getFlowTemp(rsp);
@@ -84,7 +112,7 @@ double CHcontrol::getFlow() {
         break;
     }
 
-    case CTRLMODE_OFF:
+    case HADiscovery::MODE_OFF:
         return 0;
     
     default:
@@ -93,7 +121,7 @@ double CHcontrol::getFlow() {
 
     result += retLimit.reduction;
 
-    if (roomComp.enabled) {
+    if (roomCompEnabled()) {
         // room temperature compensation
         result += roomComp.deltaT;
     }
@@ -115,26 +143,22 @@ bool CHcontrol::getChOn() {
     if (overrideEnabled && ovrdOn.active)
         return ovrdOn.value;
 
-    if ( (getFlow() == 0) || (mode == CTRLMODE_OFF) )
+    if ( (mode == HADiscovery::MODE_OFF) || (roomComp.mode == HADiscovery::MODE_OFF) || (getFlow() == 0) )
         return false;
 
     return !(config.roomSuspend.enabled && roomSuspended) && !(config.minSuspend && minSuspended);
 }
 
-void CHcontrol::setMode(const ChannelControlMode mode) {
+void CHcontrol::setMode(const HADiscovery::ClimateMode mode) {
     this->mode = mode;
 }
 
-void CHcontrol::setRoomCompEnabled(const bool en) {
-    roomComp.enabled = en;
-    if (!en) {
+void CHcontrol::setRoomComp(const HADiscovery::ClimateMode mode) {
+    roomComp.mode = mode;
+    if (roomComp.mode != HADiscovery::MODE_AUTO) {
         roomComp.integState = 0;
         roomComp.deltaT = 0;
     }   
-}
-
-bool CHcontrol::getRoomCompEnabled() const {
-    return roomComp.enabled;
 }
 
 double CHcontrol::getFlowMax() const {
@@ -142,7 +166,7 @@ double CHcontrol::getFlowMax() const {
 }
 
 bool CHcontrol::roomCompEnabled() const {
-    return roomComp.enabled;
+    return roomComp.mode != HADiscovery::MODE_AUTO;
 }
 bool CHcontrol::suspendEnabled() const {
     return config.roomSuspend.enabled || config.minSuspend;
@@ -178,7 +202,7 @@ void CHcontrol::loopRoomComp() {
         roomComp.init = true;
     }
 
-    if (!roomComp.enabled)
+    if (roomComp.mode != HADiscovery::MODE_AUTO)
         return;
 
     double e = rsp - rt; // error

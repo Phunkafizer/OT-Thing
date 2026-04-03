@@ -89,7 +89,7 @@ static const OTItem OTITEMS[] PROGMEM = {
     {SlaveVersion,              PSTR("slave_prod_version")}
 };
 
-OTValue *slaveValues[55] = { // reply data collected (read) from slave (boiler / ventilation / solar)
+OTValue *slaveValues[55] = { // replydata collected (read) from a connnected slave (boiler / ventilation / solar)
     new OTValueSlaveConfigMember(),
     new OTValueProductVersion(  OpenThermVersionSlave,      0,                 PSTR("OT-version slave")),
     new OTValueProductVersion(  SlaveVersion,               0,                 PSTR("productversion slave")),
@@ -149,7 +149,7 @@ OTValue *slaveValues[55] = { // reply data collected (read) from slave (boiler /
 };
 
 
-OTValue *masterValues[19] = { // request data sent (written) from roomunit
+OTValue *masterValues[19] = { // requestdata sent (written) from a connected roomunit
     new OTValueFloat(           TSet,                   -1),
     new OTValueFloat(           TsetCH2,                -1),
     new OTValueFloat(           Tr,                     -1),

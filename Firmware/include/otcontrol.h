@@ -124,8 +124,8 @@ public:
     void setConfig(JsonObject &config);
     void setDhwTemp(const double temp);
     void setChTemp(const double temp, const uint8_t channel);
-    void setChCtrlMode(const ChannelControlMode mode, const uint8_t channel);
-    void setDhwCtrlMode(const ChannelControlMode mode);
+    void setChCtrlMode(const HADiscovery::ClimateMode mode, const uint8_t channel);
+    void setDhwCtrlMode(const HADiscovery::ClimateMode mode);
     bool sendDiscovery();
     bool sendCapDiscoveries();
     void forceFlowCalc(const uint8_t channel);
@@ -135,10 +135,12 @@ public:
     void setOverrideChFlow(const bool ovrd, const uint8_t channel);
     void setOverrideDhw(const bool ovrd);
     void setMaxMod(const int mm);
-    void setRoomComp(const bool en, const uint8_t channel);
+    void setRoomMode(const HADiscovery::ClimateMode mode, const uint8_t channel);
     void setFlowMin(const double flowMin, const uint8_t channel);
     void setBypass(const bool bypass);
     bool getFlame() const;
+    bool getDhwActive() const;
+    bool getChActive(const uint8_t channel) const;
 };
 
 extern OTControl otcontrol;

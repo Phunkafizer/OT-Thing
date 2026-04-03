@@ -4,6 +4,7 @@ import os
 import time
 import webbrowser
 import requests
+import minify_html
 from serial.tools import list_ports
 Import("env")
 import esptool
@@ -121,13 +122,20 @@ mcu = board.get("build.mcu", "esp32") # works for ESP8266 and ESP32
 
 def copy_html():
     print("Creating html.h from index.html");
-    with open(os.path.join(env["PROJECT_DATA_DIR"], "index.html"), "r") as fin:
-        with open(os.path.join(env["PROJECT_DIR"], "include/html.h"), "w") as fout:
+    with open(os.path.join(env["PROJECT_DATA_DIR"], "index.html"), "r", encoding="utf-8") as fin:
+        content = fin.read()
+        if (env["PIOENV"] == "release"):
+            print("minify html");
+            content = minify_html.minify(
+                content,
+                minify_js=True,
+                minify_css=True,
+            )
+        with open(os.path.join(env["PROJECT_DIR"], "include/html.h"), "w", encoding="utf-8") as fout:
             fout.write('const char html[] PROGMEM = R"html(')
-            for line in fin:
-                fout.write(line)
+            fout.write(content)
             fout.write('\n)html";')
-    
+            
 def post_build(source, target, env):
     print("Version: " + env.GetProjectOption("custom_version"))
     print("project dir: " + env["PROJECT_DIR"])

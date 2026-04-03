@@ -3,6 +3,7 @@
 #include "ArduinoJson.h"
 #include "heatingcurve.h"
 #include "sensors.h"
+#include "HADiscLocal.h"
 
 template <typename T1>
 class ChannelOverride {
@@ -11,15 +12,9 @@ public:
     T1 value; // overriden value
 };
 
-enum ChannelControlMode: int8_t {
-    CTRLMODE_UNKNOWN = -1,
-    CTRLMODE_OFF = 0,
-    CTRLMODE_ON = 1,
-    CTRLMODE_AUTO = 2
-};
-
 class CHcontrol {
 private:
+    bool roomCompEnabled() const;
     const uint8_t channel;
     struct {
         double roomSet; // default room set point
@@ -38,7 +33,7 @@ private:
         bool minSuspend;
     } config;
     struct PiCtrl {
-        bool enabled; // enables PI controller
+        HADiscovery::ClimateMode mode {HADiscovery::MODE_AUTO};
         bool init { false };
         double rspPrev; // previous room setpoint
         double integState {0}; // state of integrator / K
@@ -58,18 +53,18 @@ public:
     double getFlow();
     bool getChOn();
     double getFlowMax() const;
-    bool roomCompEnabled() const;
+    
     bool suspendEnabled() const;
     void loop();
     void loopRoomComp();
     void loopReturnLimit();
-    void setMode(const ChannelControlMode mode);
-    void setRoomCompEnabled(const bool en);
-    bool getRoomCompEnabled() const;
+    void setMode(const HADiscovery::ClimateMode mode);
+    void setRoomComp(const HADiscovery::ClimateMode mode);
+    //bool getRoomCompEnabled() const;
     double flowTemp;
     double flowMin;
     ChannelOverride<bool> ovrdOn;
     ChannelOverride<double> ovrdTemp;
-    ChannelControlMode mode {CTRLMODE_AUTO};
+    HADiscovery::ClimateMode mode {HADiscovery::MODE_AUTO};
     static bool overrideEnabled; // set if otMode is master
 };

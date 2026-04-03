@@ -1,12 +1,11 @@
 #include "mqtt.h"
 #include <WiFi.h>
 #include <devstatus.h>
-#include "HADiscLocal.h"
 #include "portal.h"
 #include "sensors.h"
-#include "HADiscLocal.h"
 #include "hwdef.h"
 #include "auxInput.h"
+#include "otcontrol.h"
 
 static struct {
     Mqtt::MqttTopic topic;
@@ -23,8 +22,8 @@ static struct {
     {Mqtt::TOPIC_CHMODE2, "chMode2"},
     {Mqtt::TOPIC_ROOMTEMP1, "roomTemp1"},
     {Mqtt::TOPIC_ROOMTEMP2, "roomTemp2"},
-    {Mqtt::TOPIC_ROOMCOMP1, "roomComp1"},
-    {Mqtt::TOPIC_ROOMCOMP2, "roomComp2"},
+    {Mqtt::TOPIC_ROOMMODE1, "roomMode1"},
+    {Mqtt::TOPIC_ROOMMODE2, "roomMode2"},
     {Mqtt::TOPIC_ROOMSETPOINT1, "roomSetpoint1"},
     {Mqtt::TOPIC_ROOMSETPOINT2, "roomSetpoint2"},
     {Mqtt::TOPIC_OVERRIDECHFLOW1, "overrideChFlow1"},
@@ -160,14 +159,8 @@ void Mqtt::loop() {
     }
 }
 
-ChannelControlMode Mqtt::strToCtrlMode(const String &str) {
-    if (str.compareTo("heat") == 0)
-        return CTRLMODE_ON;
-    if (str.compareTo("auto") == 0)
-        return CTRLMODE_AUTO;
-    if (str.compareTo("off") == 0)
-        return CTRLMODE_OFF;
-    return CTRLMODE_UNKNOWN;
+bool Mqtt::strToBool(const String &str) {
+    return str.compareTo(F("ON")) == 0;
 }
 
 bool Mqtt::publish(String topic, JsonDocument &payload, const bool retain) {
@@ -227,8 +220,8 @@ bool Mqtt::setValue(const String &key, const String &value) {
     }   
 
     case TOPIC_DHWMODE: {
-        ChannelControlMode mode = strToCtrlMode(value);
-        if (mode != CTRLMODE_UNKNOWN)
+        auto mode = haDisc.strToClimateMode(value);
+        if (mode != HADiscovery::MODE_UNKNOWN)
             otcontrol.setDhwCtrlMode(mode);
         break;
     }
@@ -250,8 +243,8 @@ bool Mqtt::setValue(const String &key, const String &value) {
     case TOPIC_CHMODE1:
     case TOPIC_CHMODE2: {
         const uint8_t ch = (uint8_t) (etop - TOPIC_CHMODE1);
-        ChannelControlMode mode = strToCtrlMode(value);
-        if (mode != CTRLMODE_UNKNOWN)
+        auto mode = haDisc.strToClimateMode(value);
+        if (mode != HADiscovery::MODE_UNKNOWN)
             otcontrol.setChCtrlMode(mode, ch);
         break;
     }
@@ -274,25 +267,26 @@ bool Mqtt::setValue(const String &key, const String &value) {
         break;
     }
 
-    case TOPIC_ROOMCOMP1:
-    case TOPIC_ROOMCOMP2: {
-        ChannelControlMode mode = strToCtrlMode(value);
-        otcontrol.setRoomComp(mode == CTRLMODE_AUTO, (uint8_t) (etop - TOPIC_ROOMCOMP1));
+    case TOPIC_ROOMMODE1:
+    case TOPIC_ROOMMODE2: {
+        auto mode = haDisc.strToClimateMode(value);
+        if (mode != HADiscovery::MODE_UNKNOWN)
+            otcontrol.setRoomMode(mode, (uint8_t) (etop - TOPIC_ROOMMODE1));
         break;
     }
 
     case TOPIC_OVERRIDECHON1:
     case TOPIC_OVERRIDECHON2:
-        otcontrol.setOverrideChOn(value == F("ON"), (uint8_t) (etop - TOPIC_OVERRIDECHON1));
+        otcontrol.setOverrideChOn(strToBool(value), (uint8_t) (etop - TOPIC_OVERRIDECHON1));
         break;
 
     case TOPIC_OVERRIDECHFLOW1:
     case TOPIC_OVERRIDECHFLOW2:
-        otcontrol.setOverrideChFlow(value == F("ON"), (uint8_t) (etop - TOPIC_OVERRIDECHFLOW1));
+        otcontrol.setOverrideChFlow(strToBool(value), (uint8_t) (etop - TOPIC_OVERRIDECHFLOW1));
         break;
 
     case TOPIC_OVERRIDEDHW:
-        otcontrol.setOverrideDhw(value == F("ON"));
+        otcontrol.setOverrideDhw(strToBool(value));
         break;
 
     case TOPIC_VENTSETPOINT: {
@@ -302,7 +296,7 @@ bool Mqtt::setValue(const String &key, const String &value) {
     }
 
     case TOPIC_VENTENABLE:
-        otcontrol.setVentEnable(value == F("ON"));
+        otcontrol.setVentEnable(strToBool(value));
         break;
 
     case TOPIC_OPENBYPASS:
@@ -321,7 +315,7 @@ bool Mqtt::setValue(const String &key, const String &value) {
     }
 
     case TOPIC_BYPASS:
-        otcontrol.setBypass(value == F("ON"));
+        otcontrol.setBypass(strToBool(value));
         break;
 
     default:
@@ -355,6 +349,10 @@ String Mqtt::getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t
 
     case VALTMPL_HEATING_CIRCUIT:
         result += F(".get('heatercircuit') or [])[#]");
+        break;
+
+    case VALTMPL_DHW:
+        result += F(".get('dhw') or {})");
         break;
     }
 
@@ -398,11 +396,5 @@ String Mqtt::getValueTemplate(const ValueTemplateType vt, PGM_P field, const uin
 String Mqtt::getValueTemplateBool(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit) {
     String result = getValuePath(vt, field, ch, ommit);
     result += F("{{ none if tmp is none else 'ON' if tmp else 'OFF' }}");
-    return result;
-}
-
-String Mqtt::getValueTemplateClimateMode(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit) {
-    String result = getValuePath(vt, field, ch, ommit);
-    result += F("{{ none if tmp is none else 'auto' if tmp == 2 else 'heat' if tmp == 1 else 'off' }}");
     return result;
 }

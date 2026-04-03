@@ -1,4 +1,5 @@
 #pragma once
+
 #include "HADiscovery.h"
 #include "mqtt.h"
 

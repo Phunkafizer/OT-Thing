@@ -147,9 +147,9 @@
             list-style-position: inside;
         }
 
-        input[type=text],
         input[type=password],
         input[type=number],
+        input:not([type]),
         select {
             background-color: #111;
             margin: 5px 0;
@@ -1140,7 +1140,7 @@
                     </div>
                     <div class="selopt">
                         <h5>address</h5>
-                        <input type="text" field="heating.$.roomtemp.adr"/>
+                        <input field="heating.$.roomtemp.adr"/>
                     </div>
                     <div class="selopt">
                         <h5>address</h5>
@@ -1355,7 +1355,7 @@
                     <tbody id="markerbody">
                     </tbody>
                 </table>
-                <input type="text" id="comment" />
+                <input id="comment" />
                 <button onclick="addMarker()">+</button>
             </div>
         </div>
@@ -1366,7 +1366,7 @@
                 <div class="flexline">
                     <div class="param">
                         <h5>Hostname</h5>
-                        <input type="text" value="otthing" field="hostname" />
+                        <input value="otthing" field="hostname" />
                     </div>
                 </div>
                 <button onclick="startWifiScan()">scan</button><span id="scanHint" hidden>Scan running...</span>
@@ -1550,7 +1550,7 @@
                 <div>
                     <div class="param">
                         <h5>Member ID</h5>
-                        <input type="text" field="masterMemberId" intval />
+                        <input field="masterMemberId" intval />
                     </div>
                 </div>
                 <div>
@@ -1620,19 +1620,19 @@
                 <div class="flexline">
                     <div class="param">
                         <h5>Host</h5>
-                        <input type="text" field="mqtt.host"/>
+                        <input field="mqtt.host"/>
                     </div>
                     <div class="param">
                         <h5>Port</h5>
-                        <input type="text" field="mqtt.port" intval/>
+                        <input field="mqtt.port" intval/>
                     </div>
                     <div class="param">
                         <h5>Keep alive</h5>
-                        <input type="text" field="mqtt.keepAlive" intval value="15"/>
+                        <input field="mqtt.keepAlive" intval value="15"/>
                     </div>
                     <div class="param">
                         <h5>HA disc. prefix</h5>
-                        <input type="text" field="haPrefix"/>
+                        <input field="haPrefix"/>
                     </div>
                     <div class="param">
                         <h5>TLS</h5>
@@ -1647,7 +1647,7 @@
                 <div class="flexline">
                     <div class="param">
                         <h5>Username</h5>
-                        <input type="text" field="mqtt.user"/>
+                        <input field="mqtt.user"/>
                     </div>
                     <div class="param">
                         <h5>Password</h5>
@@ -1676,7 +1676,7 @@
                 </div>
                 <div class="selopt">
                     <h5>Address</h5>
-                    <input type="text" field="outsideTemp.adr"/>
+                    <input field="outsideTemp.adr"/>
                 </div>
                 <div class="selopt">
                     <h5>address</h5>
@@ -1687,11 +1687,11 @@
                     <h5>API key</h5>
                     <input type="password" field="outsideTemp.apikey"/>
                     <h5>latitude</h5>
-                    <input type="text" field="outsideTemp.lat" floatval />
+                    <input field="outsideTemp.lat" floatval />
                     <h5>longitude</h5>
-                    <input type="text" field="outsideTemp.lon" floatval />
+                    <input field="outsideTemp.lon" floatval />
                     <h5>interval / s</h5>
-                    <input type="text" field="outsideTemp.interval" intval />
+                    <input field="outsideTemp.interval" intval />
                 </div>
             </div>
 
