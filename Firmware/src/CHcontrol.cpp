@@ -51,13 +51,17 @@ void CHcontrol::getJson(JsonObject &obj) {
     obj[FPSTR(STR_STATKEY_OVERRIDE_TEMP)] = ovrdTemp.active;
     obj[FPSTR(STR_STATKEY_OVERRIDE_ON)] = ovrdOn.active;
 
-    PGM_P modeStr = haDisc.getClimateModeStr(static_cast<HADiscovery::ClimateMode>(mode));
+    PGM_P modeStr = haDisc.getClimateModeStr(mode);
     if (modeStr != nullptr)
-        obj[FPSTR(STR_STATKEY_CTRLMODE)] = FPSTR(modeStr)
-;
+        obj[FPSTR(STR_STATKEY_CTRLMODE)] = FPSTR(modeStr);
+
     obj[FPSTR(STR_STATKEY_ROOMCOMPINTEGRATOR)] = round(roomComp.integState * 10) / 10.0;
     obj[FPSTR(STR_STATKEY_RETURNLIMITINTEGRATOR)] = round(retLimit.integState * 10) / 10.0;
     obj[FPSTR(STR_STATKEY_FLOWMIN)] = flowMin;
+
+    modeStr = haDisc.getClimateModeStr(roomComp.mode);
+    if (modeStr != nullptr)
+        obj[FPSTR(STR_STATKEY_ROOMMODE)] = FPSTR(modeStr);
 
     HADiscovery::ClimateAction action;
     if (getChOn())
@@ -155,7 +159,7 @@ void CHcontrol::setMode(const HADiscovery::ClimateMode mode) {
 
 void CHcontrol::setRoomComp(const HADiscovery::ClimateMode mode) {
     roomComp.mode = mode;
-    if (roomComp.mode != HADiscovery::MODE_AUTO) {
+    if (!roomCompEnabled()) {
         roomComp.integState = 0;
         roomComp.deltaT = 0;
     }   
@@ -166,8 +170,9 @@ double CHcontrol::getFlowMax() const {
 }
 
 bool CHcontrol::roomCompEnabled() const {
-    return roomComp.mode != HADiscovery::MODE_AUTO;
+    return roomComp.mode == HADiscovery::MODE_AUTO;
 }
+
 bool CHcontrol::suspendEnabled() const {
     return config.roomSuspend.enabled || config.minSuspend;
 }

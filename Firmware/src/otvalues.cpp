@@ -340,21 +340,6 @@ bool OTValue::sendDiscovery(String field) {
     }
     String valTmpl = mqtt.getValueTemplate(inSlave ? Mqtt::VALTMPL_SLAVE : Mqtt::VALTMPL_MASTER, fn.c_str());
 
-    /*
-    String valTempl = F("{{ (value_json.");
-    valTempl += inSlave ? F("slave.") : F("thermostat.");
-    valTempl += F(".get('");
-    valTempl += FPSTR(getName());
-    
-    if (field.isEmpty()) 
-        valTempl += F("'))");
-    else {
-        valTempl += F("') or {})");
-        valTempl += '.';
-        valTempl += field;
-    }   
-    valTempl += F(" | default(None) }}");*/
-
     if (interval == 0)
         haDisc.setStateClass("");
 
