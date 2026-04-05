@@ -89,7 +89,7 @@ CONFIG = {
     },
     "outsideTemp": {
         "source": 0,
-        "apikey": "undefined",
+        "apikey": None,
         "lat": None,
         "lon": None,
         "interval": None
@@ -128,8 +128,27 @@ def copy_html():
             print("minify html");
             content = minify_html.minify(
                 content,
-                minify_js=True,
-                minify_css=True,
+                # --- JS / CSS ---
+                minify_js=True,               # minify inline <script> content
+                minify_css=True,              # minify inline <style> and style= attributes
+                minify_doctype=True,         # shorten <!DOCTYPE html> to <!doctype html>
+                # --- Attributes ---
+                keep_input_type_text_attr=True,              # keep type="text" on <input> (default is removed as redundant)
+                allow_noncompliant_unquoted_attribute_values=False,  # allow unquoted attribute values (faster, but non-standard)
+                allow_removing_spaces_between_attributes=False,      # remove spaces between attributes (non-standard)
+                # --- Tags ---
+                keep_closing_tags=False,                # keep optional closing tags e.g. </li>, </td>
+                keep_html_and_head_opening_tags=False,  # keep <html> and <head> opening tags (removed when optional)
+                # --- Comments ---
+                keep_comments=False,          # keep regular HTML comments
+                keep_ssi_comments=False,      # keep SSI comments <!--# ... -->
+                remove_bangs=False,           # remove <!...> declarations (e.g. <!DOCTYPE>)
+                remove_processing_instructions=False,  # remove <?...?> processing instructions
+                # --- Entities ---
+                allow_optimal_entities=False, # use shortest entity representation (may change semantics in edge cases)
+                # --- Template syntax preservation ---
+                preserve_brace_template_syntax=False,          # preserve {{ }}, {% %}, {# #} (Jinja, Handlebars, etc.)
+                preserve_chevron_percent_template_syntax=False, # preserve <% %> (EJS, ERB, JSP, etc.)
             )
         with open(os.path.join(env["PROJECT_DIR"], "include/html.h"), "w", encoding="utf-8") as fout:
             fout.write('const char html[] PROGMEM = R"html(')
