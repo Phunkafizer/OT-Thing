@@ -1200,12 +1200,17 @@ void OTControl::setConfig(JsonObject &config) {
     }
 
     OTMode mode = OTMODE_BYPASS;
-    bool ens = config[F("enableSlave")] | false;
-    ens |= (mode == OTMODE_REPEATER) || (mode == OTMODE_LOOPBACKTEST);
     if (config[F("otMode")].is<JsonInteger>())
         mode = (OTMode) (int) config[F("otMode")];
+    bool ens = config[F("enableSlave")] | false;
+    ens |= (mode == OTMODE_REPEATER) || (mode == OTMODE_LOOPBACKTEST);
     if (!init || (mode != otMode) || (ens != enableSlave)) {
         enableSlave = ens;
+        Serial.print("Setting OT Mode to ");
+        Serial.println((int) mode);
+        Serial.print("Enable Slave: ");
+        Serial.println(enableSlave);
+
         setOTMode(mode);
         discFlag = false;
     }
