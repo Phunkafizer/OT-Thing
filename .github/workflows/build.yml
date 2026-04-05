@@ -40,9 +40,24 @@ jobs:
         working-directory: Firmware
         run: pio run -e release
 
-      - name: Upload firmware artifact
-        uses: actions/upload-artifact@v4
+      - name: Read version from platformio.ini
+        if: github.event_name == 'push'
+        id: version
+        run: |
+          VERSION=$(grep -oP '(?<=custom_version = ).*' Firmware/platformio.ini | tr -d '[:space:]')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if echo "$VERSION" | grep -qi '\-RC'; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
         with:
-          name: firmware-release
-          path: Firmware/.pio/build/release/firmware.bin
-          if-no-files-found: error
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          prerelease: ${{ steps.version.outputs.prerelease }}
+          files: Firmware/.pio/build/release/firmware.bin
+          fail_on_unmatched_files: true
