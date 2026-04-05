@@ -13,6 +13,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -51,14 +53,6 @@ jobs:
           else
             echo "prerelease=false" >> $GITHUB_OUTPUT
           fi
-
-      - name: Create and push tag
-        if: github.event_name == 'push'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -f v${{ steps.version.outputs.version }}
-          git push origin -f v${{ steps.version.outputs.version }}
 
       - name: Create GitHub Release
         if: github.event_name == 'push'

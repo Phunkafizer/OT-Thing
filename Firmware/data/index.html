@@ -3234,6 +3234,13 @@
                     catch (err) {
                     }
 
+                    if (statuscache.fw_version !== undefined) {
+                        if (fetchStatus._fwVersion === undefined)
+                            fetchStatus._fwVersion = statuscache.fw_version;
+                        else if (fetchStatus._fwVersion !== statuscache.fw_version)
+                            location.reload();
+                    }
+
                     consumeStatusCache();
                     setTimeout(fetchStatus, 5000);
                 };
