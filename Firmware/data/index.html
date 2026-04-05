@@ -1384,7 +1384,7 @@
                         </tbody>
                     </table>
                     <h5>SSID</h5>
-                    <input id="wifissid" type="text"/>
+                    <input id="wifissid" />
                     <h5>Passwort</h5>
                     <input id="wifipass" type="password"/>
                     <div><button onclick="saveWifi()">connect</button></div>
@@ -2901,7 +2901,7 @@
             }
 
             function updateUi(root=document) {
-                __('input[type="text"], input[type="password"]', root).forEach(ele => {
+                __('input:not([type]), input[type="password"]', root).forEach(ele => {
                     if (!ele.hasAttribute('field') || ele.hidden)
                         return;
 
@@ -2965,7 +2965,7 @@
             }
 
             function initUi() {
-                __('input[type="text"], input[type="password"]').forEach(ele => {
+                __('input:not([type]), input[type="password"]').forEach(ele => {
                     if (!ele.hasAttribute('field'))
                         return;
 

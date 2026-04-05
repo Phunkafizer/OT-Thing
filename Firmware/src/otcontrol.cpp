@@ -1199,12 +1199,21 @@ void OTControl::setConfig(JsonObject &config) {
         yield();
     }
 
+    OTMode mode = OTMODE_BYPASS;
+    bool ens = config[F("enableSlave")] | false;
+    ens |= (mode == OTMODE_REPEATER) || (mode == OTMODE_LOOPBACKTEST);
+    if (config[F("otMode")].is<JsonInteger>())
+        mode = (OTMode) (int) config[F("otMode")];
+    if (!init || (mode != otMode) || (ens != enableSlave)) {
+        enableSlave = ens;
+        setOTMode(mode);
+        discFlag = false;
+    }
 
     for (int i=0; i<NUM_HEATCIRCUITS; i++) {
         JsonObject obj = config[F("heating")][i];
         chcontrol[i].setConfig(obj, init);
     }
-        
 
     JsonObject ventObj = config[F("vent")];
     ventCtrl.ventEnable = ventObj["ventEnable"] | false;
@@ -1226,17 +1235,6 @@ void OTControl::setConfig(JsonObject &config) {
     masterMemberId = config[F("masterMemberId")] | 22;
 
     slaveApp = (SlaveApplication) ((int) config[F("slaveApp")] | 0);
-
-    OTMode mode = OTMODE_BYPASS;
-    bool ens = config[F("enableSlave")] | false;
-    ens |= (mode == OTMODE_REPEATER) || (mode == OTMODE_LOOPBACKTEST);
-    if (config[F("otMode")].is<JsonInteger>())
-        mode = (OTMode) (int) config[F("otMode")];
-    if (init || (mode != otMode) || (ens != enableSlave)) {
-        enableSlave = ens;
-        setOTMode(mode);
-        discFlag = false;
-    }
 
     setDhwRequest.force();
     setBoilerRequest[0].force();
