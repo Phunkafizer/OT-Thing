@@ -1736,8 +1736,8 @@
                 </form>
                 <input id="restore_file" type="file" accept=".json" style="display: none;">
                 <div>
-                    <button onclick="checkFirmwareUpdate()">Check for update</button>
-                    <button onclick="installFirmwareUpdate()" disabled>-</button>
+                    <button id="checkbtn" onclick="checkFirmwareUpdate(this)">Check for update</button>
+                    <button id="installbtn" onclick="installFirmwareUpdate(this)" disabled>-</button>
                 </div>
             </div>
         </div>
@@ -2617,11 +2617,11 @@
                 });
         };
 
-        function checkFirmwareUpdate() {
-            _("#checkbtn").disabled = true;
+        function checkFirmwareUpdate(ele) {
+            ele.disabled = true;
             _("#installbtn").innerText = "checking...";
             _("#installbtn").disabled = true;
-            fetch("/checkupdate");
+            fetch("/checkupdate", {method: 'POST'});
         };
 
         function installFirmwareUpdate() {

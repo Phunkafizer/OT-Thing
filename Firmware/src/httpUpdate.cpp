@@ -1,6 +1,7 @@
 #include "httpUpdate.h"
 #include <Update.h>
 #include <ArduinoJson.h>
+#include <WiFi.h>
 #include "esp_task_wdt.h"
 #include "otcontrol.h"
 
@@ -10,9 +11,13 @@ void HttpUpdate::checkUpdate() {
     if (updating)
         return;
 
+    if (!WiFi.isConnected())
+        return;
+
     fwUrl.clear();
     newFw.clear();
 
+    WiFiClientSecure client;
     client.setInsecure();
     HTTPClient https;
     https.begin(client, PSTR(RELEASE_REPO));
@@ -47,6 +52,7 @@ bool HttpUpdate::getNewFw(String &version) {
 }
 
 void HttpUpdate::update() {
+    Serial.println(F("Starting update"));
     if (updating)
         return;
 
@@ -56,10 +62,16 @@ void HttpUpdate::update() {
     if (fwUrl.isEmpty())
         return;
 
+    Serial.println(F("Downloading from: "));
+    Serial.println(fwUrl);
+
+    WiFiClientSecure client;
+    client.setInsecure();
     https.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
     https.begin(client, fwUrl);
     int code = https.GET();
     if (code != HTTP_CODE_OK) {
+        Serial.println(F("Failed to download update"));
         https.end();
         updating = false;
         return;
@@ -67,6 +79,7 @@ void HttpUpdate::update() {
 
     int len = https.getSize();
     if (!Update.begin(len)) {
+        Serial.println(F("Not enough space for update"));
         https.end();
         updating = false;
         return;

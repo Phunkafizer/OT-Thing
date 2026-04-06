@@ -5,7 +5,6 @@
 
 class HttpUpdate {
 private:
-    WiFiClientSecure client;
     bool checked {false};
     String newFw;
     String fwUrl;
