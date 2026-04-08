@@ -5,10 +5,12 @@ on:
     branches:
       - master
       - main
+      - develop
   pull_request:
     branches:
       - master
       - main
+      - develop
 
 jobs:
   build:
@@ -20,14 +22,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          fetch-tags: true
           submodules: recursive
 
+      - name: Check if version tag already exists
+        id: tagcheck
+        run: |
+          VERSION=$(grep -oP '(?<=custom_version = ).*' Firmware/platformio.ini | tr -d '[:space:]')
+          TAG="v${VERSION}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          if git ls-remote --tags origin "$TAG" | grep -q "$TAG"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag $TAG already exists — skipping build."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Set up Python
+        if: steps.tagcheck.outputs.exists == 'false'
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
       - name: Cache PlatformIO packages
+        if: steps.tagcheck.outputs.exists == 'false'
         uses: actions/cache@v4
         with:
           path: ~/.platformio
@@ -36,14 +54,16 @@ jobs:
             ${{ runner.os }}-pio-
 
       - name: Install PlatformIO and Python dependencies
+        if: steps.tagcheck.outputs.exists == 'false'
         run: pip install platformio minify-html requests esptool
 
       - name: Build release firmware
+        if: steps.tagcheck.outputs.exists == 'false'
         working-directory: Firmware
         run: pio run -e release
 
       - name: Read version from platformio.ini
-        if: github.event_name == 'push'
+        if: steps.tagcheck.outputs.exists == 'false' && github.event_name == 'push'
         id: version
         run: |
           VERSION=$(grep -oP '(?<=custom_version = ).*' Firmware/platformio.ini | tr -d '[:space:]')
@@ -55,7 +75,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        if: github.event_name == 'push'
+        if: steps.tagcheck.outputs.exists == 'false' && github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
