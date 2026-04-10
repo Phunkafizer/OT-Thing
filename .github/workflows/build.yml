@@ -63,3 +63,11 @@ jobs:
           prerelease: ${{ steps.version.outputs.prerelease }}
           files: Firmware/.pio/build/release/firmware.bin
           fail_on_unmatched_files: true
+
+      - name: Notify server to pull firmware
+        if: github.event_name == 'push'
+        run: |
+          curl -fsS \
+            -X POST \
+            -H "X-Webhook-Token: ${{ secrets.WEBHOOK_SECRET }}" \
+            https://otthing.seegel-systeme.de/update_firmware.php

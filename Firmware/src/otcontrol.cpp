@@ -1206,11 +1206,6 @@ void OTControl::setConfig(JsonObject &config) {
     ens |= (mode == OTMODE_REPEATER) || (mode == OTMODE_LOOPBACKTEST);
     if (!init || (mode != otMode) || (ens != enableSlave)) {
         enableSlave = ens;
-        Serial.print("Setting OT Mode to ");
-        Serial.println((int) mode);
-        Serial.print("Enable Slave: ");
-        Serial.println(enableSlave);
-
         setOTMode(mode);
         discFlag = false;
     }

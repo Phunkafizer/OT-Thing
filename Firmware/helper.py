@@ -1,5 +1,3 @@
-import shutil
-import gzip
 import os
 import time
 import webbrowser
@@ -163,7 +161,7 @@ def post_build(source, target, env):
 def before_upload(source, target, env):
     devices = list_ports.comports()
     for d in devices:
-        if (d.vid == 12346) and (d.pid == 4097):
+        if (d.vid == 0x303A) and (d.pid == 0x1001):
             env.Replace(UPLOAD_PORT=d[0])
             break
 

@@ -7,7 +7,6 @@ class HttpUpdate {
 private:
     bool checked {false};
     String newFw;
-    String fwUrl;
     bool updating {false};
 public:
     void checkUpdate();
