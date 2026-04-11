@@ -429,6 +429,50 @@
             overflow: auto;
         }
 
+        .toast-container {
+            position: fixed;
+            right: 12px;
+            bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 3000;
+            max-width: min(92vw, 420px);
+            pointer-events: none;
+        }
+
+        .toast {
+            background-color: #111;
+            color: #fff;
+            border: 1px solid #fd975a;
+            border-left: 5px solid #fd975a;
+            border-radius: 6px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+            padding: 8px 10px;
+            font-size: 0.85em;
+            white-space: pre-line;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.18s ease, transform 0.18s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.success {
+            border-left-color: #1b9e3d;
+        }
+
+        .toast.warning {
+            border-left-color: #f0ad00;
+        }
+
+        .toast.error {
+            border-left-color: #d33;
+        }
+
         /* Responsive columns */
         @media (min-width: 600px) {
             div.statusfield {
@@ -1726,6 +1770,9 @@
                 </select>
                 
                 <h4>Firmware</h4>
+                <div style="margin: 0.2em 0 0.6em 0; font-size: 0.8em;">
+                    <a href="https://github.com/Phunkafizer/OT-Thing/releases/latest" target="_blank" rel="noopener noreferrer">Latest release on GitHub</a>
+                </div>
                 <form id="form_upload" method='POST' enctype='multipart/form-data'>
                     <input id="inp_file" type='file' accept='.bin,.bin.gz' name='firmware'>
                     <input id="btn_upload" type='submit' value='upload'>
@@ -1735,10 +1782,6 @@
                     </div>
                 </form>
                 <input id="restore_file" type="file" accept=".json" style="display: none;">
-                <div>
-                    <button id="checkbtn" onclick="checkFirmwareUpdate(this)">Check for update</button>
-                    <button id="installbtn" onclick="installFirmwareUpdate(this)" disabled>-</button>
-                </div>
             </div>
         </div>
         <div class="tab" id="log">
@@ -1753,7 +1796,7 @@
         <div class="toolbar">
             <button onclick="saveConfig()">save</button>
             <button onclick="importConfig()">import config</button>
-            <div>
+            <div style="display:flex; align-items:center; gap:0.4em;">
                 <button onclick="exportItem()">export</button>
                 <select id="selExport">
                     <option>config</option>
@@ -1777,6 +1820,7 @@
             </div>
         </div>
     </div>
+    <div id="toastContainer" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
     <script>
         const 
         CURVE_MODE_SIMPLE = 0,
@@ -1917,6 +1961,29 @@
             Object.assign(result, props);
             result.append(...children);
             return result;
+        }
+
+        function showToast(message, type = "info", timeoutMs = 3500) {
+            const container = _("#toastContainer");
+            if (!container)
+                return;
+
+            const toast = _$("div", {
+                className: `toast ${type}`,
+                textContent: String(message)
+            });
+            container.append(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.add("show");
+            });
+
+            setTimeout(() => {
+                toast.classList.remove("show");
+                setTimeout(() => {
+                    toast.remove();
+                }, 220);
+            }, timeoutMs);
         }
 
         function getNumCurvePoints() {
@@ -2480,7 +2547,7 @@
         function saveConfig() {
             let xhr = new XMLHttpRequest();
             xhr.onload = (ev) => {
-                alert("configuration saved successfully");
+                showToast("configuration saved successfully", "success");
             };
             xhr.open("POST", "config");
             xhr.setRequestHeader("Content-Type", "application/json");
@@ -2488,15 +2555,20 @@
         };
 
         function reboot() {
-            fetch("/reboot");
-            //let xhr = new XMLHttpRequest();
-            //xhr.open("GET", "/reboot");
-            //xhr.send("");
+            fetch("/reboot")
+                .then((resp) => {
+                    if (!resp.ok)
+                        throw new Error("HTTP " + resp.status);
+                    showToast("reboot requested, device will restart shortly", "success", 4500);
+                })
+                .catch((err) => {
+                    showToast("Error requesting reboot:\n" + err.message, "error", 5000);
+                });
         };
 
         function addMarker() {
             if (statuscache.outsideTemp == null) {
-                alert("No outside temperature available!");
+                showToast("No outside temperature available!", "warning");
                 return;
             }
             let heatCfg = config.heating[currentCh];
@@ -2582,7 +2654,7 @@
                     exportJson(data, "ot_items");
                 })
                 .catch(err => {
-                    alert("Error exporting OT items:\n" + err.message);
+                    showToast("Error exporting OT items:\n" + err.message, "error", 5000);
                 });
         }
 
@@ -2615,19 +2687,6 @@
                 .catch(err => {
                     _("#modalBody").textContent = "Error:\n" + err.message;
                 });
-        };
-
-        function checkFirmwareUpdate(ele) {
-            ele.disabled = true;
-            _("#installbtn").innerText = "checking...";
-            _("#installbtn").disabled = true;
-            fetch("/checkupdate", {method: 'POST'});
-        };
-
-        function installFirmwareUpdate() {
-            _("#installbtn").disabled = true;
-            _("#installbtn").innerText = "installing...";
-            fetch("/install", {method: 'POST'});
         };
 
         // copy simplecurve to multipoint curve
@@ -2745,7 +2804,7 @@
                             Object.assign(statuscache, status);
                             consumeStatusCache();
                         } catch (error) {
-                            alert("Invalid JSON file: " + error.message);
+                            showToast("Invalid JSON file: " + error.message, "error", 5000);
                         }
                     };
                     reader.readAsText(file);
@@ -3136,18 +3195,6 @@
                     });
                 }
 
-                if ('new_fw' in statuscache) {
-                    if (statuscache['new_fw'] == "") {
-                        _("#installbtn").disabled = true;
-                        _("#installbtn").innerText = "no update";
-                        _("#checkbtn").disabled = false;
-                    }
-                    else {
-                        _("#installbtn").disabled = false;
-                        _("#installbtn").innerText = "install " + statuscache['new_fw'];
-                    }
-                }
-
                 updateStatusValues();
 
                 __(".mqttbasetopic").forEach((ele) => {
@@ -3265,7 +3312,7 @@
                             Object.assign(config, restoredConfig);
                             updateUi();
                         } catch (error) {
-                            alert("Invalid JSON file: " + error.message);
+                            showToast("Invalid JSON file: " + error.message, "error", 5000);
                         }
                     };
                     reader.readAsText(file);

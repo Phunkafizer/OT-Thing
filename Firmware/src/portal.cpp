@@ -10,7 +10,6 @@
 #include "html.h"
 #include "otcontrol.h"
 #include "otvalues.h"
-#include "httpUpdate.h"
 
 static const char APP_JSON[] PROGMEM = "application/json";
 static const IPAddress apAddress(4, 3, 2, 1);
@@ -122,10 +121,6 @@ void Portal::begin(bool configMode) {
     });
 
     websrv.on(PSTR("/status"), HTTP_GET, [this](AsyncWebServerRequest *request) {
-        if (httpupdate.isUpdating()) {
-            request->send(503);
-            return;
-        }
         JsonDocument doc;
         devstatus.buildDoc(doc);
         AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));
@@ -134,10 +129,6 @@ void Portal::begin(bool configMode) {
     });
 
     websrv.on(PSTR("/otitems"), HTTP_GET, [this](AsyncWebServerRequest *request) {
-        if (httpupdate.isUpdating()) {
-            request->send(503);
-            return;
-        }
         JsonDocument doc;
         JsonObject jSlave = doc[FPSTR(STR_STATKEY_SLAVE)].to<JsonObject>();
             for (auto *valobj: slaveValues)
@@ -161,7 +152,7 @@ void Portal::begin(bool configMode) {
         [this] (AsyncWebServerRequest *request) { // onRequest handler
             int httpRes;
 
-            if (!this->updateEnable || httpupdate.isUpdating()) {
+            if (!this->updateEnable) {
                 httpRes = 503; // service unavailable
             }
             else {
@@ -176,7 +167,7 @@ void Portal::begin(bool configMode) {
             request->send(response);
         },
         [this] (AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len, bool final) { // onUpdate handler
-            if (!this->updateEnable || httpupdate.isUpdating())
+            if (!this->updateEnable)
                 return;
 
             if (!index)
@@ -229,16 +220,6 @@ void Portal::begin(bool configMode) {
             request->send(503);
     });
 
-    websrv.on(PSTR("/checkupdate"), HTTP_POST, [this](AsyncWebServerRequest *request) {
-        this->checkUpdate = true;
-        request->send(200);
-    });
-
-    websrv.on(PSTR("/install"), HTTP_POST, [this](AsyncWebServerRequest *request) {
-        this->doUpdate = true;
-        request->send(200);
-    });
-
     websrv.on(PSTR("/topics"), HTTP_GET, [this](AsyncWebServerRequest *request) {
         String list;
         for (uint8_t topic = Mqtt::TOPIC_OUTSIDETEMP; topic < Mqtt::TOPIC_UNKNOWN; topic++) {
@@ -265,16 +246,6 @@ void Portal::loop() {
     if (reboot) {
         delay(500);
         ESP.restart();
-    }
-
-    if (checkUpdate) {
-        checkUpdate = false;
-        httpupdate.checkUpdate();
-    }
-
-    if (doUpdate) {
-        doUpdate = false;
-        httpupdate.update();
     }
 
     ws.cleanupClients();

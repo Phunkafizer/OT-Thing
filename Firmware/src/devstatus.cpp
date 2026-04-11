@@ -4,7 +4,6 @@
 #include "mqtt.h"
 #include "otcontrol.h"
 #include "sensors.h"
-#include "httpUpdate.h"
 #include "auxInput.h"
 #include <NimBLEDevice.h>
 
@@ -56,10 +55,6 @@ void DevStatus::unlock() {
     doc[F("USB_connected")] = Serial.isConnected();
     doc[F("reset_reason0")] = rtc_get_reset_reason(0);
     doc[F("numWifiDisc")] = numWifiDiscon;
-
-    String newFw;
-    if (httpupdate.getNewFw(newFw))
-        doc[F("new_fw")] = newFw;
 
     struct tm timeinfo;
     if (getLocalTime(&timeinfo, 0)) {
