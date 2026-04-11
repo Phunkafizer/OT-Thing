@@ -320,8 +320,19 @@
             text-decoration: none;
         }
 
-        #scanHint {
-            padding: 5px;
+        .firmware-release-link {
+            margin: 0.2em 0 0.6em 0;
+            font-size: 0.8em;
+        }
+
+        .firmware-release-link a,
+        .firmware-release-link a:visited {
+            color: #fd975a;
+            text-decoration: underline;
+        }
+
+        .firmware-release-link a:hover {
+            color: #fff;
         }
 
         #stickydiv {
@@ -1413,7 +1424,7 @@
                         <input value="otthing" field="hostname" />
                     </div>
                 </div>
-                <button onclick="startWifiScan()">scan</button><span id="scanHint" hidden>Scan running...</span>
+                <button id="scanbtn" onclick="startWifiScan()">scan</button>
                 <div id="scanResults" hidden>
                     <table>
                         <thead>
@@ -1770,7 +1781,7 @@
                 </select>
                 
                 <h4>Firmware</h4>
-                <div style="margin: 0.2em 0 0.6em 0; font-size: 0.8em;">
+                <div class="firmware-release-link">
                     <a href="https://github.com/Phunkafizer/OT-Thing/releases/latest" target="_blank" rel="noopener noreferrer">Latest release on GitHub</a>
                 </div>
                 <form id="form_upload" method='POST' enctype='multipart/form-data'>
@@ -1945,7 +1956,8 @@
         statuscache = {},
         roomsetpoint = [21, 21], // used for drawing curve
         currentCh = 0,
-        autoscroll = true;
+        autoscroll = true,
+        wifiScanRunning = false;
 
 
         function _(query, root = document) {
@@ -1963,7 +1975,7 @@
             return result;
         }
 
-        function showToast(message, type = "info", timeoutMs = 3500) {
+        function showToast(message, type = "info", timeoutMs = 3500, onClose = null) {
             const container = _("#toastContainer");
             if (!container)
                 return;
@@ -1982,6 +1994,8 @@
                 toast.classList.remove("show");
                 setTimeout(() => {
                     toast.remove();
+                    if (typeof onClose === "function")
+                        onClose();
                 }, 220);
             }, timeoutMs);
         }
@@ -2525,9 +2539,14 @@
 
         // scan button
         function startWifiScan() {
+            if (wifiScanRunning)
+                return;
+
+            wifiScanRunning = true;
+            _("#scanbtn").disabled = true;
             _("#scanResults").hidden = true;
-            _("#scanHint").hidden = false;
             _("#scanbody").innerHTML = "";
+            showToast("Scan running...", "info", 2500);
             scanWiFi();
         }
 
@@ -2559,7 +2578,9 @@
                 .then((resp) => {
                     if (!resp.ok)
                         throw new Error("HTTP " + resp.status);
-                    showToast("reboot requested, device will restart shortly", "success", 4500);
+                    showToast("reboot requested, device will restart shortly", "success", 4500, () => {
+                        location.reload();
+                    });
                 })
                 .catch((err) => {
                     showToast("Error requesting reboot:\n" + err.message, "error", 5000);
@@ -2733,6 +2754,7 @@
 
         function scanWiFi() {
             let xhr = new XMLHttpRequest();
+            xhr.timeout = 15000;
             xhr.onload = (e) => {
                 let scanObj = JSON.parse(e.target.responseText);
                 if (scanObj.status < 0) {
@@ -2741,7 +2763,11 @@
                 }
 
                 _("#scanResults").hidden= false;
-                _("#scanHint").hidden = true;
+                wifiScanRunning = false;
+                _("#scanbtn").disabled = false;
+
+                const numResults = scanObj.results?.length ?? 0;
+                showToast(`Scan finished: ${numResults} network(s) found`, "success", 3500);
 
                 scanObj.results.forEach(element => {
                     _("#scanbody").append(
@@ -2760,6 +2786,18 @@
                         )
                     );
                 });
+            };
+
+            xhr.onerror = () => {
+                wifiScanRunning = false;
+                _("#scanbtn").disabled = false;
+                showToast("WiFi scan failed", "error", 4000);
+            };
+
+            xhr.ontimeout = () => {
+                wifiScanRunning = false;
+                _("#scanbtn").disabled = false;
+                showToast("WiFi scan timeout", "error", 4000);
             };
             
             xhr.open("GET", "scan");    

@@ -13,7 +13,27 @@ on:
       - develop
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      platformio_ini: ${{ steps.filter.outputs.platformio_ini }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed files
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            platformio_ini:
+              - 'Firmware/platformio.ini'
+
   build:
+    needs: changes
+    if: needs.changes.outputs.platformio_ini == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
