@@ -1,5 +1,8 @@
 import os
-import minify_html
+try:
+    import minify_html
+except ImportError:
+    minify_html = None
 Import("env")
 
 
@@ -16,7 +19,7 @@ def copy_html():
     print("Creating html.h from index.html");
     with open(os.path.join(env["PROJECT_DATA_DIR"], "index.html"), "r", encoding="utf-8") as fin:
         content = fin.read()
-        if env["PIOENV"] in ("release", "production"):
+        if env["PIOENV"] in ("release", "production") and minify_html is not None:
             print("minify html");
             content = minify_html.minify(
                 content,
@@ -42,6 +45,8 @@ def copy_html():
                 preserve_brace_template_syntax=False,          # preserve {{ }}, {% %}, {# #} (Jinja, Handlebars, etc.)
                 preserve_chevron_percent_template_syntax=False, # preserve <% %> (EJS, ERB, JSP, etc.)
             )
+        elif env["PIOENV"] in ("release", "production"):
+            print("minify_html not installed, skipping HTML minification")
         with open(os.path.join(env["PROJECT_DIR"], "include/html.h"), "w", encoding="utf-8") as fout:
             fout.write('const char html[] PROGMEM = R"html(')
             fout.write(content)
