@@ -61,7 +61,11 @@ jobs:
         if: steps.tagcheck.outputs.exists == 'false'
         run: |
           python -m pip install --upgrade pip
-          python -m pip install platformio minify-html
+          python -m pip install platformio
+          # Initialize PlatformIO to create its virtual environment
+          pio --version
+          # Install minify-html into PlatformIO's Python environment
+          ~/.platformio/penv/bin/python -m pip install minify-html
 
       - name: Build release firmware
         if: steps.tagcheck.outputs.exists == 'false'
