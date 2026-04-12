@@ -26,9 +26,33 @@
         }
 
         h2 {
-            background-color: #fd975a;
-            color: #000;
-            padding: 10px;
+            padding: 10px 12px;
+        }
+
+        #title {
+            position: relative;
+            display: block;
+            border: 1px solid #e08a58;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #ffb282 0%, #fd975a 45%, #c96f3f 100%);
+            color: #1a0c06;
+            font-size: 1.35em;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            text-shadow: 0 1px 0 rgba(255, 230, 210, 0.35);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 0 12px rgba(253, 151, 90, 0.25);
+            cursor: pointer;
+        }
+
+        #title::after {
+            content: "OpenTherm Controller";
+            display: block;
+            margin-top: 2px;
+            font-size: 0.48em;
+            letter-spacing: 0.2em;
+            font-weight: 600;
+            opacity: 0.9;
+            color: #2a1208;
         }
 
         div.nav {
