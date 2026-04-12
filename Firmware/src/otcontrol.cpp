@@ -1199,7 +1199,7 @@ void OTControl::setConfig(JsonObject &config) {
         yield();
     }
 
-    OTMode mode = OTMODE_BYPASS;
+    OTMode mode = OTMODE_LOOPBACKTEST;
     if (config[F("otMode")].is<JsonInteger>())
         mode = (OTMode) (int) config[F("otMode")];
     bool ens = config[F("enableSlave")] | false;
