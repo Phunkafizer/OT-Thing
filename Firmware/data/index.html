@@ -10,32 +10,93 @@
         * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-main: #1d1f24;
+            --bg-panel: #15171b;
+            --bg-card: #101216;
+            --bg-card-soft: #181c22;
+            --text-main: #f3ede4;
+            --text-muted: #d8c6b2;
+            --accent: #ff9955;
+            --accent-deep: #d8641e;
+            --accent-soft: #ffbc83;
+            --ok: #44b36f;
+            --warn: #e59a2f;
+            --err: #d64f4f;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-soft: 0 10px 24px rgba(0, 0, 0, 0.34);
+            --shadow-glow: 0 0 0 1px rgba(255, 153, 85, 0.22), 0 8px 24px rgba(216, 100, 30, 0.18);
+            --space-1: 6px;
+            --space-2: 10px;
+            --space-3: 14px;
+            --space-4: 18px;
+        }
+
+        body[data-tab="status"] {
+            --accent: #ff9955;
+            --accent-deep: #d8641e;
+            --accent-soft: #ffbc83;
+        }
+
+        body[data-tab="setup"] {
+            --accent: #47b7a9;
+            --accent-deep: #2a8c80;
+            --accent-soft: #8be0d6;
+        }
+
+        body[data-tab="heatingcurve"] {
+            --accent: #e0a53a;
+            --accent-deep: #b57b17;
+            --accent-soft: #f5ca7b;
+        }
+
+        body[data-tab="log"] {
+            --accent: #6ca8e8;
+            --accent-deep: #3f78b9;
+            --accent-soft: #9cc9f8;
         }
 
         body {
-            background-color: #210;
-            color: #fd975a;
-            font-family: sans-serif;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 20% 15%, rgba(255, 153, 85, 0.2), rgba(255, 153, 85, 0) 40%),
+                radial-gradient(circle at 80% 0%, rgba(255, 216, 170, 0.11), rgba(255, 216, 170, 0) 38%),
+                linear-gradient(165deg, #23262d 0%, #191b20 45%, #121318 100%);
+            color: var(--text-main);
+            font-family: "Trebuchet MS", "Gill Sans", "Segoe UI", sans-serif;
+            line-height: 1.42;
+            letter-spacing: 0.01em;
+            font-size: 15px;
+            padding: var(--space-2);
         }
 
         #mainwrapper {
-            max-width: 400px;
-            margin: 0px auto;
-            background-color: black;
-            padding: 5px;
+            max-width: 430px;
+            margin: 0 auto;
+            background: linear-gradient(180deg, rgba(21, 23, 27, 0.95), rgba(16, 18, 22, 0.97));
+            border: 1px solid rgba(255, 153, 85, 0.28);
+            border-radius: var(--radius-lg);
+            padding: var(--space-2);
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(4px);
         }
 
         h2 {
-            padding: 10px 12px;
+            padding: 11px 12px;
+            line-height: 1.2;
         }
 
         #title {
             position: relative;
             display: block;
             overflow: hidden;
-            border: 1px solid #e08a58;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #ffc29a 0%, #fd975a 38%, #cf7748 78%, #9d4f2e 100%);
+            border: 1px solid rgba(87, 34, 12, 0.45);
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ffd1ad 0%, #ff9955 38%, #cf6d35 78%, #9d4f2e 100%);
             background-size: 160% 160%;
             color: #1a0c06;
             font-size: 1.42em;
@@ -44,10 +105,14 @@
             text-shadow: 0 1px 0 rgba(255, 230, 210, 0.45), 0 2px 8px rgba(80, 32, 11, 0.25);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -10px 20px rgba(88, 30, 7, 0.18), 0 0 14px rgba(253, 151, 90, 0.28);
             cursor: pointer;
-            margin-bottom: 8px;
-            transition: transform 0.22s ease, box-shadow 0.22s ease;
-            animation: titleGradientShift 8s ease-in-out infinite;
+            margin-bottom: 10px;
+            transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s ease;
+            animation: titleGradientShift 14s ease-in-out infinite;
             padding-right: 120px;
+        }
+
+        .title-thing {
+            text-transform: lowercase;
         }
 
         #titleVersion {
@@ -103,62 +168,122 @@
         }
 
         div.nav {
-            margin-bottom: 8px;
+            margin-bottom: var(--space-2);
         }
 
         div.nav ul {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 7px;
         }
 
         div.nav li {
             list-style-type: none;
-            padding: 6px 8px;
-            border-radius: 6px;
-            border: 1px solid transparent;
+            padding: 7px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 153, 85, 0.28);
+            background: rgba(255, 153, 85, 0.08);
             line-height: 1;
+            transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
         }
 
         div.nav li,
         div.nav a {
-            color: #fd975a;
+            color: var(--accent-soft);
             font-weight: bold;
-            font-size: 0.8em;
+            font-size: 0.78em;
             text-decoration: none;
         }
 
         div.nav li:hover {
-            background-color: #2a2a2a;
-            border-color: #84523a;
+            background-color: rgba(255, 153, 85, 0.2);
+            border-color: rgba(255, 153, 85, 0.48);
             cursor: pointer;
+            transform: translateY(-1px);
         }
 
         div.nav li.active {
-            background-color: #fd975a;
-            border-color: #fd975a;
-            color: black;
+            background: linear-gradient(180deg, var(--accent-soft), var(--accent));
+            border-color: var(--accent-soft);
+            color: #23150d;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+        }
+
+        .tab {
+            animation: tabFadeIn 0.24s ease-out;
+        }
+
+        .tab.tab-enter > * {
+            opacity: 0;
+            transform: translateY(6px);
+            animation: tabItemReveal 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        .tab.tab-enter > *:nth-child(1) { animation-delay: 0.01s; }
+        .tab.tab-enter > *:nth-child(2) { animation-delay: 0.03s; }
+        .tab.tab-enter > *:nth-child(3) { animation-delay: 0.05s; }
+        .tab.tab-enter > *:nth-child(4) { animation-delay: 0.07s; }
+        .tab.tab-enter > *:nth-child(5) { animation-delay: 0.09s; }
+        .tab.tab-enter > *:nth-child(6) { animation-delay: 0.11s; }
+
+        @keyframes tabFadeIn {
+            from {
+                opacity: 0.84;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes tabItemReveal {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         div.group {
-            border: 2px solid #fd975a;
-            border-radius: 6px;
-            padding: 5px;
+            border: 1px solid rgba(255, 153, 85, 0.38);
+            border-radius: var(--radius-md);
+            background: linear-gradient(180deg, rgba(24, 28, 34, 0.9), rgba(16, 18, 22, 0.92));
+            padding: var(--space-2);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            position: relative;
+            overflow: hidden;
+        }
+
+        div.group::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, rgba(255, 153, 85, 0.18), rgba(255, 153, 85, 0));
+            clip-path: polygon(100% 0, 0 0, 100% 100%);
+            pointer-events: none;
         }
 
         div.flexline {
             display: flex;
-            margin-bottom: 0.4em;
+            margin-bottom: 0.55em;
             flex-wrap: wrap;
+            row-gap: 4px;
         }
 
         div.statusfield {
             min-width: 50%;
-            padding-bottom: 0.5em;
+            padding: 0.42em 0;
+            border-bottom: 1px dashed rgba(255, 153, 85, 0.12);
+            padding-right: 6px;
         }
 
         div.param {
-            padding: 0 10px 0.3em 0;
+            padding: 0 12px 0.5em 0;
         }
 
         div.param.range {
@@ -166,20 +291,29 @@
         }
 
         h3 {
-            font-size: 1.0em;
-            border-left: 6px solid #fd975a;
-            margin: 0.5em 0 0.5em 0;
-            padding-left: 0.5em;
+            font-size: 0.88em;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            border-left: 5px solid var(--accent);
+            margin: 1.05em 0 0.65em 0;
+            padding: 0.3em 0 0.3em 0.6em;
+            color: var(--accent-soft);
         }
 
         h4 {
-            font-size: 0.85em;
-            padding-bottom: 0.3em;
+            font-size: 0.82em;
+            padding-bottom: 0.5em;
+            color: var(--text-muted);
+            letter-spacing: 0.04em;
         }
 
         h5,
         th {
-            font-size: 0.7em;
+            font-size: 0.68em;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            color: #d6a883;
+            margin-bottom: 0.22em;
         }
 
         div.valunit {
@@ -189,7 +323,179 @@
 
         .statusvalue {
             color: #fff;
-            font-size: 0.8em;
+            font-size: 0.83em;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.42);
+            line-height: 1.35;
+        }
+
+        .statusvalue.temp-cold {
+            color: #92ccff;
+        }
+
+        .statusvalue.temp-hot {
+            color: #ffc17b;
+        }
+
+        .statusvalue.temp-veryhot {
+            color: #ff8f7f;
+        }
+
+        .statusvalue.value-high {
+            color: #ffd072;
+        }
+
+        .hero-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 9px;
+            margin-bottom: 10px;
+        }
+
+        .metric-card {
+            background: linear-gradient(165deg, rgba(255, 153, 85, 0.14), rgba(18, 20, 25, 0.88));
+            border: 1px solid rgba(255, 153, 85, 0.28);
+            border-radius: 10px;
+            padding: 9px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .metric-value {
+            font-size: 1.55em;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.05;
+            margin-top: 2px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .metric-runtime {
+            font-size: 1.05em;
+            line-height: 1.2;
+        }
+
+        .metric-arrow {
+            font-size: 0.52em;
+            line-height: 1;
+            border-radius: 999px;
+            padding: 3px 5px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            background: rgba(255, 255, 255, 0.08);
+            color: #e8d8ca;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .metric-arrow.up {
+            color: #bff2ce;
+            border-color: rgba(68, 179, 111, 0.6);
+            background: rgba(68, 179, 111, 0.2);
+        }
+
+        .metric-arrow.down {
+            color: #ffc7c7;
+            border-color: rgba(214, 79, 79, 0.6);
+            background: rgba(214, 79, 79, 0.2);
+        }
+
+        .metric-arrow.stable {
+            color: #f0ddb7;
+            border-color: rgba(229, 154, 47, 0.6);
+            background: rgba(229, 154, 47, 0.2);
+        }
+
+        .metric-state-card {
+            grid-column: 1 / -1;
+        }
+
+        .state-grid {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .state-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .state-label {
+            font-size: 0.66em;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #ddbba0;
+        }
+
+        .state-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.08);
+            color: #f0dfcd;
+            text-shadow: none;
+            font-size: 1.0em;
+        }
+
+        .state-icon.is-true {
+            background: rgba(68, 179, 111, 0.18);
+            border-color: rgba(68, 179, 111, 0.6);
+            color: #b8f5cc;
+        }
+
+        .state-icon.is-inactive {
+            background: rgba(255, 188, 131, 0.12);
+            border-color: rgba(255, 188, 131, 0.38);
+            color: #e9cfb7;
+        }
+
+        .state-icon.is-false {
+            background: rgba(214, 79, 79, 0.16);
+            border-color: rgba(214, 79, 79, 0.58);
+            color: #ffc1c1;
+        }
+
+        .state-icon.is-error {
+            background: rgba(214, 79, 79, 0.16);
+            border-color: rgba(214, 79, 79, 0.58);
+            color: #ffc1c1;
+        }
+
+        .state-icon.is-unknown {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.25);
+            color: #e1d1c2;
+        }
+
+        .curve-hint {
+            font-size: 0.72em;
+            color: #d5b59a;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.6em;
+            text-align: center;
+        }
+
+        body[data-focus="curve"] #heatingcurve .group {
+            box-shadow: var(--shadow-glow);
+        }
+
+        body[data-focus="curve"] #heatingcurve .curve {
+            border-color: rgba(255, 153, 85, 0.45);
+            box-shadow: 0 0 0 1px rgba(255, 153, 85, 0.22), 0 10px 24px rgba(0, 0, 0, 0.35);
+        }
+
+        body[data-focus="curve"] #status,
+        body[data-focus="curve"] #setup,
+        body[data-focus="curve"] #log {
+            opacity: 0.96;
         }
 
         .statusvalue.bool-ok::before {
@@ -210,7 +516,8 @@
         div.param span.value {
             font-size: 1.8em;
             font-weight: bold;
-            color: white;
+            color: #fff;
+            letter-spacing: 0.01em;
         }
 
         div.infobox {
@@ -228,21 +535,26 @@
         input[type=number],
         input:not([type]),
         select {
-            background-color: #111;
-            margin: 5px 0;
-            border: 1px solid #fd975a;
+            background-color: #0f1218;
+            margin: 6px 0;
+            border: 1px solid rgba(255, 153, 85, 0.6);
             color: #fff;
-            padding: 3px;
+            padding: 6px 8px;
+            border-radius: 7px;
+            min-height: 30px;
+            font-size: 0.9em;
         }
 
         input[type=range] {
             -webkit-appearance: none;
-            background: #fd975a;
+            appearance: none;
+            background: linear-gradient(90deg, #ffb67e, #ff9955);
             height: 5px;
             margin: auto 0;
             flex: 1;
             max-width: 300px;
             cursor: pointer;
+            border-radius: 999px;
         }
 
         input[type=radio] {
@@ -252,8 +564,11 @@
 
         div.curve {
             text-align: center;
-            background-color: #000;
-            margin-bottom: 0.5em;
+            background-color: #0f1218;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 153, 85, 0.25);
+            padding: 7px;
+            margin-bottom: 0.65em;
         }
 
         canvas {
@@ -264,25 +579,27 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 0.3em 0;
-            gap: 1em;
+            padding: 0.45em 0;
+            gap: 0.9em;
             flex-wrap: wrap;
         }
 
         button,
         input[type=submit] {
-            background-color: #fd975a;
-            color: black;
+            background: linear-gradient(180deg, #ffb67e, #ff9955);
+            color: #20130d;
             padding: 0 1em;
             border-radius: 8px;
-            border-style: none;
+            border: 1px solid rgba(255, 255, 255, 0.28);
             box-sizing: border-box;
-            font-weight: 500;
-            height: 30px;
+            font-weight: 700;
+            height: 32px;
             outline: none;
             touch-action: manipulation;
             cursor: pointer;
             display: inline-block;
+            transition: transform 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease;
+            font-size: 0.84em;
         }
 
         button:focus {
@@ -290,17 +607,20 @@
         }
 
         button:hover {
-            background-color: #6d99a4;
+            transform: translateY(-1px);
+            filter: brightness(1.04);
+            box-shadow: 0 6px 16px rgba(216, 100, 30, 0.36);
         }
 
         button:active {
-            background-color: #4d7984;
+            transform: translateY(0);
+            filter: brightness(0.96);
         }
 
         button.pressed {
-            border: 1px solid #fd975a;
-            background-color: black;
-            color: #fd975a;
+            border: 1px solid var(--accent);
+            background: #0d1015;
+            color: var(--accent-soft);
         }
 
         button:disabled {
@@ -314,11 +634,39 @@
         table {
             width: 100%;
             text-align: left;
+            border-collapse: collapse;
         }
 
         table tbody {
             color: #fff;
             font-size: 0.9em;
+        }
+
+        table tr:nth-child(even) {
+            background-color: rgba(255, 153, 85, 0.05);
+        }
+
+        .data-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: #1a1d24;
+            border-bottom: 1px solid rgba(255, 153, 85, 0.45);
+            padding: 6px 4px;
+        }
+
+        .data-table td {
+            padding: 7px 4px;
+            border-bottom: 1px solid rgba(255, 153, 85, 0.1);
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(255, 153, 85, 0.1);
+        }
+
+        .data-table .empty-row td {
+            color: #c7a88f;
+            font-style: italic;
         }
 
         table th.ot, table th.ft, table th.rs {
@@ -350,10 +698,11 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #333;
+            background-color: #2e323a;
             -webkit-transition: .4s;
             transition: .4s;
             border-radius: 5px;
+            border: 1px solid rgba(255, 153, 85, 0.24);
         }
 
         .slider:before {
@@ -363,14 +712,14 @@
             width: 20px;
             left: 4px;
             bottom: 4px;
-            background-color: #8d5535;
+            background-color: #a4623c;
             -webkit-transition: .4s;
             transition: .4s;
             border-radius: 3px;
         }
 
         input:checked+.slider {
-            background-color: #fd975a;
+            background: linear-gradient(90deg, #ffb67e, #ff9955);
         }
 
         input:focus+.slider {
@@ -385,21 +734,26 @@
 
         div.footer {
             text-align: center;
-            color: #fd975a;
-            margin-top: 0.5em;
-            padding: 5px;
+            color: var(--accent-soft);
+            margin-top: 0.8em;
+            padding: 8px 5px 5px;
+            border-top: 1px solid rgba(255, 153, 85, 0.22);
         }
 
         div.footer a,
         div.footer a:visited {
             font-size: 0.8em;
-            color: #fd975a;
+            color: var(--accent-soft);
             text-decoration: none;
         }
 
         .firmware-release-link {
             margin: 0.2em 0 0.6em 0;
             font-size: 0.8em;
+        }
+
+        .firmware-heading {
+            margin-top: 0.7em;
         }
 
         .firmware-release-link a,
@@ -421,16 +775,70 @@
 
         #nocon {
             padding: 0.6em;
-            background-color: #c00;
+            background-color: #8c1b1b;
+            border: 1px solid #ce4b4b;
+            border-radius: 8px;
+            margin-bottom: 6px;
         }
 
         #console {
-            background-color: black;
+            background-color: #0c0f14;
             height: 40em;
             color: white;
             resize: vertical;
             overflow: auto;
             padding: 0 0.5em;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 153, 85, 0.3);
+        }
+
+        .empty-state {
+            color: #b09179;
+            font-size: 0.82em;
+            font-style: italic;
+            padding: 8px 2px;
+        }
+
+        .event-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .event-pill {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 153, 85, 0.44);
+            background: rgba(255, 153, 85, 0.12);
+            color: #f6d4b7;
+            padding: 4px 8px;
+            font-size: 0.68em;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .event-empty {
+            color: #b09179;
+            font-size: 0.8em;
+            font-style: italic;
+        }
+
+        .action-flash {
+            animation: actionFlash 0.55s ease;
+        }
+
+        #comment + button {
+            margin-left: 0.45em;
+        }
+
+        @keyframes actionFlash {
+            0% {
+                box-shadow: var(--shadow-glow);
+            }
+            100% {
+                box-shadow: none;
+            }
         }
 
         #console div {
@@ -473,15 +881,15 @@
         }
 
         .modal-content {
-            background-color: #000;
-            border: 2px solid #fd975a;
-            border-radius: 8px;
+            background-color: #0f1218;
+            border: 1px solid rgba(255, 153, 85, 0.72);
+            border-radius: 12px;
             max-width: 90%;
             width: 360px;
             box-sizing: border-box;
-            padding: 8px;
+            padding: 10px;
             color: #fff;
-            box-shadow: 0 0 20px rgba(253, 151, 90, 0.3);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45), 0 0 20px rgba(253, 151, 90, 0.2);
         }
 
         .modal-header {
@@ -504,12 +912,12 @@
         }
 
         #modalBody {
-            background-color: #000;
+            background-color: #0a0d11;
             color: #fff;
-            border: 1px solid #fd975a;
+            border: 1px solid rgba(255, 153, 85, 0.58);
             border-radius: 6px;
             margin-top: 8px;
-            padding: 6px;
+            padding: 8px;
             font-family: "Lucida Console", "Courier New", monospace;
             font-size: 0.75em;
             white-space: pre-wrap;
@@ -530,11 +938,11 @@
         }
 
         .toast {
-            background-color: #111;
+            background-color: #11161d;
             color: #fff;
-            border: 1px solid #fd975a;
-            border-left: 5px solid #fd975a;
-            border-radius: 6px;
+            border: 1px solid rgba(255, 153, 85, 0.6);
+            border-left: 5px solid var(--accent);
+            border-radius: 8px;
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
             padding: 8px 10px;
             font-size: 0.85em;
@@ -563,6 +971,10 @@
 
         /* Responsive columns */
         @media (min-width: 600px) {
+            body {
+                font-size: 15.5px;
+            }
+
             div.statusfield {
                 min-width: 33.33%; /* 3 columns on tablets */
             }
@@ -573,7 +985,108 @@
                 width: 480px;
             }
             #mainwrapper {
-                max-width: 600px; /* Slightly wider on tablets */
+                max-width: 620px; /* Slightly wider on tablets */
+            }
+        }
+
+        @media (max-width: 520px) {
+            body {
+                padding: 8px;
+                font-size: 14px;
+            }
+
+            #mainwrapper {
+                padding: 8px;
+                border-radius: 12px;
+            }
+
+            div.nav ul {
+                gap: 8px;
+            }
+
+            div.nav li {
+                padding: 9px 12px;
+                font-size: 0.85em;
+            }
+
+            div.statusfield {
+                min-width: 100%;
+                padding: 0.42em 0;
+            }
+
+            .hero-metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .state-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .data-table,
+            .data-table thead,
+            .data-table tbody,
+            .data-table tr,
+            .data-table th,
+            .data-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .data-table thead {
+                display: none;
+            }
+
+            .data-table tr {
+                border: 1px solid rgba(255, 153, 85, 0.24);
+                border-radius: 8px;
+                padding: 4px;
+                margin-bottom: 6px;
+            }
+
+            .data-table td {
+                border: none;
+                padding: 4px 6px;
+            }
+
+            button,
+            input[type=submit] {
+                min-height: 36px;
+                padding: 0 1.1em;
+            }
+
+            input[type=password],
+            input[type=number],
+            input:not([type]),
+            select {
+                min-height: 34px;
+                font-size: 16px;
+            }
+
+            .switch {
+                width: 66px;
+                height: 32px;
+            }
+
+            .slider:before {
+                width: 24px;
+                height: 24px;
+            }
+
+            input:checked+.slider:before {
+                transform: translateX(33px);
+            }
+
+            div.toolbar {
+                gap: 0.6em;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation: none !important;
+                transition: none !important;
             }
         }
 
@@ -588,7 +1101,7 @@
                 width: 680px;
             }
             #mainwrapper {
-                max-width: 800px; /* Wider on desktops */
+                max-width: 840px; /* Wider on desktops */
             }
         }
     </style>
@@ -600,7 +1113,7 @@
     </div>
 
     <div id="mainwrapper">
-        <h2 id="title">OTthing<span id="titleVersion" hidden></span></h2>
+        <h2 id="title">OT<span class="title-thing">thing</span><span id="titleVersion" hidden></span></h2>
         <input id="inject_status" type="file" accept=".json" style="display: none;">
         <div class="nav">
             <ul>
@@ -613,6 +1126,53 @@
         </div>
 
         <div class="tab" id="status">
+            <div class="hero-metrics" id="heroMetrics">
+                <div class="metric-card metric-state-card">
+                    <h5>Status</h5>
+                    <div class="state-grid">
+                        <div class="state-item">
+                            <span class="state-label">Flame</span>
+                            <span class="state-icon is-unknown" id="stateFlame" title="unknown" aria-label="Flame status">…</span>
+                        </div>
+                        <div class="state-item">
+                            <span class="state-label">CH1</span>
+                            <span class="state-icon is-unknown" id="stateCh1" title="unknown" aria-label="CH1 status">…</span>
+                        </div>
+                        <div class="state-item">
+                            <span class="state-label">CH2</span>
+                            <span class="state-icon is-unknown" id="stateCh2" title="unknown" aria-label="CH2 status">…</span>
+                        </div>
+                        <div class="state-item">
+                            <span class="state-label">DHW</span>
+                            <span class="state-icon is-unknown" id="stateDhw" title="unknown" aria-label="DHW status">…</span>
+                        </div>
+                        <div class="state-item">
+                            <span class="state-label">Diag</span>
+                            <span class="state-icon is-unknown" id="stateDiag" title="unknown" aria-label="Diagnostic value">…</span>
+                        </div>
+                        <div class="state-item">
+                            <span class="state-label">MQTT</span>
+                            <span class="state-icon is-unknown" id="stateMqtt" title="unknown" aria-label="MQTT connection status">…</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <h5>Flow set</h5>
+                    <div class="metric-value"><span id="heroFlowSet">--</span><span class="metric-arrow" id="heroFlowSetTrendIcon">•</span></div>
+                </div>
+                <div class="metric-card">
+                    <h5>Flow</h5>
+                    <div class="metric-value"><span id="heroFlow">--</span><span class="metric-arrow" id="heroFlowTrendIcon">•</span></div>
+                </div>
+                <div class="metric-card">
+                    <h5>Outside</h5>
+                    <div class="metric-value"><span id="heroOutside">--</span><span class="metric-arrow" id="heroOutsideTrendIcon">•</span></div>
+                </div>
+                <div class="metric-card">
+                    <h5>Modulation</h5>
+                    <div class="metric-value"><span id="heroMod">--</span><span class="metric-arrow" id="heroModTrendIcon">•</span></div>
+                </div>
+            </div>
             <h3>System</h3>
             <div class="group">
                 <div class="flexline">
@@ -661,7 +1221,7 @@
                         <span class="statusvalue" field="numWifiDisc"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>MQTT connected</h5>
+                        <h5>MQTT</h5>
                         <span class="statusvalue" field="mqtt.connected"></span>
                     </div>
                     <div class="statusfield">
@@ -681,7 +1241,7 @@
                     <span class="statusvalue" field="owResult"></span>
                 </div>
             </div>
-            <h3>Slave</h3>
+            <h3>OT slave</h3>
             <div class="group">
                 <h4>Status</h4>
                 <div class="flexline">
@@ -1016,7 +1576,7 @@
                 </div>
             </div>
 
-            <h3>Master</h3>
+            <h3>OT master</h3>
             <div class="group">
                 <div class="flexline">
                     <div class="statusfield">
@@ -1443,6 +2003,7 @@
                 <div class="curve">
                     <canvas id="canvas"></canvas>
                 </div>
+                <div class="curve-hint curve-only">Drag points to tune the multipoint curve.</div>
 
                 <div class="flexline">
                     <div class="statusfield nohide">
@@ -1473,8 +2034,8 @@
             </div>
 
             <h3>Marker</h3>
-            <div class="group">
-                <table>
+            <div class="group" id="markerGroup">
+                <table class="data-table marker-table">
                     <thead>
                         <tr>
                             <th class="comment">comment</th>
@@ -1485,6 +2046,7 @@
                         </tr>
                     </thead>
                     <tbody id="markerbody">
+                        <tr class="empty-row"><td colspan="5">No markers yet. Add one to capture current outside and flow temperatures.</td></tr>
                     </tbody>
                 </table>
                 <input id="comment" />
@@ -1494,7 +2056,7 @@
 
         <div class="tab" id="setup">
             <h3>WiFi</h3>
-            <div class="group">
+            <div class="group" id="wifiGroup">
                 <div class="flexline">
                     <div class="param">
                         <h5>Hostname</h5>
@@ -1503,7 +2065,7 @@
                 </div>
                 <button id="scanbtn" onclick="startWifiScan()">scan</button>
                 <div id="scanResults" hidden>
-                    <table>
+                    <table class="data-table wifi-table">
                         <thead>
                             <tr>
                                 <th></th>
@@ -1513,6 +2075,7 @@
                             </tr>
                         </thead>
                         <tbody id="scanbody">
+                            <tr class="empty-row"><td colspan="4">No scan results yet. Press scan to discover nearby networks.</td></tr>
                         </tbody>
                     </table>
                     <h5>SSID</h5>
@@ -1526,23 +2089,13 @@
             <h3>OpenTherm</h3>
             <div class="group">
                 <h4>Mode</h4>
-                <div class="flexline">
-                    <div class="param">
-                        <input type="radio" name="otMode" value="0" field="otMode" intval>
-                        <label>Bypass</label>
-                    </div>
-                    <div class="param">
-                        <input type="radio" name="otMode" value="1" field="otMode" intval>
-                        <label>Master</label>
-                    </div>
-                    <div class="param">
-                        <input type="radio" name="otMode" value="2" field="otMode" intval>
-                        <label>Repeater</label>
-                    </div>
-                    <div class="param">
-                        <input type="radio" name="otMode" value="4" field="otMode" intval>
-                        <label>Test</label>
-                    </div>
+                <div class="param">
+                    <select id="otModeSelect" field="otMode" intval>
+                        <option value="0">Bypass</option>
+                        <option value="1">Master</option>
+                        <option value="2">Repeater</option>
+                        <option value="4">Test</option>
+                    </select>
                 </div>
                 <div class="param otmode-master">
                     <h5>Enable slave interface</h5>
@@ -1857,13 +2410,13 @@
                     <option value="7200">UTC + 2</option>
                 </select>
                 
-                <h4>Firmware</h4>
+                <h4 class="firmware-heading">Firmware</h4>
                 <div class="firmware-release-link">
                     <a href="https://github.com/Phunkafizer/OT-Thing/releases/latest" target="_blank" rel="noopener noreferrer">Latest release on GitHub</a>
                 </div>
-                <form id="form_upload" method='POST' enctype='multipart/form-data'>
-                    <input id="inp_file" type='file' accept='.bin,.bin.gz' name='firmware'>
-                    <input id="btn_upload" type='submit' value='upload'>
+                <form id="form_download" method='POST' enctype='multipart/form-data'>
+                    <input id="firmware_file" type='file' accept='.bin,.bin.gz' name='firmware' hidden>
+                    <button id="btn_download" type="button">download...</button>
                     <div id="progressDiv" class="progress" hidden>
                         <div id="progressText"></div>
                         <progress id="updprogress" max="100" value="0"></progress>
@@ -1874,6 +2427,7 @@
         </div>
         <div class="tab" id="log">
             <div id="console">
+                <div class="empty-state" id="consoleEmpty">No log messages yet.</div>
             </div>
             <div id="logstatus"></div>
             <div class="toolbar">
@@ -1881,7 +2435,7 @@
                 <button onclick="toggleAutoScroll(event)">autoscroll</button>
             </div>
         </div>
-        <div class="toolbar">
+        <div class="toolbar" id="globalToolbar">
             <button onclick="saveConfig()">save</button>
             <button onclick="importConfig()">import config</button>
             <div style="display:flex; align-items:center; gap:0.4em;">
@@ -2075,6 +2629,180 @@
                         onClose();
                 }, 220);
             }, timeoutMs);
+        }
+
+        function flashElement(selector) {
+            const el = _(selector);
+            if (!el)
+                return;
+            el.classList.remove("action-flash");
+            void el.offsetWidth;
+            el.classList.add("action-flash");
+            setTimeout(() => el.classList.remove("action-flash"), 650);
+        }
+
+        function addRecentEvent(text) {
+            const row = _("#recentEvents");
+            if (!row)
+                return;
+
+            const empty = _(".event-empty", row);
+            if (empty)
+                empty.remove();
+
+            row.prepend(_$("span", {
+                className: "event-pill",
+                textContent: text
+            }));
+
+            while (row.childElementCount > 5)
+                row.removeChild(row.lastElementChild);
+        }
+
+        function setStateIcon(id, value, isFlame = false) {
+            const icon = _(`#${id}`);
+            if (!icon)
+                return;
+
+            icon.classList.remove("is-true", "is-false", "is-inactive", "is-error", "is-unknown");
+
+            if (value === true) {
+                icon.classList.add("is-true");
+                icon.textContent = isFlame ? "🔥" : "✔";
+                icon.title = "active";
+            }
+            else if (value === false) {
+                icon.classList.add("is-inactive");
+                icon.textContent = "○";
+                icon.title = "inactive";
+            }
+            else {
+                icon.classList.add("is-unknown");
+                icon.textContent = "…";
+                icon.title = "unknown";
+            }
+        }
+
+        function parseNumber(value) {
+            const num = Number.parseFloat(value);
+            return Number.isFinite(num) ? num : null;
+        }
+
+        function updateMetric(idValue, idArrow, value, unit, key) {
+            const valueEl = _(`#${idValue}`);
+            const arrowEl = _(`#${idArrow}`);
+            if (!valueEl || !arrowEl)
+                return;
+
+            if (value == null) {
+                valueEl.textContent = "--";
+                arrowEl.textContent = "•";
+                arrowEl.classList.remove("up", "down", "stable");
+                return;
+            }
+
+            const roundedValue = Math.round(value * 10) / 10;
+            valueEl.textContent = unit ? `${roundedValue} ${unit}` : String(roundedValue);
+            updateMetric._hist = updateMetric._hist ?? {};
+            const prev = updateMetric._hist[key];
+
+            arrowEl.classList.remove("up", "down", "stable");
+            if (prev == null || Math.abs(value - prev) < 0.05) {
+                arrowEl.textContent = "→";
+                arrowEl.classList.add("stable");
+            }
+            else if (value > prev) {
+                arrowEl.textContent = "↑";
+                arrowEl.classList.add("up");
+            }
+            else {
+                arrowEl.textContent = "↓";
+                arrowEl.classList.add("down");
+            }
+            updateMetric._hist[key] = value;
+        }
+
+        function updateHeroMetrics() {
+            const flowSet = (currentCh === 0) ? statuscache?.master?.ch_set_t : statuscache?.master?.ch_set_t2;
+            const flow = (currentCh === 0) ? statuscache?.slave?.flow_t : statuscache?.slave?.flow_t2;
+            const outside = statuscache?.outsideTemp;
+            const mod = statuscache?.slave?.rel_mod;
+
+            updateMetric("heroFlowSet", "heroFlowSetTrendIcon", parseNumber(flowSet), "°C", `flowset${currentCh}`);
+            updateMetric("heroFlow", "heroFlowTrendIcon", parseNumber(flow), "°C", `flow${currentCh}`);
+            updateMetric("heroOutside", "heroOutsideTrendIcon", parseNumber(outside), "°C", "outside");
+            updateMetric("heroMod", "heroModTrendIcon", parseNumber(mod), "%", "mod");
+        }
+
+        function updateHeroStateCard() {
+            setStateIcon("stateFlame", statuscache?.slave?.status?.flame, true);
+            setStateIcon("stateCh1", statuscache?.slave?.status?.ch_mode);
+            setStateIcon("stateCh2", statuscache?.slave?.status?.ch2_mode);
+            setStateIcon("stateDhw", statuscache?.slave?.status?.dhw_mode);
+
+            const diagEl = _("#stateDiag");
+            if (diagEl) {
+                const diag = statuscache?.slave?.status?.diagnostic;
+                diagEl.classList.remove("is-true", "is-false", "is-inactive", "is-error", "is-unknown");
+                if (diag === null || diag === undefined || diag === "") {
+                    diagEl.classList.add("is-unknown");
+                    diagEl.textContent = "…";
+                    diagEl.title = "unknown";
+                }
+                else {
+                    const isError =
+                        diag === true ||
+                        diag === "true" ||
+                        diag === 1 ||
+                        diag === "1";
+                    diagEl.classList.add(isError ? "is-error" : "is-true");
+                    diagEl.textContent = isError ? "!" : "●";
+                    diagEl.title = isError ? "diagnostic error" : "diagnostic ok";
+                }
+            }
+
+            const mqttEl = _("#stateMqtt");
+            if (mqttEl) {
+                const mqttConnected = statuscache?.mqtt?.connected;
+                mqttEl.classList.remove("is-true", "is-false", "is-inactive", "is-error", "is-unknown");
+                if (mqttConnected === true) {
+                    mqttEl.classList.add("is-true");
+                    mqttEl.textContent = "●";
+                    mqttEl.title = "mqtt";
+                }
+                else if (mqttConnected === false) {
+                    mqttEl.classList.add("is-error");
+                    mqttEl.textContent = "✖";
+                    mqttEl.title = "mqtt connection error";
+                }
+                else {
+                    mqttEl.classList.add("is-unknown");
+                    mqttEl.textContent = "…";
+                    mqttEl.title = "unknown";
+                }
+            }
+        }
+
+        function applyValueColoring() {
+            __(".statusvalue").forEach((ele) => {
+                ele.classList.remove("temp-cold", "temp-hot", "temp-veryhot", "value-high");
+                const unit = ele.getAttribute("unit") || "";
+                const raw = ele.textContent.replace(/[^0-9.+-]/g, "");
+                const val = parseNumber(raw);
+                if (val == null)
+                    return;
+
+                if (/°C|deg;C/.test(unit)) {
+                    if (val < 30)
+                        ele.classList.add("temp-cold");
+                    else if (val >= 65)
+                        ele.classList.add("temp-veryhot");
+                    else if (val >= 45)
+                        ele.classList.add("temp-hot");
+                }
+                else if (unit.includes("%") && val >= 80)
+                    ele.classList.add("value-high");
+            });
         }
 
         function getNumCurvePoints() {
@@ -2623,7 +3351,11 @@
             _("#scanbtn").disabled = true;
             _("#scanResults").hidden = true;
             _("#scanbody").innerHTML = "";
+            _("#scanbody").append(_$("tr", {className: "empty-row"},
+                _$("td", {colSpan: 4, textContent: "Scanning for networks..."})
+            ));
             showToast("Scan running...", "info", 2500);
+            addRecentEvent("WiFi scan started");
             scanWiFi();
         }
 
@@ -2631,6 +3363,9 @@
         function saveWifi() {
             let xhr = new XMLHttpRequest();
             xhr.onload = (ev) => {
+                showToast("WiFi credentials sent", "success", 3000);
+                flashElement("#wifiGroup");
+                addRecentEvent("WiFi connect requested");
             };
             xhr.open('POST', 'setwifi');
             xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
@@ -2644,6 +3379,8 @@
             let xhr = new XMLHttpRequest();
             xhr.onload = (ev) => {
                 showToast("configuration saved successfully", "success");
+                flashElement("#globalToolbar");
+                addRecentEvent("Configuration saved");
             };
             xhr.open("POST", "config");
             xhr.setRequestHeader("Content-Type", "application/json");
@@ -2658,6 +3395,7 @@
                     showToast("reboot requested, device will restart shortly", "success", 4500, () => {
                         location.reload();
                     });
+                    addRecentEvent("Reboot requested");
                 })
                 .catch((err) => {
                     showToast("Error requesting reboot:\n" + err.message, "error", 5000);
@@ -2687,8 +3425,11 @@
             });
             heatCfg.marker.sort((a, b) => a.ot - b.ot);
             _("#comment").value = "";
-            drawMarkerTable();
+            if (typeof window.drawMarkerTable === "function")
+                window.drawMarkerTable();
             drawCurve();
+            flashElement("#markerGroup");
+            addRecentEvent("Marker added");
         }
 
         function exportItem() {
@@ -2811,6 +3552,12 @@
 
         function clearLog() {
             _("#console").innerHTML = "";
+            _("#console").append(_$("div", {
+                className: "empty-state",
+                id: "consoleEmpty",
+                textContent: "No log messages yet."
+            }));
+            addRecentEvent("Log cleared");
         };
 
         function toggleAutoScroll(ev) {
@@ -2845,6 +3592,15 @@
 
                 const numResults = scanObj.results?.length ?? 0;
                 showToast(`Scan finished: ${numResults} network(s) found`, "success", 3500);
+                addRecentEvent(`WiFi scan: ${numResults} network(s)`);
+
+                _("#scanbody").innerHTML = "";
+                if (numResults === 0) {
+                    _("#scanbody").append(_$("tr", {className: "empty-row"},
+                        _$("td", {colSpan: 4, textContent: "No nearby networks found."})
+                    ));
+                    return;
+                }
 
                 scanObj.results.forEach(element => {
                     _("#scanbody").append(
@@ -2869,12 +3625,14 @@
                 wifiScanRunning = false;
                 _("#scanbtn").disabled = false;
                 showToast("WiFi scan failed", "error", 4000);
+                addRecentEvent("WiFi scan failed");
             };
 
             xhr.ontimeout = () => {
                 wifiScanRunning = false;
                 _("#scanbtn").disabled = false;
                 showToast("WiFi scan timeout", "error", 4000);
+                addRecentEvent("WiFi scan timeout");
             };
             
             xhr.open("GET", "scan");    
@@ -2883,12 +3641,30 @@
 
 
         window.onload = () => {
+            let tabEnterTimer = null;
+
             __("div.nav li").forEach(li => {
                 li.onclick = ev => {
+                    const tabName = li.getAttribute("tab");
+                    const tabElement = _(`#${tabName}`);
+                    if (!tabElement)
+                        return;
+
                     __("div.nav li").forEach(x => x.classList.remove("active"));
                     __(".tab").forEach(x => x.hidden = true);
 
-                    _(`#${li.getAttribute("tab")}`).hidden = false;
+                    tabElement.hidden = false;
+                    document.body.setAttribute("data-tab", tabName);
+                    document.body.setAttribute("data-focus", tabName === "heatingcurve" ? "curve" : "normal");
+
+                    tabElement.classList.remove("tab-enter");
+                    void tabElement.offsetWidth;
+                    tabElement.classList.add("tab-enter");
+
+                    if (tabEnterTimer)
+                        clearTimeout(tabEnterTimer);
+                    tabEnterTimer = setTimeout(() => tabElement.classList.remove("tab-enter"), 360);
+
                     li.classList.add("active");
 
                     if (li.hasAttribute("channel")) {
@@ -2949,34 +3725,48 @@
                 })
             });
 
-            __('input[name="otMode"]').forEach(function (item) {
-                item.onclick = (ev) => {
-                    __('.otmode-repeater, .otmode-master, .otmode-test').forEach(function(ele) {
-                        ele.hidden = true;
-                    });
-                    switch (parseInt(item.value)) {
-                        case 1:
-                            // show elements for master mode
-                            __('.otmode-master').forEach(function(ele) {
-                                 ele.hidden = false;
-                            });
-                            break;
-                        case 2:
-                            // show elements for repeater mode
-                            __('.otmode-repeater').forEach(function(ele) {
-                                 ele.hidden = false;
-                            });
-                            break;
-                        default:
-                            break;
-                    }                    
-                }
-            });
+            function updateOtModeVisibility(mode) {
+                __('.otmode-repeater, .otmode-master, .otmode-test').forEach(function(ele) {
+                    ele.hidden = true;
+                });
 
-            function drawMarkerTable() {
+                switch (parseInt(mode)) {
+                    case 1:
+                        // show elements for master mode
+                        __('.otmode-master').forEach(function(ele) {
+                            ele.hidden = false;
+                        });
+                        break;
+                    case 2:
+                        // show elements for repeater mode
+                        __('.otmode-repeater').forEach(function(ele) {
+                            ele.hidden = false;
+                        });
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            const otModeSelect = _("#otModeSelect");
+            if (otModeSelect) {
+                otModeSelect.addEventListener("change", (ev) => {
+                    updateOtModeVisibility(ev.target.value);
+                });
+            }
+
+            window.drawMarkerTable = function drawMarkerTable() {
                 _("#markerbody").innerHTML = "";
+                const markers = config.heating[currentCh].marker ?? [];
+                if (markers.length === 0) {
+                    _("#markerbody").append(_$("tr", {className: "empty-row"},
+                        _$("td", {colSpan: 5, textContent: "No markers yet. Add one to capture current outside and flow temperatures."})
+                    ));
+                    return;
+                }
+
                 var i = 0;
-                config.heating[currentCh].marker?.forEach(function (item) {
+                markers.forEach(function (item) {
                     _(`#markerbody`).append(
                         _$("tr", {}, 
                             _$("td", {textContent: item.comment}),
@@ -2998,7 +3788,7 @@
                     );
                     _(`#markerbody tr:last-child button`).setAttribute("index", i++);
                 });
-            }
+            };
 
             function getConfigValFromPath(path, def=false) {
                 path = path.replace('$', currentCh);
@@ -3133,6 +3923,8 @@
 
                 _("#curveMode").checked = (hcfg.curveMode ?? 0) === CURVE_MODE_MULTIPOINT;
                 _("#curveMode").dispatchEvent(new Event("change"));
+
+                updateOtModeVisibility(getConfigValFromPath("otMode"));
 
                 drawMarkerTable();
                 drawCurve();
@@ -3304,6 +4096,12 @@
                     }
                 }
                 _("#runtime").innerText = rtstr;
+                updateHeroMetrics();
+
+                const flameNow = statuscache?.slave?.status?.flame;
+                if (consumeStatusCache._prevFlame !== undefined && flameNow !== consumeStatusCache._prevFlame)
+                    addRecentEvent(flameNow ? "Flame ON" : "Flame OFF");
+                consumeStatusCache._prevFlame = flameNow;
 
                 if (statuscache.slave?.slave_config_member?.dhw_present === false) {
                     __(".DHW").forEach(ele => {
@@ -3324,6 +4122,8 @@
                 }
 
                 updateStatusValues();
+                updateHeroStateCard();
+                applyValueColoring();
 
                 __(".mqttbasetopic").forEach((ele) => {
                     ele.innerHTML = statuscache.mqtt.basetopic;
@@ -3447,43 +4247,73 @@
                 }
             };
 
-            var xhrUpl = new XMLHttpRequest();
-            _("#form_upload").onsubmit = (ev) =>{
+            var xhrDownload = new XMLHttpRequest();
+            _("#btn_download").onclick = () => {
+                _("#firmware_file").click();
+            };
+
+            _("#firmware_file").onchange = (ev) => {
+                if (ev.target.files && ev.target.files[0])
+                    _("#form_download").requestSubmit();
+            };
+
+            _("#form_download").onsubmit = (ev) =>{
                 ev.preventDefault();
 
-                var file = _("#inp_file").files[0];
+                var file = _("#firmware_file").files[0];
+                if (!file)
+                    return;
                 var formdata = new FormData();
-                formdata.append(_("#inp_file").name, file, file.name);
+                formdata.append(_("#firmware_file").name, file, file.name);
+                const progressBar = _("#updprogress");
+                const progressText = _("#progressText");
                 
-                xhrUpl.upload.onprogress = (ev) => {
+                xhrDownload.upload.onprogress = (ev) => {
+                    if (!ev.lengthComputable)
+                        return;
+
                     var perc = Math.round(ev.loaded / ev.total * 100);
-                    _("#updprogress").value = perc;
-                    _("#updprogress").innerText = perc + ' %';
-                    _("#progressText").innerHTML = "Uploading...";
+                    if (perc < 100) {
+                        progressBar.value = perc;
+                        progressBar.innerText = perc + ' %';
+                        progressText.innerHTML = `Transferring firmware... ${perc} %`;
+                    }
+                    else {
+                        // Transfer is done; device still needs time to write/verify firmware.
+                        progressBar.removeAttribute("value");
+                        progressText.innerHTML = "Transfer complete. Installing firmware on device...";
+                    }
                 };
 
-                xhrUpl.onload = () => {
-                    _("#inp_file").value = "";
-                    _("#progressText").innerHTML = "Upload successful. Rebooting...";
+                xhrDownload.onload = () => {
+                    _("#firmware_file").value = "";
+                    progressBar.value = 100;
+                    progressText.innerHTML = "Download successful. Rebooting...";
                     setTimeout(() => {
                         location.reload();
                     }), "5000";
                 };
 
-                xhrUpl.onloadstart = () => {
+                xhrDownload.onloadstart = () => {
                     _("#progressDiv").hidden = false;
-                    _("#btn_upload").disabled = true;
-                    _("#inp_file").disabled = true;
+                    _("#btn_download").disabled = true;
+                    _("#firmware_file").disabled = true;
+                    progressBar.max = 100;
+                    progressBar.value = 0;
+                    progressText.innerHTML = "Preparing firmware transfer...";
                 };
 
-                xhrUpl.onerror = () => {
-                    _("#progressText").innerHTML = "Error: " + ajaxUpl.status;
+                xhrDownload.onerror = () => {
+                    progressBar.value = 0;
+                    progressText.innerHTML = "Error: " + xhrDownload.status;
+                    _("#btn_download").disabled = false;
+                    _("#firmware_file").disabled = false;
                 };
 
-                xhrUpl.open('post', '/update');
-                xhrUpl.setRequestHeader('Access-Control-Allow-Headers', '*');
-                xhrUpl.setRequestHeader('Access-Control-Allow-Origin', '*');
-                xhrUpl.send(formdata);
+                xhrDownload.open('post', '/update');
+                xhrDownload.setRequestHeader('Access-Control-Allow-Headers', '*');
+                xhrDownload.setRequestHeader('Access-Control-Allow-Origin', '*');
+                xhrDownload.send(formdata);
             };
 
             function connectWS() {
@@ -3491,6 +4321,9 @@
                     let e = _$("div");
                     e.innerHTML = msg;
                     let cons = _("#console");
+                    const empty = _("#consoleEmpty");
+                    if (empty)
+                        empty.remove();
                     cons.append(e);
                     if (autoscroll)
                         cons.scrollTop = cons.scrollHeight;
@@ -3500,10 +4333,12 @@
                 websocket.onopen = (ev) => {
                     _("#logstatus").classList.add('connected');
                     _("#logstatus").classList.remove('disconnected');
+                    addRecentEvent("Log socket connected");
                 }
                 websocket.onclose = (ev) => {
                     _("#logstatus").classList.add('disconnected');
                     _("#logstatus").classList.remove('connected');
+                    addRecentEvent("Log socket disconnected");
                     setTimeout(function() {
                         connectWS();
                     }, 1000);
