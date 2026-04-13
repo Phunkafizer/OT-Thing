@@ -210,21 +210,21 @@
         }
 
         .tab {
-            animation: tabFadeIn 0.24s ease-out;
+            animation: tabFadeIn 0.4s ease-out;
         }
 
         .tab.tab-enter > * {
             opacity: 0;
             transform: translateY(6px);
-            animation: tabItemReveal 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation: tabItemReveal 0.46s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
-        .tab.tab-enter > *:nth-child(1) { animation-delay: 0.01s; }
-        .tab.tab-enter > *:nth-child(2) { animation-delay: 0.03s; }
-        .tab.tab-enter > *:nth-child(3) { animation-delay: 0.05s; }
-        .tab.tab-enter > *:nth-child(4) { animation-delay: 0.07s; }
-        .tab.tab-enter > *:nth-child(5) { animation-delay: 0.09s; }
-        .tab.tab-enter > *:nth-child(6) { animation-delay: 0.11s; }
+        .tab.tab-enter > *:nth-child(1) { animation-delay: 0.04s; }
+        .tab.tab-enter > *:nth-child(2) { animation-delay: 0.08s; }
+        .tab.tab-enter > *:nth-child(3) { animation-delay: 0.12s; }
+        .tab.tab-enter > *:nth-child(4) { animation-delay: 0.16s; }
+        .tab.tab-enter > *:nth-child(5) { animation-delay: 0.20s; }
+        .tab.tab-enter > *:nth-child(6) { animation-delay: 0.24s; }
 
         @keyframes tabFadeIn {
             from {
@@ -662,6 +662,73 @@
 
         .data-table tbody tr:hover {
             background: rgba(255, 153, 85, 0.1);
+        }
+
+        .wifi-table tbody tr.scan-result-row {
+            cursor: pointer;
+            transition: background-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .wifi-table tbody tr.scan-result-row:hover {
+            background: rgba(255, 153, 85, 0.2);
+        }
+
+        .wifi-table tbody tr.scan-result-row.is-selected {
+            background: linear-gradient(90deg, rgba(255, 188, 131, 0.24), rgba(255, 153, 85, 0.12));
+            box-shadow: inset 3px 0 0 var(--accent);
+        }
+
+        .wifi-table tbody tr.scan-result-row td {
+            transition: color 0.15s ease;
+        }
+
+        .wifi-table tbody tr.scan-result-row.is-selected td {
+            color: #fff2e5;
+        }
+
+        .scan-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 3px 9px;
+            font-size: 0.75em;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .scan-badge.channel {
+            text-transform: uppercase;
+            background: rgba(108, 168, 232, 0.2);
+            border-color: rgba(108, 168, 232, 0.55);
+            color: #cfe8ff;
+        }
+
+        .scan-badge.rssi.excellent {
+            background: rgba(68, 179, 111, 0.24);
+            border-color: rgba(68, 179, 111, 0.62);
+            color: #c6f7d5;
+        }
+
+        .scan-badge.rssi.good {
+            background: rgba(127, 206, 107, 0.22);
+            border-color: rgba(127, 206, 107, 0.58);
+            color: #d9f8c8;
+        }
+
+        .scan-badge.rssi.fair {
+            background: rgba(229, 154, 47, 0.2);
+            border-color: rgba(229, 154, 47, 0.56);
+            color: #ffe0ae;
+        }
+
+        .scan-badge.rssi.weak {
+            background: rgba(214, 79, 79, 0.2);
+            border-color: rgba(214, 79, 79, 0.56);
+            color: #ffd0d0;
         }
 
         .data-table .empty-row td {
@@ -2068,14 +2135,13 @@
                     <table class="data-table wifi-table">
                         <thead>
                             <tr>
-                                <th></th>
                                 <th>SSID</th>
                                 <th>channel</th>
                                 <th>RSSI</th>
                             </tr>
                         </thead>
                         <tbody id="scanbody">
-                            <tr class="empty-row"><td colspan="4">No scan results yet. Press scan to discover nearby networks.</td></tr>
+                            <tr class="empty-row"><td colspan="3">No scan results yet. Press scan to discover nearby networks.</td></tr>
                         </tbody>
                     </table>
                     <h5>SSID</h5>
@@ -3352,7 +3418,7 @@
             _("#scanResults").hidden = true;
             _("#scanbody").innerHTML = "";
             _("#scanbody").append(_$("tr", {className: "empty-row"},
-                _$("td", {colSpan: 4, textContent: "Scanning for networks..."})
+                _$("td", {colSpan: 3, textContent: "Scanning for networks..."})
             ));
             showToast("Scan running...", "info", 2500);
             addRecentEvent("WiFi scan started");
@@ -3597,27 +3663,57 @@
                 _("#scanbody").innerHTML = "";
                 if (numResults === 0) {
                     _("#scanbody").append(_$("tr", {className: "empty-row"},
-                        _$("td", {colSpan: 4, textContent: "No nearby networks found."})
+                        _$("td", {colSpan: 3, textContent: "No nearby networks found."})
                     ));
                     return;
                 }
 
+                const scanBody = _("#scanbody");
+                const selectScanRow = (selectedRow, ssid) => {
+                    __("tr.scan-result-row", scanBody).forEach(row => row.classList.remove("is-selected"));
+                    selectedRow.classList.add("is-selected");
+                    _("#wifissid").value = ssid;
+                };
+
                 scanObj.results.forEach(element => {
-                    _("#scanbody").append(
-                        _$("tr", {},
+                    const rssiValue = Number(element.rssi);
+                    let rssiQuality = "weak";
+                    if (!Number.isNaN(rssiValue)) {
+                        if (rssiValue >= -60)
+                            rssiQuality = "excellent";
+                        else if (rssiValue >= -70)
+                            rssiQuality = "good";
+                        else if (rssiValue >= -80)
+                            rssiQuality = "fair";
+                    }
+
+                    const row = _$("tr", {
+                            className: "scan-result-row",
+                            title: "Click to select this network"
+                        },
+                            _$("td", {textContent: element.ssid}),
                             _$("td", {},
-                                _$("input", {
-                                    type: "radio", 
-                                    name: "ssid", 
-                                    value: element.ssid, 
-                                    onclick: (ev) => {_("#wifissid").value = ev.target.value;}
+                                _$("span", {
+                                    className: "scan-badge channel",
+                                    textContent: `CH ${element.channel}`
                                 })
                             ),
-                            _$("td", {textContent: element.ssid}),
-                            _$("td", {textContent: element.channel}),
-                            _$("td", {textContent: element.rssi})
-                        )
-                    );
+                            _$("td", {},
+                                _$("span", {
+                                    className: `scan-badge rssi ${rssiQuality}`,
+                                    textContent: `${element.rssi} dBm`
+                                })
+                            )
+                        );
+
+                    row.addEventListener("click", () => {
+                        selectScanRow(row, element.ssid);
+                    });
+
+                    if (_("#wifissid").value === element.ssid)
+                        selectScanRow(row, element.ssid);
+
+                    scanBody.append(row);
                 });
             };
 
@@ -4201,7 +4297,7 @@
 
             function fetchStatus() {
                 var xhr = new XMLHttpRequest();
-                xhr.timeout = 5000;
+                xhr.timeout = 10000;
                 xhr.onload = (ev) => {
                     try {
                         statuscache = JSON.parse(ev.target.responseText);
