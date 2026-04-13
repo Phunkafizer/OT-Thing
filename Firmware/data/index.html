@@ -13,6 +13,7 @@
             box-sizing: border-box;
         }
 
+        /* Theme Tokens */
         :root {
             --bg-main: #1d1f24;
             --bg-panel: #15171b;
@@ -167,6 +168,7 @@
             }
         }
 
+        /* Navigation + Tab Animations */
         div.nav {
             margin-bottom: var(--space-2);
         }
@@ -246,6 +248,7 @@
             }
         }
 
+        /* Panels + Data Surfaces */
         div.group {
             border: 1px solid rgba(255, 153, 85, 0.38);
             border-radius: var(--radius-md);
@@ -531,6 +534,7 @@
             list-style-position: inside;
         }
 
+        /* Form Controls */
         input[type=password],
         input[type=number],
         input:not([type]),
@@ -631,6 +635,7 @@
             box-shadow: none;
         }
 
+        /* Tables + Result Rows */
         table {
             width: 100%;
             text-align: left;
@@ -933,6 +938,7 @@
             display: none !important;
         }
 
+        /* Overlays + Utilities */
         .modal {
             position: fixed;
             inset: 0;
@@ -2530,9 +2536,28 @@
     </div>
     <div id="toastContainer" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
     <script>
+        // Constants + Defaults
         const 
         CURVE_MODE_SIMPLE = 0,
         CURVE_MODE_MULTIPOINT = 1,
+        UI_STATE_VERSION = 2,
+        UI_STATE_STORAGE_KEY = "otthing.uiState",
+        UI_TIMINGS = {
+            toastDefaultMs: 3500,
+            toastDismissMs: 220,
+            flashMs: 650,
+            tabEnterCleanupMs: 760,
+            scanXhrTimeoutMs: 15000,
+            scanRetryMs: 2000,
+            scanStartToastMs: 2500,
+            scanSuccessToastMs: 3500,
+            scanErrorToastMs: 4000,
+            statusXhrTimeoutMs: 10000,
+            statusPollSuccessMs: 5000,
+            statusPollRetryMs: 3000,
+            firmwareReloadMs: 5000,
+            wsReconnectMs: 1000
+        },
         defaultConfig = {
             hostname: "otthing",
             haPrefix: "homeassistant",
@@ -2657,6 +2682,7 @@
         wifiScanRunning = false;
 
 
+        // DOM Helpers
         function _(query, root = document) {
             return root.querySelector(query);
         }
@@ -2672,7 +2698,9 @@
             return result;
         }
 
-        function showToast(message, type = "info", timeoutMs = 3500, onClose = null) {
+
+        // UI Feedback Helpers
+        function showToast(message, type = "info", timeoutMs = UI_TIMINGS.toastDefaultMs, onClose = null) {
             const container = _("#toastContainer");
             if (!container)
                 return;
@@ -2693,7 +2721,7 @@
                     toast.remove();
                     if (typeof onClose === "function")
                         onClose();
-                }, 220);
+                }, UI_TIMINGS.toastDismissMs);
             }, timeoutMs);
         }
 
@@ -2704,7 +2732,7 @@
             el.classList.remove("action-flash");
             void el.offsetWidth;
             el.classList.add("action-flash");
-            setTimeout(() => el.classList.remove("action-flash"), 650);
+            setTimeout(() => el.classList.remove("action-flash"), UI_TIMINGS.flashMs);
         }
 
         function addRecentEvent(text) {
@@ -2752,6 +2780,58 @@
         function parseNumber(value) {
             const num = Number.parseFloat(value);
             return Number.isFinite(num) ? num : null;
+        }
+
+        // UI State Persistence + Migration
+        function migrateUiState(rawState) {
+            const state = (rawState && typeof rawState === "object") ? Object.assign({}, rawState) : {};
+
+            if (!Number.isInteger(state.version))
+                state.version = 1;
+
+            if (state.version === 1) {
+                if (typeof state.tab === "string" && !state.activeTab)
+                    state.activeTab = state.tab;
+                if (state.channel !== undefined && state.currentCh === undefined)
+                    state.currentCh = parseInt(state.channel) || 0;
+
+                delete state.tab;
+                delete state.channel;
+                state.version = 2;
+            }
+
+            if (typeof state.activeTab !== "string" || state.activeTab.length === 0)
+                state.activeTab = "status";
+
+            if (!Number.isInteger(state.currentCh))
+                state.currentCh = 0;
+
+            state.currentCh = Math.max(0, Math.min(1, state.currentCh));
+            state.version = UI_STATE_VERSION;
+            return state;
+        }
+
+        function loadUiState() {
+            try {
+                const raw = localStorage.getItem(UI_STATE_STORAGE_KEY);
+                const parsed = raw ? JSON.parse(raw) : {};
+                const migrated = migrateUiState(parsed);
+                localStorage.setItem(UI_STATE_STORAGE_KEY, JSON.stringify(migrated));
+                return migrated;
+            }
+            catch (err) {
+                return migrateUiState({});
+            }
+        }
+
+        function saveUiState(patch = {}) {
+            try {
+                const current = loadUiState();
+                const merged = migrateUiState(Object.assign({}, current, patch));
+                localStorage.setItem(UI_STATE_STORAGE_KEY, JSON.stringify(merged));
+            }
+            catch (err) {
+            }
         }
 
         function updateMetric(idValue, idArrow, value, unit, key) {
@@ -3403,7 +3483,7 @@
             }
         }
 
-
+    // Button + Action Handlers
         /*
          * event handlers for buttons 
         */
@@ -3420,7 +3500,7 @@
             _("#scanbody").append(_$("tr", {className: "empty-row"},
                 _$("td", {colSpan: 3, textContent: "Scanning for networks..."})
             ));
-            showToast("Scan running...", "info", 2500);
+            showToast("Scan running...", "info", UI_TIMINGS.scanStartToastMs);
             addRecentEvent("WiFi scan started");
             scanWiFi();
         }
@@ -3644,11 +3724,11 @@
 
         function scanWiFi() {
             let xhr = new XMLHttpRequest();
-            xhr.timeout = 15000;
+            xhr.timeout = UI_TIMINGS.scanXhrTimeoutMs;
             xhr.onload = (e) => {
                 let scanObj = JSON.parse(e.target.responseText);
                 if (scanObj.status < 0) {
-                    setTimeout(scanWiFi, 2000);
+                    setTimeout(scanWiFi, UI_TIMINGS.scanRetryMs);
                     return;
                 }
 
@@ -3657,7 +3737,7 @@
                 _("#scanbtn").disabled = false;
 
                 const numResults = scanObj.results?.length ?? 0;
-                showToast(`Scan finished: ${numResults} network(s) found`, "success", 3500);
+                showToast(`Scan finished: ${numResults} network(s) found`, "success", UI_TIMINGS.scanSuccessToastMs);
                 addRecentEvent(`WiFi scan: ${numResults} network(s)`);
 
                 _("#scanbody").innerHTML = "";
@@ -3720,14 +3800,14 @@
             xhr.onerror = () => {
                 wifiScanRunning = false;
                 _("#scanbtn").disabled = false;
-                showToast("WiFi scan failed", "error", 4000);
+                showToast("WiFi scan failed", "error", UI_TIMINGS.scanErrorToastMs);
                 addRecentEvent("WiFi scan failed");
             };
 
             xhr.ontimeout = () => {
                 wifiScanRunning = false;
                 _("#scanbtn").disabled = false;
-                showToast("WiFi scan timeout", "error", 4000);
+                showToast("WiFi scan timeout", "error", UI_TIMINGS.scanErrorToastMs);
                 addRecentEvent("WiFi scan timeout");
             };
             
@@ -3735,9 +3815,11 @@
             xhr.send();
         }
 
-
+        // App Bootstrap + UI Wiring
         window.onload = () => {
             let tabEnterTimer = null;
+            const uiState = loadUiState();
+            currentCh = uiState.currentCh;
 
             __("div.nav li").forEach(li => {
                 li.onclick = ev => {
@@ -3759,7 +3841,7 @@
 
                     if (tabEnterTimer)
                         clearTimeout(tabEnterTimer);
-                    tabEnterTimer = setTimeout(() => tabElement.classList.remove("tab-enter"), 360);
+                    tabEnterTimer = setTimeout(() => tabElement.classList.remove("tab-enter"), UI_TIMINGS.tabEnterCleanupMs);
 
                     li.classList.add("active");
 
@@ -3771,9 +3853,18 @@
                             updateStatusValues(_("#heatingcurve"));
                         }
                     }
+
+                    saveUiState({
+                        activeTab: tabName,
+                        currentCh: currentCh
+                    });
                 };
             });
-            _("div.nav li.active").click();
+            const initialNav = _(`div.nav li[tab="${uiState.activeTab}"][channel="${currentCh}"]`) ||
+                _(`div.nav li[tab="${uiState.activeTab}"]`) ||
+                _("div.nav li.active");
+            if (initialNav)
+                initialNav.click();
 
             _("#title").onclick  = (ev) => {
                 if (window.location.protocol == "file:")
@@ -3950,7 +4041,7 @@
             xhrConfig.send();
 
             
-
+            // Data Binding + Config/Status Sync
             function getElementValue(ele) {
                 let val = ele.value;
                 if (ele.hasAttribute("intval"))
@@ -4297,7 +4388,7 @@
 
             function fetchStatus() {
                 var xhr = new XMLHttpRequest();
-                xhr.timeout = 10000;
+                xhr.timeout = UI_TIMINGS.statusXhrTimeoutMs;
                 xhr.onload = (ev) => {
                     try {
                         statuscache = JSON.parse(ev.target.responseText);
@@ -4313,11 +4404,11 @@
                     }
 
                     consumeStatusCache();
-                    setTimeout(fetchStatus, 5000);
+                    setTimeout(fetchStatus, UI_TIMINGS.statusPollSuccessMs);
                 };
                 xhr.ontimeout = (ev) => {
                     _("#nocon").hidden = false;
-                    setTimeout(fetchStatus, 3000);
+                    setTimeout(fetchStatus, UI_TIMINGS.statusPollRetryMs);
                 };
                 xhr.open("GET", "status");
                 xhr.send();
@@ -4387,7 +4478,7 @@
                     progressText.innerHTML = "Download successful. Rebooting...";
                     setTimeout(() => {
                         location.reload();
-                    }), "5000";
+                    }, UI_TIMINGS.firmwareReloadMs);
                 };
 
                 xhrDownload.onloadstart = () => {
@@ -4437,7 +4528,7 @@
                     addRecentEvent("Log socket disconnected");
                     setTimeout(function() {
                         connectWS();
-                    }, 1000);
+                    }, UI_TIMINGS.wsReconnectMs);
                 }
                 websocket.onmessage = (ev) => {
                     logws(ev.data);
