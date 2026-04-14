@@ -16,6 +16,18 @@ import subprocess
 import time
 import webbrowser
 
+# ANSI colour output
+if sys.platform == "win32":
+    os.system("")  # enable VT processing on Windows
+_RED    = "\033[91m"
+_GREEN  = "\033[92m"
+_YELLOW = "\033[93m"
+_RESET  = "\033[0m"
+
+def _ok(msg):   print(f"{_GREEN}{msg}{_RESET}")
+def _err(msg):  print(f"{_RED}{msg}{_RESET}")
+def _warn(msg): print(f"{_YELLOW}{msg}{_RESET}")
+
 # USB Device IDs
 TARGET_USB_VID = 0x303A
 TARGET_USB_PID = 0x1001
@@ -117,41 +129,27 @@ def get_target_port():
 
 def wait_for_stable_target_port(stable_seconds=STABLE_DEVICE_SECONDS):
     """
-    Wait for USB device to stay connected for stable_seconds.
-    Returns the port name once stable.
+    Wait for USB device to appear, then return immediately.
+    Returns the port name as soon as it is present.
     """
-    stable_port = None
-    stable_since = None
+    last_port = None
 
     print(
-        f"Waiting for USB device VID:PID {TARGET_USB_VID:04X}:{TARGET_USB_PID:04X} "
-        f"to stay connected for {int(stable_seconds)} s... (Ctrl+C to stop)"
+        f"Waiting for USB device VID:PID {TARGET_USB_VID:04X}:{TARGET_USB_PID:04X}... (Ctrl+C to stop)"
     )
 
     while True:
         port = get_target_port()
-        now = time.monotonic()
 
         if port is None:
-            if stable_port is not None:
-                print("Device disappeared again, waiting for stable connection...")
-            stable_port = None
-            stable_since = None
+            if last_port is not None:
+                print("Device disappeared, waiting for it to re-appear...")
+            last_port = None
             time.sleep(DEVICE_POLL_INTERVAL_SECONDS)
             continue
 
-        if port != stable_port:
-            stable_port = port
-            stable_since = now
-            print(f"Device {port} detected. Checking stability...")
-            time.sleep(DEVICE_POLL_INTERVAL_SECONDS)
-            continue
-
-        if (now - stable_since) >= stable_seconds:
-            print(f"Device {port} stable for {int(stable_seconds)} s. Starting upload.")
-            return port
-
-        time.sleep(DEVICE_POLL_INTERVAL_SECONDS)
+        print(f"Device {port} present. Starting upload.")
+        return port
 
 
 def upload_firmware(port, project_dir):
@@ -172,7 +170,7 @@ def upload_firmware(port, project_dir):
     
     # Check if all binaries exist
     if not all(os.path.exists(p) for p in [bootloader_path, partition_path, firmware_path]):
-        print("✗ Build artifacts not found at:")
+        _err("✗ Build artifacts not found at:")
         print(f"  {bootloader_path}")
         print(f"  {partition_path}")
         print(f"  {firmware_path}")
@@ -186,42 +184,60 @@ def upload_firmware(port, project_dir):
         from esptool.loader import NotImplementedInROMError
         
         # Connect, erase flash, and write binaries in a single session
-        with esptool.cmds.detect_chip(port=port) as esp:
+        esp = esptool.cmds.detect_chip(port=port)
+        try:
             print(f"Chip: {esp.get_chip_description()}")
             print("Erasing flash...")
             try:
                 esp.erase_flash()
             except NotImplementedInROMError:
                 print("ROM erase_flash unsupported on this chip; starting stub flasher...")
-                esp = esptool.run_stub(esp)
+                esp = esp.run_stub()
                 esp.erase_flash()
 
             print("Writing bootloader, partition table, and firmware...")
-            esptool.write_flash(
-                esp,
-                [
-                    (0x0, bootloader_path),
-                    (0x8000, partition_path),
-                    (0x10000, firmware_path),
-                ],
-                flash_freq="keep",
-                flash_mode="keep",
-                flash_size="keep",
-            )
-            print("✓ Firmware uploaded successfully")
+            import argparse
+            with open(bootloader_path, "rb") as f0, \
+                 open(partition_path, "rb") as f1, \
+                 open(firmware_path, "rb") as f2:
+                flash_args = argparse.Namespace(
+                    addr_filename=[
+                        (0x0, f0),
+                        (0x8000, f1),
+                        (0x10000, f2),
+                    ],
+                    flash_size="keep",
+                    flash_mode="keep",
+                    flash_freq="keep",
+                    no_stub=False,
+                    compress=None,
+                    no_compress=False,
+                    verify=False,
+                    erase_all=False,
+                    encrypt=False,
+                    encrypt_files=None,
+                    force=False,
+                    ignore_flash_encryption_efuse_setting=False,
+                )
+                esptool.cmds.write_flash(esp, flash_args)
+            _ok("✓ Firmware uploaded successfully")
+        finally:
+            esp._port.close()
 
         return True
     except Exception as e:
-        print(f"✗ Upload failed: {e}")
+        _err(f"✗ Upload failed: {e}")
         sys.exit(1)
 
 
-def verify_tcp_stream(host, port, max_lines=40, connect_timeout=20, read_timeout=3):
-    """Connect to a TCP/IP port and verify alternating T/B hex lines."""
+def verify_tcp_stream(host, port, max_cycles=20, connect_timeout=30, read_timeout=10):
+    """Connect to a TCP/IP port and verify OT event lines cycling T→S→P→B."""
     import re
 
-    line_pattern = re.compile(r"^[TB][0-9A-Fa-f]{8}$")
-    print(f"\n=== Verifying TCP/IP stream on {host}:{port} ===")
+    line_pattern = re.compile(r"^[TSPBtspb][0-9A-Fa-f]{8}$")
+    sequence = ["T", "S", "P", "B"]
+    max_lines = max_cycles * len(sequence)
+    print(f"\n=== Verifying TCP/IP stream on {host}:{port} ({max_cycles} cycles) ===")
 
     deadline = time.time() + connect_timeout
     sock = None
@@ -234,15 +250,17 @@ def verify_tcp_stream(host, port, max_lines=40, connect_timeout=20, read_timeout
             time.sleep(1)
 
     if sock is None:
-        print(f"✗ Could not connect to {host}:{port} within {connect_timeout}s")
+        _err(f"✗ Could not connect to {host}:{port} within {connect_timeout}s")
         return False
 
     with sock:
         sock.settimeout(read_timeout)
         try:
             with sock.makefile("r", encoding="utf-8", newline="\n") as stream:
-                previous_prefix = None
                 lines_read = 0
+                seq_idx = None
+                last_t_hex = None  # hex from last T message, expect S to match
+                last_p_hex = None  # hex from last P message, expect B to match
                 for _ in range(max_lines):
                     line = stream.readline()
                     if not line:
@@ -253,29 +271,52 @@ def verify_tcp_stream(host, port, max_lines=40, connect_timeout=20, read_timeout
                     lines_read += 1
                     print(f"TCP[{lines_read}]: {line}")
                     if not line_pattern.match(line):
-                        print("✗ Invalid line format. Expected T/B followed by 8 hex chars.")
+                        _err(f"✗ Invalid line format: '{line}'. Expected T/S/P/B + 8 hex digits.")
                         return False
-                    prefix = line[0]
-                    if previous_prefix is not None and prefix == previous_prefix:
-                        print(
-                            f"✗ Expected alternating T/B sequence, got {prefix} after {previous_prefix}."
-                        )
-                        return False
-                    previous_prefix = prefix
+                    prefix = line[0].upper()
+                    hex_val = line[1:]
+                    if seq_idx is None:
+                        # Accept any starting position in the cycle
+                        seq_idx = sequence.index(prefix) if prefix in sequence else None
+                        if seq_idx is None:
+                            _err(f"✗ Unexpected prefix '{prefix}', expected one of {sequence}.")
+                            return False
+                    else:
+                        expected_idx = (seq_idx + 1) % len(sequence)
+                        if prefix != sequence[expected_idx]:
+                            _err(f"✗ Expected '{sequence[expected_idx]}' in T→S→P→B sequence, got '{prefix}'.")
+                            return False
+                        seq_idx = expected_idx
 
-                if lines_read < 2:
-                    print("✗ Not enough lines received for verification.")
+                    # Cross-message hex matching
+                    if prefix == "T":
+                        last_t_hex = hex_val
+                    elif prefix == "S":
+                        if last_t_hex is not None and hex_val != last_t_hex:
+                            _err(f"✗ S hex '{hex_val}' does not match preceding T hex '{last_t_hex}'.")
+                            return False
+                        last_t_hex = None
+                    elif prefix == "P":
+                        last_p_hex = hex_val
+                    elif prefix == "B":
+                        if last_p_hex is not None and hex_val != last_p_hex:
+                            _err(f"✗ B hex '{hex_val}' does not match preceding P hex '{last_p_hex}'.")
+                            return False
+                        last_p_hex = None
+
+                if lines_read < max_lines:
+                    _err(f"✗ Only received {lines_read}/{max_lines} lines ({lines_read // len(sequence)}/{max_cycles} complete cycles).")
                     return False
 
         except OSError as exc:
-            print(f"✗ TCP/IP read failed: {exc}")
+            _err(f"✗ TCP/IP read failed: {exc}")
             return False
 
-    print("✓ TCP/IP stream verified")
+    _ok("✓ TCP/IP stream verified")
     return True
 
 
-def verify_http_page(host, port=80, connect_timeout=5, read_timeout=3):
+def verify_http_page(host, port=80, connect_timeout=30, read_timeout=40):
     """Open an HTTP connection and verify a valid HTML page is returned."""
     print(f"\n=== Verifying HTTP page on http://{host}:{port}/ ===")
     deadline = time.time() + connect_timeout
@@ -292,93 +333,134 @@ def verify_http_page(host, port=80, connect_timeout=5, read_timeout=3):
                 )
                 sock.sendall(request.encode("ascii"))
 
+                # Read the full response until connection closes
                 response = b""
-                while b"\r\n\r\n" not in response and len(response) < 16384:
-                    chunk = sock.recv(1024)
+                while True:
+                    try:
+                        chunk = sock.recv(4096)
+                    except OSError:
+                        break
                     if not chunk:
                         break
                     response += chunk
 
                 content = response.decode("utf-8", errors="replace")
                 if "HTTP/" not in content:
-                    print("✗ Invalid HTTP response")
+                    _err("✗ Invalid HTTP response")
                     return False
 
                 status_line = content.splitlines()[0] if content.splitlines() else ""
                 print(f"HTTP status: {status_line}")
                 if "200" not in status_line:
-                    print("✗ Non-OK HTTP status")
+                    _err("✗ Non-OK HTTP status")
                     return False
 
-                body = content.split("\r\n\r\n", 1)[1] if "\r\n\r\n" in content else ""
-                if "<html" not in body.lower():
-                    print("✗ Response does not contain valid HTML")
+                body_start = response.find(b"\r\n\r\n")
+                headers = response[:body_start].decode("utf-8", errors="replace") if body_start >= 0 else ""
+                body = response[body_start + 4:] if body_start >= 0 else b""
+
+                print(f"Body size: {len(body)} bytes, headers: {headers[:200].strip()}")
+
+                if not body:
+                    _err("✗ Response body is empty")
                     return False
 
-                print("✓ HTTP page verified")
+                # Handle gzip-encoded response — detect by magic bytes since ESP32
+                # often omits Content-Encoding: gzip header
+                is_gzip = ("content-encoding: gzip" in headers.lower()) or body[:2] == b"\x1f\x8b"
+                if is_gzip:
+                    import gzip
+                    try:
+                        body = gzip.decompress(body)
+                    except Exception as exc:
+                        _err(f"✗ Failed to decompress gzip body: {exc}")
+                        return False
+
+                if b"<html" not in body.lower() and b"<!doctype" not in body.lower():
+                    _err("✗ Response body does not contain valid HTML")
+                    return False
+
+                _ok("✓ HTTP page verified")
                 return True
         except OSError as exc:
             print(f"Waiting for HTTP port {host}:{port}... ({exc})")
             time.sleep(1)
 
-    print(f"✗ Could not connect to HTTP server on {host}:{port} within {connect_timeout}s")
+    _err(f"✗ Could not connect to HTTP server on {host}:{port} within {connect_timeout}s")
     return False
 
 
-def connect_to_otthing_wifi(profile="OTthing", timeout=20):
-    print("Connecting to OTthing WiFi...")
-    cmd = f'netsh wlan connect name="{profile}"'
-    result = subprocess.run(["cmd", "/c", cmd], capture_output=True, text=True)
-    if result.stdout.strip():
-        print(result.stdout.strip())
-    if result.returncode != 0:
-        print(result.stderr.strip())
-        return False
+def connect_to_otthing_wifi(profile="OTthing", timeout=20, retries=3):
+    def _netsh_connect():
+        print(f"Connecting to OTthing WiFi (profile: {profile})...")
+        cmd = f'netsh wlan connect name="{profile}"'
+        result = subprocess.run(["cmd", "/c", cmd], capture_output=True, text=True)
+        if result.stdout.strip():
+            print(result.stdout.strip())
+        if result.returncode != 0:
+            print(result.stderr.strip())
+            return False
+        return True
 
-    deadline = time.time() + timeout
-    while time.time() < deadline:
-        check = subprocess.run(
-            ["cmd", "/c", "netsh wlan show interfaces"],
-            capture_output=True,
-            text=True,
-        )
-        output = check.stdout
-        if "State                   : connected" in output and f"SSID                   : {profile}" in output:
-            print(f"✓ Connected to WiFi profile {profile}")
+    for attempt in range(1, retries + 1):
+        if not _netsh_connect():
+            return False
+
+        wait = 8 if attempt == 1 else 5
+        disconnected_early = False
+        for remaining in range(wait, 0, -1):
+            # Query current WiFi SSID every second during the wait
+            check = subprocess.run(
+                ["cmd", "/c", "netsh wlan show interfaces"],
+                capture_output=True, text=True, encoding="cp850", errors="replace"
+            )
+            ssid_line = next((l.strip() for l in check.stdout.splitlines() if "SSID" in l and "BSSID" not in l), "SSID: ?")
+            state_line = next((l.strip() for l in check.stdout.splitlines() if "Status" in l or "tatus" in l or "Status" in l), "State: ?")
+            print(f"  [{remaining:2d}s] {state_line} | {ssid_line}")
+            output_lower = check.stdout.lower()
+            # Break early if already associated
+            if ("verbunden" in output_lower or "connected" in output_lower) and profile.lower() in output_lower:
+                print(f"  WiFi associated after {wait - remaining + 1}s")
+                break
+            # If fully disconnected (not just associating), retry connect immediately
+            if "getrennt" in output_lower or "disconnected" in output_lower:
+                _warn("  Disconnected — retrying netsh connect immediately...")
+                disconnected_early = True
+                break
+            time.sleep(1)
+
+        if disconnected_early:
+            continue  # skip IP probe, go straight to next netsh connect attempt
+
+        # Probe the device IP to confirm the WiFi link is up
+        deadline = time.time() + timeout
+        connected = False
+        while time.time() < deadline:
+            try:
+                with socket.create_connection((DEVICE_IP, 80), timeout=5):
+                    _ok(f"✓ Connected to WiFi profile {profile} (device reachable at {DEVICE_IP})")
+                    connected = True
+                    break
+            except OSError:
+                time.sleep(1)
+
+        if connected:
             return True
-        time.sleep(1)
 
-    print(f"✗ OTthing WiFi did not become connected within {timeout}s")
+        _warn(f"⚠ Device not reachable at {DEVICE_IP} after attempt {attempt}/{retries}, retrying netsh...")
+
+    _err(f"✗ OTthing WiFi did not become connected after {retries} attempt(s)")
     return False
 
 
-def configure_device(port):
+def configure_device():
     """
     Configure device after firmware upload.
-    
-    Reads MAC, performs hard reset, connects via WiFi, and sends config.
     Uses DEVICE_IP for web interface connection.
     """
-    import esptool
     import requests
     
-    print(f"\n=== Configuring device on {port} ===")
-    
-    # Detect chip and read MAC
-    with esptool.cmds.detect_chip(port=port) as esp:
-        mac = esp.read_mac()
-        macstr = ":".join(map(lambda x: "%02X" % x, mac))
-        print(f"MAC: {macstr}")
-        esp.hard_reset()
-    
-    # Open device web interface
-    config_url = f"http://{DEVICE_IP}"
-    print(f"Opening {config_url}...")
-    webbrowser.open(config_url)
-    
-    # Wait for user to be ready
-    print("Press enter to send default config to target")
-    input("")
+    print(f"\n=== Configuring device ===")
     
     # Send configuration
     try:
@@ -395,18 +477,18 @@ def configure_device(port):
         # Compare sent vs received
         import json
         if conf == CONFIG:
-            print("✓ Configuration verified - device matches sent config")
+            _ok("✓ Configuration verified - device matches sent config")
         else:
-            print("⚠ Configuration mismatch detected:")
+            _warn("⚠ Configuration mismatch detected:")
             print("Sent:")
             print(json.dumps(CONFIG, indent=2))
             print("\nReceived:")
             print(json.dumps(conf, indent=2))
         
-        print("✓ Device configured successfully")
+        _ok("✓ Device configured successfully")
         return True
     except Exception as e:
-        print(f"✗ Configuration failed: {e}")
+        _err(f"✗ Configuration failed: {e}")
         sys.exit(1)
 
 
@@ -414,12 +496,12 @@ def wait_for_device_disconnect():
     """
     Wait for the USB device to be disconnected.
     """
-    print("Waiting for device to disconnect...")
+    _warn("Waiting for device to disconnect...")
     
     while True:
         port = get_target_port()
         if port is None:
-            print("✓ Device disconnected")
+            _ok("✓ Device disconnected")
             return
         time.sleep(DEVICE_POLL_INTERVAL_SECONDS)
 
@@ -450,7 +532,7 @@ def batch_upload(project_dir):
             upload_count += 1
 
             # Wait for device to disconnect and reconnect into config mode
-            print("Bring the device into configuration mode by holding RST > 2 seconds")
+            _warn("Bring the device into configuration mode by holding RST > 2 seconds")
             wait_for_device_disconnect()
             wait_for_stable_target_port(stable_seconds=2)
             time.sleep(2)
@@ -464,16 +546,22 @@ def batch_upload(project_dir):
             else:
                 # Attempt configuration
                 try:
-                    configure_device(stable_port)
-                    # Wait for device to be physically disconnected
+                    configure_device()
+                    # Open device web interface
+                    config_url = f"http://{DEVICE_IP}"
+                    print(f"Opening {config_url}...")
+                    webbrowser.open(config_url)
+                    _ok("\n" + "=" * 50)
+                    _ok(f"  ✓  DEVICE #{upload_count} COMPLETE — ALL STEPS PASSED")
+                    _ok("=" * 50 + "\n")
                 except Exception as e:
-                    print(f"Configuration error: {e}")
+                    _err(f"Configuration error: {e}")
                     failure_count += 1
         else:
             failure_count += 1
         
         # Wait for next device
-        print("\n✓ Device complete. Connect the next one...")
+        _warn("Connect the next one...")
         wait_for_device_disconnect()
         time.sleep(1)
 

@@ -208,7 +208,7 @@ void OTControl::begin() {
     master.hal.begin(handleIrqMaster, otCbMaster);
     slave.hal.begin(handleIrqSlave, otCbSlave);
 
-    setOTMode(otMode);
+    setOTMode(OTMODE_LOOPBACKTEST);
 }
 
 void OTControl::masterPinIrq() {
@@ -246,6 +246,8 @@ void OTControl::setOTMode(const OTMode mode) {
     digitalWrite(GPIO_BYPASS_RELAY, (mode != OTMODE_BYPASS) && !bypass);
 
     // set +24V stepup up
+    if (mode == OTMODE_LOOPBACKTEST)
+        enableSlave = true; // in loopback test mode we need to enable stepup for slave to work
     digitalWrite(GPIO_STEPUP_ENABLE, enableSlave && !bypass);
 
     for (auto *valobj: slaveValues)
