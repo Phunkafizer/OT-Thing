@@ -256,7 +256,7 @@
             padding: var(--space-2);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
 
         div.group::after {
@@ -287,6 +287,7 @@
 
         div.param {
             padding: 0 12px 0.5em 0;
+            position: relative;
         }
 
         div.param.range {
@@ -317,6 +318,30 @@
             letter-spacing: 0.09em;
             color: #d6a883;
             margin-bottom: 0.22em;
+        }
+
+        h5.infobox-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35em;
+            cursor: help;
+        }
+
+        h5.infobox-trigger::after {
+            content: "i";
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.35em;
+            height: 1.35em;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 153, 85, 0.55);
+            background: rgba(255, 153, 85, 0.14);
+            color: #ffd8b9;
+            font-size: 0.88em;
+            font-weight: 700;
+            line-height: 1;
+            text-transform: none;
         }
 
         div.valunit {
@@ -525,9 +550,24 @@
 
         div.infobox {
             display: none;
+            position: absolute;
+            z-index: 20;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
             padding: 10px;
-            color: #999;
-            font-size: 0.9em;
+            color: #d9c2ab;
+            font-size: 0.86em;
+            line-height: 1.35;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 153, 85, 0.38);
+            background: linear-gradient(180deg, rgba(20, 24, 30, 0.98), rgba(14, 17, 22, 0.98));
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .param h5.infobox-trigger:hover + .infobox,
+        .param h5.infobox-trigger:focus-visible + .infobox {
+            display: block;
         }
 
         ul {
@@ -1776,6 +1816,17 @@
                 <div class="flexline">
                     <div class="param range" field="heating.$.flowMax">
                         <h5>Max. flow temperature</h5>
+                        <div class="infobox">
+                            Typical system temperatures supply/return:
+                            <ul>
+                                <li>Old standard: 90 &deg;C / 70 &deg;C</li>
+                                <li>New standard: 75 &deg;C / 65 &deg;C</li>
+                                <li>Low-temperature: 70 &deg;C / 50 &deg;C</li>
+                                <li>Condensing boiler: 60 &deg;C / 45 &deg;C</li>
+                                <li>Condensing boiler: 45 &deg;C / 35 &deg;C</li>
+                            </ul>
+                            <p>Source: <a href="www.bosy-online.de">www.bosy-online.de</a></p>
+                        </div>
                         <div class="flexline">
                             <div class="valunit">
                                 <span class="value"></span>
@@ -1783,40 +1834,28 @@
                             </div>
                             <input id="flowmax" class="curveparam" type="range" min="30" max="90" step="1">
                         </div>
-                        <div class="infobox">
-                            Gängige Systemtemperaturen Vorlauf/R&uuml;cklauf:
-                            <ul>
-                                <li>Alte Norm: 90 &deg;C / 70 &deg;C</li>
-                                <li>Neue Norm: 75 &deg;C / 65 &deg;C</li>
-                                <li>Niedertemperatur: 70 &deg;C / 50 &deg;C</li>
-                                <li>Brennwert: 60 &deg;C / 45 &deg;C</li>
-                                <li>Brennwert: 45 &deg;C / 35 &deg;C</li>
-                            </ul>
-                            <p>Quelle: <a href="www.bosy-online.de">www.bosy-online.de</a></p>
-                        </div>
                     </div>
 
                     <!-- Exponent is linear-only, hidden when multipoint curve is active. -->
                     <div class="param linear-only range" field="heating.$.exponent">
                         <h5>Heating surface exponent</h5>
+                        <div class="infobox">
+                            Depending on the share of conduction, convection, and radiation, the relationship between
+                            flow temperature and heat output is superlinear:
+                            <ul>
+                                <li>Underfloor heating: 1.0 - 1.05</li>
+                                <li>Panel radiators: 1.26 - 1.33</li>
+                                <li>Towel radiators: 1.20 - 1.30</li>
+                                <li>Radiators according to DIN 4703: 1.3</li>
+                                <li>Convectors: 1.30 - 1.50</li>
+                            </ul>
+                            <p>Source: <a href="www.bosy-online.de">www.bosy-online.de</a></p>
+                        </div>
                         <div class="flexline">
                             <div class="valunit">
                                 <span class="value"></span>
                             </div>
                             <input type="range" class="curveparam" min="1.0" max="1.5" step="0.05">
-                        </div>
-                        <div class="infobox">
-                            Je nach Anteil von Leitung, Konvektion und Strahlung ist das Verhältnis von Vorlauftemperatur
-                            und
-                            Wärmeabgabe überliniear:
-                            <ul>
-                                <li>Fußbodenheizung: 1,0 - 1,05</li>
-                                <li>Flachheizkörper: 1,26 - 1,33</li>
-                                <li>Handtuchradiatoren: 1,20 - 1,30</li>
-                                <li>Heizkörper nach DIN 4703: 1,3</li>
-                                <li>Konvektoren: 1,30 - 1,50</li>
-                            </ul>
-                            <p>Quelle: <a href="www.bosy-online.de">www.bosy-online.de</a></p>
                         </div>
                     </div>
                 </div>
@@ -1838,6 +1877,14 @@
 
                     <div class="param range" field="heating.$.flowMin">
                         <h5>Min. flow temperature</h5>
+                        <div class="infobox">
+                            Sets the minimum allowed flow temperature for the heating circuit.
+                            <ul>
+                                <li>The calculated target flow temperature will not go below this value</li>
+                                <li>If Suspend below min. flow is enabled, the heating circuit is suspended whenever the calculated flow temperature drops below this limit</li>
+                            </ul>
+                            Use this to avoid running the circuit at unnecessarily low flow temperatures.
+                        </div>
                         <div class="flexline">
                             <div class="valunit">
                                 <span class="value"></span>
@@ -2039,20 +2086,36 @@
                     <!-- Gradient/offset are linear-only to keep multipoint mode clean. -->
                     <div class="param linear-only range" field="heating.$.gradient">
                         <h5>Gradient</h5>
+                        <div class="infobox">
+                            Defines how strongly the target flow temperature rises as outside temperature falls.
+                            <ul>
+                                <li>Higher gradient: steeper heating curve and higher flow temperatures in cold weather</li>
+                                <li>Lower gradient: flatter heating curve and lower flow temperatures</li>
+                                <li>Increase it if rooms stay too cold in winter</li>
+                                <li>Decrease it if the system overheats when outside temperatures drop</li>
+                            </ul>
+                            <p>
+                                Source: <a href="http://www.bosy-online.de/Heizkurve.htm">www.bosy-online.de</a>
+                            </p>
+                        </div>
                         <div class="flexline">
                             <div class="valunit">
                                 <span class="value"></span>
                             </div>
                             <input type="range" class="curveparam" min="0.1" max="3" step="0.05">
                         </div>
-                        <div class="infobox">
-                            <p>
-                                Quelle: <a href="http://www.bosy-online.de/Heizkurve.htm">www.bosy-online.de</a>
-                            </p>
-                        </div>
                     </div>
                     <div class="param linear-only range" field="heating.$.offset">
                         <h5>Offset</h5>
+                        <div class="infobox">
+                            Shifts the entire heating curve up or down by a fixed amount.
+                            <ul>
+                                <li>Positive offset: increases target flow temperature across the full curve</li>
+                                <li>Negative offset: decreases target flow temperature across the full curve</li>
+                                <li>Use this for fine adjustment when the overall heating level is slightly too warm or too cool</li>
+                            </ul>
+                            Unlike Gradient, Offset changes the curve evenly instead of making it steeper or flatter.
+                        </div>
                         <div class="flexline">
                             <div class="valunit">
                                 <span class="value"></span>
@@ -2063,6 +2126,15 @@
                     </div>
                     <div class="param range" field="heating.$.returnLimit.deltaT">
                         <h5>Returnlimit &Delta;T</h5>
+                        <div class="infobox">
+                            If the actual system temperature is above the return heatingcurve, a PI controller throttles the flow temperature.
+                            <ul>
+                                <li>0 K: disabled</li>
+                                <li>Higher value: stronger return-temperature limiting</li>
+                                <li>Typical starting point: 3 to 5 K</li>
+                            </ul>
+                            Use the smallest value that still improves condensing operation and system stability.
+                        </div>
                         <div class="flexline">
                             <div class="valunit">
                                 <span class="value"></span>
@@ -2780,6 +2852,18 @@
         function parseNumber(value) {
             const num = Number.parseFloat(value);
             return Number.isFinite(num) ? num : null;
+        }
+
+        function initInfoboxTooltips() {
+            __('.param h5 + .infobox').forEach((box) => {
+                const heading = box.previousElementSibling;
+                if (!heading || heading.tagName !== "H5")
+                    return;
+
+                heading.classList.add("infobox-trigger");
+                heading.setAttribute("tabindex", "0");
+                heading.setAttribute("title", "Show info");
+            });
         }
 
         // UI State Persistence + Migration
@@ -3820,6 +3904,7 @@
             let tabEnterTimer = null;
             const uiState = loadUiState();
             currentCh = uiState.currentCh;
+            initInfoboxTooltips();
 
             __("div.nav li").forEach(li => {
                 li.onclick = ev => {
