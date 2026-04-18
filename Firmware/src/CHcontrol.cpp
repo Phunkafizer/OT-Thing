@@ -129,16 +129,18 @@ double CHcontrol::getFlow() {
         // room temperature compensation
         result += roomComp.deltaT;
     }
-    clip(result, flowMin, curve.getFlowMax());
 
     if (config.minSuspend) {
-        if (result > (flowMin + 0.3))
+        if (result > (flowMin + 0.2))
             minSuspended = false;
+
+        if (result < (flowMin - 0.2))
+            minSuspended = true;
     }
     else
-        if (result < (flowMin - 0.3))
-            minSuspended = true;
-    minSuspended &= config.minSuspend;
+        minSuspended = false;
+
+    clip(result, flowMin, curve.getFlowMax());
 
     return result;
 }

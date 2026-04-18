@@ -2019,16 +2019,25 @@
                     </div>
                 </div>
 
-                <h4>Suspend on room setpoint</h4>
-                <div class="param">
-                    <h5>enable</h5>
-                    <div>
-                        <label class="switch">
-                            <input type="checkbox" hideele="suspendparams" field="heating.$.enableHyst" />
-                            <span class="slider"></span>
-                        </label>
+                <h4 class="infobox-trigger">Suspend on room setpoint</h4>
+                    <div class="infobox">
+                        When enabled, the heating circuit will be suspended (turned off) when the measured room temperature reaches or exceeds the setpoint + offset.<br>
+                        <ul>
+                            <li>Prevents unnecessary heating when the room is already warm enough.</li>
+                            <li>Uses a hysteresis and offset to avoid rapid toggling.</li>
+                            <li>Not recommended for condensing boilers or heating pumps.</li>
+                        </ul>
+                        <b>Tip:</b> Adjust the hysteresis and suspend offset below to fine-tune when heating resumes after suspension.
                     </div>
-                </div>
+                    <div class="param">
+                        <h5>enable</h5>
+                        <div>
+                            <label class="switch">
+                                <input type="checkbox" hideele="suspendparams" field="heating.$.enableHyst" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
                 <div id="suspendparams" class="flexline">
                     <div class="param range" field="heating.$.hysteresis">
                         <h5>hysteresis</h5>
@@ -2558,9 +2567,9 @@
                 <div class="firmware-release-link">
                     <a href="https://github.com/Phunkafizer/OT-Thing/releases/latest" target="_blank" rel="noopener noreferrer">Latest release on GitHub</a>
                 </div>
-                <form id="form_download" method='POST' enctype='multipart/form-data'>
+                <form id="form_update" method='POST' enctype='multipart/form-data'>
                     <input id="firmware_file" type='file' accept='.bin,.bin.gz' name='firmware' hidden>
-                    <button id="btn_download" type="button">download...</button>
+                    <button id="btn_update" type="button">update...</button>
                     <div id="progressDiv" class="progress" hidden>
                         <div id="progressText"></div>
                         <progress id="updprogress" max="100" value="0"></progress>
@@ -4520,16 +4529,16 @@
             };
 
             var xhrDownload = new XMLHttpRequest();
-            _("#btn_download").onclick = () => {
+            _("#btn_update").onclick = () => {
                 _("#firmware_file").click();
             };
 
             _("#firmware_file").onchange = (ev) => {
                 if (ev.target.files && ev.target.files[0])
-                    _("#form_download").requestSubmit();
+                    _("#form_update").requestSubmit();
             };
 
-            _("#form_download").onsubmit = (ev) =>{
+            _("#form_update").onsubmit = (ev) =>{
                 ev.preventDefault();
 
                 var file = _("#firmware_file").files[0];
@@ -4568,7 +4577,7 @@
 
                 xhrDownload.onloadstart = () => {
                     _("#progressDiv").hidden = false;
-                    _("#btn_download").disabled = true;
+                    _("#btn_update").disabled = true;
                     _("#firmware_file").disabled = true;
                     progressBar.max = 100;
                     progressBar.value = 0;
@@ -4578,7 +4587,7 @@
                 xhrDownload.onerror = () => {
                     progressBar.value = 0;
                     progressText.innerHTML = "Error: " + xhrDownload.status;
-                    _("#btn_download").disabled = false;
+                    _("#btn_update").disabled = false;
                     _("#firmware_file").disabled = false;
                 };
 
