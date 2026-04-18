@@ -311,8 +311,7 @@
             letter-spacing: 0.04em;
         }
 
-        h5,
-        th {
+        h5, th, .h5-hint {
             font-size: 0.68em;
             text-transform: uppercase;
             letter-spacing: 0.09em;
@@ -320,14 +319,14 @@
             margin-bottom: 0.22em;
         }
 
-        h5.infobox-trigger {
+        .infobox-trigger {
             display: inline-flex;
             align-items: center;
             gap: 0.35em;
             cursor: help;
         }
 
-        h5.infobox-trigger::after {
+        .infobox-trigger::after {
             content: "i";
             display: inline-flex;
             align-items: center;
@@ -565,8 +564,8 @@
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
         }
 
-        .param h5.infobox-trigger:hover + .infobox,
-        .param h5.infobox-trigger:focus-visible + .infobox {
+        .infobox-trigger:hover + .infobox,
+        .infobox-trigger:focus-visible + .infobox {
             display: block;
         }
 
@@ -1881,7 +1880,7 @@
                             Sets the minimum allowed flow temperature for the heating circuit.
                             <ul>
                                 <li>The calculated target flow temperature will not go below this value</li>
-                                <li>If Suspend below min. flow is enabled, the heating circuit is suspended whenever the calculated flow temperature drops below this limit</li>
+                                <li>If <span class="h5-hint">Suspend below min. flow</span> is enabled, the heating circuit is suspended whenever the calculated flow temperature drops below this limit</li>
                             </ul>
                             Use this to avoid running the circuit at unnecessarily low flow temperatures.
                         </div>
@@ -2019,7 +2018,9 @@
                     </div>
                 </div>
 
-                <h4 class="infobox-trigger">Suspend on room setpoint</h4>
+                <h4>Suspend on room setpoint</h4>
+                <div class="param">
+                    <h5>enable</h5>
                     <div class="infobox">
                         When enabled, the heating circuit will be suspended (turned off) when the measured room temperature reaches or exceeds the setpoint + offset.<br>
                         <ul>
@@ -2029,15 +2030,13 @@
                         </ul>
                         <b>Tip:</b> Adjust the hysteresis and suspend offset below to fine-tune when heating resumes after suspension.
                     </div>
-                    <div class="param">
-                        <h5>enable</h5>
-                        <div>
-                            <label class="switch">
-                                <input type="checkbox" hideele="suspendparams" field="heating.$.enableHyst" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
+                    <div>
+                        <label class="switch">
+                            <input type="checkbox" hideele="suspendparams" field="heating.$.enableHyst" />
+                            <span class="slider"></span>
+                        </label>
                     </div>
+                </div>
                 <div id="suspendparams" class="flexline">
                     <div class="param range" field="heating.$.hysteresis">
                         <h5>hysteresis</h5>
@@ -2864,9 +2863,9 @@
         }
 
         function initInfoboxTooltips() {
-            __('.param h5 + .infobox').forEach((box) => {
+            __('.infobox').forEach((box) => {
                 const heading = box.previousElementSibling;
-                if (!heading || heading.tagName !== "H5")
+                if (!heading)
                     return;
 
                 heading.classList.add("infobox-trigger");
