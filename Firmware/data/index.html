@@ -3551,14 +3551,17 @@
             if (flow !== undefined && flow !== null) {
                 let pf = getPoint(xaxis.min, flow);
                 let flame = statuscache.slave?.status?.flame;
-                ctx.strokeStyle = (flame === true) ? "#fa0" : "#866";
+                ctx.strokeStyle = "#fa0";
                 ctx.fillStyle = ctx.strokeStyle;
                 ctx.beginPath();
                 ctx.moveTo(pf.x , pf.y);
                 ctx.lineTo(pf.x + 9, pf.y + 4);
                 ctx.lineTo(pf.x + 9, pf.y - 4);
                 ctx.closePath();
-                ctx.fill();
+                if (flame === true)
+                    ctx.fill();
+                else
+                    ctx.stroke();
             }
 
             let ret = statuscache.heatercircuit?.[currentCh]?.returnTemp;
