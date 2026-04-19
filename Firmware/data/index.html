@@ -4258,6 +4258,14 @@
 
                         __("div.selopt", ev.target.parentElement).forEach((ele, index) => {
                             ele.hidden = (index != ev.target.selectedIndex);
+
+                            if (!ele.hidden) {
+                                // trigger input events for all form elements in the currently visible selopt div to update dependent UI
+                                __(`select`, ele).forEach((inputEle) => {
+                                    if (inputEle.selectedIndex > -1)
+                                        inputEle.dispatchEvent(new Event("change"));
+                                });
+                            }
                         });
                     });
                 });
