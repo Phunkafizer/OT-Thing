@@ -30,8 +30,8 @@ private:
     };
     Ringbuf<uint8_t, BUFSIZE_MINUTES> on; // number of on minutes per minute
     Ringbuf<uint8_t, BUFSIZE_MINUTES> cycles; // number of cycles per minute
-    Ringbuf<uint32_t, BUFSIZE_CYCLES> onTimes; // on times per cycle in seconds
-    Ringbuf<uint32_t, BUFSIZE_CYCLES> offTimes; // on times per cycle in seconds
+    Ringbuf<uint32_t, BUFSIZE_CYCLES> onTimes; // on time per cycle in seconds
+    Ringbuf<uint32_t, BUFSIZE_CYCLES> offTimes; // on time per cycle in seconds
 };
 
 extern FlameStats flameStats;

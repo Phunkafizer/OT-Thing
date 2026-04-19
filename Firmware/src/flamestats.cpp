@@ -112,8 +112,10 @@ void FlameStats::writeJson(JsonObject &obj) const {
     JsonObject fs = obj[F("flameStats")].to<JsonObject>();
     fs["duty"] = getDuty();
     fs["freq"] = getFreq();
-    if (onTimesInit)
-        fs["onTime"] = getOnTime();
+    if (onTimesInit) {
+        fs[F("onTime")] = getOnTime();
+        fs[F("lastOnTime")] = round(onTimes.buf[(idxCycles + BUFSIZE_CYCLES - 1) % BUFSIZE_CYCLES] * 10.0 / 60.0) / 10.0;
+    }
     if (offTimesInit)
-        fs["offTime"] = getOffTime();
+        fs[F("offTime")] = getOffTime();
 }

@@ -157,6 +157,7 @@ public:
     virtual bool process();
     OpenThermMessageID getId() const;
     virtual void setValue(const OpenThermMessageType ty, const uint16_t val);
+    void setMsgType(const OpenThermMessageType ty);
     uint16_t getValue();
     void setStatus(const OpenThermMessageType mt);
     void getJson(JsonObject &obj) const;

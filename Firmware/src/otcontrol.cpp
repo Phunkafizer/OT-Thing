@@ -562,8 +562,17 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         }
     }
 
-    if (!otval && (mt == OpenThermMessageType::READ_ACK))
-        portal.textAll(F("no slave val!"));
+    if (id == MConfigMMemberIDcode)
+        masterMemberIdReply = mt;
+
+    if (!otval) {
+        if (mt == OpenThermMessageType::READ_ACK)
+            portal.textAll(F("no slave val!"));
+
+        otval = OTValue::getMasterValue(id);
+        if (otval)
+            otval->setMsgType(mt);
+    }   
 }
 
 unsigned long OTControl::buildBrandResponse(const OpenThermMessageID id, const String &str, const uint8_t idx) {
@@ -902,6 +911,9 @@ void OTControl::getJson(JsonObject &obj) {
     JsonObject master = obj[FPSTR(STR_STATKEY_MASTER)].to<JsonObject>();
     for (auto *valobj: masterValues)
         valobj->getJson(master);
+
+    if (masterMemberIdReply != OpenThermMessageType::RESERVED)
+        master[F("memberIdOk")] = masterMemberIdReply == OpenThermMessageType::WRITE_ACK;
 
     if (enableSlave) {
         master[F("txCount")] = slave.txCount;

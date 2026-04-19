@@ -373,6 +373,10 @@ void OTValue::setValue(const OpenThermMessageType ty, const uint16_t val) {
     lastMsgType = ty;
 }
 
+void OTValue::setMsgType(const OpenThermMessageType ty) {
+    lastMsgType = ty;
+}
+
 uint16_t OTValue::getValue() {
     return value;
 }

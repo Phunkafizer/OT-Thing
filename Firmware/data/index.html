@@ -525,17 +525,17 @@
             opacity: 0.96;
         }
 
-        .statusvalue.bool-ok::before {
+        .statusvalue.bool-ok::after {
             content: "✔";
             color: #080;
         }
 
-        .statusvalue.bool-off::before {
+        .statusvalue.bool-off::after {
             content: "✖";
             color: #777
         }
 
-        .statusvalue.bool-error::before {
+        .statusvalue.bool-error::after {
             content: "⚠";
             color: #c00;
         }
@@ -1467,7 +1467,7 @@
                         <span class="statusvalue" field="slave.rel_vent" unit="%"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>flame ratio (3 h)</h5>
+                        <h5>&#x2300; flame ratio (3 h)</h5>
                         <span class="statusvalue" field="slave.flameStats.duty" unit="%"></span>
                     </div>
                     <div class="statusfield">
@@ -1495,11 +1495,15 @@
                         <span class="statusvalue" field="slave.dhwpump_op_hours" unit="h"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>flametime (10 cycles)</h5>
+                        <h5>last flametime</h5>
+                        <span class="statusvalue" field="slave.flameStats.lastOnTime" unit="min"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>&#x2300; flametime (10 cycles)</h5>
                         <span class="statusvalue" field="slave.flameStats.onTime" unit="min"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>pausetime (10 cycles)</h5>
+                        <h5>&#x2300;pausetime (10 cycles)</h5>
                         <span class="statusvalue" field="slave.flameStats.offTime" unit="min"></span>
                     </div>
                     <div class="statusfield">
@@ -1571,7 +1575,7 @@
                         <span class="statusvalue" field="slave.supply_fan_speed" unit="rpm"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>burner starts (3 h)</h5>
+                        <h5>&#x2300; burner starts (3 h)</h5>
                         <span class="statusvalue" field="slave.flameStats.freq" unit="/h"></span>
                     </div>
                     <div class="statusfield">
@@ -1757,7 +1761,7 @@
                     </div>
                     <div class="statusfield">
                         <h5>Member ID</h5>
-                        <span class="statusvalue" field="master.master_config_member.memberId"></span>
+                        <span class="statusvalue" field="master.master_config_member.memberId" id="masterMemberId"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Smart power</h5>
@@ -4345,6 +4349,17 @@
                         else
                             ele.parentElement.hidden = true;
                 });
+
+                if (statuscache.master?.memberIdOk !== undefined) {
+                    if (statuscache.master.memberIdOk) {
+                        _("#masterMemberId").classList.add("bool-ok");
+                        _("#masterMemberId").classList.remove("bool-error");
+                    }
+                    else {
+                        _("#masterMemberId").classList.add("bool-error");
+                        _("#masterMemberId").classList.remove("bool-ok");
+                    }
+                }
             }
 
             function consumeStatusCache() {
