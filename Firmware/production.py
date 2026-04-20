@@ -185,15 +185,11 @@ def upload_firmware(port, project_dir):
         
         # Connect, erase flash, and write binaries in a single session
         esp = esptool.cmds.detect_chip(port=port)
+        esp = esp.run_stub()
         try:
             print(f"Chip: {esp.get_chip_description()}")
             print("Erasing flash...")
-            try:
-                esp.erase_flash()
-            except NotImplementedInROMError:
-                print("ROM erase_flash unsupported on this chip; starting stub flasher...")
-                esp = esp.run_stub()
-                esp.erase_flash()
+            esp.erase_flash()
 
             print("Writing bootloader, partition table, and firmware...")
             import argparse
