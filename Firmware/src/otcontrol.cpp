@@ -394,7 +394,8 @@ void OTControl::loop() {
             }
 
             if (hasDHW && setDhwRequest) {
-                setDhwRequest.sendFloat(boilerCtrl.dhwTemp);
+                double tmp = dhwOvrd.active ? dhwOvrd.temp : boilerCtrl.dhwTemp;
+                setDhwRequest.sendFloat(tmp);
                 return;
             }
 
@@ -422,7 +423,7 @@ void OTControl::loop() {
                 lastBoilerStatus = millis();
                 unsigned long req = OpenTherm::buildSetBoilerStatusRequest(
                     chcontrol[0].getChOn(),
-                    boilerCtrl.dhwOn,
+                    dhwOvrd.active ? dhwOvrd.on :  boilerCtrl.dhwOn,
                     boilerConfig.coolOn,
                     boilerConfig.otc, 
                     chcontrol[1].getChOn(),
@@ -611,14 +612,21 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
     case OTMODE_MASTER: {
         unsigned long resp = OpenTherm::buildResponse(OpenThermMessageType::UNKNOWN_DATA_ID, id, 0x0000);
         slave.onReceive('S', msg);
+        OTValue *otval = OTValue::getSlaveValue(id);
+
         switch (mt) {
         case OpenThermMessageType::READ_DATA: {
-            OTValue *otval = OTValue::getSlaveValue(id);
             switch (id) {
             case Toutside: {
                 double t;
                 if (outsideTemp.get(t))
                     resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, tmpToData(t));
+                break;
+            }
+
+            case TdhwSet: {
+                double tmp = dhwOvrd.active ? dhwOvrd.temp : boilerCtrl.dhwTemp;
+                resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, tmpToData(tmp));
                 break;
             }
 
@@ -671,16 +679,26 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 // respond with masterstatus from roomunit and slavestatus from boiler
                 uint16_t data = (msg & 0xFF00) | (otval->getValue() & 0x00FF);
                 resp = OpenTherm::buildResponse(otval->getLastMsgType(), id, data);
-
                 chcontrol[0].ovrdOn.value = (msg & (1<<OTValueMasterStatus::BIT_CH_ENABLE)) != 0;
                 chcontrol[1].ovrdOn.value = (msg & (1<<OTValueMasterStatus::BIT_CH2_ENABLE)) != 0;
                 dhwOvrd.on = (msg & (1<<OTValueMasterStatus::BIT_DHW_ENABLE)) != 0;
                 break;
             }
 
-            default:
-                if ((otval != nullptr) && otval->hasReply())
-                    resp = OpenTherm::buildResponse(otval->getLastMsgType(), id, otval->getValue());
+            default: {
+                if (otval != nullptr) {
+                    if (otval->hasReply())
+                        resp = OpenTherm::buildResponse(otval->getLastMsgType(), id, otval->getValue());
+                }
+                else {
+                    otval = OTValue::getMasterValue(id);
+                    if (otval != nullptr) {
+                        if (otval->isSet())
+                            resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, otval->getValue());
+                    }
+                }
+                break;
+            }
             }
 
             slave.sendResponse(resp, 'P');
@@ -736,7 +754,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
 
         case TdhwSet:
             if (dhwOvrd.active && (mt == OpenThermMessageType::WRITE_DATA) )
-                newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(dhwOvrd.temp));
+                newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(boilerCtrl.dhwTemp));
             break;
 
         case Status:
