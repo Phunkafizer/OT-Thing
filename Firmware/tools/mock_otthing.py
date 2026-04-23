@@ -95,17 +95,21 @@ state = {
     "status": {
         "fw_version": "mock-1.0.0",
         "runtime": 0,
-        "resetInfo": "Power on",
-        "USB_connected": True,
+        "freeHeap": 62388,
+        "largestBlock": 31732,
+        "resetInfo": 21,
+        "reset_reason0": 21,
+        "USB_connected": False,
         "numWifiDisc": 0,
+        "dateTime": "23.04.2026 22:35:59",
         "outsideTemp": 8.4,
-        "owResult": "ok",
         "wifi": {
+            "status": 3,
+            "mode": 1,
             "mac": "AA:BB:CC:DD:EE:FF",
             "ipsta": "192.168.1.50",
             "sta_ssid": "MockWiFi",
             "hostname": "otthing-mock",
-            "status": "connected",
             "rssi": -54,
         },
         "mqtt": {
@@ -115,85 +119,215 @@ state = {
         },
         "master": {
             "status": {
-                "ch_enable": True,
+                "value": "1a00",
+                "ch_enable": False,
                 "ch2_enable": True,
                 "dhw_enable": True,
-                "otc_active": False,
+                "cooling_enable": False,
+                "otc_active": True,
+            },
+            "vent_status": {
+                "value": "100",
+                "vent_enable": True,
+                "open_bypass": False,
+                "auto_bypass": False,
+                "free_vent_enable": False,
             },
             "ch_set_t": 44.0,
-            "ch_set_t2": 38.0,
-            "dhw_set_t": 50.0,
-            "max_set_t": 70.0,
-            "room_t": 20.2,
-            "room_set_t": 20.5,
-            "room_t2": 21.5,
-            "room_set_t2": 22.0,
-            "outside_t": 8.4,
+            "ch_set_t2": 22.3,
+            "dhw_set_t": 49.0,
+            "max_set_t": 65.0,
+            "room_t": 20.1,
+            "room_set_t": 21.3,
+            "room_t2": 21.1,
+            "room_set_t2": 22.3,
+            "outside_t": 15.0,
             "max_rel_mod": 100,
+            "rel_vent_set": 50,
             "memberIdOk": True,
+            "master_ot_version": "4.2",
+            "master_prod_version": "1.0",
             "master_config_member": {
+                "value": "108",
                 "memberId": 8,
-                "smartPowerImplemented": False,
+                "smartPowerImplemented": True,
             },
-            "smartPower": False,
+            "smartPower": "low",
             "txCount": 1000,
             "rxCount": 995,
+            "invalidCount": 0,
         },
         "slave": {
             "status": {
+                "value": "24",
+                "fault": False,
                 "flame": False,
                 "diagnostic": False,
-                "ch_mode": True,
+                "ch_mode": False,
                 "ch2_mode": True,
-                "dhw_mode": False,
+                "dhw_mode": True,
+                "cooling": False,
+            },
+            "vent_status": {
+                "value": "1e",
+                "fault": False,
+                "vent_active": True,
+                "bypass_open": True,
+                "bypass_auto": True,
+                "free_vent": True,
+                "diagnostic": False,
             },
             "slave_config_member": {
+                "value": "2501",
                 "ch2_present": True,
                 "dhw_present": True,
-                "cooling_config": False,
+                "cooling_config": True,
+                "dhw_config": False,
+                "master_lowoff_pumpctrl": False,
+                "memberId": 1,
+                "ctrl_type": False,
             },
-            "flow_t": 41.0,
-            "flow_t2": 36.0,
-            "dhw_t": 47.0,
-            "outside_t": 8.4,
-            "return_t": 33.2,
-            "rel_mod": 22,
+            "slave_ot_version": "2.2",
+            "slave_prod_version": "4.4",
+            "max_cap_min_mod": {
+                "max_capacity": 20,
+                "min_modulation": 5,
+            },
+            "dhw_bounds": {"max": 60, "min": 40},
+            "ch_bounds": {"max": 60, "min": 25},
+            "rp_flags": {
+                "value": "101",
+                "dhw_setpoint_rw": True,
+                "max_ch_setpoint_rw": False,
+                "dhw_setpoint_trans": True,
+                "max_ch_setpoint_trans": False,
+            },
+            "remote_override_function": {
+                "value": "0",
+                "manual_change_priority": False,
+                "program_change_priority": False,
+            },
+            "fault_flags": {
+                "value": "0",
+                "service_request": False,
+                "lockout_reset": False,
+                "low_water_pressure": False,
+                "gas_flame_fault": False,
+                "air_pressure_fault": False,
+                "water_over_temp": False,
+                "oem_fault_code": 0,
+            },
+            "vent_fault_flags": {
+                "value": "f33",
+                "service_request": True,
+                "exhaust_fan_fault": True,
+                "inlet_fan_fault": True,
+                "frost_protection": True,
+                "oem_vent_fault_code": 51,
+            },
+            "flow_t": 48.5,
+            "flow_t2": 48.6,
+            "dhw_t": 37.5,
+            "dhw_t2": 37.6,
+            "outside_t": 15.0,
+            "return_t": 41.7,
+            "exhaust_t": 90.0,
+            "boiler_heat_ex_t": 48.5,
+            "ch_pressure": 1.3,
+            "dhw_flow_rate": 2.4,
+            "tr_override": 0,
+            "tr_override2": 0,
+            "rel_mod": 33.3,
+            "rel_vent": 55,
+            "rel_hum_exhaust": 45,
+            "co2_exhaust": 1450,
+            "supply_inlet_t": 22.1,
+            "supply_outlet_t": 22.2,
+            "exhaust_inlet_t": 22.3,
+            "exhaust_outlet_t": 22.1,
+            "exhaust_fan_speed": 2300,
+            "supply_fan_speed": 2400,
+            "boiler_fan": {"setpoint": 20, "actual": 21},
+            "flame_current": 96.8,
+            "oem_diag_code": 123,
+            "power_cycles": 159,
+            "unsuccessful_burner_starts": 19,
+            "num_flame_signal_low": 4,
+            "burner_starts": 9999,
+            "ch_pump_starts": 7777,
+            "dhw_pump_starts": 5544,
+            "dhw_burner_starts": 9955,
+            "burner_op_hours": 8888,
+            "chpump_op_hours": 6666,
+            "dhwpump_op_hours": 5555,
+            "dhw_burner_op_hours": 2222,
+            "vent_ot_version": "1.5",
+            "vent_prod_version": "1.7",
+            "brand": "Seegel Systeme",
+            "brand_version": "mock-1.0.0",
+            "brand_serial": "AA:BB:CC:DD:EE:FF",
+            "connected": True,
             "txCount": 1000,
             "rxCount": 995,
-            "timeouts": 1,
+            "timeouts": 0,
             "flameStats": {
-                "duty": 12.5,
-                "lastOnTime": 5,
-                "onTime": 7,
-                "offTime": 22,
-                "freq": 1.8,
+                "duty": 65.0,
+                "lastOnTime": 6.9,
+                "onTime": 6.9,
+                "offTime": 3.8,
+                "freq": 5.7,
             },
         },
         "heatercircuit": [
             {
-                "roomsetpoint": 20.5,
+                "ovrdTemp": False,
+                "ovrdOn": False,
+                "ctrlMode": "auto",
                 "roomMode": "heat",
-                "roomtemp": 20.2,
-                "suspended": False,
+                "action": "off",
+                "roomAction": "off",
+                "roomsetpoint": 17.0,
+                "roomtemp": 20.1,
+                "suspended": True,
                 "roomcompInteg": 0.0,
+                "retLimitInteg": 0.0,
+                "flowMin": 25,
                 "reduction": 0.0,
-                "returnTemp": 33.2,
+                "returnTemp": 41.7,
             },
             {
-                "roomsetpoint": 22.0,
-                "roomMode": "auto",
-                "roomtemp": 21.6,
+                "ovrdTemp": False,
+                "ovrdOn": False,
+                "ctrlMode": "auto",
+                "roomMode": "heat",
+                "action": "idle",
+                "roomAction": "off",
+                "roomsetpoint": 26.0,
+                "roomtemp": 21.1,
                 "suspended": False,
                 "roomcompInteg": 0.0,
+                "retLimitInteg": 0.0,
+                "flowMin": 20,
                 "reduction": 0.0,
-                "returnTemp": 31.0,
+                "returnTemp": 41.7,
             },
         ],
+        "dhw": {
+            "ovrd": False,
+            "ctrlMode": "heat",
+            "action": "heating",
+        },
+        "bypass": False,
         "1wire": {
             "28FF001": 21.1,
             "28FF002": 20.7,
         },
-        "BLE": {},
+        "BLE": {
+            "04a86a8d1f38": {"temp": 13.2, "rh": 38, "bat": 100, "rssi": -100},
+            "1bc8dc8d1f38": {"temp": 19.2, "rh": 43, "bat": 30, "rssi": -94},
+        },
+        "aux1": {},
+        "aux2": {},
     },
 }
 
@@ -255,6 +389,10 @@ def get_set(
     roomSetpoint2: float | None = None,
     roomMode1: str | None = None,
     roomMode2: str | None = None,
+    chSetTemp1: float | None = None,
+    chSetTemp2: float | None = None,
+    chMode1: str | None = None,
+    chMode2: str | None = None,
 ) -> JSONResponse:
     # Backward-compatible shortcut used earlier in UI experiments.
     if roomSetTemp is not None:
@@ -275,6 +413,22 @@ def get_set(
     if roomMode2 is not None:
         ensure_heatercircuit(1)
         state["status"]["heatercircuit"][1]["roomMode"] = roomMode2
+
+    if chMode1 is not None:
+        ensure_heatercircuit(0)
+        state["status"]["heatercircuit"][0]["ctrlMode"] = chMode1
+
+    if chMode2 is not None:
+        ensure_heatercircuit(1)
+        state["status"]["heatercircuit"][1]["ctrlMode"] = chMode2
+
+    effective_ch1_mode = chMode1 or (state["status"]["heatercircuit"][0].get("ctrlMode") if state["status"]["heatercircuit"] else None)
+    if chSetTemp1 is not None and effective_ch1_mode != "auto":
+        state["status"]["master"]["ch_set_t"] = chSetTemp1
+
+    effective_ch2_mode = chMode2 or (state["status"]["heatercircuit"][1].get("ctrlMode") if len(state["status"]["heatercircuit"]) > 1 else None)
+    if chSetTemp2 is not None and effective_ch2_mode != "auto":
+        state["status"]["master"]["ch_set_t2"] = chSetTemp2
 
     return JSONResponse({"ok": True})
 
@@ -345,18 +499,23 @@ _ADMIN_HTML = """<!DOCTYPE html>
   .row input[type=number], .row input[type=text] { width: 88px; background: #0d1b2a; color: #eee; border: 1px solid #334; border-radius: 4px; padding: 3px 6px; font-family: inherit; font-size: 0.82em; }
   .row select { background: #0d1b2a; color: #eee; border: 1px solid #334; border-radius: 4px; padding: 3px 6px; font-family: inherit; font-size: 0.82em; }
   .row input[type=checkbox] { width: 16px; height: 16px; accent-color: #4fc3f7; }
-  button.set-btn { background: #0f9b8e; color: #fff; border: none; padding: 3px 10px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.78em; font-weight: bold; }
-  button.set-btn:hover { background: #4fc3f7; color: #000; }
+
   #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #0f9b8e; color: #fff; padding: 7px 22px; border-radius: 20px; font-size: 0.88em; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
   #toast.show { opacity: 1; }
   #toast.err { background: #ef5350; }
   #reload-btn { margin-bottom: 16px; background: #333; color: #aaa; border: 1px solid #444; padding: 5px 14px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.82em; }
   #reload-btn:hover { background: #444; color: #fff; }
+  .load-btn { background: #1a2a3a; color: #4fc3f7; border: 1px solid #334; padding: 5px 14px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.82em; margin-bottom: 16px; margin-right: 8px; }
+  .load-btn:hover { background: #0d1b2a; color: #fff; }
 </style>
 </head>
 <body>
 <h1>OTThing Mock Control Panel</h1>
 <button id="reload-btn" onclick="reload()">↺ Reload values from /status</button>
+<button class="load-btn" onclick="document.getElementById('file-status').click()">📂 Load status JSON</button>
+<input type="file" id="file-status" accept=".json,application/json" style="display:none" onchange="loadJsonFile(this,'status')">
+<button class="load-btn" onclick="document.getElementById('file-config').click()">📂 Load config JSON</button>
+<input type="file" id="file-config" accept=".json,application/json" style="display:none" onchange="loadJsonFile(this,'config')">
 <div class="grid" id="grid"></div>
 <div id="toast"></div>
 <script>
@@ -383,12 +542,18 @@ const FIELDS = [
     { key: "heatercircuit.0.roomsetpoint", label: "Room setpoint (°C)", type: "number", step: 0.5 },
     { key: "heatercircuit.0.roomtemp",     label: "Room temp (°C)",     type: "number", step: 0.1 },
     { key: "heatercircuit.0.roomMode",     label: "Room mode",          type: "select", options: ["off","heat","auto"] },
+    { key: "heatercircuit.0.ctrlMode",     label: "CH ctrl mode",       type: "select", options: ["off","heat","auto"] },
+    { key: "heatercircuit.0.action",       label: "Action",             type: "select", options: ["off","heating","cooling","idle"] },
+    { key: "heatercircuit.0.roomAction",   label: "Room action",        type: "select", options: ["off","heating","cooling","idle"] },
     { key: "heatercircuit.0.suspended",    label: "Suspended",          type: "bool" },
   ]},
   { section: "Heater circuit 2", rows: [
     { key: "heatercircuit.1.roomsetpoint", label: "Room setpoint (°C)", type: "number", step: 0.5 },
     { key: "heatercircuit.1.roomtemp",     label: "Room temp (°C)",     type: "number", step: 0.1 },
     { key: "heatercircuit.1.roomMode",     label: "Room mode",          type: "select", options: ["off","heat","auto"] },
+    { key: "heatercircuit.1.ctrlMode",     label: "CH ctrl mode",       type: "select", options: ["off","heat","auto"] },
+    { key: "heatercircuit.1.action",       label: "Action",             type: "select", options: ["off","heating","cooling","idle"] },
+    { key: "heatercircuit.1.roomAction",   label: "Room action",        type: "select", options: ["off","heating","cooling","idle"] },
     { key: "heatercircuit.1.suspended",    label: "Suspended",          type: "bool" },
   ]},
   { section: "Master", rows: [
@@ -456,24 +621,23 @@ function buildUI(status) {
       div.className = 'row';
       let inputHtml;
       if (row.type === 'bool') {
-        inputHtml = `<input type="checkbox" id="${id}" ${val ? 'checked' : ''}>`;
+        inputHtml = `<input type="checkbox" id="${id}" data-key="${row.key}" data-type="${row.type}" ${val ? 'checked' : ''}>`;
       } else if (row.type === 'select') {
         const opts = (row.options || []).map(o => `<option${o === val ? ' selected' : ''}>${o}</option>`).join('');
-        inputHtml = `<select id="${id}">${opts}</select>`;
+        inputHtml = `<select id="${id}" data-key="${row.key}" data-type="${row.type}">${opts}</select>`;
       } else {
-        inputHtml = `<input type="number" id="${id}" value="${val ?? ''}" step="${row.step ?? 1}">`;
+        inputHtml = `<input type="number" id="${id}" data-key="${row.key}" data-type="${row.type}" value="${val ?? ''}" step="${row.step ?? 1}">`;
       }
-      div.innerHTML = `<label for="${id}">${row.label}</label>${inputHtml}<button class="set-btn" data-key="${row.key}" data-type="${row.type}">Set</button>`;
+      div.innerHTML = `<label for="${id}">${row.label}</label>${inputHtml}`;
       card.appendChild(div);
     }
     grid.appendChild(card);
   }
-  grid.addEventListener('click', async (e) => {
-    const btn = e.target.closest('button.set-btn');
-    if (!btn) return;
-    const key = btn.dataset.key;
-    const type = btn.dataset.type;
-    const el = document.getElementById('f_' + key.replace(/\\./g, '_'));
+  grid.addEventListener('change', async (e) => {
+    const el = e.target;
+    if (!el.dataset.key) return;
+    const key = el.dataset.key;
+    const type = el.dataset.type;
     let value;
     if (type === 'bool') value = el.checked;
     else if (type === 'number') value = parseFloat(el.value);
@@ -488,6 +652,23 @@ async function reload() {
   showToast('Reloaded from /status');
 }
 
+async function loadJsonFile(input, target) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  let data;
+  try { data = JSON.parse(await file.text()); }
+  catch (err) { showToast('Invalid JSON: ' + err.message, true); return; }
+  const url = target === 'config' ? '/config' : '/admin/status';
+  const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  if (r.ok) {
+    showToast(`Loaded ${target} from ${file.name}`);
+    if (target === 'status') { const s = await fetch('/status'); buildUI(await s.json()); }
+  } else {
+    showToast(`Upload failed (${r.status})`, true);
+  }
+}
+
 (async () => {
   const r = await fetch('/status');
   buildUI(await r.json());
@@ -500,6 +681,12 @@ async function reload() {
 @app.get("/admin")
 def get_admin() -> HTMLResponse:
     return HTMLResponse(_ADMIN_HTML)
+
+
+@app.post("/admin/status")
+async def post_admin_status(request: Request) -> PlainTextResponse:
+    state["status"] = await request.json()
+    return PlainTextResponse("ok")
 
 
 @app.post("/admin/state")

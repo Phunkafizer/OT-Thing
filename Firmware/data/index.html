@@ -482,6 +482,54 @@
             color: #ffe5cf;
         }
 
+        /* Flow set card action-state theming */
+        #heroFlowSetCard,
+        #heroRoomSetCard1,
+        #heroRoomSetCard2 {
+            transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+        }
+
+        #heroFlowSetCard.action-heating,
+        #heroRoomSetCard1.action-heating,
+        #heroRoomSetCard2.action-heating {
+            background: linear-gradient(165deg, rgba(255, 100, 50, 0.30), rgba(18, 20, 25, 0.88));
+            border-color: rgba(255, 120, 60, 0.55);
+            box-shadow: 0 0 12px rgba(255, 90, 30, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+
+        #heroFlowSetCard.action-idle,
+        #heroRoomSetCard1.action-idle,
+        #heroRoomSetCard2.action-idle {
+            background: linear-gradient(165deg, rgba(255, 153, 85, 0.14), rgba(18, 20, 25, 0.88));
+            border-color: rgba(255, 153, 85, 0.28);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        #heroFlowSetCard.action-off,
+        #heroRoomSetCard1.action-off,
+        #heroRoomSetCard2.action-off {
+            background: linear-gradient(165deg, rgba(80, 80, 100, 0.18), rgba(18, 20, 25, 0.88));
+            border-color: rgba(160, 160, 180, 0.22);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        #heroFlowSetCard.action-cooling,
+        #heroRoomSetCard1.action-cooling,
+        #heroRoomSetCard2.action-cooling {
+            background: linear-gradient(165deg, rgba(60, 160, 220, 0.22), rgba(18, 20, 25, 0.88));
+            border-color: rgba(80, 180, 240, 0.45);
+            box-shadow: 0 0 10px rgba(60, 160, 220, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .flow-action-icon {
+            display: inline-block;
+            font-size: 0.78em;
+            line-height: 1;
+            margin-left: 3px;
+            opacity: 0.85;
+            vertical-align: middle;
+        }
+
         .metric-runtime {
             font-size: 1.05em;
             line-height: 1.2;
@@ -1357,7 +1405,7 @@
                     </div>
                 </div>
                 <div class="metric-card hero-roomset-card" id="heroRoomSetCard1">
-                    <h5>Room setpoint</h5>
+                    <h5>Room setpoint<span class="flow-action-icon" id="heroRoomActionIcon1"></span></h5>
                     <div class="metric-inline-row">
                         <div class="metric-value"><span id="heroRoomSet1">--</span></div>
                         <div class="metric-actions">
@@ -1374,7 +1422,7 @@
                     </div>
                 </div>
                 <div class="metric-card hero-roomset-card CH2" id="heroRoomSetCard2">
-                    <h5>Room setpoint 2</h5>
+                    <h5>Room setpoint 2<span class="flow-action-icon" id="heroRoomActionIcon2"></span></h5>
                     <div class="metric-inline-row">
                         <div class="metric-value"><span id="heroRoomSet2">--</span></div>
                         <div class="metric-actions">
@@ -1390,9 +1438,22 @@
                         </div>
                     </div>
                 </div>
-                <div class="metric-card">
-                    <h5>Flow set</h5>
-                    <div class="metric-value"><span id="heroFlowSet">--</span><span class="metric-arrow" id="heroFlowSetTrendIcon">•</span></div>
+                <div class="metric-card hero-roomset-card" id="heroFlowSetCard">
+                    <h5>Flow set<span class="flow-action-icon" id="heroFlowActionIcon"></span></h5>
+                    <div class="metric-inline-row">
+                        <div class="metric-value"><span id="heroFlowSet">--</span><span class="metric-arrow" id="heroFlowSetTrendIcon">•</span></div>
+                        <div class="metric-actions">
+                            <div class="step-group">
+                                <button class="step-btn" type="button" onclick="adjustFlowSetTemp(-0.5)">▼</button>
+                                <button class="step-btn" type="button" onclick="adjustFlowSetTemp(0.5)">▲</button>
+                            </div>
+                            <div class="mode-group">
+                                <button class="mode-btn" id="btnFlowModeOff" type="button" onclick="setFlowMode('off')" title="set CH1 to off">⏻</button>
+                                <button class="mode-btn" id="btnFlowModeOn" type="button" onclick="setFlowMode('heat')" title="set CH1 to on">⏽</button>
+                                <button class="mode-btn" id="btnFlowModeAuto" type="button" onclick="setFlowMode('auto')" title="set CH1 to auto">↺</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="metric-card">
                     <h5>Flow</h5>
@@ -3107,7 +3168,7 @@
             return null;
         }
 
-        function updateRoomModeButtons(ch, mode) {
+        function updateRoomModeButtons(ch, mode, action) {
             const idx = ch + 1;
             const activeMode = (mode === "on") ? "heat" : mode;
             const ids = {
@@ -3122,6 +3183,19 @@
                     return;
                 btn.classList.toggle("pressed", key === activeMode);
             });
+
+            const card = _(`#heroRoomSetCard${idx}`);
+            const iconEl = _(`#heroRoomActionIcon${idx}`);
+            if (card) {
+                card.classList.remove("action-heating", "action-idle", "action-off", "action-cooling");
+                if (action)
+                    card.classList.add(`action-${action}`);
+            }
+            if (iconEl) {
+                const icons = { heating: "🔥", idle: "⏸", off: "⏹", cooling: "❄" };
+                iconEl.textContent = icons[action] ?? "";
+                iconEl.title = action ?? "";
+            }
         }
 
         function updateHeroMetrics() {
@@ -3137,7 +3211,7 @@
                         : `${Math.round(parsedRoomSet * 10) / 10} °C`;
                 }
 
-                updateRoomModeButtons(ch, roomMode);
+                updateRoomModeButtons(ch, roomMode, statuscache?.heatercircuit?.[ch]?.roomAction ?? null);
             }
 
             const flowSet = (currentCh === 0) ? statuscache?.master?.ch_set_t : statuscache?.master?.ch_set_t2;
@@ -3146,6 +3220,9 @@
             const mod = statuscache?.slave?.rel_mod;
 
             updateMetric("heroFlowSet", "heroFlowSetTrendIcon", parseNumber(flowSet), "°C", `flowset${currentCh}`);
+            const flowCtrlMode = normalizeRoomMode(statuscache?.heatercircuit?.[0]?.ctrlMode);
+            const flowAction = statuscache?.heatercircuit?.[0]?.action ?? null;
+            updateFlowModeButtons(flowCtrlMode, flowAction);
             updateMetric("heroFlow", "heroFlowTrendIcon", parseNumber(flow), "°C", `flow${currentCh}`);
             updateMetric("heroOutside", "heroOutsideTrendIcon", parseNumber(outside), "°C", "outside");
             updateMetric("heroMod", "heroModTrendIcon", parseNumber(mod), "%", "mod");
@@ -3836,6 +3913,87 @@
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.send(JSON.stringify(config));
         };
+
+        function adjustFlowSetTemp(delta) {
+            const currentValue = parseNumber(statuscache?.master?.ch_set_t);
+            if (currentValue == null) {
+                showToast("No flow setpoint available", "warning", 3000);
+                return;
+            }
+
+            const nextValue = Math.round((currentValue + delta) * 10) / 10;
+            fetch(`/set?chSetTemp1=${encodeURIComponent(nextValue)}`)
+                .then((resp) => {
+                    if (!resp.ok)
+                        throw new Error("HTTP " + resp.status);
+
+                    if (!statuscache.master)
+                        statuscache.master = {};
+
+                    statuscache.master.ch_set_t = nextValue;
+                    updateHeroMetrics();
+                    flashElement("#heroFlowSetCard");
+                })
+                .catch((err) => {
+                    showToast("Error setting flow setpoint:\n" + err.message, "error", 5000);
+                    addRecentEvent("Flow setpoint update failed");
+                });
+        }
+
+        function setFlowMode(mode) {
+            const modeKey = normalizeRoomMode(mode);
+            if (!modeKey)
+                return;
+
+            fetch(`/set?chMode1=${encodeURIComponent(modeKey)}`)
+                .then((resp) => {
+                    if (!resp.ok)
+                        throw new Error("HTTP " + resp.status);
+
+                    if (!statuscache.heatercircuit)
+                        statuscache.heatercircuit = [];
+                    if (!statuscache.heatercircuit[0])
+                        statuscache.heatercircuit[0] = {};
+
+                    statuscache.heatercircuit[0].ctrlMode = modeKey;
+                    updateHeroMetrics();
+                    flashElement("#heroFlowSetCard");
+                    addRecentEvent(`Flow mode ${modeKey}`);
+                })
+                .catch((err) => {
+                    showToast("Error setting flow mode:\n" + err.message, "error", 5000);
+                    addRecentEvent("Flow mode update failed");
+                });
+        }
+
+        function updateFlowModeButtons(mode, action) {
+            const activeMode = (mode === "on") ? "heat" : mode;
+            const ids = {
+                off: "#btnFlowModeOff",
+                heat: "#btnFlowModeOn",
+                auto: "#btnFlowModeAuto"
+            };
+
+            Object.keys(ids).forEach((key) => {
+                const btn = _(ids[key]);
+                if (!btn)
+                    return;
+                btn.classList.toggle("pressed", key === activeMode);
+            });
+
+            const card = _("#heroFlowSetCard");
+            const iconEl = _("#heroFlowActionIcon");
+            if (card) {
+                card.classList.remove("action-heating", "action-idle", "action-off", "action-cooling");
+                if (action)
+                    card.classList.add(`action-${action}`);
+            }
+            if (iconEl) {
+                const icons = { heating: "🔥", idle: "⏸", off: "⏹", cooling: "❄" };
+                iconEl.textContent = icons[action] ?? "";
+                iconEl.title = action ?? "";
+            }
+        }
 
         function adjustRoomSetpoint(ch, delta) {
             const currentValue = parseNumber(statuscache?.heatercircuit?.[ch]?.roomsetpoint ?? roomsetpoint[ch]);
