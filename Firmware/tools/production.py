@@ -565,8 +565,8 @@ def batch_upload(project_dir):
 if __name__ == "__main__":
     import os
     
-    # Get the directory where this script is located (project directory)
-    project_dir = os.path.dirname(os.path.abspath(__file__))
+    # Script lives in tools/, so project root is one level up.
+    project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     
     try:
         batch_upload(project_dir)

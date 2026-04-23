@@ -30,3 +30,4 @@ _ReSharper*/
 .idea/
 #Nuget packages folder
 packages/
+__pycache__/

@@ -397,6 +397,91 @@
             gap: 6px;
         }
 
+        .metric-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .metric-actions button {
+            flex: 1;
+            min-width: 0;
+            padding: 6px 0;
+            font-size: 1.05em;
+            font-weight: 700;
+        }
+
+        .hero-roomset-card .metric-inline-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 2px;
+        }
+
+        .hero-roomset-card .metric-value {
+            margin-top: 0;
+            white-space: nowrap;
+        }
+
+        .hero-roomset-card .metric-actions {
+            display: flex;
+            align-items: center;
+            margin-top: 0;
+            gap: 7px;
+            flex-shrink: 0;
+        }
+
+        .hero-roomset-card .metric-actions .mode-group,
+        .hero-roomset-card .metric-actions .step-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .hero-roomset-card .metric-actions .mode-group {
+        }
+
+        .hero-roomset-card .metric-actions .step-group {
+            padding-right: 7px;
+            border-right: 1px solid rgba(255, 188, 131, 0.2);
+        }
+
+        .hero-roomset-card .metric-actions button {
+            flex: none;
+            min-width: 30px;
+            height: 22px;
+            padding: 0 7px;
+            line-height: 1;
+            font-size: 0.72em;
+            font-weight: 600;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 188, 131, 0.42);
+            background: rgba(255, 188, 131, 0.12);
+            color: var(--text-muted);
+            box-shadow: none;
+            transform: none;
+            filter: none;
+        }
+
+        .hero-roomset-card .metric-actions button:hover {
+            transform: none;
+            filter: brightness(1.03);
+            box-shadow: none;
+        }
+
+        .hero-roomset-card .metric-actions .mode-btn.pressed {
+            border-color: var(--accent-soft);
+            background: rgba(255, 153, 85, 0.2);
+            color: #fff;
+        }
+
+        .hero-roomset-card .metric-actions .step-btn {
+            min-width: 30px;
+            padding: 0 8px;
+            color: #ffe5cf;
+        }
+
         .metric-runtime {
             font-size: 1.05em;
             line-height: 1.2;
@@ -1039,13 +1124,16 @@
 
         .toast-container {
             position: fixed;
-            right: 12px;
-            bottom: 12px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
             display: flex;
             flex-direction: column;
+            align-items: center;
             gap: 8px;
             z-index: 3000;
             max-width: min(92vw, 420px);
+            width: min(92vw, 420px);
             pointer-events: none;
         }
 
@@ -1250,7 +1338,7 @@
                             <span class="state-label">CH1</span>
                             <span class="state-icon is-unknown" id="stateCh1" title="unknown" aria-label="CH1 status">…</span>
                         </div>
-                        <div class="state-item">
+                        <div class="state-item CH2">
                             <span class="state-label">CH2</span>
                             <span class="state-icon is-unknown" id="stateCh2" title="unknown" aria-label="CH2 status">…</span>
                         </div>
@@ -1265,6 +1353,40 @@
                         <div class="state-item">
                             <span class="state-label">MQTT</span>
                             <span class="state-icon is-unknown" id="stateMqtt" title="unknown" aria-label="MQTT connection status">…</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-card hero-roomset-card" id="heroRoomSetCard1">
+                    <h5>Room setpoint</h5>
+                    <div class="metric-inline-row">
+                        <div class="metric-value"><span id="heroRoomSet1">--</span></div>
+                        <div class="metric-actions">
+                            <div class="step-group">
+                                <button class="step-btn" type="button" onclick="adjustRoomSetpoint(0, -0.5)">▼</button>
+                                <button class="step-btn" type="button" onclick="adjustRoomSetpoint(0, 0.5)">▲</button>
+                            </div>
+                            <div class="mode-group">
+                                <button class="mode-btn" id="btnRoomModeOff1" type="button" onclick="setRoomMode(0, 'off')" title="set heating channel 1 to off">⏻</button>
+                                <button class="mode-btn" id="btnRoomModeOn1" type="button" onclick="setRoomMode(0, 'heat')" title="set heating channel 1 to on, room compensation disabled">⏽</button>
+                                <button class="mode-btn" id="btnRoomModeAuto1" type="button" onclick="setRoomMode(0, 'auto')" title="set heating channel 1 to on, room compensation enabled">↺</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-card hero-roomset-card CH2" id="heroRoomSetCard2">
+                    <h5>Room setpoint 2</h5>
+                    <div class="metric-inline-row">
+                        <div class="metric-value"><span id="heroRoomSet2">--</span></div>
+                        <div class="metric-actions">
+                            <div class="step-group">
+                                <button class="step-btn" type="button" onclick="adjustRoomSetpoint(1, -0.5)">▼</button>
+                                <button class="step-btn" type="button" onclick="adjustRoomSetpoint(1, 0.5)">▲</button>
+                            </div>
+                            <div class="mode-group">
+                                <button class="mode-btn" id="btnRoomModeOff2" type="button" onclick="setRoomMode(1, 'off')" title="set heating channel 2 to off">⏻</button>
+                                <button class="mode-btn" id="btnRoomModeOn2" type="button" onclick="setRoomMode(1, 'heat')" title="set heating channel 2 to on, room compensation disabled">⏽</button>
+                                <button class="mode-btn" id="btnRoomModeAuto2" type="button" onclick="setRoomMode(1, 'auto')" title="set heating channel 2 to on, room compensation enabled">↺</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2588,7 +2710,13 @@
             <div id="logstatus"></div>
             <div class="toolbar">
                 <button onclick="clearLog()">clear log</button>
-                <button onclick="toggleAutoScroll(event)">autoscroll</button>
+                <div style="display:flex; align-items:center; gap:0.5em;">
+                    <span>autoscroll</span>
+                    <label class="switch" style="margin:0;">
+                        <input id="logAutoscroll" type="checkbox" checked onchange="toggleAutoScroll(this)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
             </div>
         </div>
         <div class="toolbar" id="globalToolbar">
@@ -2964,7 +3092,54 @@
             updateMetric._hist[key] = value;
         }
 
+        function normalizeRoomMode(value) {
+            if (value === null || value === undefined)
+                return null;
+
+            const str = String(value).trim().toLowerCase();
+            if (str === "off" || str === "0" || str === "false")
+                return "off";
+            if (str === "on" || str === "heat" || str === "1" || str === "true")
+                return "heat";
+            if (str === "auto" || str === "2")
+                return "auto";
+
+            return null;
+        }
+
+        function updateRoomModeButtons(ch, mode) {
+            const idx = ch + 1;
+            const activeMode = (mode === "on") ? "heat" : mode;
+            const ids = {
+                off: `#btnRoomModeOff${idx}`,
+                heat: `#btnRoomModeOn${idx}`,
+                auto: `#btnRoomModeAuto${idx}`
+            };
+
+            Object.keys(ids).forEach((key) => {
+                const btn = _(ids[key]);
+                if (!btn)
+                    return;
+                btn.classList.toggle("pressed", key === activeMode);
+            });
+        }
+
         function updateHeroMetrics() {
+            for (let ch = 0; ch < 2; ch++) {
+                const roomSet = statuscache?.heatercircuit?.[ch]?.roomsetpoint;
+                const roomMode = normalizeRoomMode(statuscache?.heatercircuit?.[ch]?.roomMode);
+                const roomSetEl = _(`#heroRoomSet${ch + 1}`);
+
+                if (roomSetEl) {
+                    const parsedRoomSet = parseNumber(roomSet);
+                    roomSetEl.textContent = (parsedRoomSet == null)
+                        ? "--"
+                        : `${Math.round(parsedRoomSet * 10) / 10} °C`;
+                }
+
+                updateRoomModeButtons(ch, roomMode);
+            }
+
             const flowSet = (currentCh === 0) ? statuscache?.master?.ch_set_t : statuscache?.master?.ch_set_t2;
             const flow = (currentCh === 0) ? statuscache?.slave?.flow_t : statuscache?.slave?.flow_t2;
             const outside = statuscache?.outsideTemp;
@@ -3608,10 +3783,25 @@
         function saveWifi() {
             let xhr = new XMLHttpRequest();
             xhr.onload = (ev) => {
+                if (xhr.status < 200 || xhr.status >= 300) {
+                    showToast("Error sending WiFi credentials:\nHTTP " + xhr.status, "error", 5000);
+                    addRecentEvent("WiFi connect failed");
+                    return;
+                }
+
                 showToast("WiFi credentials sent", "success", 3000);
                 flashElement("#wifiGroup");
                 addRecentEvent("WiFi connect requested");
             };
+            xhr.onerror = () => {
+                showToast("Error sending WiFi credentials:\nnetwork request failed", "error", 5000);
+                addRecentEvent("WiFi connect failed");
+            };
+            xhr.ontimeout = () => {
+                showToast("Error sending WiFi credentials:\nrequest timeout", "error", 5000);
+                addRecentEvent("WiFi connect timeout");
+            };
+            xhr.timeout = UI_TIMINGS.statusXhrTimeoutMs;
             xhr.open('POST', 'setwifi');
             xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
             let params = "ssid=" + encodeURIComponent(_("#wifissid").value) + 
@@ -3623,14 +3813,85 @@
         function saveConfig() {
             let xhr = new XMLHttpRequest();
             xhr.onload = (ev) => {
+                if (xhr.status < 200 || xhr.status >= 300) {
+                    showToast("Error saving configuration:\nHTTP " + xhr.status, "error", 5000);
+                    addRecentEvent("Configuration save failed");
+                    return;
+                }
+
                 showToast("configuration saved successfully", "success");
                 flashElement("#globalToolbar");
                 addRecentEvent("Configuration saved");
             };
+            xhr.onerror = () => {
+                showToast("Error saving configuration:\nnetwork request failed", "error", 5000);
+                addRecentEvent("Configuration save failed");
+            };
+            xhr.ontimeout = () => {
+                showToast("Error saving configuration:\nrequest timeout", "error", 5000);
+                addRecentEvent("Configuration save timeout");
+            };
+            xhr.timeout = UI_TIMINGS.statusXhrTimeoutMs;
             xhr.open("POST", "config");
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.send(JSON.stringify(config));
         };
+
+        function adjustRoomSetpoint(ch, delta) {
+            const currentValue = parseNumber(statuscache?.heatercircuit?.[ch]?.roomsetpoint ?? roomsetpoint[ch]);
+            if (currentValue == null) {
+                showToast("No room setpoint available", "warning", 3000);
+                return;
+            }
+
+            const nextValue = Math.round((currentValue + delta) * 10) / 10;
+            fetch(`/set?roomSetpoint${ch + 1}=${encodeURIComponent(nextValue)}`)
+                .then((resp) => {
+                    if (!resp.ok)
+                        throw new Error("HTTP " + resp.status);
+
+                    if (!statuscache.heatercircuit)
+                        statuscache.heatercircuit = [];
+                    if (!statuscache.heatercircuit[ch])
+                        statuscache.heatercircuit[ch] = {};
+
+                    statuscache.heatercircuit[ch].roomsetpoint = nextValue;
+                    roomsetpoint[ch] = nextValue;
+                    updateHeroMetrics();
+                    drawCurve();
+                    flashElement(`#heroRoomSetCard${ch + 1}`);
+                })
+                .catch((err) => {
+                    showToast("Error setting room setpoint:\n" + err.message, "error", 5000);
+                    addRecentEvent("Room setpoint update failed");
+                });
+        }
+
+        function setRoomMode(ch, mode) {
+            const modeKey = normalizeRoomMode(mode);
+            if (!modeKey)
+                return;
+
+            fetch(`/set?roomMode${ch + 1}=${encodeURIComponent(modeKey)}`)
+                .then((resp) => {
+                    if (!resp.ok)
+                        throw new Error("HTTP " + resp.status);
+
+                    if (!statuscache.heatercircuit)
+                        statuscache.heatercircuit = [];
+                    if (!statuscache.heatercircuit[ch])
+                        statuscache.heatercircuit[ch] = {};
+
+                    statuscache.heatercircuit[ch].roomMode = modeKey;
+                    updateHeroMetrics();
+                    flashElement(`#heroRoomSetCard${ch + 1}`);
+                    addRecentEvent(`Room ${ch + 1} mode ${modeKey}`);
+                })
+                .catch((err) => {
+                    showToast("Error setting room mode:\n" + err.message, "error", 5000);
+                    addRecentEvent("Room mode update failed");
+                });
+        }
 
         function reboot() {
             fetch("/reboot")
@@ -3736,9 +3997,12 @@
                 })
                 .then(data => {
                     exportJson(data, "ot_items");
+                    showToast("OT items exported successfully", "success", 3000);
+                    addRecentEvent("OT items exported");
                 })
                 .catch(err => {
                     showToast("Error exporting OT items:\n" + err.message, "error", 5000);
+                    addRecentEvent("OT items export failed");
                 });
         }
 
@@ -3767,9 +4031,13 @@
                         _("#modalBody").innerHTML = "REFUSED<br>";
                     
                     _("#modalBody").innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    showToast(rc >= 128 ? "OT request accepted" : "OT request refused", rc >= 128 ? "success" : "warning", 3500);
+                    addRecentEvent(rc >= 128 ? "OT request accepted" : "OT request refused");
                 })
                 .catch(err => {
                     _("#modalBody").textContent = "Error:\n" + err.message;
+                    showToast("Error sending OT request:\n" + err.message, "error", 5000);
+                    addRecentEvent("OT request failed");
                 });
         };
 
@@ -3805,9 +4073,8 @@
             addRecentEvent("Log cleared");
         };
 
-        function toggleAutoScroll(ev) {
-            ev.target.classList.toggle("pressed");
-            autoscroll = !autoscroll;
+        function toggleAutoScroll(checkbox) {
+            autoscroll = !!checkbox?.checked;
         }
 
         function closeModal() {
@@ -4592,9 +4859,21 @@
                 };
 
                 xhrDownload.onload = () => {
+                    if (xhrDownload.status < 200 || xhrDownload.status >= 300) {
+                        progressBar.value = 0;
+                        progressText.innerHTML = "Error: HTTP " + xhrDownload.status;
+                        _("#btn_update").disabled = false;
+                        _("#firmware_file").disabled = false;
+                        showToast("Firmware update failed:\nHTTP " + xhrDownload.status, "error", 5000);
+                        addRecentEvent("Firmware update failed");
+                        return;
+                    }
+
                     _("#firmware_file").value = "";
                     progressBar.value = 100;
                     progressText.innerHTML = "Download successful. Rebooting...";
+                    showToast("Firmware uploaded successfully. Device is rebooting...", "success", 4000);
+                    addRecentEvent("Firmware update uploaded");
                     setTimeout(() => {
                         location.reload();
                     }, UI_TIMINGS.firmwareReloadMs);
@@ -4614,6 +4893,8 @@
                     progressText.innerHTML = "Error: " + xhrDownload.status;
                     _("#btn_update").disabled = false;
                     _("#firmware_file").disabled = false;
+                    showToast("Firmware update failed:\nnetwork request failed", "error", 5000);
+                    addRecentEvent("Firmware update failed");
                 };
 
                 xhrDownload.open('post', '/update');
