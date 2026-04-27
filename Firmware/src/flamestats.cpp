@@ -114,10 +114,13 @@ void FlameStats::writeJson(JsonObject &obj) const {
     fs["freq"] = getFreq();
     if (onTimesInit) {
         fs[F("onTime")] = getOnTime();
+        double currentOnTime;
         if (currentFlame)
-            fs[F("lastOnTime")] = getCurrentOnTime();
+            currentOnTime = getCurrentOnTime();
         else
-            fs[F("lastOnTime")] = round(onTimes.buf[(idxCycles + BUFSIZE_CYCLES - 1) % BUFSIZE_CYCLES] * 10.0 / 60.0) / 10.0;
+            currentOnTime = onTimes.buf[(idxCycles + BUFSIZE_CYCLES - 1) % BUFSIZE_CYCLES];
+
+        fs[F("lastOnTime")] = round(currentOnTime * 10.0 / 60.0) / 10.0;
     }
     if (offTimesInit)
         fs[F("offTime")] = getOffTime();
