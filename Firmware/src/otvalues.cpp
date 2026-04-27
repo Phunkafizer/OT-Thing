@@ -644,7 +644,7 @@ bool OTValueVentMasterStatus::sendDiscovery() {
 
 OTValueSlaveConfigMember::OTValueSlaveConfigMember():
         OTValueFlags(SConfigSMemberIDcode, 0, flags, sizeof(flags) / sizeof(flags[0]), true) {
-    entityCategory = HA_ENTITY_CATEGORY_CONFIG;
+    entityCategory = HA_ENTITY_CATEGORY_DIAGNOSTIC;
 }
 
 void OTValueSlaveConfigMember::getValue(JsonVariant var) const {
