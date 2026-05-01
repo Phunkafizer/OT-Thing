@@ -4930,10 +4930,39 @@
                 drawCurve();
             }
 
+            let statusPollTimer = null;
+            let statusRequestInFlight = false;
+
+            function scheduleStatusFetch(delayMs) {
+                if (statusPollTimer !== null)
+                    clearTimeout(statusPollTimer);
+
+                statusPollTimer = setTimeout(() => {
+                    statusPollTimer = null;
+                    fetchStatus();
+                }, Math.max(0, delayMs));
+            }
+
             function fetchStatus() {
+                if (statusRequestInFlight)
+                    return;
+
+                statusRequestInFlight = true;
                 var xhr = new XMLHttpRequest();
                 xhr.timeout = UI_TIMINGS.statusXhrTimeoutMs;
+
+                function finishWithDelay(delayMs) {
+                    statusRequestInFlight = false;
+                    scheduleStatusFetch(delayMs);
+                }
+
                 xhr.onload = (ev) => {
+                    if (xhr.status < 200 || xhr.status >= 300) {
+                        _("#nocon").hidden = false;
+                        finishWithDelay(UI_TIMINGS.statusPollRetryMs);
+                        return;
+                    }
+
                     try {
                         statuscache = JSON.parse(ev.target.responseText);
                     }
@@ -4948,15 +4977,32 @@
                     }
 
                     consumeStatusCache();
-                    setTimeout(fetchStatus, UI_TIMINGS.statusPollSuccessMs);
+                    finishWithDelay(UI_TIMINGS.statusPollSuccessMs);
                 };
-                xhr.ontimeout = (ev) => {
+                xhr.onerror = () => {
                     _("#nocon").hidden = false;
-                    setTimeout(fetchStatus, UI_TIMINGS.statusPollRetryMs);
+                    finishWithDelay(UI_TIMINGS.statusPollRetryMs);
+                };
+                xhr.ontimeout = () => {
+                    _("#nocon").hidden = false;
+                    finishWithDelay(UI_TIMINGS.statusPollRetryMs);
                 };
                 xhr.open("GET", "status");
                 xhr.send();
             }
+
+            // Mobile browsers can pause timers in the background; force a fresh poll on resume.
+            document.addEventListener("visibilitychange", () => {
+                if (document.visibilityState === "visible")
+                    scheduleStatusFetch(0);
+            });
+            window.addEventListener("pageshow", () => {
+                scheduleStatusFetch(0);
+            });
+            window.addEventListener("focus", () => {
+                scheduleStatusFetch(0);
+            });
+
             fetchStatus();
             drawCurve();
 

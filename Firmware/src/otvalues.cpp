@@ -264,7 +264,6 @@ bool OTValue::sendDiscovery() {
     {OpenThermMessageID::DayTime,                   PSTR("day_time")},
     {OpenThermMessageID::Date,                      PSTR("date")},
     {OpenThermMessageID::Year,                      PSTR("year")},
-    {OpenThermMessageID::TdhwSet,                   PSTR("dhw_set_t")},
     {OpenThermMessageID::Vset,                      PSTR("rel_vent_set")},
     {OpenThermMessageID::RemoteOverrideFunction,    PSTR("remote_override_function")},
 */
