@@ -155,19 +155,23 @@ def wait_for_stable_target_port(stable_seconds=STABLE_DEVICE_SECONDS):
 def upload_firmware(port, project_dir):
     """
     Upload bootloader, firmware, and partitions to device using esptool.
-    
+    Reads chip info (type, MAC) before programming and returns it.
+
     Assumes firmware has already been built in .pio/build/release/
-    
+
     Args:
         port: Serial port (e.g., 'COM3')
         project_dir: Project directory containing .pio/build/release/
+
+    Returns:
+        dict with keys 'chip', 'mac' on success, or None on failure.
     """
     # Paths to build artifacts
     build_dir = os.path.join(project_dir, ".pio", "build", "release")
     bootloader_path = os.path.join(build_dir, "bootloader.bin")
     partition_path = os.path.join(build_dir, "partitions.bin")
     firmware_path = os.path.join(build_dir, "firmware.bin")
-    
+
     # Check if all binaries exist
     if not all(os.path.exists(p) for p in [bootloader_path, partition_path, firmware_path]):
         _err("✗ Build artifacts not found at:")
@@ -175,52 +179,38 @@ def upload_firmware(port, project_dir):
         print(f"  {partition_path}")
         print(f"  {firmware_path}")
         print("\nRun: pio run -e release")
-        return False
-    
+        return None
+
     print(f"\n=== Uploading firmware to {port} ===")
-    
+
     try:
         import esptool
-        from esptool.loader import NotImplementedInROMError
-        
-        # Connect, erase flash, and write binaries in a single session
+
         esp = esptool.cmds.detect_chip(port=port)
         esp = esp.run_stub()
         try:
-            print(f"Chip: {esp.get_chip_description()}")
+            chip_desc = esp.get_chip_description()
+            mac = ":".join(f"{b:02x}" for b in esp.read_mac("BASE_MAC"))
+            print(f"Chip : {chip_desc}")
+            print(f"MAC  : {mac}")
+
             print("Erasing flash...")
             esp.erase_flash()
 
             print("Writing bootloader, partition table, and firmware...")
-            import argparse
-            with open(bootloader_path, "rb") as f0, \
-                 open(partition_path, "rb") as f1, \
-                 open(firmware_path, "rb") as f2:
-                flash_args = argparse.Namespace(
-                    addr_filename=[
-                        (0x0, f0),
-                        (0x8000, f1),
-                        (0x10000, f2),
-                    ],
-                    flash_size="keep",
-                    flash_mode="keep",
-                    flash_freq="keep",
-                    no_stub=False,
-                    compress=None,
-                    no_compress=False,
-                    verify=False,
-                    erase_all=False,
-                    encrypt=False,
-                    encrypt_files=None,
-                    force=False,
-                    ignore_flash_encryption_efuse_setting=False,
-                )
-                esptool.cmds.write_flash(esp, flash_args)
+            esptool.cmds.write_flash(
+                esp,
+                [
+                    (0x0,     bootloader_path),
+                    (0x8000,  partition_path),
+                    (0x10000, firmware_path),
+                ],
+            )
             _ok("✓ Firmware uploaded successfully")
         finally:
             esp._port.close()
 
-        return True
+        return {"chip": chip_desc, "mac": mac}
     except Exception as e:
         _err(f"✗ Upload failed: {e}")
         sys.exit(1)
@@ -418,6 +408,9 @@ def connect_to_otthing_wifi(profile="OTthing", timeout=20, retries=3):
             if ("verbunden" in output_lower or "connected" in output_lower) and profile.lower() in output_lower:
                 print(f"  WiFi associated after {wait - remaining + 1}s")
                 break
+            if "verbindung wird getrennt" in output_lower:
+                time.sleep(1)
+                continue
             # If fully disconnected (not just associating), retry connect immediately
             if "getrennt" in output_lower or "disconnected" in output_lower:
                 _warn("  Disconnected — retrying netsh connect immediately...")
@@ -502,6 +495,35 @@ def wait_for_device_disconnect():
         time.sleep(DEVICE_POLL_INTERVAL_SECONDS)
 
 
+def _get_firmware_version(project_dir):
+    """Read custom_version from platformio.ini."""
+    ini_path = os.path.join(project_dir, "platformio.ini")
+    try:
+        import configparser
+        cfg = configparser.ConfigParser()
+        cfg.read(ini_path)
+        return cfg.get("env", "custom_version", fallback="unknown").strip()
+    except Exception:
+        return "unknown"
+
+
+def _log_device(project_dir, device_info):
+    """Append a one-line entry for this device to devicelist.txt."""
+    import datetime
+    version = _get_firmware_version(project_dir)
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    line = (
+        f"{timestamp}  "
+        f"chip={device_info['chip']}  "
+        f"mac={device_info['mac']}  "
+        f"fw={version}\n"
+    )
+    log_path = os.path.join(project_dir, "devicelist.txt")
+    with open(log_path, "a", encoding="utf-8") as f:
+        f.write(line)
+    _ok(f"✓ Logged to devicelist.txt: {line.strip()}")
+
+
 def batch_upload(project_dir):
     """
     Continuous batch upload loop.
@@ -523,12 +545,11 @@ def batch_upload(project_dir):
             break
         
         # Upload firmware
-        success = upload_firmware(stable_port, project_dir)
-        if success:
+        device_info = upload_firmware(stable_port, project_dir)
+        if device_info:
             upload_count += 1
 
-            # Wait for device to disconnect and reconnect into config mode
-            _warn("Bring the device into configuration mode by holding RST > 2 seconds")
+            # Wait for device to reconnect after booting into the application
             wait_for_device_disconnect()
             wait_for_stable_target_port(stable_seconds=2)
             time.sleep(2)
@@ -543,6 +564,8 @@ def batch_upload(project_dir):
                 # Attempt configuration
                 try:
                     configure_device()
+                    # Log device info
+                    _log_device(project_dir, device_info)
                     # Open device web interface
                     config_url = f"http://{DEVICE_IP}"
                     print(f"Opening {config_url}...")
