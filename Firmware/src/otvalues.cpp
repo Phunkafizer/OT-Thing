@@ -108,7 +108,7 @@ OTValue *slaveValues[55] = { // replydata collected (read) from a connnected sla
     new OTValueFloatTemp(       Tdhw2,                                          PSTR("DHW temperature 2")),
     new OTValueFloatTemp(       Toutside,                                       PSTR("outside temp.")),
     new OTValueFloatTemp(       Tret,                                           PSTR("return temp.")),
-    new OTValuei16(             Texhaust,                   10,                 PSTR("exhaust temp.")),
+    new OTValueFloatTemp(       Texhaust,                                       PSTR("exhaust temp.")),
     new OTValueFloatTemp(       TrOverride2,                                    PSTR("room setpoint 2 override")),
     new OTValueProductVersion(  OpenThermVersionVentilationHeatRecovery,    0,  PSTR("OT-version slave")),
     new OTValueProductVersion(  VentilationHeatRecoveryVersion,             0,  PSTR("productversion slave")),
@@ -453,12 +453,7 @@ OTValueFloat::OTValueFloat(const OpenThermMessageID id, const int interval, PGM_
 
 void OTValueFloat::getValue(JsonVariant var) const {
     int8_t i = value >> 8;
-    double d;
-    if (i >= 0)
-        d = round((i + (value & 0xFF) / 256.0) * 10) / 10.0;
-    else
-        d = round((i - (value & 0xFF) / 256.0) * 10) / 10.0;
-
+    double d = round((i + (value & 0xFF) / 256.0) * 10) / 10.0;
     var.set<double>(d);
 }
 

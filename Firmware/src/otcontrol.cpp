@@ -42,7 +42,7 @@ const struct {
     {Tret,                      floatToOT(41.7)},
     {TflowCH2,                  floatToOT(48.6)},
     {Tdhw2,                     floatToOT(37.6)},
-    {Texhaust,                  90},
+    {Texhaust,                  floatToOT(90.0)},
     {TrOverride2,               0},
     {TdhwSetUBTdhwSetLB,        nib(60, 40)}, // 60 °C upper bound, 40 C° lower bound
     {MaxTSetUBMaxTSetLB,        nib(60, 25)}, // 60 °C upper bound, 20 C° lower bound
@@ -709,17 +709,24 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             slave.sendResponse(resp, 'P');
 
             switch (id) {
-            case TSet:
-                chcontrol[0].ovrdTemp.value = OpenTherm::getFloat(msg);
-                if (chcontrol[0].ovrdTemp.active)
-                    setBoilerRequest[0].force();
+            case TSet: {
+                float val = OpenTherm::getFloat(msg);
+                if (val > 0) {
+                    chcontrol[0].ovrdTemp.value = val;
+                    if (chcontrol[0].ovrdTemp.active)
+                        setBoilerRequest[0].force();
+                }
                 break;
-
-            case TsetCH2:
-                chcontrol[1].ovrdTemp.value = OpenTherm::getFloat(msg);
-                if (chcontrol[1].ovrdTemp.active)
-                    setBoilerRequest[1].force();
+            }
+            case TsetCH2: {
+                float val = OpenTherm::getFloat(msg);
+                if (val > 0) {
+                    chcontrol[1].ovrdTemp.value = val;
+                    if (chcontrol[1].ovrdTemp.active)
+                        setBoilerRequest[1].force();
+                }
                 break;
+            }
 
             case TdhwSet:
                 dhwOvrd.temp = OpenTherm::getFloat(msg);

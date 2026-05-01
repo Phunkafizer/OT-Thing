@@ -99,8 +99,13 @@ void CHcontrol::getJson(JsonObject &obj) {
 double CHcontrol::getFlow() {
     double result = config.flow;
 
-    if (overrideEnabled && ovrdTemp.active)
-        return ovrdTemp.value;
+    if (overrideEnabled && ovrdTemp.active) {
+        if (ovrdTemp.value <= 0)
+            return 0;
+        double v = ovrdTemp.value;
+        clip(v, flowMin, curve.getFlowMax());
+        return v;
+    }
 
     switch (mode) {
     case HADiscovery::MODE_HEAT:
