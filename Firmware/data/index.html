@@ -2503,6 +2503,13 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
+                        <div class="param">
+                            <h5>Exhaust (non-std.)</h5>
+                            <label class="switch">
+                                <input type="checkbox" field="boiler.texhaustAsFloat" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
                     <div class="flexline">
                         <div class="param range" field="boiler.maxModulation">
@@ -2846,7 +2853,8 @@
                 otc: false,
                 summerMode: false,
                 dhwBlocking: false,
-                maxModulation: 100
+                maxModulation: 100,
+                texhaustAsFloat: false
             },
             heating: [
                 {

@@ -1263,6 +1263,7 @@ void OTControl::setConfig(JsonObject &config) {
     boilerConfig.otc = boiler[F("otc")] | false;
     boilerConfig.summerMode = boiler[F("summerMode")] | false;
     boilerConfig.dhwBlocking = boiler[F("dhwBlocking")] | false;
+    OTValue::setTexhaustAsFloat(boiler[F("texhaustAsFloat")] | false);
 
     masterMemberId = config[F("masterMemberId")] | 22;
 
