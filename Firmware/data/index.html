@@ -432,6 +432,12 @@
             white-space: nowrap;
         }
 
+        .pinned-card-body .metric-value .state-icon {
+            width: 22px;
+            height: 22px;
+            font-size: 0.86em;
+        }
+
         .pinned-card-body h5 {
             white-space: normal;
             overflow: visible;
@@ -3309,6 +3315,46 @@
             return unit ? `${text} ${unit}` : text;
         }
 
+        function getPinnedMetricBoolDisplay(fieldPath, sourceValueEl) {
+            const val = getStatusValueByField(fieldPath);
+            const isErr = sourceValueEl?.classList?.contains("error") || false;
+
+            if (val !== true && val !== false)
+                return null;
+
+            if (val === true) {
+                return {
+                    className: isErr ? "is-error" : "is-true",
+                    symbol: isErr ? "!" : "●",
+                    title: isErr ? "alert" : "on"
+                };
+            }
+
+            return {
+                className: isErr ? "is-true" : "is-false",
+                symbol: isErr ? "●" : "✖",
+                title: isErr ? "ok" : "off"
+            };
+        }
+
+        function setPinnedMetricValueContent(valueEl, fieldPath, sourceValueEl) {
+            if (!valueEl || !sourceValueEl)
+                return;
+
+            const boolDisplay = getPinnedMetricBoolDisplay(fieldPath, sourceValueEl);
+            if (!boolDisplay) {
+                valueEl.textContent = getPinnedMetricValueText(fieldPath, sourceValueEl);
+                return;
+            }
+
+            valueEl.textContent = "";
+            valueEl.append(_$("span", {
+                className: `state-icon ${boolDisplay.className}`,
+                textContent: boolDisplay.symbol,
+                title: boolDisplay.title
+            }));
+        }
+
         function renderPinnedHeroCards() {
             const heroMetrics = _("#heroMetrics");
             if (!heroMetrics)
@@ -3341,11 +3387,16 @@
                         saveUiState({ pinnedHeroFields: Array.from(pinnedHeroFields) });
                         renderPinnedHeroCards();
                     }
-                },
+                });
+
+                const valueEl = _$("div", { className: "metric-value" });
+                setPinnedMetricValueContent(valueEl, fieldPath, sourceValueEl);
+
+                card.append(
                 _$("div", { className: "pinned-card-inner" },
                     _$("div", { className: "pinned-card-body" },
                         _$("h5", { textContent: getPinnedMetricLabel(sourceValueEl, fieldPath) }),
-                        _$("div", { className: "metric-value", textContent: getPinnedMetricValueText(fieldPath, sourceValueEl) })
+                        valueEl
                     ),
                     svg
                 ));
@@ -3417,7 +3468,7 @@
                 const sourceValueEl = getSourceValueElementByField(fieldPath);
                 const valueEl = _(".metric-value", card);
                 if (valueEl && sourceValueEl)
-                    valueEl.textContent = getPinnedMetricValueText(fieldPath, sourceValueEl);
+                    setPinnedMetricValueContent(valueEl, fieldPath, sourceValueEl);
                 const svg = _("svg.pinned-sparkline", card);
                 if (svg && pinnedHeroHistory[fieldPath]?.length >= 2)
                     drawSparkline(svg, pinnedHeroHistory[fieldPath]);
