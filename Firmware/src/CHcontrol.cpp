@@ -150,7 +150,7 @@ double CHcontrol::getFlow() {
 
 bool CHcontrol::getChOn() {
     if (overrideEnabled && ovrdOn.active)
-        return ovrdOn.value;
+        return ovrdOn.value && (getFlow() != 0);
 
     if ( (mode == HADiscovery::MODE_OFF) || (roomComp.mode == HADiscovery::MODE_OFF) || (getFlow() == 0) )
         return false;
