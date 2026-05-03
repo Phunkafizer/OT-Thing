@@ -138,14 +138,15 @@ OTControl::OTInterface::OTInterface(const uint8_t inPin, const uint8_t outPin, c
 }
 
 void OTControl::OTInterface::sendRequest(const char source, const unsigned long msg) {
-    hal.sendRequestAsync(msg);
-    
-    if (source)
-        command.sendOtEvent(source, msg);
-    
-    txCount++;
-    lastTx = millis();
-    lastTxMsg = msg;
+    const bool sent = hal.sendRequestAsync(msg);
+
+    if (sent) {
+        if (source)
+            command.sendOtEvent(source, msg);
+        txCount++;
+        lastTx = millis();
+        lastTxMsg = msg;
+    }
 }
 
 void OTControl::OTInterface::resetCounters() {
