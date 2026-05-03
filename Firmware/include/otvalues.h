@@ -167,6 +167,7 @@ public:
     static OTValue* getSlaveValue(const OpenThermMessageID id);
     static OTValue* getMasterValue(const OpenThermMessageID id);
     static class OTValueSlaveConfigMember* getSlaveConfig();
+    static void setTexhaustAsFloat(bool asFloat);
     void refreshDisc();
     bool isSet() const;
     bool hasReply() const;
