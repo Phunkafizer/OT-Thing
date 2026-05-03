@@ -355,19 +355,27 @@
             line-height: 1.35;
         }
 
-        .statusvalue.temp-cold {
+        .statusvalue.temp-cold,
+        .metric-value.temp-cold,
+        .metric-value .temp-cold {
             color: #92ccff;
         }
 
-        .statusvalue.temp-hot {
+        .statusvalue.temp-hot,
+        .metric-value.temp-hot,
+        .metric-value .temp-hot {
             color: #ffc17b;
         }
 
-        .statusvalue.temp-veryhot {
+        .statusvalue.temp-veryhot,
+        .metric-value.temp-veryhot,
+        .metric-value .temp-veryhot {
             color: #ff8f7f;
         }
 
-        .statusvalue.value-high {
+        .statusvalue.value-high,
+        .metric-value.value-high,
+        .metric-value .value-high {
             color: #ffd072;
         }
 
@@ -1510,7 +1518,7 @@
                 <div class="metric-card hero-roomset-card" id="heroRoomSetCard1">
                     <h5>Room setpoint<span class="flow-action-icon" id="heroRoomActionIcon1"></span></h5>
                     <div class="metric-inline-row">
-                        <div class="metric-value"><span id="heroRoomSet1">--</span></div>
+                        <div class="metric-value"><span id="heroRoomSet1" data-min="17" data-max="23">--</span></div>
                         <div class="metric-actions">
                             <div class="step-group">
                                 <button class="step-btn" type="button" onclick="adjustRoomSetpoint(0, -0.5)">▼</button>
@@ -1527,7 +1535,7 @@
                 <div class="metric-card hero-roomset-card CH2" id="heroRoomSetCard2">
                     <h5>Room setpoint 2<span class="flow-action-icon" id="heroRoomActionIcon2"></span></h5>
                     <div class="metric-inline-row">
-                        <div class="metric-value"><span id="heroRoomSet2">--</span></div>
+                        <div class="metric-value"><span id="heroRoomSet2" data-min="17" data-max="23">--</span></div>
                         <div class="metric-actions">
                             <div class="step-group">
                                 <button class="step-btn" type="button" onclick="adjustRoomSetpoint(1, -0.5)">▼</button>
@@ -3341,9 +3349,20 @@
             if (!valueEl || !sourceValueEl)
                 return;
 
+            clearValueColorClasses(valueEl);
+
             const boolDisplay = getPinnedMetricBoolDisplay(fieldPath, sourceValueEl);
             if (!boolDisplay) {
                 valueEl.textContent = getPinnedMetricValueText(fieldPath, sourceValueEl);
+
+                const val = getStatusValueByField(fieldPath);
+                const num = parseNumber(val);
+                if (num != null) {
+                    const unit = sourceValueEl.getAttribute("unit") || "";
+                    const minRaw = sourceValueEl.getAttribute("data-min") ?? sourceValueEl.getAttribute("min");
+                    const maxRaw = sourceValueEl.getAttribute("data-max") ?? sourceValueEl.getAttribute("max");
+                    applyValueColorClass(valueEl, num, unit, minRaw, maxRaw);
+                }
                 return;
             }
 
@@ -3611,9 +3630,15 @@
 
                 if (roomSetEl) {
                     const parsedRoomSet = parseNumber(roomSet);
+                    clearValueColorClasses(roomSetEl);
                     roomSetEl.textContent = (parsedRoomSet == null)
                         ? "--"
                         : `${Math.round(parsedRoomSet * 10) / 10} °C`;
+                    if (parsedRoomSet != null) {
+                        const minRaw = roomSetEl.getAttribute("data-min");
+                        const maxRaw = roomSetEl.getAttribute("data-max");
+                        applyValueColorClass(roomSetEl, parsedRoomSet, "°C", minRaw, maxRaw);
+                    }
                 }
 
                 updateRoomModeButtons(ch, roomMode, statuscache?.heatercircuit?.[ch]?.roomAction ?? null);
