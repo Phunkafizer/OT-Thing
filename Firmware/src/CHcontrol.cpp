@@ -143,7 +143,12 @@ double CHcontrol::getFlow() {
     else
         minSuspended = false;
 
+    bool heatingDemand = (result > flowMin);
+
     clip(result, flowMin, curve.getFlowMax());
+
+    if (!heatingDemand)
+        return 0;
 
     return result;
 }
