@@ -372,8 +372,8 @@
         }
 
         .hero-metrics {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            display: flex;
+            flex-wrap: wrap;
             gap: 9px;
             margin-bottom: 10px;
         }
@@ -384,6 +384,100 @@
             border-radius: 10px;
             padding: 9px;
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            flex: 1 1 45%;
+            min-width: 140px;
+        }
+
+        /* Status card is special: always pinned to the first row at full width */
+        .metric-card.metric-state-card {
+            flex: 1 1 100%;
+            min-width: 100%;
+        }
+
+        /* Cards with buttons need extra width to avoid control overflow */
+        .metric-card:has(.metric-actions) {
+            flex: 1 1 calc((100% - 9px) / 2);
+            min-width: 250px;
+        }
+
+        /* Simple cards (no actions, non-status) are compact: 3 per row on narrow phones */
+        .metric-card:not(.metric-state-card):not(:has(.metric-actions)) {
+            flex: 1 1 calc((100% - 18px) / 3);
+            min-width: 108px;
+        }
+
+        .metric-card.pinned-hero-card {
+            border-color: rgba(255, 188, 131, 0.45);
+            cursor: pointer;
+        }
+
+        .metric-card.pinned-hero-card:hover {
+            border-color: rgba(255, 188, 131, 0.7);
+        }
+
+        .pinned-card-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .pinned-card-body {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .pinned-card-body h5 {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        svg.pinned-sparkline {
+            flex: 0 0 auto;
+            overflow: visible;
+            opacity: 0.85;
+        }
+
+        .hero-pin-target {
+            cursor: zoom-in;
+        }
+
+        .hero-pin-target h5::after {
+            content: " 📌";
+            opacity: 0.48;
+            font-size: 0.82em;
+            font-weight: 500;
+            margin-left: 2px;
+        }
+
+        .hero-pin-target:hover h5::after {
+            opacity: 0.85;
+        }
+
+        .hero-pin-target.is-pinned {
+            outline: 1px dashed rgba(255, 188, 131, 0.52);
+            outline-offset: -4px;
+            border-radius: 8px;
+            background: linear-gradient(165deg, rgba(255, 153, 85, 0.1), rgba(22, 25, 31, 0.56));
+        }
+
+        .hero-pin-target.is-pinned h5::after {
+            opacity: 1;
+        }
+
+        /* With more width, fit one additional simple card per row (4 total) */
+        @media (min-width: 560px) {
+            .metric-card:not(.metric-state-card):not(:has(.metric-actions)) {
+                flex-basis: calc((100% - 27px) / 4);
+            }
+        }
+
+        @media (max-width: 540px) {
+            .metric-card:has(.metric-actions) {
+                flex-basis: 100%;
+                min-width: 100%;
+            }
         }
 
         .metric-value {
@@ -437,9 +531,6 @@
             display: inline-flex;
             align-items: center;
             gap: 3px;
-        }
-
-        .hero-roomset-card .metric-actions .mode-group {
         }
 
         .hero-roomset-card .metric-actions .step-group {
@@ -1263,7 +1354,7 @@
             }
 
             .hero-metrics {
-                grid-template-columns: 1fr;
+                gap: 8px;
             }
 
             .state-grid {
@@ -1376,7 +1467,7 @@
         <div class="tab" id="status">
             <div class="hero-metrics" id="heroMetrics">
                 <div class="metric-card metric-state-card">
-                    <h5>Status</h5>
+                    <h5 aria-label="Status"></h5>
                     <div class="state-grid">
                         <div class="state-item">
                             <span class="state-label">Flame</span>
@@ -1443,7 +1534,7 @@
                     <div class="metric-inline-row">
                         <div class="metric-value"><span id="heroFlowSet">--</span><span class="metric-arrow" id="heroFlowSetTrendIcon">•</span></div>
                         <div class="metric-actions">
-                            <div class="step-group">
+                            <div class="step-group" id="flowSetStepGroup" hidden>
                                 <button class="step-btn" type="button" onclick="adjustFlowSetTemp(-0.5)">▼</button>
                                 <button class="step-btn" type="button" onclick="adjustFlowSetTemp(0.5)">▲</button>
                             </div>
@@ -1454,18 +1545,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="metric-card">
-                    <h5>Flow</h5>
-                    <div class="metric-value"><span id="heroFlow">--</span><span class="metric-arrow" id="heroFlowTrendIcon">•</span></div>
-                </div>
-                <div class="metric-card">
-                    <h5>Outside</h5>
-                    <div class="metric-value"><span id="heroOutside">--</span><span class="metric-arrow" id="heroOutsideTrendIcon">•</span></div>
-                </div>
-                <div class="metric-card">
-                    <h5>Modulation</h5>
-                    <div class="metric-value"><span id="heroMod">--</span><span class="metric-arrow" id="heroModTrendIcon">•</span></div>
                 </div>
             </div>
             <h3>System</h3>
@@ -1537,7 +1616,7 @@
                 </div>
             </div>
             <h3>OT slave</h3>
-            <div class="group">
+            <div class="group hero-pin-source">
                 <h4>Status</h4>
                 <div class="flexline">
                     <div class="statusfield">
@@ -1876,7 +1955,7 @@
             </div>
 
             <h3>OT master</h3>
-            <div class="group">
+            <div class="group hero-pin-source">
                 <div class="flexline">
                     <div class="statusfield">
                         <h5>Heater circuit 1 enabled</h5>
@@ -2345,7 +2424,7 @@
                 </div>
                 <div class="curve-hint curve-only">Drag points to tune the multipoint curve.</div>
 
-                <div class="flexline">
+                <div class="flexline hero-pin-source">
                     <div class="statusfield nohide">
                         <h5>Outside temperature</h5>
                         <span class="statusvalue" field="outsideTemp" unit="°C"></span>
@@ -2813,7 +2892,7 @@
         const 
         CURVE_MODE_SIMPLE = 0,
         CURVE_MODE_MULTIPOINT = 1,
-        UI_STATE_VERSION = 2,
+        UI_STATE_VERSION = 4,
         UI_STATE_STORAGE_KEY = "otthing.uiState",
         UI_TIMINGS = {
             toastDefaultMs: 3500,
@@ -2947,9 +3026,12 @@
                 }
             ]
         };
+        const PINNED_HISTORY_MAX = 50;
         let config = defaultConfig,
         statuscache = {},
         roomsetpoint = [21, 21], // used for drawing curve
+        pinnedHeroFields = new Set(),
+        pinnedHeroHistory = {},
         currentCh = 0,
         autoscroll = true,
         wifiScanRunning = false;
@@ -3085,11 +3167,21 @@
                 state.version = 2;
             }
 
+            if (state.version === 2) {
+                if (!Array.isArray(state.pinnedHeroFields))
+                    state.pinnedHeroFields = [];
+                state.version = 3;
+            }
+
             if (typeof state.activeTab !== "string" || state.activeTab.length === 0)
                 state.activeTab = "status";
 
             if (!Number.isInteger(state.currentCh))
                 state.currentCh = 0;
+
+            if (!Array.isArray(state.pinnedHeroFields))
+                state.pinnedHeroFields = [];
+            state.pinnedHeroFields = normalizePinnedHeroFields(state.pinnedHeroFields);
 
             state.currentCh = Math.max(0, Math.min(1, state.currentCh));
             state.version = UI_STATE_VERSION;
@@ -3117,6 +3209,250 @@
             }
             catch (err) {
             }
+        }
+
+        function normalizePinnedHeroFields(rawFields) {
+            if (!Array.isArray(rawFields))
+                return [];
+
+            return rawFields
+                .filter((entry) => typeof entry === "string" && entry.length > 0)
+                .slice(0, 12);
+        }
+
+        function syncPinnedHeroFieldsToConfig() {
+            if (!config || typeof config !== "object")
+                return;
+
+            if (!config.ui || typeof config.ui !== "object")
+                config.ui = {};
+
+            config.ui.pinnedHeroFields = Array.from(pinnedHeroFields);
+        }
+
+        function applyPinnedHeroFieldsFromConfig() {
+            if (!config?.ui || !Object.prototype.hasOwnProperty.call(config.ui, "pinnedHeroFields"))
+                return;
+
+            const cfgFields = normalizePinnedHeroFields(config.ui.pinnedHeroFields);
+            pinnedHeroFields = new Set(cfgFields);
+            saveUiState({ pinnedHeroFields: cfgFields });
+            renderPinnedHeroCards();
+        }
+
+        function getStatusValueByField(fieldPath) {
+            if (!fieldPath)
+                return null;
+
+            try {
+                const parts = fieldPath.replace('$', currentCh).split('.');
+                let val = statuscache;
+                for (let i = 0; i < parts.length; i++) {
+                    if (val == null)
+                        return null;
+                    val = val[parts[i]];
+                }
+                return (val === undefined) ? null : val;
+            }
+            catch (err) {
+                return null;
+            }
+        }
+
+        function getSourceValueElementByField(fieldPath) {
+            const values = __(".hero-pin-source .statusvalue[field]");
+            for (const valueEl of values) {
+                if (valueEl.getAttribute("field") === fieldPath)
+                    return valueEl;
+            }
+            return null;
+        }
+
+        function getPinnedMetricLabel(sourceValueEl, fieldPath) {
+            const labelEl = sourceValueEl?.parentElement ? _("h5", sourceValueEl.parentElement) : null;
+            const labelText = labelEl?.textContent?.trim();
+            if (labelText)
+                return labelText;
+
+            const parts = String(fieldPath || "").split('.');
+            return parts[parts.length - 1] || "Metric";
+        }
+
+        function getPinnedMetricValueText(fieldPath, sourceValueEl) {
+            const val = getStatusValueByField(fieldPath);
+            const unit = sourceValueEl?.getAttribute("unit") || "";
+            const isErr = sourceValueEl?.classList?.contains("error") || false;
+
+            if (val === null)
+                return "---";
+
+            if (val === true)
+                return isErr ? "Alert" : "On";
+            if (val === false)
+                return isErr ? "Ok" : "Off";
+
+            const text = String(val);
+            return unit ? `${text} ${unit}` : text;
+        }
+
+        function renderPinnedHeroCards() {
+            const heroMetrics = _("#heroMetrics");
+            if (!heroMetrics)
+                return;
+
+            __(".pinned-hero-card", heroMetrics).forEach((card) => card.remove());
+
+            const staleFields = [];
+            Array.from(pinnedHeroFields).forEach((fieldPath) => {
+                const sourceValueEl = getSourceValueElementByField(fieldPath);
+                if (!sourceValueEl) {
+                    staleFields.push(fieldPath);
+                    return;
+                }
+
+                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svg.setAttribute("class", "pinned-sparkline");
+                svg.setAttribute("width", "80");
+                svg.setAttribute("height", "44");
+                svg.setAttribute("viewBox", "0 0 80 44");
+                if (pinnedHeroHistory[fieldPath]?.length >= 2)
+                    drawSparkline(svg, pinnedHeroHistory[fieldPath]);
+
+                const card = _$("div", {
+                    className: "metric-card pinned-hero-card",
+                    title: "Double-click to remove from hero",
+                    ondblclick: () => {
+                        pinnedHeroFields.delete(fieldPath);
+                        syncPinnedHeroFieldsToConfig();
+                        saveUiState({ pinnedHeroFields: Array.from(pinnedHeroFields) });
+                        renderPinnedHeroCards();
+                    }
+                },
+                _$("div", { className: "pinned-card-inner" },
+                    _$("div", { className: "pinned-card-body" },
+                        _$("h5", { textContent: getPinnedMetricLabel(sourceValueEl, fieldPath) }),
+                        _$("div", { className: "metric-value", textContent: getPinnedMetricValueText(fieldPath, sourceValueEl) })
+                    ),
+                    svg
+                ));
+                card.dataset.field = fieldPath;
+
+                heroMetrics.append(card);
+            });
+
+            if (staleFields.length > 0) {
+                staleFields.forEach((fieldPath) => pinnedHeroFields.delete(fieldPath));
+                syncPinnedHeroFieldsToConfig();
+                saveUiState({ pinnedHeroFields: Array.from(pinnedHeroFields) });
+            }
+
+            refreshHeroPinTargetState();
+        }
+
+        function drawSparkline(svg, values) {
+            svg.innerHTML = "";
+            const w = 80, h = 44, pad = 3;
+            if (values.length < 2) return;
+
+            let min = Math.min(...values);
+            let max = Math.max(...values);
+            if (min === max) { min -= 0.5; max += 0.5; }
+
+            const pts = values.map((v, i) => {
+                const x = pad + (i / (values.length - 1)) * (w - pad * 2);
+                const y = h - pad - ((v - min) / (max - min)) * (h - pad * 2);
+                return `${x.toFixed(1)},${y.toFixed(1)}`;
+            }).join(" ");
+
+            const poly = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+            poly.setAttribute("points", pts);
+            poly.setAttribute("fill", "none");
+            poly.setAttribute("stroke", "rgba(255,188,131,0.75)");
+            poly.setAttribute("stroke-width", "1.5");
+            poly.setAttribute("stroke-linecap", "round");
+            poly.setAttribute("stroke-linejoin", "round");
+            svg.appendChild(poly);
+
+            // Dot on last value
+            const lastVal = values[values.length - 1];
+            const lx = w - pad;
+            const ly = h - pad - ((lastVal - min) / (max - min)) * (h - pad * 2);
+            const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            dot.setAttribute("cx", lx.toFixed(1));
+            dot.setAttribute("cy", ly.toFixed(1));
+            dot.setAttribute("r", "2.5");
+            dot.setAttribute("fill", "rgba(255,188,131,0.95)");
+            svg.appendChild(dot);
+        }
+
+        function updatePinnedHeroHistory() {
+            for (const fieldPath of pinnedHeroFields) {
+                const val = getStatusValueByField(fieldPath);
+                const num = typeof val === "number" ? val : parseFloat(val);
+                if (!isFinite(num)) continue;
+                if (!pinnedHeroHistory[fieldPath]) pinnedHeroHistory[fieldPath] = [];
+                const arr = pinnedHeroHistory[fieldPath];
+                arr.push(num);
+                if (arr.length > PINNED_HISTORY_MAX) arr.shift();
+            }
+        }
+
+        function updatePinnedHeroCardsDisplay() {
+            __(".pinned-hero-card[data-field]", _("#heroMetrics")).forEach(card => {
+                const fieldPath = card.dataset.field;
+                const sourceValueEl = getSourceValueElementByField(fieldPath);
+                const valueEl = _(".metric-value", card);
+                if (valueEl && sourceValueEl)
+                    valueEl.textContent = getPinnedMetricValueText(fieldPath, sourceValueEl);
+                const svg = _("svg.pinned-sparkline", card);
+                if (svg && pinnedHeroHistory[fieldPath]?.length >= 2)
+                    drawSparkline(svg, pinnedHeroHistory[fieldPath]);
+            });
+        }
+
+        function refreshHeroPinTargetState() {
+            __(".hero-pin-source .statusfield").forEach((statusField) => {
+                const valueEl = _(".statusvalue[field]", statusField);
+                const fieldPath = valueEl?.getAttribute("field");
+                const pinned = !!fieldPath && pinnedHeroFields.has(fieldPath);
+                statusField.classList.toggle("is-pinned", pinned);
+            });
+        }
+
+        function initHeroMetricPinning() {
+            __(".hero-pin-source .statusfield").forEach((statusField) => {
+                if (statusField.dataset.pinBound === "1")
+                    return;
+
+                const valueEl = _(".statusvalue[field]", statusField);
+                if (!valueEl)
+                    return;
+
+                statusField.classList.add("hero-pin-target");
+                statusField.title = "Double-click to pin/unpin in hero cards";
+                statusField.dataset.pinBound = "1";
+                statusField.addEventListener("dblclick", (ev) => {
+                    ev.preventDefault();
+                    const fieldPath = valueEl.getAttribute("field");
+                    if (!fieldPath)
+                        return;
+
+                    if (pinnedHeroFields.has(fieldPath)) {
+                        pinnedHeroFields.delete(fieldPath);
+                        showToast("Removed from hero", "info", 1800);
+                    }
+                    else {
+                        pinnedHeroFields.add(fieldPath);
+                        showToast("Pinned to hero", "success", 1800);
+                    }
+
+                    syncPinnedHeroFieldsToConfig();
+                    saveUiState({ pinnedHeroFields: Array.from(pinnedHeroFields) });
+                    renderPinnedHeroCards();
+                });
+            });
+
+            refreshHeroPinTargetState();
         }
 
         function updateMetric(idValue, idArrow, value, unit, key) {
@@ -3226,6 +3562,8 @@
             updateMetric("heroFlow", "heroFlowTrendIcon", parseNumber(flow), "°C", `flow${currentCh}`);
             updateMetric("heroOutside", "heroOutsideTrendIcon", parseNumber(outside), "°C", "outside");
             updateMetric("heroMod", "heroModTrendIcon", parseNumber(mod), "%", "mod");
+            updatePinnedHeroHistory();
+            updatePinnedHeroCardsDisplay();
         }
 
         function updateHeroStateCard() {
@@ -3974,6 +4312,10 @@
                 auto: "#btnFlowModeAuto"
             };
 
+            const stepGroup = _("#flowSetStepGroup");
+            if (stepGroup)
+                stepGroup.hidden = activeMode !== "heat";
+
             Object.keys(ids).forEach((key) => {
                 const btn = _(ids[key]);
                 if (!btn)
@@ -4344,7 +4686,15 @@
             let tabEnterTimer = null;
             const uiState = loadUiState();
             currentCh = uiState.currentCh;
+            pinnedHeroFields = new Set(uiState.pinnedHeroFields || []);
+            if (pinnedHeroFields.size === 0) {
+                pinnedHeroFields = new Set(["slave.flow_t", "slave.rel_mod", "slave.ch_pressure"]);
+                saveUiState({ pinnedHeroFields: Array.from(pinnedHeroFields) });
+            }
+            syncPinnedHeroFieldsToConfig();
             initInfoboxTooltips();
+            initHeroMetricPinning();
+            renderPinnedHeroCards();
 
             __("div.nav li").forEach(li => {
                 li.onclick = ev => {
@@ -4552,11 +4902,17 @@
 
             let xhrConfig = new XMLHttpRequest();
             xhrConfig.onload = (ev) => {
+                let parsedConfig = null;
                 try {
-                    config = JSON.parse(ev.target.responseText);
+                    parsedConfig = JSON.parse(ev.target.responseText);
                 }
                 catch (err) {
                 }
+
+                if (parsedConfig)
+                    config = parsedConfig;
+
+                applyPinnedHeroFieldsFromConfig();
                 initUi();
             };
             xhrConfig.onerror = (ev) => {
@@ -4855,6 +5211,7 @@
                 updateStatusValues();
                 updateHeroStateCard();
                 applyValueColoring();
+                renderPinnedHeroCards();
 
                 __(".mqttbasetopic").forEach((ele) => {
                     ele.innerHTML = statuscache.mqtt.basetopic;

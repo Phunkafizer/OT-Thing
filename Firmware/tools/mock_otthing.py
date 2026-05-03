@@ -423,11 +423,11 @@ def get_set(
         state["status"]["heatercircuit"][1]["ctrlMode"] = chMode2
 
     effective_ch1_mode = chMode1 or (state["status"]["heatercircuit"][0].get("ctrlMode") if state["status"]["heatercircuit"] else None)
-    if chSetTemp1 is not None and effective_ch1_mode != "auto":
+    if chSetTemp1 is not None and effective_ch1_mode in {"heat", "on"}:
         state["status"]["master"]["ch_set_t"] = chSetTemp1
 
     effective_ch2_mode = chMode2 or (state["status"]["heatercircuit"][1].get("ctrlMode") if len(state["status"]["heatercircuit"]) > 1 else None)
-    if chSetTemp2 is not None and effective_ch2_mode != "auto":
+    if chSetTemp2 is not None and effective_ch2_mode in {"heat", "on"}:
         state["status"]["master"]["ch_set_t2"] = chSetTemp2
 
     return JSONResponse({"ok": True})
@@ -507,6 +507,13 @@ _ADMIN_HTML = """<!DOCTYPE html>
   #reload-btn:hover { background: #444; color: #fff; }
   .load-btn { background: #1a2a3a; color: #4fc3f7; border: 1px solid #334; padding: 5px 14px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.82em; margin-bottom: 16px; margin-right: 8px; }
   .load-btn:hover { background: #0d1b2a; color: #fff; }
+    .quick-set { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px; padding: 10px; border: 1px solid #334; border-radius: 8px; background: #1a1a2a; }
+    .quick-set input[type=text], .quick-set select { background: #0d1b2a; color: #eee; border: 1px solid #334; border-radius: 4px; padding: 5px 8px; font-family: inherit; font-size: 0.82em; }
+    .quick-set .path-input { flex: 2; min-width: 260px; }
+    .quick-set .value-input { flex: 1; min-width: 180px; }
+    .quick-set .quick-btn { background: #1a2a3a; color: #4fc3f7; border: 1px solid #334; padding: 5px 14px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.82em; }
+    .quick-set .quick-btn:hover { background: #0d1b2a; color: #fff; }
+    .quick-set .hint { width: 100%; font-size: 0.78em; color: #889; }
 </style>
 </head>
 <body>
@@ -516,6 +523,20 @@ _ADMIN_HTML = """<!DOCTYPE html>
 <input type="file" id="file-status" accept=".json,application/json" style="display:none" onchange="loadJsonFile(this,'status')">
 <button class="load-btn" onclick="document.getElementById('file-config').click()">📂 Load config JSON</button>
 <input type="file" id="file-config" accept=".json,application/json" style="display:none" onchange="loadJsonFile(this,'config')">
+<div class="quick-set">
+    <input id="customPath" class="path-input" list="statusPathList" type="text" placeholder="status path, e.g. slave.status.flame">
+    <datalist id="statusPathList"></datalist>
+    <select id="customType" title="value type">
+        <option value="auto" selected>auto</option>
+        <option value="bool">bool</option>
+        <option value="number">number</option>
+        <option value="string">string</option>
+        <option value="json">json</option>
+    </select>
+    <input id="customValue" class="value-input" type="text" placeholder="value">
+    <button class="quick-btn" onclick="setCustomPath()">Apply</button>
+    <div class="hint">Use dot notation paths (for arrays: heatercircuit.0.roomsetpoint). Values can be auto-detected or forced with the type selector.</div>
+</div>
 <div class="grid" id="grid"></div>
 <div id="toast"></div>
 <script>
@@ -586,9 +607,127 @@ async function sendValue(key, value) {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({[key]: value})
     });
-    if (r.ok) showToast('✓  ' + key + ' = ' + JSON.stringify(value));
-    else showToast('Error ' + r.status, true);
+        if (r.ok) {
+            showToast('✓  ' + key + ' = ' + JSON.stringify(value));
+            return;
+        }
+
+        const body = await r.json().catch(() => null);
+        const details = body?.failed ? (' ' + JSON.stringify(body.failed)) : '';
+        showToast('Error ' + r.status + details, true);
   } catch(e) { showToast(e.message, true); }
+}
+
+function collectLeafPaths(obj, prefix = '') {
+    const paths = [];
+    if (obj === null || obj === undefined)
+        return paths;
+
+    if (Array.isArray(obj)) {
+        obj.forEach((entry, idx) => {
+            const key = prefix ? `${prefix}.${idx}` : String(idx);
+            if (entry !== null && typeof entry === 'object')
+                paths.push(...collectLeafPaths(entry, key));
+            else
+                paths.push(key);
+        });
+        return paths;
+    }
+
+    if (typeof obj === 'object') {
+        Object.keys(obj).forEach((k) => {
+            const value = obj[k];
+            const key = prefix ? `${prefix}.${k}` : k;
+            if (value !== null && typeof value === 'object')
+                paths.push(...collectLeafPaths(value, key));
+            else
+                paths.push(key);
+        });
+        return paths;
+    }
+
+    if (prefix)
+        paths.push(prefix);
+    return paths;
+}
+
+function updatePathSuggestions(status) {
+    const list = document.getElementById('statusPathList');
+    if (!list)
+        return;
+
+    list.innerHTML = '';
+    collectLeafPaths(status).forEach((path) => {
+        list.append(new Option(path, path));
+    });
+}
+
+function parseCustomValue(rawValue, mode) {
+    const raw = String(rawValue ?? '').trim();
+
+    if (mode === 'string')
+        return rawValue;
+
+    if (mode === 'bool') {
+        const low = raw.toLowerCase();
+        if (low === 'true' || low === '1' || low === 'on') return true;
+        if (low === 'false' || low === '0' || low === 'off') return false;
+        throw new Error('expected true/false');
+    }
+
+    if (mode === 'number') {
+        const num = Number.parseFloat(raw);
+        if (!Number.isFinite(num))
+            throw new Error('expected number');
+        return num;
+    }
+
+    if (mode === 'json')
+        return JSON.parse(raw);
+
+    if (raw === '')
+        return '';
+
+    const low = raw.toLowerCase();
+    if (low === 'true') return true;
+    if (low === 'false') return false;
+    if (low === 'null') return null;
+    if (/^-?\\d+(\\.\\d+)?$/.test(raw)) return Number.parseFloat(raw);
+
+    if (raw.startsWith('{') || raw.startsWith('[')) {
+        try {
+            return JSON.parse(raw);
+        }
+        catch (err) {
+        }
+    }
+
+    return rawValue;
+}
+
+async function setCustomPath() {
+    const pathEl = document.getElementById('customPath');
+    const typeEl = document.getElementById('customType');
+    const valueEl = document.getElementById('customValue');
+    if (!pathEl || !typeEl || !valueEl)
+        return;
+
+    const path = pathEl.value.trim();
+    if (!path) {
+        showToast('Path is required', true);
+        return;
+    }
+
+    let value;
+    try {
+        value = parseCustomValue(valueEl.value, typeEl.value);
+    }
+    catch (err) {
+        showToast('Invalid value: ' + err.message, true);
+        return;
+    }
+
+    await sendValue(path, value);
 }
 
 function applyStatus(status) {
@@ -607,6 +746,7 @@ function applyStatus(status) {
 
 function buildUI(status) {
   const grid = document.getElementById('grid');
+    updatePathSuggestions(status);
   grid.innerHTML = '';
   for (const section of FIELDS) {
     const card = document.createElement('div');
@@ -633,22 +773,27 @@ function buildUI(status) {
     }
     grid.appendChild(card);
   }
-  grid.addEventListener('change', async (e) => {
-    const el = e.target;
-    if (!el.dataset.key) return;
-    const key = el.dataset.key;
-    const type = el.dataset.type;
-    let value;
-    if (type === 'bool') value = el.checked;
-    else if (type === 'number') value = parseFloat(el.value);
-    else value = el.value;
-    await sendValue(key, value);
-  });
+    if (!grid.dataset.changeBound) {
+        grid.addEventListener('change', async (e) => {
+            const el = e.target;
+            if (!el.dataset.key) return;
+            const key = el.dataset.key;
+            const type = el.dataset.type;
+            let value;
+            if (type === 'bool') value = el.checked;
+            else if (type === 'number') value = parseFloat(el.value);
+            else value = el.value;
+            await sendValue(key, value);
+        });
+        grid.dataset.changeBound = '1';
+    }
 }
 
 async function reload() {
   const r = await fetch('/status');
-  applyStatus(await r.json());
+    const status = await r.json();
+    applyStatus(status);
+    updatePathSuggestions(status);
   showToast('Reloaded from /status');
 }
 
@@ -670,6 +815,14 @@ async function loadJsonFile(input, target) {
 }
 
 (async () => {
+    const customValue = document.getElementById('customValue');
+    if (customValue) {
+        customValue.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter')
+                setCustomPath();
+        });
+    }
+
   const r = await fetch('/status');
   buildUI(await r.json());
 })();
