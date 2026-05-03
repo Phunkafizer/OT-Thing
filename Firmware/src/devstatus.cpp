@@ -22,7 +22,7 @@ PGM_P STR_STATKEY_DHW PROGMEM = "dhw";
 PGM_P STR_STATKEY_RETURNLIMITINTEGRATOR PROGMEM = "retLimitInteg";
 PGM_P STR_STATKEY_ROOMACTION PROGMEM = "roomAction";
 PGM_P STR_STATKEY_ROOMMODE PROGMEM = "roomMode";
-
+PGM_P STR_STATKEY_SUSPENDED PROGMEM = "suspended";
 DevStatus devstatus;
 
 class DevStatusLock: public SemHelper {

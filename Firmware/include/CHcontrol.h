@@ -45,6 +45,7 @@ private:
         double reduction {0}; // result of PI controller
     } retLimit;
     bool minSuspended {false};
+    bool outSuspended {false};
     HeatingCurve curve;
 public:
     CHcontrol(const uint8_t channel);

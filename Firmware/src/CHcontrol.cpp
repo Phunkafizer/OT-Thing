@@ -73,7 +73,7 @@ void CHcontrol::getJson(JsonObject &obj) {
         action = HADiscovery::ACTION_OFF;
     obj[FPSTR(STR_STATKEY_ACTION)] = haDisc.getClimateActionStr(action);
 
-    obj[F("suspended")] = roomSuspended || minSuspended;
+    obj[FPSTR(STR_STATKEY_SUSPENDED)] = roomSuspended || minSuspended || outSuspended;
 
     double d;
     if (returnTemp[channel].get(d)) {
@@ -112,8 +112,9 @@ double CHcontrol::getFlow() {
 
     case HADiscovery::MODE_AUTO: {
         double rsp = config.roomSet; // default room set point
-        roomSetPoint[channel].get(rsp);
-        result = curve.getFlowTemp(rsp);
+        result = 0.0;
+        if (roomSetPoint[channel].get(rsp))
+            result = curve.getFlowTemp(rsp);
         if (result == 0.0)
             result = flowTemp;
         break;
@@ -143,8 +144,18 @@ double CHcontrol::getFlow() {
     else
         minSuspended = false;
 
-    clip(result, flowMin, curve.getFlowMax());
+    double ost;
+    if (outsideTemp.get(ost)) {
+        if (result > (ost + 0.2))
+            outSuspended = false;
 
+        if (result < (ost - 0.2))
+            outSuspended = true;
+    }
+    else
+        outSuspended = false;
+
+    clip(result, flowMin, curve.getFlowMax());
     return result;
 }
 
@@ -155,7 +166,16 @@ bool CHcontrol::getChOn() {
     if ( (mode == HADiscovery::MODE_OFF) || (roomComp.mode == HADiscovery::MODE_OFF) || (getFlow() == 0) )
         return false;
 
-    return !(config.roomSuspend.enabled && roomSuspended) && !(config.minSuspend && minSuspended);
+    if (config.roomSuspend.enabled && roomSuspended)
+        return false;
+
+    if (config.minSuspend && minSuspended)
+        return false;
+
+    if (outSuspended)
+        return false;
+
+    return true;
 }
 
 void CHcontrol::setMode(const HADiscovery::ClimateMode mode) {
