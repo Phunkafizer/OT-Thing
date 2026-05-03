@@ -709,17 +709,22 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             slave.sendResponse(resp, 'P');
 
             switch (id) {
-            case TSet:
-                chcontrol[0].ovrdTemp.value = OpenTherm::getFloat(msg);
+            case TSet: {
+                float val = OpenTherm::getFloat(msg);
+                if (val < 0) val = 0;
+                chcontrol[0].ovrdTemp.value = val;
                 if (chcontrol[0].ovrdTemp.active)
                     setBoilerRequest[0].force();
                 break;
-
-            case TsetCH2:
-                chcontrol[1].ovrdTemp.value = OpenTherm::getFloat(msg);
+            }
+            case TsetCH2: {
+                float val = OpenTherm::getFloat(msg);
+                if (val < 0) val = 0;
+                chcontrol[1].ovrdTemp.value = val;
                 if (chcontrol[1].ovrdTemp.active)
                     setBoilerRequest[1].force();
                 break;
+            }
 
             case TdhwSet:
                 dhwOvrd.temp = OpenTherm::getFloat(msg);
@@ -1263,6 +1268,7 @@ void OTControl::setConfig(JsonObject &config) {
     boilerConfig.otc = boiler[F("otc")] | false;
     boilerConfig.summerMode = boiler[F("summerMode")] | false;
     boilerConfig.dhwBlocking = boiler[F("dhwBlocking")] | false;
+    OTValue::setTexhaustAsFloat(boiler[F("texhaustAsFloat")] | false);
 
     masterMemberId = config[F("masterMemberId")] | 22;
 

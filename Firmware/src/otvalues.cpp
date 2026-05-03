@@ -211,6 +211,22 @@ OTValueSlaveConfigMember* OTValue::getSlaveConfig() {
     return static_cast<OTValueSlaveConfigMember*>(getSlaveValue(SConfigSMemberIDcode));
 }
 
+void OTValue::setTexhaustAsFloat(const bool asFloat) {
+    static bool current = false;
+    if (asFloat == current)
+        return;
+    current = asFloat;
+    for (auto *&val: slaveValues) {
+        if (val->id == Texhaust) {
+            delete val;
+            val = asFloat
+                ? (OTValue*) new OTValueFloatTemp(Texhaust,      PSTR("exhaust temp."))
+                : (OTValue*) new OTValuei16(      Texhaust, 10,  PSTR("exhaust temp."));
+            return;
+        }
+    }
+}
+
 OTValue* OTValue::getMasterValue(const OpenThermMessageID id) {
     for (auto *val: masterValues) {
         if (val->id == id) {
@@ -451,13 +467,7 @@ OTValueFloat::OTValueFloat(const OpenThermMessageID id, const int interval, PGM_
 }
 
 void OTValueFloat::getValue(JsonVariant var) const {
-    int8_t i = value >> 8;
-    double d;
-    if (i >= 0)
-        d = round((i + (value & 0xFF) / 256.0) * 10) / 10.0;
-    else
-        d = round((i - (value & 0xFF) / 256.0) * 10) / 10.0;
-
+    double d = round((int16_t)value * 10 / 256.0) / 10.0;
     var.set<double>(d);
 }
 
