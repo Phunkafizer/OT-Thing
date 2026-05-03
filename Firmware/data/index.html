@@ -1679,36 +1679,36 @@
                 <div class="flexline">
                     <div class="statusfield">
                         <h5>Flow temperature</h5>
-                        <span class="statusvalue" field="slave.flow_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="slave.flow_t" unit="&deg;C" data-min="25" data-max="60"></span>
                     </div>
                     
                     <div class="statusfield">
                         <h5>Flow temperature 2</h5>
-                        <span class="statusvalue" field="slave.flow_t2" unit="&deg;C"></span>
+                        <span class="statusvalue" field="slave.flow_t2" unit="&deg;C" data-min="25" data-max="60"></span>
                     </div>
                     <div class="statusfield">
                         <h5>DHW temperature</h5>
-                        <span class="statusvalue" field="slave.dhw_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="slave.dhw_t" unit="&deg;C" data-min="25" data-max="60"></span>
                     </div>
                     <div class="statusfield">
                         <h5>DHW temperature 2</h5>
-                        <span class="statusvalue" field="slave.dhw_t2" unit="&deg;C"></span>    
+                        <span class="statusvalue" field="slave.dhw_t2" unit="&deg;C" data-min="25" data-max="60"></span>    
                     </div>
                     <div class="statusfield">
                         <h5>Exhaust temperature</h5>
-                        <span class="statusvalue" field="slave.exhaust_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="slave.exhaust_t" unit="&deg;C" data-min="35" data-max="80"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Outside temperature</h5>
-                        <span class="statusvalue" field="slave.outside_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="slave.outside_t" unit="&deg;C" data-min="0" data-max="20"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Return temperature</h5>
-                        <span class="statusvalue" field="slave.return_t" unit="&deg;C"></span>    
+                        <span class="statusvalue" field="slave.return_t" unit="&deg;C" data-min="25" data-max="60"></span>    
                     </div>
                     <div class="statusfield">
                         <h5>Room override temp.</h5>
-                        <span class="statusvalue" field="slave.tr_override" unit="&deg;C"></span>    
+                        <span class="statusvalue" field="slave.tr_override" unit="&deg;C" data-min="15" data-max="30"></span>    
                     </div>
                     <div class="statusfield">
                         <h5>Supply inlet temp.</h5>
@@ -1734,11 +1734,11 @@
                 <div class="flexline">
                     <div class="statusfield">
                         <h5>Modulation</h5>
-                        <span class="statusvalue" field="slave.rel_mod" unit="%"></span>
+                        <span class="statusvalue" field="slave.rel_mod" unit="%" data-min="5" data-max="70"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Rel. ventilation</h5>
-                        <span class="statusvalue" field="slave.rel_vent" unit="%"></span>
+                        <span class="statusvalue" field="slave.rel_vent" unit="%" data-min="0" data-max="100"></span>
                     </div>
                     <div class="statusfield">
                         <h5>&#x2300; flame ratio (3 h)</h5>
@@ -2003,23 +2003,23 @@
                     </div>
                     <div class="statusfield">
                         <h5>Room temperature</h5>
-                        <span class="statusvalue" field="master.room_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.room_t" unit="&deg;C" data-min="17" data-max="23"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room set temperature</h5>
-                        <span class="statusvalue" field="master.room_set_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.room_set_t" unit="&deg;C" data-min="17" data-max="23"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room temperature 2</h5>
-                        <span class="statusvalue" field="master.room_t2" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.room_t2" unit="&deg;C" data-min="17" data-max="23"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room set temperature 2</h5>
-                        <span class="statusvalue" field="master.room_set_t2" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.room_set_t2" unit="&deg;C" data-min="17" data-max="23"></span>
                     </div>
                     <div class="statusfield">
                         <h5>outside temp.</h5>
-                        <span class="statusvalue" field="master.outside_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.outside_t" unit="&deg;C" data-min="0" data-max="20"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Max. rel. modulation</h5>
@@ -3526,6 +3526,8 @@
             if (!valueEl || !arrowEl)
                 return;
 
+            clearValueColorClasses(valueEl);
+
             if (value == null) {
                 valueEl.textContent = "--";
                 arrowEl.textContent = "•";
@@ -3535,6 +3537,8 @@
 
             const roundedValue = Math.round(value * 10) / 10;
             valueEl.textContent = unit ? `${roundedValue} ${unit}` : String(roundedValue);
+            applyValueColorClass(valueEl, roundedValue, unit, null, null);
+
             updateMetric._hist = updateMetric._hist ?? {};
             const prev = updateMetric._hist[key];
 
@@ -3682,24 +3686,66 @@
 
         function applyValueColoring() {
             __(".statusvalue").forEach((ele) => {
-                ele.classList.remove("temp-cold", "temp-hot", "temp-veryhot", "value-high");
+                clearValueColorClasses(ele);
                 const unit = ele.getAttribute("unit") || "";
                 const raw = ele.textContent.replace(/[^0-9.+-]/g, "");
                 const val = parseNumber(raw);
                 if (val == null)
                     return;
 
-                if (/°C|deg;C/.test(unit)) {
-                    if (val < 30)
-                        ele.classList.add("temp-cold");
-                    else if (val >= 65)
-                        ele.classList.add("temp-veryhot");
-                    else if (val >= 45)
-                        ele.classList.add("temp-hot");
-                }
-                else if (unit.includes("%") && val >= 80)
-                    ele.classList.add("value-high");
+                const minRaw = ele.getAttribute("data-min") ?? ele.getAttribute("min");
+                const maxRaw = ele.getAttribute("data-max") ?? ele.getAttribute("max");
+                applyValueColorClass(ele, val, unit, minRaw, maxRaw);
             });
+        }
+
+        function clearValueColorClasses(ele) {
+            ele.classList.remove("temp-cold", "temp-hot", "temp-veryhot", "value-high");
+        }
+
+        function getValueColorClass(value, unit, minRaw, maxRaw) {
+            const normalizedUnit = String(unit || "");
+            const min = parseNumber(minRaw);
+            const max = parseNumber(maxRaw);
+
+            if (min != null && max != null && max > min) {
+                const ratio = (value - min) / (max - min);
+                if (/°C|deg;C/.test(normalizedUnit)) {
+                    if (ratio < 0.35)
+                        return "temp-cold";
+                    if (ratio >= 0.85)
+                        return "temp-veryhot";
+                    if (ratio >= 0.60)
+                        return "temp-hot";
+                    return "";
+                }
+
+                if (ratio >= 0.80)
+                    return "value-high";
+
+                return "";
+            }
+
+            if (/°C|deg;C/.test(normalizedUnit)) {
+                if (value < 30)
+                    return "temp-cold";
+                if (value >= 65)
+                    return "temp-veryhot";
+                if (value >= 45)
+                    return "temp-hot";
+                return "";
+            }
+
+            if (normalizedUnit.includes("%") && value >= 80)
+                return "value-high";
+
+            return "";
+        }
+
+        function applyValueColorClass(ele, value, unit, minRaw, maxRaw) {
+            const cls = getValueColorClass(value, unit, minRaw, maxRaw);
+            if (cls)
+                ele.classList.add(cls);
         }
 
         function getNumCurvePoints() {
