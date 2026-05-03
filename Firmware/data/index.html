@@ -409,6 +409,7 @@
         .metric-card.pinned-hero-card {
             border-color: rgba(255, 188, 131, 0.45);
             cursor: pointer;
+            min-width: 150px;
         }
 
         .metric-card.pinned-hero-card:hover {
@@ -427,10 +428,15 @@
             min-width: 0;
         }
 
-        .pinned-card-body h5 {
+        .pinned-card-body .metric-value {
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        }
+
+        .pinned-card-body h5 {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            line-height: 1.25;
         }
 
         svg.pinned-sparkline {
