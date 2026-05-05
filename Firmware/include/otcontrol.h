@@ -68,13 +68,13 @@ private:
     struct {
         bool coolOn;
         bool otc;
-        bool summerMode;
-        bool dhwBlocking;
     } boilerConfig;
     struct {
         bool dhwOn;
         double dhwTemp;
         uint8_t maxModulation;
+        bool summerMode;
+        bool dhwBlocking;
     } boilerCtrl;
     struct {
         bool active;
@@ -139,6 +139,8 @@ public:
     void setRoomMode(const HADiscovery::ClimateMode mode, const uint8_t channel);
     void setFlowMin(const double flowMin, const uint8_t channel);
     void setBypass(const bool bypass);
+    void setSummerMode(const bool summerMode);
+    void setDhwBlocking(const bool dhwBlocking);
     bool getFlame() const;
     bool getDhwActive() const;
     bool getChActive(const uint8_t channel) const;

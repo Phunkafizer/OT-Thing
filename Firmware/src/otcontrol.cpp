@@ -265,6 +265,14 @@ void OTControl::setBypass(const bool bypass) {
     setOTMode(otMode);
 }
 
+void OTControl::setSummerMode(const bool summerMode) {
+    boilerCtrl.summerMode = summerMode;
+}
+
+void OTControl::setDhwBlocking(const bool dhwBlocking) {
+    boilerCtrl.dhwBlocking = dhwBlocking;
+}
+
 bool OTControl::getFlame() const {
     OTValueStatus *ots = static_cast<OTValueStatus*>(OTValue::getSlaveValue(Status));
     if (ots)
@@ -428,8 +436,8 @@ void OTControl::loop() {
                     boilerConfig.coolOn,
                     boilerConfig.otc, 
                     chcontrol[1].getChOn(),
-                    boilerConfig.summerMode,
-                    boilerConfig.dhwBlocking);
+                    boilerCtrl.summerMode,
+                    boilerCtrl.dhwBlocking);
                 req |= statusReqOvl;
                 sendRequest('T', req);
                 return;
@@ -987,6 +995,8 @@ void OTControl::getJson(JsonObject &obj) {
 
 
     obj[F("bypass")] = bypass;
+    obj[F("summerMode")] = boilerCtrl.summerMode;
+    obj[F("dhwBlocking")] = boilerCtrl.dhwBlocking;
 }
 
 bool OTControl::sendDiscovery() {
@@ -1061,6 +1071,11 @@ bool OTControl::sendDiscovery() {
     haDisc.createSwitch(F("bypass"), Mqtt::TOPIC_BYPASS);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOT, PSTR("bypass")));
     discFlag &= haDisc.publish();
+
+    haDisc.createSwitch(F("summer mode"), Mqtt::TOPIC_SUMMERMODE);
+    haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOT, STR_STATKEY_SUMMERMODE));
+    discFlag &= haDisc.publish();
+        return false;
 
     return discFlag;
 }
@@ -1214,6 +1229,11 @@ bool OTControl::sendCapDiscoveries() {
     if (!haDisc.publish(ovr && vsc->hasDHW()))
         return false;
 
+    haDisc.createSwitch(F("DHW blocking"), Mqtt::TOPIC_DHWBLOCKING);
+    haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOT, STR_STATKEY_DHWBLOCKING));
+    if (!haDisc.publish(vsc->hasDHW()))
+        return false;
+
     return sendChDiscoveries(1, vsc->hasCh2());
 }
 
@@ -1267,8 +1287,8 @@ void OTControl::setConfig(JsonObject &config) {
     boilerCtrl.maxModulation = boiler[F("maxModulation")] | 100;
     statusReqOvl = boiler[F("statusReq")] | 0x0000;
     boilerConfig.otc = boiler[F("otc")] | false;
-    boilerConfig.summerMode = boiler[F("summerMode")] | false;
-    boilerConfig.dhwBlocking = boiler[F("dhwBlocking")] | false;
+    boilerCtrl.summerMode = boiler[F("summerMode")] | false;
+    boilerCtrl.dhwBlocking = boiler[F("dhwBlocking")] | false;
     OTValue::setTexhaustAsFloat(boiler[F("texhaustAsFloat")] | false);
 
     masterMemberId = config[F("masterMemberId")] | 22;

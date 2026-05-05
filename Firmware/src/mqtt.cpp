@@ -37,7 +37,9 @@ static struct {
     {Mqtt::TOPIC_AUTOBYPASS, "autoBypass"},
     {Mqtt::TOPIC_FREEVENTENABLE, "freeVentEnable"},
     {Mqtt::TOPIC_MAXMODULATION, "maxModulation"},
-    {Mqtt::TOPIC_BYPASS, "bypass"}
+    {Mqtt::TOPIC_BYPASS, "bypass"},
+    {Mqtt::TOPIC_SUMMERMODE, "summerMode"},
+    {Mqtt::TOPIC_DHWBLOCKING, "dhwBlocking"}
 };
 
 Mqtt mqtt;
@@ -316,6 +318,14 @@ bool Mqtt::setValue(const String &key, const String &value) {
 
     case TOPIC_BYPASS:
         otcontrol.setBypass(strToBool(value));
+        break;
+
+    case TOPIC_SUMMERMODE:
+        otcontrol.setSummerMode(strToBool(value));
+        break;
+
+    case TOPIC_DHWBLOCKING:
+        otcontrol.setDhwBlocking(strToBool(value));
         break;
 
     default:

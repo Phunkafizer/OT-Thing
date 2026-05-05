@@ -42,6 +42,8 @@ public:
         TOPIC_FREEVENTENABLE,
         TOPIC_MAXMODULATION,
         TOPIC_BYPASS,
+        TOPIC_SUMMERMODE,
+        TOPIC_DHWBLOCKING,
         TOPIC_UNKNOWN // has to be at end of list!
     };
     enum ValueTemplateType {
