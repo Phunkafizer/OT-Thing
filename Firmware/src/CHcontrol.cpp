@@ -115,8 +115,12 @@ double CHcontrol::getFlow() {
         result = 0.0;
         if (roomSetPoint[channel].get(rsp))
             result = curve.getFlowTemp(rsp);
-        if (result == 0.0)
-            result = flowTemp;
+
+        if (std::isnan(result) || result <= 0.0)
+            result = 0.0;
+        else
+            if (result == 0.0)
+                result = flowTemp;
         break;
     }
 
@@ -163,7 +167,7 @@ bool CHcontrol::getChOn() {
     if (overrideEnabled && ovrdOn.active)
         return ovrdOn.value;
 
-    if ( (mode == HADiscovery::MODE_OFF) || (roomComp.mode == HADiscovery::MODE_OFF) || (getFlow() == 0) )
+    if ( (mode == HADiscovery::MODE_OFF) || (roomComp.mode == HADiscovery::MODE_OFF) || (getFlow() == 0.0) )
         return false;
 
     if (config.roomSuspend.enabled && roomSuspended)
