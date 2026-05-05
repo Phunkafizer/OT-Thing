@@ -78,7 +78,7 @@ public:
     OneWireNode *own; // points to a OneWireNode if configured
     Sensor(const double alpha);
     virtual void set(const double val, const Source src);
-    bool get(double &val);
+    bool get(double &val, const bool raw = false);
     virtual void setConfig(JsonObject &obj);
     bool isMqttSource();
     bool isOtSource();

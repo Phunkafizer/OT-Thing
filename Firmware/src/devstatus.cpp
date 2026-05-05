@@ -81,7 +81,7 @@ void DevStatus::unlock() {
     otcontrol.getJson(jot);
 
     double outT;
-    if (outsideTemp.get(outT))
+    if (outsideTemp.get(outT, true))
         doc[F("outsideTemp")] = outT;
 
     if (!outsideTemp.owResult.isEmpty())

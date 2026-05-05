@@ -47,7 +47,7 @@ void Sensor::updateSmooth() {
     smoothed = alpha * value + (1.0 - alpha) * smoothed;
 }
 
-bool Sensor::get(double &val) {
+bool Sensor::get(double &val, const bool raw) {
     if (src == SOURCE_BLE) {
         SensorLock lock;
         if (!lock)
@@ -58,8 +58,13 @@ bool Sensor::get(double &val) {
             set(sensor->temp, SOURCE_BLE);
     }
 
-    if (setFlag)
-        val = round(this->smoothed * 10) / 10;
+    if (setFlag) {
+        if (raw)
+            val = value;
+        else
+            val = smoothed;
+        val = round(val * 10) / 10;
+    }
     
     return setFlag;
 }
