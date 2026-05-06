@@ -866,8 +866,8 @@ if __name__ == "__main__":
     def _open_browser() -> None:
         import time
         time.sleep(1.2)  # wait for uvicorn to be ready
-        webbrowser.open("http://127.0.0.1:8080/")
-        webbrowser.open("http://127.0.0.1:8080/admin")
+        webbrowser.open("http://127.0.0.1:8081/")
+        webbrowser.open("http://127.0.0.1:8081/admin")
 
     threading.Thread(target=_open_browser, daemon=True).start()
-    uvicorn.run("mock_otthing:app", host="127.0.0.1", port=8080, reload=True)
+    uvicorn.run("mock_otthing:app", host="127.0.0.1", port=8081, reload=True)
