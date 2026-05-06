@@ -30,5 +30,12 @@ void OTThingHADiscovery::createSwitch(String name, Mqtt::MqttTopic topic) {
 bool OTThingHADiscovery::publish(const bool avail) {
     if (!avail)
         haDisc.clearDoc();
+    else {
+         // Expose direct web configuration endpoint in HA device info using IP only.
+        String cfgUrl = F("http://");
+        cfgUrl += WiFi.localIP().toString();
+        doc[F("dev")][F("cu")] = cfgUrl;
+    }
+
     return mqtt.publish(topic, doc, true);
 }
