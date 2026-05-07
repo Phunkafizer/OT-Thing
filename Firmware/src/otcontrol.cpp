@@ -1086,7 +1086,6 @@ bool OTControl::sendDiscovery() {
     haDisc.createSwitch(F("summer mode"), Mqtt::TOPIC_SUMMERMODE);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOT, STR_STATKEY_SUMMERMODE));
     discFlag &= haDisc.publish();
-        return false;
 
     return discFlag;
 }
