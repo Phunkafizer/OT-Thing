@@ -883,7 +883,7 @@ OTValueFlameCurrent::OTValueFlameCurrent():
 
 bool OTValueFlameCurrent::sendDiscovery() {
     haDisc.createSensor(FPSTR(haName), FPSTR(getName()));
-    haDisc.setUnit(F("µA"));
+    haDisc.setUnit(F("μA"));
     haDisc.setDeviceClass(FPSTR(HA_DEVICE_CLASS_CURRENT));
     return OTValue::sendDiscovery("");
 }
