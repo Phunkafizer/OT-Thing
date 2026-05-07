@@ -154,6 +154,7 @@ protected:
     PGM_P entityCategory;
 public:
     OTValue(const OpenThermMessageID id, const int interval, PGM_P haName = nullptr);
+    virtual ~OTValue() = default;
     virtual bool process();
     OpenThermMessageID getId() const;
     virtual void setValue(const OpenThermMessageType ty, const uint16_t val);
