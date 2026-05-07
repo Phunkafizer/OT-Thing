@@ -22,6 +22,7 @@ static const OTItem OTITEMS[] PROGMEM = {
     {RemoteRequest,             PSTR("remote_req")},
     {ASFflags,                  PSTR("fault_flags")},
     {RBPflags,                  PSTR("rp_flags")},
+    {CoolingControl,            PSTR("cooling_ctrl")},
     {TsetCH2,                   PSTR("ch_set_t2")},
     {TrOverride,                PSTR("tr_override")},
     {TSP,                       PSTR("num_tsps")},
@@ -149,7 +150,7 @@ OTValue *slaveValues[55] = { // replydata collected (read) from a connnected sla
 };
 
 
-OTValue *masterValues[19] = { // requestdata sent (written) from a connected roomunit
+OTValue *masterValues[20] = { // requestdata sent (written) from a connected roomunit
     new OTValueFloat(           TSet,                   -1),
     new OTValueFloat(           TsetCH2,                -1),
     new OTValueFloat(           Tr,                     -1),
@@ -168,7 +169,8 @@ OTValue *masterValues[19] = { // requestdata sent (written) from a connected roo
     new OTValueu16(             Year,                   -1),
     new OTValueu16(             Vset,                   -1),
     new OTValueFloat(           Toutside,               -1),
-    new OTValueFloat(           MaxTSet,                -1)
+    new OTValueFloat(           MaxTSet,                -1),
+    new OTValueFloat(           CoolingControl,         -1),
 };
 
 const char* getOTname(OpenThermMessageID id) {

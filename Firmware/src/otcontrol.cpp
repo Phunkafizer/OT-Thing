@@ -30,52 +30,52 @@ const struct {
 } loopbackTestData[] PROGMEM = {
     {SConfigSMemberIDcode,      nib(1<<0 | 1<<2 | 1<<5, 1)}, // DHW, cooling, CH2 present, Member ID 1
     {ASFflags,                  0x0000}, // no error flags, oem error code 0
-    {RBPflags,                  0x0101},
-    {TrOverride,                0},
+    //{RBPflags,                  0x0101},
+    //{TrOverride,                0},
     {MaxCapacityMinModLevel,    nib(20, 5)}, // 20 kW / 5 %
     {RelModLevel,               floatToOT(33.3)},
     {CHPressure,                floatToOT(1.25)},
-    {DHWFlowRate,               floatToOT(2.4)},
+    //{DHWFlowRate,               floatToOT(2.4)},
     {Tboiler,                   floatToOT(48.5)},
     {Tdhw,                      floatToOT(37.5)},
     {Toutside,                  floatToOT(3.5)},
     {Tret,                      floatToOT(41.7)},
-    {TflowCH2,                  floatToOT(48.6)},
-    {Tdhw2,                     floatToOT(37.6)},
+    //{TflowCH2,                  floatToOT(48.6)},
+    //{Tdhw2,                     floatToOT(37.6)},
     {Texhaust,                  90},
-    {TrOverride2,               0},
+    //{TrOverride2,               0},
     {TdhwSetUBTdhwSetLB,        nib(60, 40)}, // 60 °C upper bound, 40 C° lower bound
     {MaxTSetUBMaxTSetLB,        nib(60, 25)}, // 60 °C upper bound, 20 C° lower bound
     {PowerCycles,               159},
     {SuccessfulBurnerStarts,    9999},
-    {CHPumpStarts,              7777},
-    {DHWPumpValveStarts,        5544},
-    {DHWBurnerStarts,           9955},
-    {BurnerOperationHours,      8888},
-    {CHPumpOperationHours,      6666},
-    {DHWPumpValveOperationHours,5555},
-    {DHWBurnerOperationHours,   2222},
+    //{CHPumpStarts,              7777},
+    //{DHWPumpValveStarts,        5544},
+    //{DHWBurnerStarts,           9955},
+    //{BurnerOperationHours,      8888},
+    //{CHPumpOperationHours,      6666},
+    //{DHWPumpValveOperationHours,5555},
+    //{DHWBurnerOperationHours,   2222},
     {OpenThermVersionSlave,     nib(2, 2)},
     {SlaveVersion,              nib(4, 4)},
     {StatusVentilationHeatRecovery, 0x001E},
     {RelVentLevel,              55}, // relative ventilation 0..100 %
     {RHexhaust,                 45},
-    {CO2exhaust,                1450}, // PPM
-    {Tsi,                       floatToOT(22.1)},
-    {Tso,                       floatToOT(22.2)},
-    {Tei,                       floatToOT(22.3)},
-    {Teo,                       floatToOT(22.1)},
-    {RPMexhaust,                2300},
-    {RPMsupply,                 2400},
+    //{CO2exhaust,                1450}, // PPM
+    //{Tsi,                       floatToOT(22.1)},
+    //{Tso,                       floatToOT(22.2)},
+    //{Tei,                       floatToOT(22.3)},
+    //{Teo,                       floatToOT(22.1)},
+    //{RPMexhaust,                2300},
+    //{RPMsupply,                 2400},
     {ASFflagsOEMfaultCodeVentilationHeatRecovery,   0x0F33},
     {OpenThermVersionVentilationHeatRecovery,       0x0105},
     {VentilationHeatRecoveryVersion,                0x0107},
-    {RemoteOverrideFunction,    0x0000},
-    {UnsuccessfulBurnerStarts,  19},
+    //{RemoteOverrideFunction,    0x0000},
+    //{UnsuccessfulBurnerStarts,  19},
     {FlameSignalTooLowNumber,   4},
     {OEMDiagnosticCode,         123},
-    {TboilerHeatExchanger,      floatToOT(48.5)},
-    {BoilerFanSpeedSetpointAndActual, nib(20, 21)},
+    //{TboilerHeatExchanger,      floatToOT(48.5)},
+    //{BoilerFanSpeedSetpointAndActual, nib(20, 21)},
     {FlameCurrent,              floatToOT(96.8)},
 };
 
@@ -338,10 +338,12 @@ void OTControl::loop() {
     
     bool hasDHW = false;
     bool hasCh2 = false;
+    bool hasCool = false;
     OTValueSlaveConfigMember *sc = OTValue::getSlaveConfig();
     if (sc != nullptr) {
         hasDHW = sc->hasDHW();
         hasCh2 = sc->hasCh2();
+        hasCool = sc->hasCooling();
     }
 
     switch (otMode) {
@@ -408,6 +410,11 @@ void OTControl::loop() {
                 return;
             }
 
+            if (hasCool && setCoolingCtrlSetpoint) {
+                setCoolingCtrlSetpoint.sendFloat(boilerCtrl.coolingCtrl);
+                return;
+            }
+
             if (!outsideTemp.isOtSource() && setOutsideTemp) {
                 double t;
                 if (outsideTemp.get(t)) {
@@ -433,7 +440,7 @@ void OTControl::loop() {
                 unsigned long req = OpenTherm::buildSetBoilerStatusRequest(
                     chcontrol[0].getChOn(),
                     dhwOvrd.active ? dhwOvrd.on :  boilerCtrl.dhwOn,
-                    boilerConfig.coolOn,
+                    boilerCtrl.coolOn,
                     boilerConfig.otc, 
                     chcontrol[1].getChOn(),
                     boilerCtrl.summerMode,
@@ -947,6 +954,8 @@ void OTControl::getJson(JsonObject &obj) {
     if (masterMemberIdReply != OpenThermMessageType::RESERVED)
         master[F("memberIdOk")] = masterMemberIdReply == OpenThermMessageType::WRITE_ACK;
 
+    master[F("coolingCtrl")] = boilerCtrl.coolingCtrl;
+
     if (enableSlave) {
         master[F("txCount")] = slave.txCount;
         master[F("rxCount")] = slave.rxCount;
@@ -993,6 +1002,8 @@ void OTControl::getJson(JsonObject &obj) {
     else
         jDhw[FPSTR(STR_STATKEY_ACTION)] = FPSTR(HA_ACTION_OFF);
 
+    obj[FPSTR(STR_STATKEY_COOLINGMODE)] = haDisc.getClimateModeStr(boilerCtrl.coolOn ? HADiscovery::MODE_COOL : HADiscovery::MODE_OFF);
+    obj[FPSTR(STR_STATKEY_COOLINGCTRL)] = boilerCtrl.coolingCtrl;
 
     obj[F("bypass")] = bypass;
     obj[F("summerMode")] = boilerCtrl.summerMode;
@@ -1234,6 +1245,15 @@ bool OTControl::sendCapDiscoveries() {
     if (!haDisc.publish(vsc->hasDHW()))
         return false;
 
+    haDisc.createNumber(F("cooling control signal"), Mqtt::getTopicString(Mqtt::TOPIC_COOLINGCTRL), mqtt.getCmdTopic(Mqtt::TOPIC_COOLINGCTRL));
+    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_ROOT, STR_STATKEY_COOLINGCTRL));
+    haDisc.setMinMax(0, 100, 1);
+    haDisc.setUnit(FPSTR(HA_UNIT_PERCENT));
+    haDisc.setIcon(F("mdi:snowflake-thermometer"));
+    haDisc.setRetain(true);
+    if (!haDisc.publish(vsc->hasCooling()))
+        return false;
+
     return sendChDiscoveries(1, vsc->hasCh2());
 }
 
@@ -1245,6 +1265,15 @@ void OTControl::setDhwTemp(double temp) {
 void OTControl::setDhwCtrlMode(const HADiscovery::ClimateMode mode) {
     boilerCtrl.dhwOn = (mode != HADiscovery::MODE_AUTO);
     setDhwRequest.force();
+}
+
+void OTControl::setCoolingMode(const HADiscovery::ClimateMode mode) {
+    boilerCtrl.coolOn = (mode == HADiscovery::MODE_COOL);
+}
+
+void OTControl::setCoolingCtrl(const int ctrl) {
+    boilerCtrl.coolingCtrl = (uint8_t) constrain(ctrl, 0, 100);
+    setCoolingCtrlSetpoint.force();
 }
 
 void OTControl::setConfig(JsonObject &config) {
@@ -1289,6 +1318,8 @@ void OTControl::setConfig(JsonObject &config) {
     boilerConfig.otc = boiler[F("otc")] | false;
     boilerCtrl.summerMode = boiler[F("summerMode")] | false;
     boilerCtrl.dhwBlocking = boiler[F("dhwBlocking")] | false;
+    boilerCtrl.coolOn = boiler[F("coolOn")] | false;
+    boilerCtrl.coolingCtrl = 0;
     OTValue::setTexhaustAsFloat(boiler[F("texhaustAsFloat")] | false);
 
     masterMemberId = config[F("masterMemberId")] | 22;

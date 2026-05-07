@@ -103,6 +103,8 @@ state = {
         "numWifiDisc": 0,
         "dateTime": "23.04.2026 22:35:59",
         "outsideTemp": 8.4,
+        "coolingCtrl": 35.0,
+        "coolingMode": "off",
         "wifi": {
             "status": 3,
             "mode": 1,
@@ -143,6 +145,7 @@ state = {
             "room_set_t2": 22.3,
             "outside_t": 15.0,
             "max_rel_mod": 100,
+            "coolingCtrl": 35.0,
             "rel_vent_set": 50,
             "memberIdOk": True,
             "master_ot_version": "4.2",
@@ -182,6 +185,7 @@ state = {
                 "ch2_present": True,
                 "dhw_present": True,
                 "cooling_config": True,
+                "heat_cool_ctrl": False,
                 "dhw_config": False,
                 "master_lowoff_pumpctrl": False,
                 "memberId": 1,
@@ -393,6 +397,8 @@ def get_set(
     chSetTemp2: float | None = None,
     chMode1: str | None = None,
     chMode2: str | None = None,
+    coolingCtrl: float | None = None,
+    coolingMode: str | None = None,
 ) -> JSONResponse:
     # Backward-compatible shortcut used earlier in UI experiments.
     if roomSetTemp is not None:
@@ -429,6 +435,18 @@ def get_set(
     effective_ch2_mode = chMode2 or (state["status"]["heatercircuit"][1].get("ctrlMode") if len(state["status"]["heatercircuit"]) > 1 else None)
     if chSetTemp2 is not None and effective_ch2_mode in {"heat", "on"}:
         state["status"]["master"]["ch_set_t2"] = chSetTemp2
+
+    if coolingCtrl is not None:
+        ctrl = max(0.0, min(100.0, coolingCtrl))
+        state["status"]["coolingCtrl"] = ctrl
+        state["status"]["master"]["coolingCtrl"] = ctrl
+
+    if coolingMode is not None:
+        mode = str(coolingMode).lower()
+        if mode in {"off", "cool"}:
+            state["status"]["coolingMode"] = mode
+            state["status"]["slave"]["status"]["cooling"] = (mode == "cool")
+            state["status"]["master"]["status"]["cooling_enable"] = (mode == "cool")
 
     return JSONResponse({"ok": True})
 
@@ -544,6 +562,8 @@ const FIELDS = [
   { section: "General", rows: [
     { key: "outsideTemp",  label: "Outside temp (°C)", type: "number", step: 0.1 },
     { key: "runtime",      label: "Runtime (s)",       type: "number", step: 1 },
+        { key: "coolingCtrl",  label: "Cooling ctrl (%)",  type: "number", step: 1 },
+        { key: "coolingMode",  label: "Cooling mode",      type: "select", options: ["off","cool"] },
   ]},
   { section: "Slave status", rows: [
     { key: "slave.status.flame",      label: "Flame",      type: "bool" },
@@ -551,6 +571,7 @@ const FIELDS = [
     { key: "slave.status.ch2_mode",   label: "CH2 mode",   type: "bool" },
     { key: "slave.status.dhw_mode",   label: "DHW mode",   type: "bool" },
     { key: "slave.status.diagnostic", label: "Diagnostic", type: "bool" },
+        { key: "slave.slave_config_member.heat_cool_ctrl", label: "Heat/cool master ctrl", type: "bool" },
   ]},
   { section: "Slave temps & modulation", rows: [
     { key: "slave.flow_t",   label: "Flow temp (°C)",        type: "number", step: 0.1 },
@@ -584,6 +605,7 @@ const FIELDS = [
     { key: "master.room_set_t2", label: "Room setpoint 2 (°C)", type: "number", step: 0.1 },
     { key: "master.ch_set_t",    label: "CH flow setpoint (°C)",type: "number", step: 0.1 },
     { key: "master.ch_set_t2",   label: "CH2 flow setpoint (°C)",type:"number", step: 0.1 },
+        { key: "master.coolingCtrl", label: "Cooling ctrl (%)",     type: "number", step: 1 },
   ]},
 ];
 

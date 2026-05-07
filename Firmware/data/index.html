@@ -95,25 +95,43 @@
             position: relative;
             display: block;
             overflow: hidden;
-            border: 1px solid rgba(87, 34, 12, 0.45);
-            border-radius: 12px;
-            background: linear-gradient(135deg, #ffd1ad 0%, #ff9955 38%, #cf6d35 78%, #9d4f2e 100%);
-            background-size: 160% 160%;
-            color: #1a0c06;
-            font-size: 1.42em;
-            letter-spacing: 0.06em;
+            border: 1px solid rgba(255, 153, 85, 0.36);
+            border-radius: 10px;
+            background:
+                linear-gradient(165deg, rgba(255, 188, 131, 0.34), rgba(255, 153, 85, 0.12) 40%, rgba(0, 0, 0, 0) 68%),
+                linear-gradient(180deg, rgba(78, 58, 47, 0.98), rgba(53, 38, 31, 0.98));
+            color: #ffe4cf;
+            font-family: "Consolas", "Lucida Console", "Trebuchet MS", monospace;
+            font-size: 1.2em;
+            letter-spacing: 0.08em;
             text-transform: uppercase;
-            text-shadow: 0 1px 0 rgba(255, 230, 210, 0.45), 0 2px 8px rgba(80, 32, 11, 0.25);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -10px 20px rgba(88, 30, 7, 0.18), 0 0 14px rgba(253, 151, 90, 0.28);
+            text-shadow: none;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 240, 228, 0.12),
+                inset 0 -10px 18px rgba(56, 22, 8, 0.22);
             cursor: pointer;
             margin-bottom: 10px;
-            transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s ease;
-            animation: titleGradientShift 14s ease-in-out infinite;
-            padding-right: 120px;
+            transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+            padding-right: 112px;
+        }
+
+        .title-mark {
+            display: inline-block;
+            padding: 1px 7px;
+            margin-right: 6px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 188, 131, 0.46);
+            background: rgba(255, 188, 131, 0.18);
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #ffe6d0;
         }
 
         .title-thing {
-            text-transform: lowercase;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: #fff0e1;
         }
 
         #titleVersion {
@@ -121,14 +139,14 @@
             right: 10px;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.22);
-            border: 1px solid rgba(92, 36, 12, 0.3);
+            background: rgba(255, 188, 131, 0.14);
+            border: 1px solid rgba(255, 188, 131, 0.34);
             border-radius: 999px;
             padding: 3px 9px;
             font-size: 0.42em;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.12em;
             font-weight: 700;
-            color: #2a1208;
+            color: #ffe0c5;
             text-shadow: none;
             pointer-events: none;
         }
@@ -136,36 +154,32 @@
         #title::before {
             content: "";
             position: absolute;
-            inset: -40% 55% -40% -35%;
-            background: linear-gradient(120deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.0));
-            transform: translateX(-28%);
+            left: 12px;
+            top: 50%;
+            width: 16px;
+            height: 2px;
+            background: rgba(255, 204, 162, 0.92);
+            transform: translateY(-50%);
             pointer-events: none;
         }
 
         #title::after {
-            content: "OpenTherm Controller • Smart Heating";
+            content: "OpenTherm controller";
             display: block;
-            margin-top: 2px;
-            font-size: 0.45em;
-            letter-spacing: 0.17em;
+            margin-top: 3px;
+            font-size: 0.41em;
+            letter-spacing: 0.14em;
             font-weight: 600;
-            opacity: 0.92;
-            color: #2a1208;
+            opacity: 0.86;
+            color: #e2c0a4;
         }
 
         #title:hover {
             transform: translateY(-1px);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -10px 20px rgba(88, 30, 7, 0.18), 0 0 18px rgba(253, 151, 90, 0.34);
-        }
-
-        @keyframes titleGradientShift {
-            0%,
-            100% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
+            border-color: rgba(255, 188, 131, 0.58);
+            background:
+                linear-gradient(165deg, rgba(255, 196, 143, 0.42), rgba(255, 153, 85, 0.16) 42%, rgba(0, 0, 0, 0) 68%),
+                linear-gradient(180deg, rgba(89, 66, 54, 0.98), rgba(60, 43, 35, 0.98));
         }
 
         /* Navigation + Tab Animations */
@@ -595,12 +609,14 @@
 
         /* Flow set card action-state theming */
         #heroFlowSetCard,
+        #heroCoolingCard,
         #heroRoomSetCard1,
         #heroRoomSetCard2 {
             transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
         }
 
         #heroFlowSetCard.action-heating,
+        #heroCoolingCard.action-heating,
         #heroRoomSetCard1.action-heating,
         #heroRoomSetCard2.action-heating {
             background: linear-gradient(165deg, rgba(255, 100, 50, 0.30), rgba(18, 20, 25, 0.88));
@@ -609,6 +625,7 @@
         }
 
         #heroFlowSetCard.action-idle,
+        #heroCoolingCard.action-idle,
         #heroRoomSetCard1.action-idle,
         #heroRoomSetCard2.action-idle {
             background: linear-gradient(165deg, rgba(255, 153, 85, 0.14), rgba(18, 20, 25, 0.88));
@@ -617,6 +634,7 @@
         }
 
         #heroFlowSetCard.action-off,
+        #heroCoolingCard.action-off,
         #heroRoomSetCard1.action-off,
         #heroRoomSetCard2.action-off {
             background: linear-gradient(165deg, rgba(80, 80, 100, 0.18), rgba(18, 20, 25, 0.88));
@@ -625,6 +643,7 @@
         }
 
         #heroFlowSetCard.action-cooling,
+        #heroCoolingCard.action-cooling,
         #heroRoomSetCard1.action-cooling,
         #heroRoomSetCard2.action-cooling {
             background: linear-gradient(165deg, rgba(60, 160, 220, 0.22), rgba(18, 20, 25, 0.88));
@@ -682,8 +701,10 @@
 
         .state-grid {
             display: grid;
-            grid-template-columns: repeat(6, minmax(0, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(52px, 64px));
+            justify-content: center;
+            column-gap: 10px;
+            row-gap: 8px;
             margin-top: 4px;
         }
 
@@ -1379,7 +1400,7 @@
             }
 
             .state-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(52px, 1fr));
             }
 
             .data-table,
@@ -1473,7 +1494,7 @@
     </div>
 
     <div id="mainwrapper">
-        <h2 id="title">OT<span class="title-thing">thing</span><span id="titleVersion" hidden></span></h2>
+        <h2 id="title"><span class="title-mark">OT</span><span class="title-thing">Thing</span><span id="titleVersion" hidden></span></h2>
         <input id="inject_status" type="file" accept=".json" style="display: none;">
         <div class="nav">
             <ul>
@@ -1501,6 +1522,10 @@
                         <div class="state-item CH2">
                             <span class="state-label">CH2</span>
                             <span class="state-icon is-unknown" id="stateCh2" title="unknown" aria-label="CH2 status">…</span>
+                        </div>
+                        <div class="state-item cool">
+                            <span class="state-label">Cooling</span>
+                            <span class="state-icon is-unknown" id="stateCooling" title="unknown" aria-label="Cooling status">…</span>
                         </div>
                         <div class="state-item">
                             <span class="state-label">DHW</span>
@@ -1553,7 +1578,7 @@
                 <div class="metric-card hero-roomset-card" id="heroFlowSetCard">
                     <h5>Flow set<span class="flow-action-icon" id="heroFlowActionIcon"></span></h5>
                     <div class="metric-inline-row">
-                        <div class="metric-value"><span id="heroFlowSet">--</span><span class="metric-arrow" id="heroFlowSetTrendIcon">•</span></div>
+                        <div class="metric-value"><span id="heroFlowSet">--</span></div>
                         <div class="metric-actions">
                             <div class="step-group" id="flowSetStepGroup" hidden>
                                 <button class="step-btn" type="button" onclick="adjustFlowSetTemp(-0.5)">▼</button>
@@ -1563,6 +1588,22 @@
                                 <button class="mode-btn" id="btnFlowModeOff" type="button" onclick="setFlowMode('off')" title="set CH1 to off">⏻</button>
                                 <button class="mode-btn" id="btnFlowModeOn" type="button" onclick="setFlowMode('heat')" title="set CH1 to on">⏽</button>
                                 <button class="mode-btn" id="btnFlowModeAuto" type="button" onclick="setFlowMode('auto')" title="set CH1 to auto">↺</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-card hero-roomset-card cool" id="heroCoolingCard">
+                    <h5>Cooling<span class="flow-action-icon" id="heroCoolingActionIcon"></span></h5>
+                    <div class="metric-inline-row">
+                        <div class="metric-value"><span id="heroCoolingCtrl" data-min="0" data-max="100">--</span></div>
+                        <div class="metric-actions">
+                            <div class="step-group" id="coolingStepGroup">
+                                <button class="step-btn" type="button" onclick="adjustCoolingCtrl(-1)">▼</button>
+                                <button class="step-btn" type="button" onclick="adjustCoolingCtrl(1)">▲</button>
+                            </div>
+                            <div class="mode-group">
+                                <button class="mode-btn" id="btnCoolingModeOff" type="button" onclick="setCoolingMode('off')" title="set cooling mode to off">⏻</button>
+                                <button class="mode-btn" id="btnCoolingModeCool" type="button" onclick="setCoolingMode('cool')" title="set cooling mode to cool">❄</button>
                             </div>
                         </div>
                     </div>
@@ -1897,6 +1938,14 @@
                         <span class="statusvalue" field="slave.slave_config_member.ch2_present"></span>
                     </div>
                     <div class="statusfield">
+                        <h5>Cooling supported</h5>
+                        <span class="statusvalue" field="slave.slave_config_member.cooling_config"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Heat/cool master ctrl</h5>
+                        <span class="statusvalue" field="slave.slave_config_member.heat_cool_ctrl"></span>
+                    </div>
+                    <div class="statusfield">
                         <h5>DHW setpoint trans.</h5>
                         <span class="statusvalue" field="slave.rp_flags.dhw_setpoint_trans"></span>
                     </div>
@@ -2033,6 +2082,10 @@
                     <div class="statusfield">
                         <h5>Max. rel. modulation</h5>
                         <span class="statusvalue" field="master.max_rel_mod" unit="%"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Cooling</h5>
+                        <span class="statusvalue" field="master.coolingCtrl" unit="%"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Product version</h5>
@@ -3542,16 +3595,18 @@
 
         function updateMetric(idValue, idArrow, value, unit, key) {
             const valueEl = _(`#${idValue}`);
-            const arrowEl = _(`#${idArrow}`);
-            if (!valueEl || !arrowEl)
+            const arrowEl = idArrow ? _(`#${idArrow}`) : null;
+            if (!valueEl)
                 return;
 
             clearValueColorClasses(valueEl);
 
             if (value == null) {
                 valueEl.textContent = "--";
-                arrowEl.textContent = "•";
-                arrowEl.classList.remove("up", "down", "stable");
+                if (arrowEl) {
+                    arrowEl.textContent = "•";
+                    arrowEl.classList.remove("up", "down", "stable");
+                }
                 return;
             }
 
@@ -3561,6 +3616,11 @@
 
             updateMetric._hist = updateMetric._hist ?? {};
             const prev = updateMetric._hist[key];
+
+            if (!arrowEl) {
+                updateMetric._hist[key] = value;
+                return;
+            }
 
             arrowEl.classList.remove("up", "down", "stable");
             if (prev == null || Math.abs(value - prev) < 0.05) {
@@ -3649,11 +3709,15 @@
             const flow = (currentCh === 0) ? statuscache?.slave?.flow_t : statuscache?.slave?.flow_t2;
             const outside = statuscache?.outsideTemp;
             const mod = statuscache?.slave?.rel_mod;
+            const coolingCtrl = parseNumber(statuscache?.coolingCtrl);
+            const coolingMode = statuscache?.coolingMode;
 
-            updateMetric("heroFlowSet", "heroFlowSetTrendIcon", parseNumber(flowSet), "°C", `flowset${currentCh}`);
+            updateMetric("heroFlowSet", "", parseNumber(flowSet), "°C", `flowset${currentCh}`);
             const flowCtrlMode = normalizeRoomMode(statuscache?.heatercircuit?.[0]?.ctrlMode);
             const flowAction = statuscache?.heatercircuit?.[0]?.action ?? null;
             updateFlowModeButtons(flowCtrlMode, flowAction);
+            updateMetric("heroCoolingCtrl", "", coolingCtrl, "%", "coolingCtrl");
+            updateCoolingModeButtons(coolingMode);
             updateMetric("heroFlow", "heroFlowTrendIcon", parseNumber(flow), "°C", `flow${currentCh}`);
             updateMetric("heroOutside", "heroOutsideTrendIcon", parseNumber(outside), "°C", "outside");
             updateMetric("heroMod", "heroModTrendIcon", parseNumber(mod), "%", "mod");
@@ -3665,6 +3729,7 @@
             setStateIcon("stateFlame", statuscache?.slave?.status?.flame, true);
             setStateIcon("stateCh1", statuscache?.slave?.status?.ch_mode);
             setStateIcon("stateCh2", statuscache?.slave?.status?.ch2_mode);
+            setStateIcon("stateCooling", statuscache?.slave?.status?.cooling);
             setStateIcon("stateDhw", statuscache?.slave?.status?.dhw_mode);
 
             const diagEl = _("#stateDiag");
@@ -4441,6 +4506,50 @@
                 });
         }
 
+        function adjustCoolingCtrl(delta) {
+            const currentValue = parseNumber(statuscache?.coolingCtrl);
+            if (currentValue == null) {
+                showToast("No cooling control value available", "warning", 3000);
+                return;
+            }
+
+            const nextValue = Math.max(0, Math.min(100, Math.round((currentValue + delta) * 10) / 10));
+            fetch(`/set?coolingCtrl=${encodeURIComponent(nextValue)}`)
+                .then((resp) => {
+                    if (!resp.ok)
+                        throw new Error("HTTP " + resp.status);
+
+                    statuscache.coolingCtrl = nextValue;
+                    updateHeroMetrics();
+                    flashElement("#heroCoolingCard");
+                })
+                .catch((err) => {
+                    showToast("Error setting cooling control:\n" + err.message, "error", 5000);
+                    addRecentEvent("Cooling control update failed");
+                });
+        }
+
+        function setCoolingMode(mode) {
+            const modeKey = String(mode || "").toLowerCase();
+            if (modeKey !== "off" && modeKey !== "cool")
+                return;
+
+            fetch(`/set?coolingMode=${encodeURIComponent(modeKey)}`)
+                .then((resp) => {
+                    if (!resp.ok)
+                        throw new Error("HTTP " + resp.status);
+
+                    statuscache.coolingMode = modeKey;
+                    updateHeroMetrics();
+                    flashElement("#heroCoolingCard");
+                    addRecentEvent(`Cooling mode ${modeKey}`);
+                })
+                .catch((err) => {
+                    showToast("Error setting cooling mode:\n" + err.message, "error", 5000);
+                    addRecentEvent("Cooling mode update failed");
+                });
+        }
+
         function updateFlowModeButtons(mode, action) {
             const activeMode = (mode === "on") ? "heat" : mode;
             const ids = {
@@ -4471,6 +4580,32 @@
                 const icons = { heating: "🔥", idle: "⏸", off: "⏹", cooling: "❄" };
                 iconEl.textContent = icons[action] ?? "";
                 iconEl.title = action ?? "";
+            }
+        }
+
+        function updateCoolingModeButtons(mode) {
+            const activeMode = (String(mode || "").toLowerCase() === "cool") ? "cool" : "off";
+            const ids = {
+                off: "#btnCoolingModeOff",
+                cool: "#btnCoolingModeCool"
+            };
+
+            Object.keys(ids).forEach((key) => {
+                const btn = _(ids[key]);
+                if (!btn)
+                    return;
+                btn.classList.toggle("pressed", key === activeMode);
+            });
+
+            const card = _("#heroCoolingCard");
+            const iconEl = _("#heroCoolingActionIcon");
+            if (card) {
+                card.classList.remove("action-heating", "action-idle", "action-off", "action-cooling");
+                card.classList.add(activeMode === "cool" ? "action-cooling" : "action-off");
+            }
+            if (iconEl) {
+                iconEl.textContent = activeMode === "cool" ? "❄" : "⏹";
+                iconEl.title = activeMode;
             }
         }
 

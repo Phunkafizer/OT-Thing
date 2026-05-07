@@ -332,13 +332,14 @@ protected:
 class OTValueSlaveConfigMember: public OTValueFlags {
 private:
     void getValue(JsonVariant var) const override;
-    const Flag flags[6] PROGMEM = {
+    const Flag flags[7] PROGMEM = {
         {8, "dhw_present",              "DHW present",              nullptr},
         {9, "ctrl_type",                "Control type on/off",      nullptr},
         {10, "cooling_config",          "Cooling supported",        nullptr},
         {11, "dhw_config",              "DHW storage",              nullptr},
         {12, "master_lowoff_pumpctrl",  "Master pump ctrl allowed", nullptr},
-        {13, "ch2_present",             "CH2 present",              nullptr}
+        {13, "ch2_present",             "CH2 present",              nullptr},
+        {15, "heat_cool_ctrl",          "Heat/Cool master ctrl",    nullptr},
     };
 protected:
     bool sendDiscovery() override;
@@ -512,5 +513,5 @@ public:
 
 
 extern OTValue *slaveValues[55];
-extern OTValue *masterValues[19];
+extern OTValue *masterValues[20];
 extern const char* getOTname(OpenThermMessageID id);

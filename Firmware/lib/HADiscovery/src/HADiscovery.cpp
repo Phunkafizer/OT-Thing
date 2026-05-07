@@ -23,12 +23,12 @@ PGM_P HA_ENTITY_CATEGORY_DIAGNOSTIC = "diagnostic";
 PGM_P HA_CLIMATE_MODE_OFF PROGMEM = "off";
 PGM_P HA_CLIMATE_MODE_HEAT PROGMEM = "heat";
 PGM_P HA_CLIMATE_MODE_AUTO PROGMEM = "auto";
+PGM_P HA_CLIMATE_MODE_COOL PROGMEM = "cool";
 
 PGM_P HA_ACTION_OFF PROGMEM = "off";
 PGM_P HA_ACTION_HEATING PROGMEM = "heating";
 PGM_P HA_ACTION_COOLING PROGMEM = "cooling";
 PGM_P HA_ACTION_IDLE PROGMEM = "idle";
-
 
 PGM_P HA_AVAILABILITY                   PROGMEM = "avty";
 PGM_P HA_TOPIC                          PROGMEM = "t";
@@ -70,7 +70,6 @@ PGM_P HA_MODE_STATE_TOPIC               PROGMEM = "mode_stat_t";
 PGM_P HA_MODE_STATE_TEMPLATE            PROGMEM = "mode_stat_tpl";
 PGM_P HA_ACTION_TOPIC                   PROGMEM = "act_t";
 PGM_P HA_ACTION_TEMPLATE                PROGMEM = "act_tpl";    
-
 
 String HADiscovery::ha_prefix = F("homeassistant");
 String HADiscovery::devName;
@@ -198,6 +197,8 @@ void HADiscovery::setModes(const uint8_t modes) {
         jModes.add(FPSTR(HA_CLIMATE_MODE_HEAT));
     if ( (modes & (1<<2)) != 0)
         jModes.add(FPSTR(HA_CLIMATE_MODE_AUTO));
+    if ( (modes & (1<<3)) != 0)
+        jModes.add(FPSTR(HA_CLIMATE_MODE_COOL));
 }
 
 void HADiscovery::setUnit(const String unit) {
@@ -305,6 +306,8 @@ PGM_P HADiscovery::getClimateModeStr(const ClimateMode mode) {
         return HA_CLIMATE_MODE_HEAT;
     case MODE_AUTO:
         return HA_CLIMATE_MODE_AUTO;
+    case MODE_COOL:
+        return HA_CLIMATE_MODE_COOL;
     default:
         return nullptr;
     }
@@ -326,6 +329,8 @@ PGM_P HADiscovery::getClimateActionStr(const ClimateAction action) {
 }
 
 HADiscovery::ClimateMode HADiscovery::strToClimateMode(const String &str) {
+    if (str.compareTo(FPSTR(HA_CLIMATE_MODE_COOL)) == 0)
+        return MODE_COOL;
     if (str.compareTo(FPSTR(HA_CLIMATE_MODE_HEAT)) == 0)
         return MODE_HEAT;
     if (str.compareTo(FPSTR(HA_CLIMATE_MODE_AUTO)) == 0)

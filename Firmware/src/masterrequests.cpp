@@ -85,3 +85,7 @@ OTWRSetMaxCh::OTWRSetMaxCh():
         OTWriteRequest(MaxTSet, 180) {
 }
 
+OTWRSetCoolingCtrl::OTWRSetCoolingCtrl():
+        OTWriteRequest(CoolingControl, 10) {
+}
+

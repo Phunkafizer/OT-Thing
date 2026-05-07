@@ -39,7 +39,9 @@ static struct {
     {Mqtt::TOPIC_MAXMODULATION, "maxModulation"},
     {Mqtt::TOPIC_BYPASS, "bypass"},
     {Mqtt::TOPIC_SUMMERMODE, "summerMode"},
-    {Mqtt::TOPIC_DHWBLOCKING, "dhwBlocking"}
+    {Mqtt::TOPIC_DHWBLOCKING, "dhwBlocking"},
+    {Mqtt::TOPIC_COOLINGMODE, "coolingMode"},
+    {Mqtt::TOPIC_COOLINGCTRL, "coolingCtrl"},
 };
 
 Mqtt mqtt;
@@ -326,6 +328,14 @@ bool Mqtt::setValue(const String &key, const String &value) {
 
     case TOPIC_DHWBLOCKING:
         otcontrol.setDhwBlocking(strToBool(value));
+        break;
+
+    case TOPIC_COOLINGMODE:
+        otcontrol.setCoolingMode(haDisc.strToClimateMode(value));
+        break;
+
+    case TOPIC_COOLINGCTRL:
+        otcontrol.setCoolingCtrl(value.toInt());
         break;
 
     default:

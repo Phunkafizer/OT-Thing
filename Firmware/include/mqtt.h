@@ -44,6 +44,8 @@ public:
         TOPIC_BYPASS,
         TOPIC_SUMMERMODE,
         TOPIC_DHWBLOCKING,
+        TOPIC_COOLINGMODE,
+        TOPIC_COOLINGCTRL,
         TOPIC_UNKNOWN // has to be at end of list!
     };
     enum ValueTemplateType {

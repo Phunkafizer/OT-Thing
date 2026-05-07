@@ -71,3 +71,8 @@ class OTWRSetMaxCh: public OTWriteRequest {
 public:
     OTWRSetMaxCh();
 };
+
+class OTWRSetCoolingCtrl: public OTWriteRequest {
+public:
+    OTWRSetCoolingCtrl();
+};

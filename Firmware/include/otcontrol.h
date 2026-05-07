@@ -66,7 +66,6 @@ private:
         uint8_t setpoint;
     } ventCtrl;
     struct {
-        bool coolOn;
         bool otc;
     } boilerConfig;
     struct {
@@ -75,6 +74,8 @@ private:
         uint8_t maxModulation;
         bool summerMode;
         bool dhwBlocking;
+        bool coolOn;
+        uint8_t coolingCtrl;
     } boilerCtrl;
     struct {
         bool active;
@@ -94,6 +95,7 @@ private:
     OTWRProdVersion setProdVersion;
     OTWRSetOTVersion setOTVersion;
     OTWRSetMaxCh setMaxCh;
+    OTWRSetCoolingCtrl setCoolingCtrlSetpoint;
     uint8_t masterMemberId;
     struct OTInterface {
         OTInterface(const uint8_t inPin, const uint8_t outPin, const bool isSlave);
@@ -127,6 +129,8 @@ public:
     void setChTemp(const double temp, const uint8_t channel);
     void setChCtrlMode(const HADiscovery::ClimateMode mode, const uint8_t channel);
     void setDhwCtrlMode(const HADiscovery::ClimateMode mode);
+    void setCoolingMode(const HADiscovery::ClimateMode mode);
+    void setCoolingCtrl(const int ctrl);
     bool sendDiscovery();
     bool sendCapDiscoveries();
     void forceFlowCalc(const uint8_t channel);
