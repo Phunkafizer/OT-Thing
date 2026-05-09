@@ -258,6 +258,10 @@ void OTControl::setOTMode(const OTMode mode) {
         valobj->init(false);
 
     master.hal.setAlwaysReceive(mode == OTMODE_REPEATER);
+
+    SemMaster sem(100);
+    delay(200); // give some time for master to switch to new mode
+    master.hal.requestLowPower();
 }
 
 void OTControl::setBypass(const bool bypass) {
