@@ -583,9 +583,6 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         }
     }
 
-    if (id == MConfigMMemberIDcode)
-        masterMemberIdReply = mt;
-
     if (!otval) {
         if (mt == OpenThermMessageType::READ_ACK)
             portal.textAll(F("no slave val!"));
@@ -705,6 +702,13 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 break;
             }
 
+            case Tret: {
+                double t;
+                if (returnTemp[0].get(t))
+                    resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, tmpToData(t));
+                break;
+            }
+
             default: {
                 if (otval != nullptr) {
                     if (otval->hasReply())
@@ -725,7 +729,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             break;
         }
         case OpenThermMessageType::WRITE_DATA: {
-            resp = OpenTherm::buildResponse(OpenThermMessageType::WRITE_ACK, id, 0x0000);
+            resp = OpenTherm::buildResponse(OpenThermMessageType::WRITE_ACK, id, msg & 0xFFFF);
             slave.sendResponse(resp, 'P');
 
             switch (id) {
@@ -926,7 +930,7 @@ bool OTControl::setMasterVal(const unsigned long msg) {
 }
 
 void OTControl::getJson(JsonObject &obj) {
-    JsonObject jSlave = obj[F("slave")].to<JsonObject>();
+    JsonObject jSlave = obj[FPSTR(STR_STATKEY_SLAVE)].to<JsonObject>();
     for (auto *valobj: slaveValues)
         valobj->getJson(jSlave);
 
@@ -953,12 +957,7 @@ void OTControl::getJson(JsonObject &obj) {
 
     JsonObject master = obj[FPSTR(STR_STATKEY_MASTER)].to<JsonObject>();
     for (auto *valobj: masterValues)
-        valobj->getJson(master);
-
-    if (masterMemberIdReply != OpenThermMessageType::RESERVED)
-        master[F("memberIdOk")] = masterMemberIdReply == OpenThermMessageType::WRITE_ACK;
-
-    master[F("coolingCtrl")] = boilerCtrl.coolingCtrl;
+        valobj->getJson(master, true);
 
     if (enableSlave) {
         master[F("txCount")] = slave.txCount;

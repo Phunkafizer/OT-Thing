@@ -805,6 +805,11 @@
             color: #c00;
         }
 
+        .statusvalue.result-warn::before {
+            content: "⚠ ";
+            color: #c00;
+        }
+
         div.param span.value {
             font-size: 1.8em;
             font-weight: bold;
@@ -1516,11 +1521,11 @@
                             <span class="state-icon is-unknown" id="stateFlame" title="unknown" aria-label="Flame status">…</span>
                         </div>
                         <div class="state-item">
-                            <span class="state-label">CH1</span>
+                            <span class="state-label">Heating</span>
                             <span class="state-icon is-unknown" id="stateCh1" title="unknown" aria-label="CH1 status">…</span>
                         </div>
                         <div class="state-item CH2">
-                            <span class="state-label">CH2</span>
+                            <span class="state-label">Heating 2</span>
                             <span class="state-icon is-unknown" id="stateCh2" title="unknown" aria-label="CH2 status">…</span>
                         </div>
                         <div class="state-item cool">
@@ -2029,111 +2034,111 @@
                 <div class="flexline">
                     <div class="statusfield">
                         <h5>Heater circuit 1 enabled</h5>
-                        <span class="statusvalue" field="master.status.ch_enable"></span>
+                        <span class="statusvalue" field="master.status.data.ch_enable"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Heater circuit 2 enabled</h5>
-                        <span class="statusvalue" field="master.status.ch2_enable"></span>
+                        <span class="statusvalue" field="master.status.data.ch2_enable"></span>
                     </div>
                     <div class="statusfield">
                         <h5>DHW enabled</h5>
-                        <span class="statusvalue" field="master.status.dhw_enable"></span>
+                        <span class="statusvalue" field="master.status.data.dhw_enable"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Outside temp. compensation</h5>
-                        <span class="statusvalue" field="master.status.otc_active"></span>
+                        <span class="statusvalue" field="master.status.data.otc_active"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Flow set temperature</h5>
-                        <span class="statusvalue" field="master.ch_set_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.ch_set_t.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Flow set temperature 2</h5>
-                        <span class="statusvalue" field="master.ch_set_t2" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.ch_set_t2.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>DHW set temperature</h5>
-                        <span class="statusvalue" field="master.dhw_set_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.dhw_set_t.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>max. CH setpoint</h5>
-                        <span class="statusvalue" field="master.max_set_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="master.max_set_t.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room temperature</h5>
-                        <span class="statusvalue" field="master.room_t" unit="&deg;C" data-min="17" data-max="23"></span>
+                        <span class="statusvalue" field="master.room_t.data" unit="&deg;C" data-min="17" data-max="23"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room set temperature</h5>
-                        <span class="statusvalue" field="master.room_set_t" unit="&deg;C" data-min="17" data-max="23"></span>
+                        <span class="statusvalue" field="master.room_set_t.data" unit="&deg;C" data-min="17" data-max="23"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room temperature 2</h5>
-                        <span class="statusvalue" field="master.room_t2" unit="&deg;C" data-min="17" data-max="23"></span>
+                        <span class="statusvalue" field="master.room_t2.data" unit="&deg;C" data-min="17" data-max="23"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room set temperature 2</h5>
-                        <span class="statusvalue" field="master.room_set_t2" unit="&deg;C" data-min="17" data-max="23"></span>
+                        <span class="statusvalue" field="master.room_set_t2.data" unit="&deg;C" data-min="17" data-max="23"></span>
                     </div>
                     <div class="statusfield">
                         <h5>outside temp.</h5>
-                        <span class="statusvalue" field="master.outside_t" unit="&deg;C" data-min="0" data-max="20"></span>
+                        <span class="statusvalue" field="master.outside_t.data" unit="&deg;C" data-min="0" data-max="20"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Max. rel. modulation</h5>
-                        <span class="statusvalue" field="master.max_rel_mod" unit="%"></span>
+                        <span class="statusvalue" field="master.max_rel_mod.data" unit="%"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Cooling</h5>
-                        <span class="statusvalue" field="master.coolingCtrl" unit="%"></span>
+                        <span class="statusvalue" field="master.cooling_ctrl.data" unit="%"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Product version</h5>
-                        <span class="statusvalue" field="master.master_prod_version"></span>
+                        <span class="statusvalue" field="master.master_prod_version.data"></span>
                     </div>
                     <div class="statusfield">
                         <h5>OT version</h5>
-                        <span class="statusvalue" field="master.master_ot_version"></span>
+                        <span class="statusvalue" field="master.master_ot_version.data"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Member ID</h5>
-                        <span class="statusvalue" field="master.master_config_member.memberId" id="masterMemberId"></span>
+                        <span class="statusvalue" field="master.master_config_member.data.memberId" id="masterMemberId"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Smart power</h5>
-                        <span class="statusvalue" field="master.smartPower"></span>
+                        <span class="statusvalue" field="master.smartPower.data"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Smart power implemented</h5>
-                        <span class="statusvalue" field="master.master_config_member.smartPowerImplemented"></span>
+                        <span class="statusvalue" field="master.master_config_member.data.smartPowerImplemented"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Frames sent</h5>
-                        <span class="statusvalue" field="master.txCount"></span>
+                        <span class="statusvalue" field="master.txCount.data"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Frames received</h5>
-                        <span class="statusvalue" field="master.rxCount"></span>
+                        <span class="statusvalue" field="master.rxCount.data"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Ventilation set point</h5>
-                        <span class="statusvalue" field="master.rel_vent_set" unit="%"></span>
+                        <span class="statusvalue" field="master.rel_vent_set.data" unit="%"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Vent. enable</h5>
-                        <span class="statusvalue" field="master.vent_status.vent_enable"></span>
+                        <span class="statusvalue" field="master.vent_status.data.vent_enable"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Vent. open bypass</h5>
-                        <span class="statusvalue" field="master.vent_status.open_bypass"></span>
+                        <span class="statusvalue" field="master.vent_status.data.open_bypass"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Vent. bypass auto</h5>
-                        <span class="statusvalue" field="master.vent_status.auto_bypass"></span>
+                        <span class="statusvalue" field="master.vent_status.data.auto_bypass"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Free vent. enable</h5>
-                        <span class="statusvalue" field="master.vent_status.free_vent_enable"></span>
+                        <span class="statusvalue" field="master.vent_status.data.free_vent_enable"></span>
                     </div>
                 </div>
             </div>
@@ -3705,7 +3710,7 @@
                 updateRoomModeButtons(ch, roomMode, statuscache?.heatercircuit?.[ch]?.roomAction ?? null);
             }
 
-            const flowSet = (currentCh === 0) ? statuscache?.master?.ch_set_t : statuscache?.master?.ch_set_t2;
+            const flowSet = (currentCh === 0) ? statuscache?.master?.ch_set_t?.data : statuscache?.master?.ch_set_t2?.data;
             const flow = (currentCh === 0) ? statuscache?.slave?.flow_t : statuscache?.slave?.flow_t2;
             const outside = statuscache?.outsideTemp;
             const mod = statuscache?.slave?.rel_mod;
@@ -4455,7 +4460,7 @@
         };
 
         function adjustFlowSetTemp(delta) {
-            const currentValue = parseNumber(statuscache?.master?.ch_set_t);
+            const currentValue = parseNumber(statuscache?.master?.ch_set_t?.data);
             if (currentValue == null) {
                 showToast("No flow setpoint available", "warning", 3000);
                 return;
@@ -4467,10 +4472,13 @@
                     if (!resp.ok)
                         throw new Error("HTTP " + resp.status);
 
-                    if (!statuscache.master)
-                        statuscache.master = {};
+                    const master = statuscache.master ?? (statuscache.master = {});
+                    const chSet = (master.ch_set_t && (typeof master.ch_set_t === "object"))
+                        ? master.ch_set_t
+                        : (master.ch_set_t = {});
 
-                    statuscache.master.ch_set_t = nextValue;
+                    chSet.data = nextValue;
+                    chSet.result = true;
                     updateHeroMetrics();
                     flashElement("#heroFlowSetCard");
                 })
@@ -5370,10 +5378,14 @@
             function updateStatusValues(root) {
                 __(".statusvalue", root).forEach((ele) => {
                     var val = null;
+                    let fieldPath = "";
                     if (!ele.hasAttribute('field'))
                         return;
+
+                    ele.classList.remove("bool-ok", "bool-off", "bool-error", "result-warn");
                     try {
-                        var f = ele.getAttribute('field');
+                        fieldPath = ele.getAttribute('field');
+                        var f = fieldPath;
                         f = f.replace('$', currentCh).split('.');
                         val = statuscache;
                         for (var i=0; i<f.length; i++)
@@ -5382,12 +5394,14 @@
                         if ((val !== null) && (val !== undefined)) {
                             const isErr = ele.classList.contains("error");
                             if (val === true) {
+                                ele.textContent = "";
                                 ele.classList.add(isErr ? "bool-error" : "bool-ok");
                                 ele.classList.remove(isErr ? "bool-ok" :"bool-off");
                             }
                             else if (val === false) {
+                                ele.textContent = "";
                                 ele.classList.add(isErr ? "bool-ok" : "bool-off");
-                                ele.classList.remove(isErr ? "bool-error" : "bool-on");
+                                ele.classList.remove(isErr ? "bool-error" : "bool-ok");
                             }
                             else
                                 ele.textContent = val;
@@ -5395,11 +5409,38 @@
                         else
                             ele.textContent = "---";
                         
-                        if (ele.hasAttribute('unit'))
+                        if (ele.hasAttribute('unit') && (typeof val !== "boolean"))
                             ele.textContent += ' ' + ele.getAttribute('unit');
                     }
                     catch (ex) {
                         val = null;
+                    }
+
+                    if (fieldPath.startsWith("master.")) {
+                        try {
+                            let dataIdx = fieldPath.indexOf(".data.");
+                            if ((dataIdx < 0) && fieldPath.endsWith(".data"))
+                                dataIdx = fieldPath.length - 5;
+
+                            if (dataIdx < 0)
+                                throw new Error("No data segment");
+
+                            const resultPath = (fieldPath.substring(0, dataIdx) + ".result").replace('$', currentCh).split('.');
+                            let resultVal = statuscache;
+                            for (let i=0; i<resultPath.length; i++)
+                                resultVal = resultVal[resultPath[i]];
+
+                            if (resultVal === false)
+                                ele.classList.add("result-warn");
+                            else
+                                ele.classList.remove("result-warn");
+                        }
+                        catch (ex) {
+                            ele.classList.remove("result-warn");
+                        }
+                    }
+                    else {
+                        ele.classList.remove("result-warn");
                     }
 
                     if ( ((val !== null) && (val !== undefined)) || ele.classList.contains("nohide") )
@@ -5411,16 +5452,6 @@
                             ele.parentElement.hidden = true;
                 });
 
-                if (statuscache.master?.memberIdOk !== undefined) {
-                    if (statuscache.master.memberIdOk) {
-                        _("#masterMemberId").classList.add("bool-ok");
-                        _("#masterMemberId").classList.remove("bool-error");
-                    }
-                    else {
-                        _("#masterMemberId").classList.add("bool-error");
-                        _("#masterMemberId").classList.remove("bool-ok");
-                    }
-                }
             }
 
             function consumeStatusCache() {

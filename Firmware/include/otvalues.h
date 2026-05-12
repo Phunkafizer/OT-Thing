@@ -161,7 +161,7 @@ public:
     void setMsgType(const OpenThermMessageType ty);
     uint16_t getValue();
     void setStatus(const OpenThermMessageType mt);
-    void getJson(JsonObject &obj) const;
+    void getJson(JsonObject &obj, const bool addResult = false) const;
     void getStatus(JsonObject &obj) const;
     virtual void init(const bool enabled);
     void setTimeout();

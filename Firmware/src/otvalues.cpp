@@ -404,13 +404,19 @@ void OTValue::init(const bool enabled) {
     setFlag = false;
 }
 
-void OTValue::getJson(JsonObject &obj) const {
+void OTValue::getJson(JsonObject &obj, const bool addResult) const {
     if (enabled) {
         JsonVariant var = obj[FPSTR(getName())].to<JsonVariant>();
-        if (isSet())
-            getValue(var);
-        else
+        if (!isSet()) {
             var.set(nullptr);
+            return;
+        }
+
+        if (addResult) {
+            var[F("result")] = (lastMsgType == OpenThermMessageType::WRITE_ACK) || (lastMsgType == OpenThermMessageType::READ_ACK);
+            var = var[F("data")].to<JsonVariant>();
+        }
+        getValue(var);   
     }
 }
 

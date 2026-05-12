@@ -117,7 +117,6 @@ private:
     bool bypass {false};
     uint16_t statusReqOvl {0}; // will be or'ed to status request as this is needed by some boilers
     bool init {false};
-    OpenThermMessageType masterMemberIdReply {OpenThermMessageType::RESERVED};
 public:
     OTControl();
     void begin();
