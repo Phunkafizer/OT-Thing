@@ -121,39 +121,48 @@ state = {
         },
         "master": {
             "status": {
-                "value": "1a00",
-                "ch_enable": False,
-                "ch2_enable": True,
-                "dhw_enable": True,
-                "cooling_enable": False,
-                "otc_active": True,
+                "result": True,
+                "data": {
+                    "value": "1a00",
+                    "ch_enable": False,
+                    "ch2_enable": True,
+                    "dhw_enable": True,
+                    "cooling_enable": False,
+                    "otc_active": True,
+                },
             },
             "vent_status": {
-                "value": "100",
-                "vent_enable": True,
-                "open_bypass": False,
-                "auto_bypass": False,
-                "free_vent_enable": False,
+                "result": True,
+                "data": {
+                    "value": "100",
+                    "vent_enable": True,
+                    "open_bypass": False,
+                    "auto_bypass": False,
+                    "free_vent_enable": False,
+                },
             },
-            "ch_set_t": 44.0,
-            "ch_set_t2": 22.3,
-            "dhw_set_t": 49.0,
-            "max_set_t": 65.0,
-            "room_t": 20.1,
-            "room_set_t": 21.3,
-            "room_t2": 21.1,
-            "room_set_t2": 22.3,
-            "outside_t": 15.0,
-            "max_rel_mod": 100,
-            "coolingCtrl": 35.0,
-            "rel_vent_set": 50,
+            "ch_set_t": {"result": True, "data": 44.0},
+            "ch_set_t2": {"result": True, "data": 22.3},
+            "dhw_set_t": {"result": True, "data": 49.0},
+            "max_set_t": {"result": True, "data": 65.0},
+            "room_t": {"result": True, "data": 20.1},
+            "room_set_t": {"result": True, "data": 21.3},
+            "room_t2": {"result": True, "data": 21.1},
+            "room_set_t2": {"result": True, "data": 22.3},
+            "outside_t": {"result": True, "data": 15.0},
+            "max_rel_mod": {"result": True, "data": 100},
+            "cooling_ctrl": {"result": True, "data": 35.0},
+            "rel_vent_set": {"result": True, "data": 50},
             "memberIdOk": True,
-            "master_ot_version": "4.2",
-            "master_prod_version": "1.0",
+            "master_ot_version": {"result": True, "data": "4.2"},
+            "master_prod_version": {"result": True, "data": "1.0"},
             "master_config_member": {
-                "value": "108",
-                "memberId": 8,
-                "smartPowerImplemented": True,
+                "result": True,
+                "data": {
+                    "value": "108",
+                    "memberId": 8,
+                    "smartPowerImplemented": True,
+                },
             },
             "smartPower": "low",
             "txCount": 1000,
@@ -430,23 +439,23 @@ def get_set(
 
     effective_ch1_mode = chMode1 or (state["status"]["heatercircuit"][0].get("ctrlMode") if state["status"]["heatercircuit"] else None)
     if chSetTemp1 is not None and effective_ch1_mode in {"heat", "on"}:
-        state["status"]["master"]["ch_set_t"] = chSetTemp1
+        state["status"]["master"]["ch_set_t"]["data"] = chSetTemp1
 
     effective_ch2_mode = chMode2 or (state["status"]["heatercircuit"][1].get("ctrlMode") if len(state["status"]["heatercircuit"]) > 1 else None)
     if chSetTemp2 is not None and effective_ch2_mode in {"heat", "on"}:
-        state["status"]["master"]["ch_set_t2"] = chSetTemp2
+        state["status"]["master"]["ch_set_t2"]["data"] = chSetTemp2
 
     if coolingCtrl is not None:
         ctrl = max(0.0, min(100.0, coolingCtrl))
         state["status"]["coolingCtrl"] = ctrl
-        state["status"]["master"]["coolingCtrl"] = ctrl
+        state["status"]["master"]["cooling_ctrl"]["data"] = ctrl
 
     if coolingMode is not None:
         mode = str(coolingMode).lower()
         if mode in {"off", "cool"}:
             state["status"]["coolingMode"] = mode
             state["status"]["slave"]["status"]["cooling"] = (mode == "cool")
-            state["status"]["master"]["status"]["cooling_enable"] = (mode == "cool")
+            state["status"]["master"]["status"]["data"]["cooling_enable"] = (mode == "cool")
 
     return JSONResponse({"ok": True})
 
@@ -599,13 +608,13 @@ const FIELDS = [
     { key: "heatercircuit.1.suspended",    label: "Suspended",          type: "bool" },
   ]},
   { section: "Master", rows: [
-    { key: "master.room_t",      label: "Room temp 1 (°C)",     type: "number", step: 0.1 },
-    { key: "master.room_set_t",  label: "Room setpoint 1 (°C)", type: "number", step: 0.1 },
-    { key: "master.room_t2",     label: "Room temp 2 (°C)",     type: "number", step: 0.1 },
-    { key: "master.room_set_t2", label: "Room setpoint 2 (°C)", type: "number", step: 0.1 },
-    { key: "master.ch_set_t",    label: "CH flow setpoint (°C)",type: "number", step: 0.1 },
-    { key: "master.ch_set_t2",   label: "CH2 flow setpoint (°C)",type:"number", step: 0.1 },
-        { key: "master.coolingCtrl", label: "Cooling ctrl (%)",     type: "number", step: 1 },
+    { key: "master.room_t.data",      label: "Room temp 1 (°C)",      type: "number", step: 0.1 },
+    { key: "master.room_set_t.data",  label: "Room setpoint 1 (°C)",  type: "number", step: 0.1 },
+    { key: "master.room_t2.data",     label: "Room temp 2 (°C)",      type: "number", step: 0.1 },
+    { key: "master.room_set_t2.data", label: "Room setpoint 2 (°C)",  type: "number", step: 0.1 },
+    { key: "master.ch_set_t.data",    label: "CH flow setpoint (°C)", type: "number", step: 0.1 },
+    { key: "master.ch_set_t2.data",   label: "CH2 flow setpoint (°C)",type: "number", step: 0.1 },
+        { key: "master.cooling_ctrl.data", label: "Cooling ctrl (%)",  type: "number", step: 1 },
   ]},
 ];
 

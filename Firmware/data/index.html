@@ -525,6 +525,19 @@
             gap: 6px;
         }
 
+        .metric-value.value-change-flash {
+            animation: heroValueFlash 0.62s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .statusvalue.value-change-flash {
+            animation: heroValueFlash 0.62s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .metric-card.value-change-flash-card,
+        .statusfield.value-change-flash-card {
+            animation: heroCardFlash 0.62s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
         .metric-actions {
             display: flex;
             gap: 6px;
@@ -1220,6 +1233,36 @@
             }
             100% {
                 box-shadow: none;
+            }
+        }
+
+        @keyframes heroValueFlash {
+            0% {
+                transform: translateY(0);
+                filter: brightness(1);
+                text-shadow: 0 0 0 rgba(255, 188, 131, 0);
+            }
+            35% {
+                transform: translateY(-1px);
+                filter: brightness(1.18);
+                text-shadow: 0 0 15px rgba(255, 188, 131, 0.82);
+            }
+            100% {
+                transform: translateY(0);
+                filter: brightness(1);
+                text-shadow: 0 0 0 rgba(255, 188, 131, 0);
+            }
+        }
+
+        @keyframes heroCardFlash {
+            0% {
+                box-shadow: 0 0 0 rgba(255, 188, 131, 0), inset 0 0 0 rgba(255, 188, 131, 0);
+            }
+            40% {
+                box-shadow: 0 0 0 1px rgba(255, 188, 131, 0.65), inset 0 0 24px rgba(255, 188, 131, 0.18);
+            }
+            100% {
+                box-shadow: 0 0 0 rgba(255, 188, 131, 0), inset 0 0 0 rgba(255, 188, 131, 0);
             }
         }
 
@@ -2984,6 +3027,7 @@
             toastDefaultMs: 3500,
             toastDismissMs: 220,
             flashMs: 650,
+            valueFlashMs: 640,
             tabEnterCleanupMs: 760,
             scanXhrTimeoutMs: 15000,
             scanRetryMs: 2000,
@@ -3175,6 +3219,49 @@
             void el.offsetWidth;
             el.classList.add("action-flash");
             setTimeout(() => el.classList.remove("action-flash"), UI_TIMINGS.flashMs);
+        }
+
+        function flashMetricValueOnChange(valueContainerEl, signature) {
+            if (!valueContainerEl)
+                return;
+
+            const nextSignature = String(signature ?? "");
+            const previousSignature = valueContainerEl.dataset.lastDisplayValue;
+            valueContainerEl.dataset.lastDisplayValue = nextSignature;
+
+            if (previousSignature === undefined || previousSignature === nextSignature)
+                return;
+
+            valueContainerEl.classList.remove("value-change-flash");
+            void valueContainerEl.offsetWidth;
+            valueContainerEl.classList.add("value-change-flash");
+            setTimeout(() => valueContainerEl.classList.remove("value-change-flash"), UI_TIMINGS.valueFlashMs);
+
+            const cardEl = valueContainerEl.closest(".metric-card, .statusfield");
+            if (!cardEl)
+                return;
+
+            cardEl.classList.remove("value-change-flash-card");
+            void cardEl.offsetWidth;
+            cardEl.classList.add("value-change-flash-card");
+            setTimeout(() => cardEl.classList.remove("value-change-flash-card"), UI_TIMINGS.valueFlashMs);
+        }
+
+        function flashCardOnChange(cardEl, signature) {
+            if (!cardEl)
+                return;
+
+            const nextSignature = String(signature ?? "");
+            const previousSignature = cardEl.dataset.lastCardSignature;
+            cardEl.dataset.lastCardSignature = nextSignature;
+
+            if (previousSignature === undefined || previousSignature === nextSignature)
+                return;
+
+            cardEl.classList.remove("value-change-flash-card");
+            void cardEl.offsetWidth;
+            cardEl.classList.add("value-change-flash-card");
+            setTimeout(() => cardEl.classList.remove("value-change-flash-card"), UI_TIMINGS.valueFlashMs);
         }
 
         function addRecentEvent(text) {
@@ -3448,7 +3535,9 @@
 
             const boolDisplay = getPinnedMetricBoolDisplay(fieldPath, sourceValueEl);
             if (!boolDisplay) {
-                valueEl.textContent = getPinnedMetricValueText(fieldPath, sourceValueEl);
+                const textValue = getPinnedMetricValueText(fieldPath, sourceValueEl);
+                valueEl.textContent = textValue;
+                flashMetricValueOnChange(valueEl, textValue);
 
                 const val = getStatusValueByField(fieldPath);
                 const num = parseNumber(val);
@@ -3467,6 +3556,7 @@
                 textContent: boolDisplay.symbol,
                 title: boolDisplay.title
             }));
+            flashMetricValueOnChange(valueEl, `${boolDisplay.className}:${boolDisplay.symbol}:${boolDisplay.title}`);
         }
 
         function renderPinnedHeroCards() {
@@ -3657,10 +3747,13 @@
             if (!valueEl)
                 return;
 
+            const flashTarget = valueEl.closest(".metric-value") || valueEl;
+
             clearValueColorClasses(valueEl);
 
             if (value == null) {
                 valueEl.textContent = "--";
+                flashMetricValueOnChange(flashTarget, "--");
                 if (arrowEl) {
                     arrowEl.textContent = "•";
                     arrowEl.classList.remove("up", "down", "stable");
@@ -3669,7 +3762,9 @@
             }
 
             const roundedValue = Math.round(value * 10) / 10;
-            valueEl.textContent = unit ? `${roundedValue} ${unit}` : String(roundedValue);
+            const displayText = unit ? `${roundedValue} ${unit}` : String(roundedValue);
+            valueEl.textContent = displayText;
+            flashMetricValueOnChange(flashTarget, displayText);
             applyValueColorClass(valueEl, roundedValue, unit, null, null);
 
             updateMetric._hist = updateMetric._hist ?? {};
@@ -3739,6 +3834,8 @@
                 iconEl.textContent = icons[action] ?? "";
                 iconEl.title = action ?? "";
             }
+
+            flashCardOnChange(card, `${activeMode ?? ""}|${action ?? ""}`);
         }
 
         function updateHeroMetrics() {
@@ -3750,9 +3847,11 @@
                 if (roomSetEl) {
                     const parsedRoomSet = parseNumber(roomSet);
                     clearValueColorClasses(roomSetEl);
-                    roomSetEl.textContent = (parsedRoomSet == null)
+                    const roomDisplay = (parsedRoomSet == null)
                         ? "--"
                         : `${Math.round(parsedRoomSet * 10) / 10} °C`;
+                    roomSetEl.textContent = roomDisplay;
+                    flashMetricValueOnChange(roomSetEl.closest(".metric-value") || roomSetEl, roomDisplay);
                     if (parsedRoomSet != null) {
                         const minRaw = roomSetEl.getAttribute("data-min");
                         const maxRaw = roomSetEl.getAttribute("data-max");
@@ -3831,6 +3930,18 @@
                     mqttEl.title = "unknown";
                 }
             }
+
+            const stateCard = _(".metric-card.metric-state-card");
+            const stateSignature = [
+                statuscache?.slave?.status?.flame,
+                statuscache?.slave?.status?.ch_mode,
+                statuscache?.slave?.status?.ch2_mode,
+                statuscache?.slave?.status?.cooling,
+                statuscache?.slave?.status?.dhw_mode,
+                statuscache?.slave?.status?.diagnostic,
+                statuscache?.mqtt?.connected
+            ].map((v) => String(v)).join("|");
+            flashCardOnChange(stateCard, stateSignature);
         }
 
         function applyValueColoring() {
@@ -4642,6 +4753,8 @@
                 iconEl.textContent = icons[action] ?? "";
                 iconEl.title = action ?? "";
             }
+
+            flashCardOnChange(card, `${activeMode ?? ""}|${action ?? ""}`);
         }
 
         function updateCoolingModeButtons(mode) {
@@ -4668,6 +4781,8 @@
                 iconEl.textContent = activeMode === "cool" ? "❄" : "⏹";
                 iconEl.title = activeMode;
             }
+
+            flashCardOnChange(card, activeMode);
         }
 
         function adjustRoomSetpoint(ch, delta) {
@@ -5436,6 +5551,7 @@
                 __(".statusvalue", root).forEach((ele) => {
                     var val = null;
                     let fieldPath = "";
+                    let valueSignature = "";
                     if (!ele.hasAttribute('field'))
                         return;
 
@@ -5454,24 +5570,35 @@
                                 ele.textContent = "";
                                 ele.classList.add(isErr ? "bool-error" : "bool-ok");
                                 ele.classList.remove(isErr ? "bool-ok" :"bool-off");
+                                valueSignature = isErr ? "bool:error" : "bool:on";
                             }
                             else if (val === false) {
                                 ele.textContent = "";
                                 ele.classList.add(isErr ? "bool-ok" : "bool-off");
                                 ele.classList.remove(isErr ? "bool-error" : "bool-ok");
+                                valueSignature = isErr ? "bool:ok" : "bool:off";
                             }
-                            else
+                            else {
                                 ele.textContent = val;
+                                valueSignature = String(val);
+                            }
                         }
-                        else
+                        else {
                             ele.textContent = "---";
+                            valueSignature = "---";
+                        }
                         
-                        if (ele.hasAttribute('unit') && (typeof val !== "boolean"))
+                        if (ele.hasAttribute('unit') && (typeof val !== "boolean")) {
                             ele.textContent += ' ' + ele.getAttribute('unit');
+                            valueSignature = ele.textContent;
+                        }
                     }
                     catch (ex) {
                         val = null;
+                        valueSignature = "error";
                     }
+
+                    flashMetricValueOnChange(ele, valueSignature);
 
                     if (fieldPath.startsWith("master.")) {
                         try {
@@ -5571,7 +5698,6 @@
                 updateStatusValues();
                 updateHeroStateCard();
                 applyValueColoring();
-                renderPinnedHeroCards();
 
                 __(".mqttbasetopic").forEach((ele) => {
                     ele.innerHTML = statuscache.mqtt.basetopic;
