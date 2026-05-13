@@ -399,8 +399,8 @@ void OTControl::loop() {
 
         if ( (slaveApp == SLAVEAPP_HEATCOOL) || (otMode == OTMODE_LOOPBACKTEST) ) {
             for (int ch=0; ch<(hasCh2 ? 2 : 1); ch++) {
-                if (chcontrol[ch].getChOn() && setBoilerRequest[ch]) {
-                    double flow = chcontrol[ch].getFlow();
+                if (setBoilerRequest[ch]) {
+                    double flow = chcontrol[ch].getChOn() ? chcontrol[ch].getFlow() : 10.0;
                     setBoilerRequest[ch].sendFloat(flow);
                     return;
                 }
