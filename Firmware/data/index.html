@@ -2102,11 +2102,11 @@
                     </div>
                     <div class="statusfield">
                         <h5>Member ID</h5>
-                        <span class="statusvalue" field="master.master_config_member.data.memberId" id="masterMemberId"></span>
+                        <span class="statusvalue" field="master.master_config_member.data.memberId"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Smart power</h5>
-                        <span class="statusvalue" field="master.smartPower.data"></span>
+                        <span class="statusvalue" field="master.smartPower"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Smart power implemented</h5>
@@ -2114,11 +2114,11 @@
                     </div>
                     <div class="statusfield">
                         <h5>Frames sent</h5>
-                        <span class="statusvalue" field="master.txCount.data"></span>
+                        <span class="statusvalue" field="master.txCount"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Frames received</h5>
-                        <span class="statusvalue" field="master.rxCount.data"></span>
+                        <span class="statusvalue" field="master.rxCount"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Ventilation set point</h5>
@@ -2978,7 +2978,7 @@
         const 
         CURVE_MODE_SIMPLE = 0,
         CURVE_MODE_MULTIPOINT = 1,
-        UI_STATE_VERSION = 4,
+        UI_STATE_VERSION = 5,
         UI_STATE_STORAGE_KEY = "otthing.uiState",
         UI_TIMINGS = {
             toastDefaultMs: 3500,
@@ -3113,7 +3113,7 @@
                 }
             ]
         };
-        const PINNED_HISTORY_MAX = 50;
+        const PINNED_HISTORY_MAX = 100;
         let config = defaultConfig,
         statuscache = {},
         roomsetpoint = [21, 21], // used for drawing curve
@@ -3260,6 +3260,17 @@
                 state.version = 3;
             }
 
+            if (state.version === 3) {
+                if (!state.pinnedHeroHistory || typeof state.pinnedHeroHistory !== "object" || Array.isArray(state.pinnedHeroHistory))
+                    state.pinnedHeroHistory = {};
+                state.version = 4;
+            }
+
+            if (state.version === 4) {
+                state.pinnedHeroHistory = normalizePinnedHeroHistory(state.pinnedHeroHistory, state.pinnedHeroFields);
+                state.version = 5;
+            }
+
             if (typeof state.activeTab !== "string" || state.activeTab.length === 0)
                 state.activeTab = "status";
 
@@ -3269,6 +3280,7 @@
             if (!Array.isArray(state.pinnedHeroFields))
                 state.pinnedHeroFields = [];
             state.pinnedHeroFields = normalizePinnedHeroFields(state.pinnedHeroFields);
+            state.pinnedHeroHistory = normalizePinnedHeroHistory(state.pinnedHeroHistory, state.pinnedHeroFields);
 
             state.currentCh = Math.max(0, Math.min(1, state.currentCh));
             state.version = UI_STATE_VERSION;
@@ -3305,6 +3317,30 @@
             return rawFields
                 .filter((entry) => typeof entry === "string" && entry.length > 0)
                 .slice(0, 12);
+        }
+
+        function normalizePinnedHeroHistory(rawHistory, rawFields) {
+            const history = (rawHistory && typeof rawHistory === "object" && !Array.isArray(rawHistory)) ? rawHistory : {};
+            const fields = normalizePinnedHeroFields(rawFields);
+            const allowedFields = new Set(fields.length > 0 ? fields : Object.keys(history));
+            const result = {};
+
+            allowedFields.forEach((fieldPath) => {
+                const src = history[fieldPath];
+                if (!Array.isArray(src))
+                    return;
+
+                const cleaned = src
+                    .map((value) => Number.parseFloat(value))
+                    .filter((value) => Number.isFinite(value));
+
+                if (cleaned.length === 0)
+                    return;
+
+                result[fieldPath] = cleaned.slice(-PINNED_HISTORY_MAX);
+            });
+
+            return result;
         }
 
         function syncPinnedHeroFieldsToConfig() {
@@ -3462,7 +3498,10 @@
                     ondblclick: () => {
                         pinnedHeroFields.delete(fieldPath);
                         syncPinnedHeroFieldsToConfig();
-                        saveUiState({ pinnedHeroFields: Array.from(pinnedHeroFields) });
+                        saveUiState({
+                            pinnedHeroFields: Array.from(pinnedHeroFields),
+                            pinnedHeroHistory: normalizePinnedHeroHistory(pinnedHeroHistory, Array.from(pinnedHeroFields))
+                        });
                         renderPinnedHeroCards();
                     }
                 });
@@ -3484,9 +3523,15 @@
             });
 
             if (staleFields.length > 0) {
-                staleFields.forEach((fieldPath) => pinnedHeroFields.delete(fieldPath));
+                staleFields.forEach((fieldPath) => {
+                    pinnedHeroFields.delete(fieldPath);
+                    delete pinnedHeroHistory[fieldPath];
+                });
                 syncPinnedHeroFieldsToConfig();
-                saveUiState({ pinnedHeroFields: Array.from(pinnedHeroFields) });
+                saveUiState({
+                    pinnedHeroFields: Array.from(pinnedHeroFields),
+                    pinnedHeroHistory: normalizePinnedHeroHistory(pinnedHeroHistory, Array.from(pinnedHeroFields))
+                });
             }
 
             refreshHeroPinTargetState();
@@ -3529,6 +3574,7 @@
         }
 
         function updatePinnedHeroHistory() {
+            let historyChanged = false;
             for (const fieldPath of pinnedHeroFields) {
                 const val = getStatusValueByField(fieldPath);
                 const num = typeof val === "number" ? val : parseFloat(val);
@@ -3537,6 +3583,13 @@
                 const arr = pinnedHeroHistory[fieldPath];
                 arr.push(num);
                 if (arr.length > PINNED_HISTORY_MAX) arr.shift();
+                historyChanged = true;
+            }
+
+            if (historyChanged) {
+                saveUiState({
+                    pinnedHeroHistory: normalizePinnedHeroHistory(pinnedHeroHistory, Array.from(pinnedHeroFields))
+                });
             }
         }
 
@@ -4967,9 +5020,13 @@
             const uiState = loadUiState();
             currentCh = uiState.currentCh;
             pinnedHeroFields = new Set(uiState.pinnedHeroFields || []);
+            pinnedHeroHistory = normalizePinnedHeroHistory(uiState.pinnedHeroHistory, uiState.pinnedHeroFields);
             if (pinnedHeroFields.size === 0) {
                 pinnedHeroFields = new Set(["slave.flow_t", "slave.rel_mod", "slave.ch_pressure"]);
-                saveUiState({ pinnedHeroFields: Array.from(pinnedHeroFields) });
+                saveUiState({
+                    pinnedHeroFields: Array.from(pinnedHeroFields),
+                    pinnedHeroHistory: normalizePinnedHeroHistory(pinnedHeroHistory, Array.from(pinnedHeroFields))
+                });
             }
             syncPinnedHeroFieldsToConfig();
             initInfoboxTooltips();

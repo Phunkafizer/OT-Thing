@@ -387,7 +387,8 @@ void OTValue::setValue(const OpenThermMessageType ty, const uint16_t val) {
     if (!discFlag)
         discFlag = sendDiscovery();
 
-    lastMsgType = ty;
+    if (ty != OpenThermMessageType::WRITE_DATA)
+        lastMsgType = ty;
 }
 
 void OTValue::setMsgType(const OpenThermMessageType ty) {
@@ -513,11 +514,13 @@ bool OTValueFlags::sendDiscFlag(const Flag *flag, const bool enb)  {
         dc = FPSTR(flag->haDevClass);
 
     haDisc.createBinarySensor(FPSTR(flag->discName), FPSTR(flag->field), dc);
-    
-    String valTmpl = F("{% set tmp = ((value_json.get('#0') or {}).get('#1') or {}).get('#2') %}{{ none if tmp is none else ('ON' if tmp else 'OFF') }}");
-    valTmpl.replace("#0", slave ? FPSTR(STR_STATKEY_SLAVE) : FPSTR(STR_STATKEY_MASTER));
-    valTmpl.replace("#1", getName());
-    valTmpl.replace("#2", FPSTR(flag->field));
+    String fn = getName();
+    fn += '.';
+    fn += FPSTR(flag->field);
+    String valTmpl = mqtt.getValueTemplateBool(
+        slave ? Mqtt::VALTMPL_SLAVE : Mqtt::VALTMPL_MASTER,
+        fn.c_str()
+    );
     haDisc.setValueTemplate(valTmpl);
     haDisc.setEntityCategory(entityCategory);
     return haDisc.publish(enb);

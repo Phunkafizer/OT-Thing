@@ -542,7 +542,6 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
         slave.sendResponse(newMsg);
     }
 
-
     char c;
     if ((status == OpenThermResponseStatus::INVALID) && (otMode != OTMODE_REPEATER))
         c = 'E';
@@ -586,11 +585,10 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
     if (!otval) {
         if (mt == OpenThermMessageType::READ_ACK)
             portal.textAll(F("no slave val!"));
-
-        otval = OTValue::getMasterValue(id);
-        if (otval)
-            otval->setMsgType(mt);
-    }   
+    }
+    otval = OTValue::getMasterValue(id);
+    if (otval)
+        otval->setMsgType(mt);
 }
 
 unsigned long OTControl::buildBrandResponse(const OpenThermMessageID id, const String &str, const uint8_t idx) {
