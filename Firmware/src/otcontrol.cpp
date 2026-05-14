@@ -1338,6 +1338,7 @@ void OTControl::setConfig(JsonObject &config) {
 
     master.resetCounters();
     slave.resetCounters();
+    master.hal.setRequestDelay(500);
 
     init = true;
 }
