@@ -1338,7 +1338,7 @@ void OTControl::setConfig(JsonObject &config) {
 
     master.resetCounters();
     slave.resetCounters();
-    master.hal.setRequestDelay(500);
+    master.hal.setRequestDelay(config[F("otDelay")] | 100);
 
     init = true;
 }

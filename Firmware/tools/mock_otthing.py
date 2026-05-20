@@ -17,6 +17,7 @@ state = {
         "slaveApp": 0,
         "otMode": 4,
         "enableSlave": False,
+        "otDelay": 100,
         "timezone": 3600,
         "boiler": {
             "dhwOn": True,

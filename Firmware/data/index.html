@@ -1271,16 +1271,48 @@
             font-size: 12px;
         }
 
-        #logstatus {
-            height: 0.5em;
+        #log .log-toolbar {
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.65em;
+            padding: 0.2em 0 0.4em;
+            font-size: 0.88em;
         }
 
-        #logstatus.connected {
-            background-color: green;
+        #log .log-toolbar-controls {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.7em;
         }
 
-        #logstatus.disconnected {
-            background-color: red;
+        #log .log-toolbar button {
+            height: 26px;
+            font-size: 0.76em;
+            padding: 0 0.8em;
+        }
+
+        #log .log-toolbar .log-switch {
+            width: 44px;
+            height: 22px;
+        }
+
+        #log .log-toolbar .log-switch .slider:before {
+            width: 16px;
+            height: 16px;
+            left: 3px;
+            bottom: 3px;
+        }
+
+        #log .log-toolbar .log-switch input:checked + .slider:before {
+            transform: translateX(21px);
+        }
+
+        #logReconnectHint {
+            color: #f1b78d;
+            font-size: 0.84em;
+            letter-spacing: 0.03em;
+            text-transform: lowercase;
         }
 
         #updprogress {
@@ -2733,6 +2765,16 @@
                                 <input type="range" min="30" max="70" step="1" />
                             </div>
                         </div>
+                        <div class="param range" field="otDelay">
+                            <h5>master request delay</h5>
+                            <div class="flexline">
+                                <div class="valunit">
+                                    <span class="value"></span>
+                                    <span class="unit">ms</span>
+                                </div>
+                                <input type="range" min="100" max="500" step="100" />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -2973,19 +3015,21 @@
             </div>
         </div>
         <div class="tab" id="log">
+            <div class="toolbar log-toolbar">
+                <span id="logReconnectHint" hidden>reconnecting...</span>
+                <div class="log-toolbar-controls">
+                    <button onclick="clearLog()">clear log</button>
+                    <div style="display:flex; align-items:center; gap:0.5em;">
+                        <span>autoscroll</span>
+                        <label class="switch log-switch" style="margin:0;">
+                            <input id="logAutoscroll" type="checkbox" checked onchange="toggleAutoScroll(this)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
             <div id="console">
                 <div class="empty-state" id="consoleEmpty">No log messages yet.</div>
-            </div>
-            <div id="logstatus"></div>
-            <div class="toolbar">
-                <button onclick="clearLog()">clear log</button>
-                <div style="display:flex; align-items:center; gap:0.5em;">
-                    <span>autoscroll</span>
-                    <label class="switch" style="margin:0;">
-                        <input id="logAutoscroll" type="checkbox" checked onchange="toggleAutoScroll(this)">
-                        <span class="slider"></span>
-                    </label>
-                </div>
             </div>
         </div>
         <div class="toolbar" id="globalToolbar">
@@ -3046,6 +3090,7 @@
             slaveApp: 0, // 0 = heat/cool, 1 = ventilation, 2 = solar storage
             otMode: 4, // Test
             enableSlave: false,
+            otDelay: 100,
             timezone: 3600,
             boiler: {
                 dhwOn: true,
@@ -5951,6 +5996,12 @@
             };
 
             function connectWS() {
+                function setWsConnectionState(connected) {
+                    const hint = _("#logReconnectHint");
+                    if (hint)
+                        hint.hidden = connected;
+                }
+
                 function logws(msg) {
                     let e = _$("div");
                     e.innerHTML = msg;
@@ -5963,15 +6014,16 @@
                         cons.scrollTop = cons.scrollHeight;
                 }
 
-                var websocket = new WebSocket("ws");
+                setWsConnectionState(false);
+                const wsProtocol = (location.protocol === "https:") ? "wss" : "ws";
+                const wsUrl = `${wsProtocol}://${location.host}/ws`;
+                var websocket = new WebSocket(wsUrl);
                 websocket.onopen = (ev) => {
-                    _("#logstatus").classList.add('connected');
-                    _("#logstatus").classList.remove('disconnected');
+                    setWsConnectionState(true);
                     addRecentEvent("Log socket connected");
                 }
                 websocket.onclose = (ev) => {
-                    _("#logstatus").classList.add('disconnected');
-                    _("#logstatus").classList.remove('connected');
+                    setWsConnectionState(false);
                     addRecentEvent("Log socket disconnected");
                     setTimeout(function() {
                         connectWS();
