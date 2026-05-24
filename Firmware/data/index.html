@@ -3067,6 +3067,7 @@
         CURVE_MODE_MULTIPOINT = 1,
         UI_STATE_VERSION = 5,
         UI_STATE_STORAGE_KEY = "otthing.uiState",
+        LOG_MAX_LINES = 1000,
         UI_TIMINGS = {
             toastDefaultMs: 3500,
             toastDismissMs: 220,
@@ -6010,6 +6011,8 @@
                     if (empty)
                         empty.remove();
                     cons.append(e);
+                    while (cons.childElementCount > LOG_MAX_LINES)
+                        cons.removeChild(cons.firstElementChild);
                     if (autoscroll)
                         cons.scrollTop = cons.scrollHeight;
                 }

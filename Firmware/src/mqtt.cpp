@@ -47,7 +47,6 @@ static struct {
 Mqtt mqtt;
 static uint32_t numDisc = 0;
 static WiFiClient espClient;
-static char statBuf[4096];
 
 void mqttConnectCb(bool sessionPresent) {
     mqtt.onConnect();
@@ -156,8 +155,9 @@ void Mqtt::loop() {
             lastStatus = millis();
             JsonDocument doc;
             devstatus.buildDoc(doc);
-            serializeJson(doc, statBuf);
-            cli.publish(haDisc.defaultStateTopic.c_str(), 0, false, statBuf);
+            String statStr;
+            serializeJson(doc, statStr);
+            cli.publish(haDisc.defaultStateTopic.c_str(), 0, false, statStr.c_str());
             cli.publish(statusTopic.c_str(), 0, false, PSTR("online"));
         }
     }
