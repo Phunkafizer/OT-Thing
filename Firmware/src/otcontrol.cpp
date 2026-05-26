@@ -377,7 +377,7 @@ void OTControl::loop() {
         }
 
         if (setMasterConfigMember) {
-            setMasterConfigMember.send((1<<8) | masterMemberId);
+            setMasterConfigMember.send((0<<8) | masterMemberId);
             return;
         }
 
@@ -1326,15 +1326,20 @@ void OTControl::setConfig(JsonObject &config) {
 
     slaveApp = (SlaveApplication) ((int) config[F("slaveApp")] | 0);
 
+    for (int i=0; i<NUM_HEATCIRCUITS; i++) {
+        setBoilerRequest[i].force();
+        setRoomTemp[i].force();
+        setRoomSetPoint[i].force();
+    }
     setDhwRequest.force();
-    setBoilerRequest[0].force();
-    setBoilerRequest[1].force();
     setMasterConfigMember.force();
     setVentSetpointRequest.force();
     setMaxModulation.force();
     setProdVersion.force();
     setOTVersion.force();
     setMaxCh.force();
+    setOutsideTemp.force();
+    setCoolingCtrlSetpoint.force();
 
     master.resetCounters();
     slave.resetCounters();

@@ -47,6 +47,8 @@ static struct {
 Mqtt mqtt;
 static uint32_t numDisc = 0;
 static WiFiClient espClient;
+static String mqttRxTopic;
+static String mqttRxPayload;
 
 void mqttConnectCb(bool sessionPresent) {
     mqtt.onConnect();
@@ -57,8 +59,26 @@ void mqttDisconnectCb(AsyncMqttClientDisconnectReason reason) {
 }
 
 static void mqttMessageReceived(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
-    String payloadStr(payload, len);
-    mqtt.onMessage(topic, payloadStr);
+    // AsyncMqttClient may deliver one MQTT message in multiple chunks.
+    if (index == 0) {
+        mqttRxTopic = String(topic);
+        mqttRxPayload = "";
+        mqttRxPayload.reserve(total);
+    }
+
+    if (mqttRxTopic != String(topic)) {
+        mqttRxTopic = String(topic);
+        mqttRxPayload = "";
+        mqttRxPayload.reserve(total);
+    }
+
+    mqttRxPayload.concat(payload, len);
+
+    if ((index + len) >= total) {
+        mqtt.onMessage(topic, mqttRxPayload);
+        mqttRxTopic = "";
+        mqttRxPayload = "";
+    }
 }
 
 Mqtt::Mqtt():
