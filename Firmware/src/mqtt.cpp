@@ -394,6 +394,10 @@ String Mqtt::getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t
     case VALTMPL_DHW:
         result += F(".get('dhw') or {})");
         break;
+
+    case VALTMPL_FLAMESTATS:
+        result += F(".get('slave') or {}).get('flameStats') or {}");
+        break;
     }
 
     int numbrak = 2;
@@ -437,7 +441,7 @@ String Mqtt::getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t
 
 String Mqtt::getValueTemplate(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit) {
     String result = getValuePath(vt, field, ch, ommit);
-    result += F("{{ tmp | default(None) }}");
+    result += F("{{ tmp | default(none) }}");
     return result;
 }
 

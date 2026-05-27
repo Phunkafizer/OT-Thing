@@ -1,5 +1,6 @@
 #include "flamestats.h"
 #include "otcontrol.h"
+#include "devstatus.h"
 
 FlameStats flameStats;
 
@@ -53,6 +54,10 @@ void FlameStats::update() {
     }
 }
 
+double FlameStats::secToMin(const uint32_t sec) const {
+    return round(sec * 10.0 / 60.0) / 10.0;
+}
+
 uint8_t FlameStats::getDuty() const {
     return 100 * on.sum / BUFSIZE_MINUTES / 60;
 }
@@ -75,7 +80,7 @@ int FlameStats::getCurrentOnTime() const {
  */
 
 double FlameStats::getOnTime() const {
-    return round(onTimes.sum / BUFSIZE_CYCLES / 60.0 * 10) / 10.0;
+    return secToMin(onTimes.sum / BUFSIZE_CYCLES);
 }
 
 /* 
@@ -83,7 +88,7 @@ double FlameStats::getOnTime() const {
  */
 
 double FlameStats::getOffTime() const {
-    return round(offTimes.sum / BUFSIZE_CYCLES / 60.0 * 10) / 10.0;
+    return secToMin(offTimes.sum / BUFSIZE_CYCLES);
 }
 
 void FlameStats::loop() {
@@ -109,19 +114,16 @@ void FlameStats::Ringbuf<T1, T2>::update(const uint8_t idx) {
 }
 
 void FlameStats::writeJson(JsonObject &obj) const {
-    JsonObject fs = obj[F("flameStats")].to<JsonObject>();
+    JsonObject fs = obj[FPSTR(STR_STATKEY_FLAMESTATS)].to<JsonObject>();
     fs["duty"] = getDuty();
     fs["freq"] = getFreq();
     if (onTimesInit) {
-        fs[F("onTime")] = getOnTime();
-        double currentOnTime;
-        if (currentFlame)
-            currentOnTime = getCurrentOnTime();
-        else
-            currentOnTime = onTimes.buf[(idxCycles + BUFSIZE_CYCLES - 1) % BUFSIZE_CYCLES];
-
-        fs[F("lastOnTime")] = round(currentOnTime * 10.0 / 60.0) / 10.0;
+        fs[FPSTR(STR_STATKEY_FLAMESTATS_ONTIME)] = getOnTime();
+        double lasttOnTime = onTimes.buf[(idxCycles + BUFSIZE_CYCLES - 1) % BUFSIZE_CYCLES];
+        fs[FPSTR(STR_STATKEY_FLAMESTATS_LASTONTIME)] = secToMin(lasttOnTime);
     }
     if (offTimesInit)
-        fs[F("offTime")] = getOffTime();
+        fs[FPSTR(STR_STATKEY_FLAMESTATS_OFFTIME)] = getOffTime();
+    if (currentFlame)
+        fs[FPSTR(STR_STATKEY_FLAMESTATS_CURRENTONTIME)] = secToMin(getCurrentOnTime());
 }

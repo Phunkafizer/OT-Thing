@@ -1060,24 +1060,36 @@ bool OTControl::sendDiscovery() {
     discFlag &= haDisc.publish();
 
     haDisc.createSensor(F("flame ratio"), F("flame_ratio"));
-    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_SLAVE, PSTR("flameStats.duty")));
+    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_DUTY));
     haDisc.setDeviceClass(F("power_factor"));
     haDisc.setUnit(FPSTR(HA_UNIT_PERCENT));
     discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
 
     haDisc.createSensor(F("burner starts /h"), F("flame_freq"));
-    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_SLAVE, PSTR("flameStats.freq")));
+    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_FREQ));
     haDisc.setUnit(F("/h"));
     discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
 
     haDisc.createSensor(F("flametime per cycle"), F("flame_on"));
-    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_SLAVE, PSTR("flameStats.onTime")));
-    haDisc.setUnit(F("min"));
+    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_ONTIME));
+    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
     discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
 
     haDisc.createSensor(F("pausetime per cycle"), F("flame_off"));
-    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_SLAVE, PSTR("flameStats.offTime")));
-    haDisc.setUnit(F("min"));
+    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_OFFTIME));
+    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
+    discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
+
+    haDisc.createSensor(F("current on time"), F("current_on_time"));
+    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_CURRENTONTIME));
+    haDisc.setDeviceClass(PSTR(HA_DEVICE_CLASS_DURATION));
+    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
+    discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
+
+    haDisc.createSensor(F("last on time"), F("last_on_time"));
+    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_LASTONTIME));
+    haDisc.setDeviceClass(PSTR(HA_DEVICE_CLASS_DURATION));
+    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
     discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
 
     haDisc.createSwitch(F("bypass"), Mqtt::TOPIC_BYPASS);

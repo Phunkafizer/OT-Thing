@@ -286,6 +286,7 @@ state = {
             "timeouts": 0,
             "flameStats": {
                 "duty": 65.0,
+                "currentOnTime": 0.0,
                 "lastOnTime": 6.9,
                 "onTime": 6.9,
                 "offTime": 3.8,

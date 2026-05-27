@@ -53,7 +53,8 @@ public:
         VALTMPL_DHW,
         VALTMPL_SLAVE,
         VALTMPL_MASTER,
-        VALTMPL_HEATING_CIRCUIT
+        VALTMPL_HEATING_CIRCUIT,
+        VALTMPL_FLAMESTATS
     };
     Mqtt();
     void begin();

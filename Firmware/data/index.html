@@ -1899,6 +1899,10 @@
                         <span class="statusvalue" field="slave.dhwpump_op_hours" unit="h"></span>
                     </div>
                     <div class="statusfield">
+                        <h5>current flametime</h5>
+                        <span class="statusvalue" field="slave.flameStats.currentOnTime" unit="min"></span>
+                    </div>
+                    <div class="statusfield">
                         <h5>last flametime</h5>
                         <span class="statusvalue" field="slave.flameStats.lastOnTime" unit="min"></span>
                     </div>
@@ -3930,10 +3934,40 @@
 
         function updateHeroStateCard() {
             setStateIcon("stateFlame", statuscache?.slave?.status?.flame, true);
-            setStateIcon("stateCh1", statuscache?.slave?.status?.ch_mode);
-            setStateIcon("stateCh2", statuscache?.slave?.status?.ch2_mode);
-            setStateIcon("stateCooling", statuscache?.slave?.status?.cooling);
-            setStateIcon("stateDhw", statuscache?.slave?.status?.dhw_mode);
+
+            function setTriStateEnabledIcon(id, active, enabled) {
+                const icon = _(`#${id}`);
+                if (!icon)
+                    return;
+
+                icon.classList.remove("is-true", "is-false", "is-inactive", "is-error", "is-unknown");
+
+                if (enabled === false) {
+                    icon.classList.add("is-false");
+                    icon.textContent = "✖";
+                    icon.title = "disabled";
+                }
+                else if (active === true) {
+                    icon.classList.add("is-true");
+                    icon.textContent = "✔";
+                    icon.title = "active";
+                }
+                else if (enabled === true) {
+                    icon.classList.add("is-inactive");
+                    icon.textContent = "○";
+                    icon.title = "inactive";
+                }
+                else {
+                    icon.classList.add("is-unknown");
+                    icon.textContent = "…";
+                    icon.title = "unknown";
+                }
+            }
+
+            setTriStateEnabledIcon("stateCh1", statuscache?.slave?.status?.ch_mode, statuscache?.master?.status?.data?.ch_enable);
+            setTriStateEnabledIcon("stateCh2", statuscache?.slave?.status?.ch2_mode, statuscache?.master?.status?.data?.ch2_enable);
+            setTriStateEnabledIcon("stateCooling", statuscache?.slave?.status?.cooling, statuscache?.master?.status?.data?.cooling_enable);
+            setTriStateEnabledIcon("stateDhw", statuscache?.slave?.status?.dhw_mode, statuscache?.master?.status?.data?.dhw_enable);
 
             const diagEl = _("#stateDiag");
             if (diagEl) {
@@ -3982,8 +4016,12 @@
                 statuscache?.slave?.status?.flame,
                 statuscache?.slave?.status?.ch_mode,
                 statuscache?.slave?.status?.ch2_mode,
+                statuscache?.master?.status?.data?.ch_enable,
+                statuscache?.master?.status?.data?.ch2_enable,
                 statuscache?.slave?.status?.cooling,
+                statuscache?.master?.status?.data?.cooling_enable,
                 statuscache?.slave?.status?.dhw_mode,
+                statuscache?.master?.status?.data?.dhw_enable,
                 statuscache?.slave?.status?.diagnostic,
                 statuscache?.mqtt?.connected
             ].map((v) => String(v)).join("|");

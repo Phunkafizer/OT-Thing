@@ -14,6 +14,7 @@ private:
     static const uint8_t BUFSIZE_CYCLES = 10;
     void update();
     void set(const bool flame);
+    double secToMin(const uint32_t sec) const;
     bool currentFlame {false};
     uint32_t lastEdge {0};
     uint32_t lastLoop {0};
