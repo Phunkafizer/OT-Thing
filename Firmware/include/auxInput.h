@@ -15,7 +15,8 @@ public:
         MODE_BINARY = 1,
         MODE_COUNTER = 2,
         MODE_ANALOG = 3,
-        MODE_1WIRE = 4
+        MODE_1WIRE = 4,
+        MODE_CH_DEMAND = 5   // digital input drives central heating on/off
     } mode;
 
     void setup();

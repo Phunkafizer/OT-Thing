@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include "otcontrol.h"
+#include "auxInput.h"
 #include "otvalues.h"
 #include "command.h"
 #include "HADiscLocal.h"
@@ -241,7 +242,9 @@ uint16_t OTControl::tmpToData(const double tmpf) {
 void OTControl::setOTMode(const OTMode mode) {
     otMode = mode;
 
-    CHcontrol::overrideEnabled = (otMode == OTMODE_MASTER) && enableSlave;
+    bool auxChDemand = (auxInput[0].mode == AuxInput::MODE_CH_DEMAND) ||
+                       (auxInput[1].mode == AuxInput::MODE_CH_DEMAND);
+    CHcontrol::overrideEnabled = (otMode == OTMODE_MASTER) && (enableSlave || auxChDemand);
 
     // set bypass relay
     digitalWrite(GPIO_BYPASS_RELAY, (mode != OTMODE_BYPASS) && !bypass);
@@ -1309,6 +1312,13 @@ void OTControl::setConfig(JsonObject &config) {
         discFlag = false;
     }
 
+    // recompute overrideEnabled in case only aux mode changed (no OT mode/slave change)
+    {
+        bool auxChDemand = (auxInput[0].mode == AuxInput::MODE_CH_DEMAND) ||
+                           (auxInput[1].mode == AuxInput::MODE_CH_DEMAND);
+        CHcontrol::overrideEnabled = (otMode == OTMODE_MASTER) && (enableSlave || auxChDemand);
+    }
+
     for (int i=0; i<NUM_HEATCIRCUITS; i++) {
         JsonObject obj = config[F("heating")][i];
         chcontrol[i].setConfig(obj, init);
@@ -1368,6 +1378,11 @@ void OTControl::setChCtrlMode(const HADiscovery::ClimateMode mode, const uint8_t
 void OTControl::setOverrideChOn(const bool ovrd, const uint8_t channel) {
     chcontrol[channel].ovrdOn.active = ovrd;
     setBoilerRequest[channel].force();
+}
+
+void OTControl::setChDemand(const bool on, const uint8_t channel) {
+    chcontrol[channel].ovrdOn.active = true;
+    chcontrol[channel].ovrdOn.value = on;
 }
 
 void OTControl::setOverrideChFlow(const bool ovrd, const uint8_t channel) {

@@ -136,6 +136,7 @@ public:
     void setVentSetpoint(const uint8_t v);
     void setVentEnable(const bool en);
     void setOverrideChOn(const bool ovrd, const uint8_t channel);
+    void setChDemand(const bool on, const uint8_t channel = 0);
     void setOverrideChFlow(const bool ovrd, const uint8_t channel);
     void setOverrideDhw(const bool ovrd);
     void setMaxMod(const int mm);
