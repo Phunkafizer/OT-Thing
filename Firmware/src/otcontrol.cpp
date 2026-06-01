@@ -242,9 +242,16 @@ uint16_t OTControl::tmpToData(const double tmpf) {
 void OTControl::setOTMode(const OTMode mode) {
     otMode = mode;
 
-    bool auxChDemand = (auxInput[0].mode == AuxInput::MODE_CH_DEMAND) ||
-                       (auxInput[1].mode == AuxInput::MODE_CH_DEMAND);
-    CHcontrol::overrideEnabled = (otMode == OTMODE_MASTER) && (enableSlave || auxChDemand);
+    CHcontrol::overrideEnabled = (otMode == OTMODE_MASTER) && enableSlave;
+
+    // Reset aux CH role state when leaving master mode
+    if (otMode != OTMODE_MASTER) {
+        for (auto& ch : chcontrol) {
+            ch.auxDemandOn = false;
+            ch.auxEnableActive = false;
+            ch.auxEnableOn = true;
+        }
+    }
 
     // set bypass relay
     digitalWrite(GPIO_BYPASS_RELAY, (mode != OTMODE_BYPASS) && !bypass);
@@ -1312,11 +1319,13 @@ void OTControl::setConfig(JsonObject &config) {
         discFlag = false;
     }
 
-    // recompute overrideEnabled in case only aux mode changed (no OT mode/slave change)
-    {
-        bool auxChDemand = (auxInput[0].mode == AuxInput::MODE_CH_DEMAND) ||
-                           (auxInput[1].mode == AuxInput::MODE_CH_DEMAND);
-        CHcontrol::overrideEnabled = (otMode == OTMODE_MASTER) && (enableSlave || auxChDemand);
+    // Sync aux CH role flags into CHcontrol (only meaningful in master mode)
+    if (otMode == OTMODE_MASTER) {
+        for (int i = 0; i < NUM_HEATCIRCUITS; i++) {
+            chcontrol[i].auxDemandOn = false;  // reset; loop() will resync on next edge
+            chcontrol[i].auxEnableOn = true;   // safe default: allow CH
+            chcontrol[i].auxEnableActive = AuxInput::hasEnableRole(i);
+        }
     }
 
     for (int i=0; i<NUM_HEATCIRCUITS; i++) {
@@ -1380,9 +1389,14 @@ void OTControl::setOverrideChOn(const bool ovrd, const uint8_t channel) {
     setBoilerRequest[channel].force();
 }
 
-void OTControl::setChDemand(const bool on, const uint8_t channel) {
-    chcontrol[channel].ovrdOn.active = true;
-    chcontrol[channel].ovrdOn.value = on;
+void OTControl::setAuxDemand(const uint8_t channel, const bool on) {
+    if (otMode != OTMODE_MASTER) return;
+    chcontrol[channel].auxDemandOn = on;
+}
+
+void OTControl::setAuxEnable(const uint8_t channel, const bool on) {
+    if (otMode != OTMODE_MASTER) return;
+    chcontrol[channel].auxEnableOn = on;
 }
 
 void OTControl::setOverrideChFlow(const bool ovrd, const uint8_t channel) {
