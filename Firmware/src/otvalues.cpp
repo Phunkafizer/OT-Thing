@@ -735,6 +735,7 @@ bool OTValueVentFaultFlags::sendDiscovery() {
 
 OTValueProductVersion::OTValueProductVersion(const OpenThermMessageID id, const int interval, PGM_P haName):
         OTValue(id, interval, haName) {
+    entityCategory = HA_ENTITY_CATEGORY_DIAGNOSTIC;
 }
 
 bool OTValueProductVersion::sendDiscovery() {
