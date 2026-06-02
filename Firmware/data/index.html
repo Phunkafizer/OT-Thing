@@ -2979,20 +2979,40 @@
                 <div class="flexline">
                     <div class="param">
                         <h5>aux 1 (DQ)</h5>
-                        <select field="aux.0.mode" intval>
+                        <select id="aux0mode" field="aux.0.mode" intval>
                             <option value="0">unused</option>
                             <option value="1">digital</option>
                             <option value="3">analog</option>
                             <option value="4">1wire</option>
                         </select>
+                        <div id="aux0role" hidden>
+                            <h5>role</h5>
+                            <select field="aux.0.digitalRole" intval>
+                                <option value="0">none</option>
+                                <option value="1">demand CH 1</option>
+                                <option value="2">demand CH 2</option>
+                                <option value="3">enable CH 1</option>
+                                <option value="4">enable CH 2</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="param">
                         <h5>aux. 2 (DI)</h5>
-                        <select field="aux.1.mode" intval>
+                        <select id="aux1mode" field="aux.1.mode" intval>
                             <option value="0">unused</option>
                             <option value="1">digital</option>
                             <option value="4">1wire</option>
                         </select>
+                        <div id="aux1role" hidden>
+                            <h5>role</h5>
+                            <select field="aux.1.digitalRole" intval>
+                                <option value="0">none</option>
+                                <option value="1">demand CH 1</option>
+                                <option value="2">demand CH 2</option>
+                                <option value="3">enable CH 1</option>
+                                <option value="4">enable CH 2</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 
@@ -3200,10 +3220,12 @@
             masterMemberId: 8,
             aux: [
                 {
-                    mode: 4 // 1wire
+                    mode: 4, // 1wire
+                    digitalRole: 0
                 },
                 {
-                    mode: 0 // not used
+                    mode: 0, // not used
+                    digitalRole: 0
                 }
             ]
         };
@@ -5353,6 +5375,17 @@
                 });
             }
 
+            function updateAuxRoleVisibility(idx, mode) {
+                const roleDiv = _(`#aux${idx}role`);
+                if (roleDiv) roleDiv.hidden = (parseInt(mode) !== 1);
+            }
+            [0, 1].forEach(idx => {
+                const sel = _(`#aux${idx}mode`);
+                if (sel) {
+                    sel.addEventListener("change", (ev) => updateAuxRoleVisibility(idx, ev.target.value));
+                }
+            });
+
             window.drawMarkerTable = function drawMarkerTable() {
                 _("#markerbody").innerHTML = "";
                 const markers = config.heating[currentCh].marker ?? [];
@@ -5529,6 +5562,7 @@
                 _("#curveMode").dispatchEvent(new Event("change"));
 
                 updateOtModeVisibility(getConfigValFromPath("otMode"));
+                [0, 1].forEach(idx => updateAuxRoleVisibility(idx, getConfigValFromPath(`aux.${idx}.mode`)));
 
                 drawMarkerTable();
                 drawCurve();

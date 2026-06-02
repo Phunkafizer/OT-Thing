@@ -163,7 +163,7 @@ double CHcontrol::getFlow() {
     return result;
 }
 
-bool CHcontrol::getChOn() {
+bool CHcontrol::calcChOn() {
     if (overrideEnabled && ovrdOn.active)
         return ovrdOn.value;
 
@@ -180,6 +180,13 @@ bool CHcontrol::getChOn() {
         return false;
 
     return true;
+}
+
+bool CHcontrol::getChOn() {
+    bool on = calcChOn();
+    if (auxEnableActive) on = on && auxEnableOn;   // AND: enable role gates CH
+    if (auxDemandOn)     on = on || auxDemandOn;   // OR: demand role forces CH on
+    return on;
 }
 
 void CHcontrol::setMode(const HADiscovery::ClimateMode mode) {
