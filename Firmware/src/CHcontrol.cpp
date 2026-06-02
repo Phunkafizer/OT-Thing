@@ -2,6 +2,7 @@
 #include "flamestats.h"
 #include "devstatus.h"
 #include "otcontrol.h"
+#include "auxInput.h"
 
 bool CHcontrol::overrideEnabled; // set if otMode is master
 
@@ -163,9 +164,15 @@ double CHcontrol::getFlow() {
     return result;
 }
 
-bool CHcontrol::calcChOn() {
+bool CHcontrol::getChOn() {
     if (overrideEnabled && ovrdOn.active)
         return ovrdOn.value;
+
+    if (AuxInput::hasChDisable(channel))
+        return false;
+
+    if (AuxInput::hasChDemand(channel))
+        return true;
 
     if ( (mode == HADiscovery::MODE_OFF) || (roomComp.mode == HADiscovery::MODE_OFF) || (getFlow() == 0.0) )
         return false;
@@ -180,13 +187,6 @@ bool CHcontrol::calcChOn() {
         return false;
 
     return true;
-}
-
-bool CHcontrol::getChOn() {
-    bool on = calcChOn();
-    if (auxEnableActive) on = on && auxEnableOn;   // AND: enable role gates CH
-    if (auxDemandOn)     on = on || auxDemandOn;   // OR: demand role forces CH on
-    return on;
 }
 
 void CHcontrol::setMode(const HADiscovery::ClimateMode mode) {

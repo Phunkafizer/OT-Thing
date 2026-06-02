@@ -30,7 +30,8 @@ public:
     void setConfig(JsonObject cfg);
     void getJson(JsonDocument &doc) const;
     bool sendDiscovery();
-    static bool hasEnableRole(uint8_t channel);
+    static bool hasChDemand(const uint8_t channel);
+    static bool hasChDisable(const uint8_t channel);
 };
 
 extern AuxInput auxInput[2];

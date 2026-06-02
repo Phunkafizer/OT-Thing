@@ -15,7 +15,6 @@ public:
 class CHcontrol {
 private:
     bool roomCompEnabled() const;
-    bool calcChOn();
     const uint8_t channel;
     struct {
         double roomSet; // default room set point
@@ -55,7 +54,6 @@ public:
     double getFlow();
     bool getChOn();
     double getFlowMax() const;
-    
     bool suspendEnabled() const;
     void loop();
     void loopRoomComp();
@@ -68,7 +66,4 @@ public:
     ChannelOverride<double> ovrdTemp;
     HADiscovery::ClimateMode mode {HADiscovery::MODE_AUTO};
     static bool overrideEnabled; // set if otMode is master && enableSlave
-    bool auxDemandOn {false};    // demand role: contact closed → force CH on (OR)
-    bool auxEnableActive {false};// enable role is configured for this channel
-    bool auxEnableOn {true};     // enable role: contact state (true = allow CH)
 };

@@ -50,24 +50,21 @@ void AuxInput::setConfig(JsonObject cfg) {
 }
 
 void AuxInput::loop() {
-    if (mode != MODE_BINARY || digitalRole == DROLE_NONE)
-        return;
-    bool now = (digitalRead(gpio) == 0);
-    if (now == state)
-        return;
-    state = now;
-    uint8_t ch = (digitalRole == DROLE_DEMAND_CH2 || digitalRole == DROLE_ENABLE_CH2) ? 1 : 0;
-    if (digitalRole == DROLE_ENABLE_CH1 || digitalRole == DROLE_ENABLE_CH2)
-        otcontrol.setAuxEnable(ch, state);
-    else
-        otcontrol.setAuxDemand(ch, state);
+    switch (mode) {
+    case MODE_BINARY: {
+        bool state = (digitalRead(gpio) == 0);
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 void AuxInput::getJson(JsonDocument &doc) const {
     JsonObject obj = doc[FPSTR(name)].to<JsonObject>();
     switch (mode) {
     case MODE_BINARY:
-        obj[F("state")] = digitalRead(gpio) == 0;
+        obj[F("state")] = state;
         break;
     case MODE_ANALOG:
         obj[F("value")] = analogRead(gpio);
@@ -80,8 +77,21 @@ void AuxInput::getJson(JsonDocument &doc) const {
 bool AuxInput::sendDiscovery() {
     switch (mode) {
     case MODE_BINARY: {
-        const __FlashStringHelper *label = (digitalRole != DROLE_NONE)
-            ? F("heating demand") : F("digital input");
+        String label;
+        switch (digitalRole) {
+        case DROLE_DEMAND_CH1:
+        case DROLE_DEMAND_CH2:
+            label = F("heating demand");
+            break;
+        case DROLE_ENABLE_CH1:
+        case DROLE_ENABLE_CH2:
+            label = F("heating enable");
+            break;
+        default:
+            label = F("digital input");
+            break;
+        }
+
         haDisc.createBinarySensor(label, FPSTR(name), "");
         String str = F("{% set tmp=(value_json.get('#') or {}).get('state') %}{{ none if tmp is none else 'ON' if tmp else 'OFF' }}");
         str.replace("#", FPSTR(name));
@@ -105,10 +115,20 @@ bool AuxInput::sendDiscovery() {
     return true;
 }
 
-bool AuxInput::hasEnableRole(uint8_t channel) {
-    DigitalRole target = (channel == 0) ? DROLE_ENABLE_CH1 : DROLE_ENABLE_CH2;
-    for (const auto& a : auxInput)
-        if (a.mode == MODE_BINARY && a.digitalRole == target)
+bool AuxInput::hasChDemand(const uint8_t channel) {
+    const DigitalRole target = (channel == 0) ? DROLE_DEMAND_CH1 : DROLE_DEMAND_CH2;
+    for (const auto& aux: auxInput) {
+        if ( (aux.mode == MODE_BINARY) && (aux.digitalRole == target) && aux.state )
             return true;
+    }
+    return false;
+}
+
+bool AuxInput::hasChDisable(const uint8_t channel) {
+    const DigitalRole target = (channel == 0) ? DROLE_ENABLE_CH1 : DROLE_ENABLE_CH2;
+    for (const auto& aux: auxInput) {
+        if ( (aux.mode == MODE_BINARY) && (aux.digitalRole == target) && !aux.state )
+            return true;
+    }
     return false;
 }
