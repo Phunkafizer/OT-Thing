@@ -52,7 +52,7 @@ void AuxInput::setConfig(JsonObject cfg) {
 void AuxInput::loop() {
     switch (mode) {
     case MODE_BINARY: {
-        bool state = (digitalRead(gpio) == 0);
+        state = (digitalRead(gpio) == 0);
         break;
     }
     default:

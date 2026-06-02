@@ -190,7 +190,7 @@ OTControl::OTControl():
         lastVentStatus(0),
         otMode(OTMODE_LOOPBACKTEST),
         slaveApp(SLAVEAPP_HEATCOOL),
-        chcontrol{CHcontrol(0), CHcontrol(0)},
+        chcontrol{CHcontrol(0), CHcontrol(1)},
         setBoilerRequest{OTWRSetBoilerTemp(0), OTWRSetBoilerTemp(1)},
         setRoomTemp{OTWRSetRoomTemp(0), OTWRSetRoomTemp(1)},
         setRoomSetPoint{OTWRSetRoomSetPoint(0), OTWRSetRoomSetPoint(1)},
