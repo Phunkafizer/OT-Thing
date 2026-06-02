@@ -235,8 +235,10 @@ void Portal::begin(bool configMode) {
             const AsyncWebParameter* par = request->getParam(i);
             String key = par->name();
             String value = par->value();
-            if (!mqtt.setValue(key, value))
+            if (!mqtt.setValue(key, value)) {
                 request->send(503);
+                return;
+            }
         }
         request->send(200);
     });

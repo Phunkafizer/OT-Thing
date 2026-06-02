@@ -30,9 +30,7 @@ void OtGwCommand::onNewClient(void* arg, AsyncClient* client) {
 }
 
 void OtGwCommand::onClientData(void* arg, AsyncClient* client, void *data, size_t len) {
-    char *s = (char*) data;
-    s[len - 1] = 0;
-    Serial.println(s);
+    ;
 }
 
 void OtGwCommand::onClientDisconnect(void* arg, AsyncClient* client) {

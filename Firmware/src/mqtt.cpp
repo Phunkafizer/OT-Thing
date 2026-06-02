@@ -105,8 +105,6 @@ void Mqtt::begin() {
 void Mqtt::onConnect() {
     portal.textAll(F("MQTT connected"));
 
-    cli.setWill(statusTopic.c_str(), 0, true, "offline");
-
     String topic = baseTopic + F("/+/set");
     cli.subscribe(topic.c_str(), 0);
 
@@ -157,8 +155,9 @@ String Mqtt::getBaseTopic() {
 void Mqtt::loop() {
     if (!cli.connected() && ((millis() - lastConTry) > 10000) && WiFi.isConnected() && configSet) {
         lastConTry = millis();
-        cli.connect();
         haDisc.defaultStateTopic = baseTopic + F("/state");
+        cli.setWill(statusTopic.c_str(), 0, true, "offline");
+        cli.connect();        
     }
 
     if (cli.connected()) {
