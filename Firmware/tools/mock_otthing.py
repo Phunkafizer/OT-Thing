@@ -537,7 +537,8 @@ _ADMIN_HTML = """<!DOCTYPE html>
   .load-btn { background: #1a2a3a; color: #4fc3f7; border: 1px solid #334; padding: 5px 14px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.82em; margin-bottom: 16px; margin-right: 8px; }
   .load-btn:hover { background: #0d1b2a; color: #fff; }
     .quick-set { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px; padding: 10px; border: 1px solid #334; border-radius: 8px; background: #1a1a2a; }
-    .quick-set input[type=text], .quick-set select { background: #0d1b2a; color: #eee; border: 1px solid #334; border-radius: 4px; padding: 5px 8px; font-family: inherit; font-size: 0.82em; }
+    .quick-set input[type=text], .quick-set input[type=number], .quick-set select { background: #0d1b2a; color: #eee; border: 1px solid #334; border-radius: 4px; padding: 5px 8px; font-family: inherit; font-size: 0.82em; }
+    .quick-set input[type=checkbox].value-input { width: 18px; height: 18px; min-width: 18px; accent-color: #4fc3f7; }
     .quick-set .path-input { flex: 2; min-width: 260px; }
     .quick-set .value-input { flex: 1; min-width: 180px; }
     .quick-set .quick-btn { background: #1a2a3a; color: #4fc3f7; border: 1px solid #334; padding: 5px 14px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.82em; }
@@ -576,13 +577,45 @@ const FIELDS = [
         { key: "coolingCtrl",  label: "Cooling ctrl (%)",  type: "number", step: 1 },
         { key: "coolingMode",  label: "Cooling mode",      type: "select", options: ["off","cool"] },
   ]},
+    { section: "Master status", rows: [
+        { key: "master.status.data.ch_enable",      label: "CH enable",      type: "bool" },
+        { key: "master.status.data.ch2_enable",     label: "CH2 enable",     type: "bool" },
+        { key: "master.status.data.dhw_enable",     label: "DHW enable",     type: "bool" },
+        { key: "master.status.data.cooling_enable", label: "Cooling enable", type: "bool" },
+        { key: "master.status.data.otc_active",     label: "OTC active",     type: "bool" },
+    ]},
+    { section: "Master vent status", rows: [
+        { key: "master.vent_status.data.vent_enable",      label: "Vent enable",      type: "bool" },
+        { key: "master.vent_status.data.open_bypass",      label: "Open bypass",      type: "bool" },
+        { key: "master.vent_status.data.auto_bypass",      label: "Auto bypass",      type: "bool" },
+        { key: "master.vent_status.data.free_vent_enable", label: "Free vent enable", type: "bool" },
+    ]},
   { section: "Slave status", rows: [
-    { key: "slave.status.flame",      label: "Flame",      type: "bool" },
-    { key: "slave.status.ch_mode",    label: "CH mode",    type: "bool" },
-    { key: "slave.status.ch2_mode",   label: "CH2 mode",   type: "bool" },
-    { key: "slave.status.dhw_mode",   label: "DHW mode",   type: "bool" },
-    { key: "slave.status.diagnostic", label: "Diagnostic", type: "bool" },
-        { key: "slave.slave_config_member.heat_cool_ctrl", label: "Heat/cool master ctrl", type: "bool" },
+        { key: "slave.status.fault",      label: "Fault",      type: "bool" },
+        { key: "slave.status.flame",      label: "Flame",      type: "bool" },
+        { key: "slave.status.diagnostic", label: "Diagnostic", type: "bool" },
+        { key: "slave.status.ch_mode",    label: "CH mode",    type: "bool" },
+        { key: "slave.status.ch2_mode",   label: "CH2 mode",   type: "bool" },
+        { key: "slave.status.dhw_mode",   label: "DHW mode",   type: "bool" },
+        { key: "slave.status.cooling",    label: "Cooling",    type: "bool" },
+    ]},
+    { section: "Slave vent status", rows: [
+        { key: "slave.vent_status.fault",       label: "Vent fault",      type: "bool" },
+        { key: "slave.vent_status.vent_active", label: "Vent active",     type: "bool" },
+        { key: "slave.vent_status.bypass_open", label: "Bypass open",     type: "bool" },
+        { key: "slave.vent_status.bypass_auto", label: "Bypass auto",     type: "bool" },
+        { key: "slave.vent_status.free_vent",   label: "Free vent",       type: "bool" },
+        { key: "slave.vent_status.diagnostic",  label: "Vent diagnostic", type: "bool" },
+    ]},
+    { section: "Slave config", rows: [
+        { key: "slave.slave_config_member.ch2_present",           label: "CH2 present",               type: "bool" },
+        { key: "slave.slave_config_member.dhw_present",           label: "DHW present",               type: "bool" },
+        { key: "slave.slave_config_member.cooling_config",        label: "Cooling config",            type: "bool" },
+        { key: "slave.slave_config_member.heat_cool_ctrl",        label: "Heat/cool master ctrl",     type: "bool" },
+        { key: "slave.slave_config_member.dhw_config",            label: "DHW config",                type: "bool" },
+        { key: "slave.slave_config_member.master_lowoff_pumpctrl",label: "Master low/off pump ctrl",  type: "bool" },
+        { key: "slave.slave_config_member.memberId",              label: "Member ID",                 type: "number", step: 1 },
+        { key: "slave.slave_config_member.ctrl_type",             label: "Ctrl type",                 type: "bool" },
   ]},
   { section: "Slave temps & modulation", rows: [
     { key: "slave.flow_t",   label: "Flow temp (°C)",        type: "number", step: 0.1 },
@@ -624,6 +657,108 @@ function deepGet(obj, path) {
   return path.split('.').reduce((o, k) => o != null ? (Array.isArray(o) ? o[+k] : o[k]) : undefined, obj);
 }
 
+function deepSet(obj, path, value) {
+    if (!obj || !path) return;
+    const keys = path.split('.');
+    let cur = obj;
+    for (let i = 0; i < keys.length - 1; i++) {
+        const k = keys[i];
+        cur = Array.isArray(cur) ? cur[+k] : cur[k];
+        if (cur == null) return;
+    }
+    const last = keys[keys.length - 1];
+    if (Array.isArray(cur)) cur[+last] = value;
+    else cur[last] = value;
+}
+
+function valueToInputString(value) {
+    if (value === undefined || value === null) return '';
+    if (typeof value === 'object') return JSON.stringify(value);
+    return String(value);
+}
+
+function inferCustomType(value) {
+    if (typeof value === 'boolean') return 'bool';
+    if (typeof value === 'number' && Number.isFinite(value)) return 'number';
+    if (typeof value === 'string') return 'string';
+    return 'json';
+}
+
+function setCustomValueWidget(type, value) {
+    const valueEl = document.getElementById('customValue');
+    if (!valueEl) return;
+
+    if (type === 'bool') {
+        valueEl.type = 'checkbox';
+        valueEl.checked = !!value;
+        valueEl.title = valueEl.checked ? 'true' : 'false';
+        return;
+    }
+
+    if (type === 'number') {
+        valueEl.type = 'number';
+        valueEl.step = 'any';
+        valueEl.value = (typeof value === 'number' && Number.isFinite(value)) ? String(value) : '';
+        valueEl.title = '';
+        return;
+    }
+
+    valueEl.type = 'text';
+    valueEl.value = valueToInputString(value);
+    valueEl.title = '';
+}
+
+let latestStatus = null;
+
+function syncCustomValueFromPath() {
+    const pathEl = document.getElementById('customPath');
+    const typeEl = document.getElementById('customType');
+    const valueEl = document.getElementById('customValue');
+    if (!pathEl || !valueEl || !latestStatus) return;
+
+    const path = pathEl.value.trim();
+    if (!path) return;
+
+    const val = deepGet(latestStatus, path);
+    if (val === undefined) return;
+
+    const detectedType = inferCustomType(val);
+    if (typeEl)
+        typeEl.value = detectedType;
+    setCustomValueWidget(detectedType, val);
+}
+
+function syncCustomValueInputFromType() {
+    const pathEl = document.getElementById('customPath');
+    const typeEl = document.getElementById('customType');
+    const valueEl = document.getElementById('customValue');
+    if (!typeEl || !valueEl) return;
+
+    const path = pathEl ? pathEl.value.trim() : '';
+    const pathValue = (latestStatus && path) ? deepGet(latestStatus, path) : undefined;
+    if (pathValue !== undefined) {
+        const t = typeEl.value === 'auto' ? inferCustomType(pathValue) : typeEl.value;
+        setCustomValueWidget(t, pathValue);
+        return;
+    }
+
+    if (typeEl.value === 'bool') {
+        valueEl.type = 'checkbox';
+        valueEl.checked = false;
+        valueEl.title = 'false';
+        return;
+    }
+    if (typeEl.value === 'number') {
+        valueEl.type = 'number';
+        valueEl.step = 'any';
+        valueEl.value = '';
+        valueEl.title = '';
+        return;
+    }
+    valueEl.type = 'text';
+    valueEl.title = '';
+}
+
 let toastTimer;
 function showToast(msg, err) {
   const t = document.getElementById('toast');
@@ -641,6 +776,7 @@ async function sendValue(key, value) {
       body: JSON.stringify({[key]: value})
     });
         if (r.ok) {
+            deepSet(latestStatus, key, value);
             showToast('✓  ' + key + ' = ' + JSON.stringify(value));
             return;
         }
@@ -753,7 +889,18 @@ async function setCustomPath() {
 
     let value;
     try {
-        value = parseCustomValue(valueEl.value, typeEl.value);
+        let effectiveType = typeEl.value;
+        if (effectiveType === 'auto' && latestStatus) {
+            const existing = deepGet(latestStatus, path);
+            if (existing !== undefined)
+                effectiveType = inferCustomType(existing);
+        }
+
+        if (effectiveType === 'bool' && valueEl.type === 'checkbox') {
+            value = valueEl.checked;
+        } else {
+            value = parseCustomValue(valueEl.value, effectiveType);
+        }
     }
     catch (err) {
         showToast('Invalid value: ' + err.message, true);
@@ -764,6 +911,7 @@ async function setCustomPath() {
 }
 
 function applyStatus(status) {
+        latestStatus = status;
   for (const section of FIELDS) {
     for (const row of section.rows) {
       const id = 'f_' + row.key.replace(/\\./g, '_');
@@ -775,10 +923,12 @@ function applyStatus(status) {
       else el.value = val;
     }
   }
+        syncCustomValueFromPath();
 }
 
 function buildUI(status) {
   const grid = document.getElementById('grid');
+        latestStatus = status;
     updatePathSuggestions(status);
   grid.innerHTML = '';
   for (const section of FIELDS) {
@@ -806,6 +956,7 @@ function buildUI(status) {
     }
     grid.appendChild(card);
   }
+        syncCustomValueFromPath();
     if (!grid.dataset.changeBound) {
         grid.addEventListener('change', async (e) => {
             const el = e.target;
@@ -849,12 +1000,24 @@ async function loadJsonFile(input, target) {
 
 (async () => {
     const customValue = document.getElementById('customValue');
+    const customPath = document.getElementById('customPath');
+    const customType = document.getElementById('customType');
     if (customValue) {
         customValue.addEventListener('keydown', (ev) => {
             if (ev.key === 'Enter')
                 setCustomPath();
         });
+        customValue.addEventListener('change', () => {
+            if (customValue.type === 'checkbox')
+                customValue.title = customValue.checked ? 'true' : 'false';
+        });
     }
+    if (customPath) {
+        customPath.addEventListener('change', syncCustomValueFromPath);
+        customPath.addEventListener('input', syncCustomValueFromPath);
+    }
+    if (customType)
+        customType.addEventListener('change', syncCustomValueInputFromType);
 
   const r = await fetch('/status');
   buildUI(await r.json());

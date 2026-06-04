@@ -4,6 +4,7 @@
 #include "heatingcurve.h"
 #include "sensors.h"
 #include "HADiscLocal.h"
+#include <vector>
 
 template <typename T1>
 class ChannelOverride {
@@ -47,6 +48,15 @@ private:
     bool minSuspended {false};
     bool outSuspended {false};
     HeatingCurve curve;
+    struct SchedulerEntry{
+        uint8_t days;
+        uint16_t time; // minutes after midnight
+        double temp;
+    };
+    std::vector<SchedulerEntry> schedule;
+    int8_t lastSchudleIdx { -1 };
+    bool scheduleActive {false};
+    int8_t getCurrentScheduleIdx() const;
 public:
     CHcontrol(const uint8_t channel);
     void setConfig(JsonObject &obj, const bool init);
