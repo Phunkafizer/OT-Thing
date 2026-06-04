@@ -12,7 +12,7 @@ static struct {
     const char *str;
 } topicList[] PROGMEM = {
     {Mqtt::TOPIC_OUTSIDETEMP, "outsideTemp"},
-    {Mqtt::TOPIC_DHWSETTEMP, "dwhSetTemp"},
+    {Mqtt::TOPIC_DHWSETTEMP, "dhwSetTemp"},
     {Mqtt::TOPIC_CHSETTEMP1, "chSetTemp1"},
     {Mqtt::TOPIC_CHSETTEMP2, "chSetTemp2"},
     {Mqtt::TOPIC_CHMINTEMP1, "chMinTemp1"},
