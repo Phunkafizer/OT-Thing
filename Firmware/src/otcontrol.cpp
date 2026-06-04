@@ -407,7 +407,7 @@ void OTControl::loop() {
                 }
             }
 
-            if (hasDHW && setDhwRequest) {
+            if (hasDHW && setDhwRequest &&!noDhwSet) {
                 double tmp = dhwOvrd.active ? dhwOvrd.temp : boilerCtrl.dhwTemp;
                 setDhwRequest.sendFloat(tmp);
                 return;
@@ -1357,6 +1357,8 @@ void OTControl::setConfig(JsonObject &config) {
     master.resetCounters();
     slave.resetCounters();
     master.hal.setRequestDelay(config[F("otDelay")] | 100);
+
+    noDhwSet = config[F("noDhwSet")] | false;
 
     init = true;
 }
