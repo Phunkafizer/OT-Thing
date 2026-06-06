@@ -1,3 +1,4 @@
+import gzip
 import os
 try:
     import minify_html
@@ -47,10 +48,25 @@ def copy_html():
             )
         elif env["PIOENV"] in ("release", "production"):
             print("minify_html not installed, skipping HTML minification")
+
+        compressed = gzip.compress(content.encode("utf-8"), compresslevel=9)
+        print(f"embed html: {len(content.encode('utf-8'))} bytes raw, {len(compressed)} bytes gzip")
+
         with open(os.path.join(env["PROJECT_DIR"], "include/html.h"), "w", encoding="utf-8") as fout:
-            fout.write('const char html[] PROGMEM = R"html(')
-            fout.write(content)
-            fout.write('\n)html";')
+            fout.write("#pragma once\n")
+            fout.write("#include <pgmspace.h>\n\n")
+            fout.write(f"const size_t html_gz_len = {len(compressed)};\n")
+            fout.write("const uint8_t html_gz[] PROGMEM = {\n")
+
+            for index in range(0, len(compressed), 16):
+                chunk = compressed[index:index + 16]
+                fout.write("    ")
+                fout.write(", ".join(f"0x{byte:02x}" for byte in chunk))
+                if index + 16 < len(compressed):
+                    fout.write(",")
+                fout.write("\n")
+
+            fout.write("};\n")
             
 def post_build(source, target, env):
     print("Version: " + env.GetProjectOption("custom_version"))

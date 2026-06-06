@@ -721,6 +721,62 @@
             margin-top: 4px;
         }
 
+        .metric-card.temp-trend-card {
+            padding: 10px;
+            background: linear-gradient(165deg, rgba(255, 153, 85, 0.18), rgba(17, 20, 26, 0.93));
+            border-color: rgba(255, 188, 131, 0.44);
+        }
+
+        .temp-chart-wrap {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 188, 131, 0.25);
+            background: linear-gradient(180deg, rgba(12, 14, 18, 0.82), rgba(10, 12, 16, 0.9));
+            padding: 4px;
+        }
+
+        #heroTempTrendChart {
+            display: block;
+            width: 100%;
+            height: 126px;
+        }
+
+        .temp-legend {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 5px 8px;
+            margin-top: 8px;
+        }
+
+        .temp-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .temp-legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            flex: 0 0 auto;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+        }
+
+        .temp-legend-name {
+            font-size: 0.66em;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #ddbba0;
+        }
+
+        .temp-legend-value {
+            margin-left: auto;
+            font-size: 0.74em;
+            color: #f0dfcd;
+            white-space: nowrap;
+        }
+
         .state-item {
             display: flex;
             flex-direction: column;
@@ -1042,6 +1098,45 @@
             letter-spacing: 0.05em;
             text-transform: uppercase;
             line-height: 1;
+        }
+
+        .schedule-program-wrap {
+            margin: 4px 0 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 188, 131, 0.25);
+            background: linear-gradient(180deg, rgba(12, 14, 18, 0.82), rgba(10, 12, 16, 0.9));
+            padding: 6px 8px 8px;
+        }
+
+        .schedule-program-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .schedule-program-title {
+            color: #e7c7ab;
+            font-size: 0.78em;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .schedule-program-status {
+            font-size: 0.72em;
+            color: #bfa892;
+        }
+
+        .schedule-program-status.off {
+            color: #d9b38d;
+        }
+
+        #scheduleProgramChart {
+            display: block;
+            width: 100%;
+            height: 156px;
         }
 
         .scan-badge {
@@ -1649,6 +1744,34 @@
                         <div class="state-item">
                             <span class="state-label">MQTT</span>
                             <span class="state-icon is-unknown" id="stateMqtt" title="unknown" aria-label="MQTT connection status">…</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-card metric-state-card temp-trend-card" id="heroTempTrendCard">
+                    <h5>Live trend</h5>
+                    <div class="temp-chart-wrap">
+                        <svg id="heroTempTrendChart" viewBox="0 0 320 126" preserveAspectRatio="none" aria-label="Temperature trend chart"></svg>
+                    </div>
+                    <div class="temp-legend">
+                        <div class="temp-legend-item">
+                            <span class="temp-legend-dot" style="background:#ffb76a"></span>
+                            <span class="temp-legend-name">Flow</span>
+                            <span class="temp-legend-value" id="heroTrendFlowVal">--</span>
+                        </div>
+                        <div class="temp-legend-item">
+                            <span class="temp-legend-dot" style="background:#ef4b4b"></span>
+                            <span class="temp-legend-name">DHW</span>
+                            <span class="temp-legend-value" id="heroTrendDhwVal">--</span>
+                        </div>
+                        <div class="temp-legend-item">
+                            <span class="temp-legend-dot" style="background:#98d5ff"></span>
+                            <span class="temp-legend-name">Return</span>
+                            <span class="temp-legend-value" id="heroTrendReturnVal">--</span>
+                        </div>
+                        <div class="temp-legend-item">
+                            <span class="temp-legend-dot" style="background:#9ce9c9"></span>
+                            <span class="temp-legend-name">Flow set</span>
+                            <span class="temp-legend-value" id="heroTrendFlowSetVal">--</span>
                         </div>
                     </div>
                 </div>
@@ -2655,6 +2778,14 @@
                     </div>
                 </div>
 
+                <div class="schedule-program-wrap">
+                    <div class="schedule-program-head">
+                        <span class="schedule-program-title">Weekly room set program</span>
+                        <span class="schedule-program-status" id="scheduleProgramStatus">No entries</span>
+                    </div>
+                    <svg id="scheduleProgramChart" viewBox="0 0 700 156" preserveAspectRatio="none" aria-label="Weekly programmed room set temperature"></svg>
+                </div>
+
                 <table class="data-table marker-table">
                     <thead>
                         <tr>
@@ -3197,7 +3328,7 @@
         const 
         CURVE_MODE_SIMPLE = 0,
         CURVE_MODE_MULTIPOINT = 1,
-        UI_STATE_VERSION = 5,
+        UI_STATE_VERSION = 6,
         UI_STATE_STORAGE_KEY = "otthing.uiState",
         LOG_MAX_LINES = 1000,
         UI_TIMINGS = {
@@ -3347,11 +3478,17 @@
             ]
         };
         const PINNED_HISTORY_MAX = 100;
+        const HERO_TEMP_HISTORY_MAX = 120;
+        const DEFAULT_HERO_TEMP_HISTORY_BY_CH = [
+            { flow: [], dhw: [], ret: [], flowSet: [], ch: [], dhwMode: [], flame: [] },
+            { flow: [], dhw: [], ret: [], flowSet: [], ch: [], dhwMode: [], flame: [] }
+        ];
         let config = defaultConfig,
         statuscache = {},
         roomsetpoint = [21, 21], // used for drawing curve
         pinnedHeroFields = new Set(),
         pinnedHeroHistory = {},
+        heroTempHistoryByCh = DEFAULT_HERO_TEMP_HISTORY_BY_CH.map((entry) => Object.assign({}, entry)),
         currentCh = 0,
         scheduleEditIndex = [null, null],
         autoscroll = true,
@@ -3501,6 +3638,290 @@
             return Number.isFinite(num) ? num : null;
         }
 
+        function formatTrendTemp(value) {
+            if (value == null)
+                return "--";
+            return `${Math.round(value * 10) / 10} °C`;
+        }
+
+        function appendTempHistorySample(history, key, value) {
+            if (!history || !history[key])
+                return;
+
+            const arr = history[key];
+            arr.push(value == null ? null : value);
+            if (arr.length > HERO_TEMP_HISTORY_MAX)
+                arr.shift();
+        }
+
+        function drawHeroTempTrendChart(svg, history) {
+            if (!svg || !history)
+                return;
+
+            svg.innerHTML = "";
+
+            const width = 320;
+            const height = 126;
+            const padLeft = 28;
+            const padRight = 6;
+            const padTop = 6;
+            const padBottom = 16;
+            const barRowHeight = 8;
+            const barRowGap = 3;
+            const barRowsTop = padTop;
+            const barDefs = [
+                { key: "ch", label: "CH", color: "#44d45f" },
+                { key: "dhwMode", label: "DHW", color: "#ef4b4b" },
+                { key: "flame", label: "FL", color: "#ffb347" }
+            ];
+            const barsHeight = (barDefs.length * barRowHeight) + ((barDefs.length - 1) * barRowGap);
+            const separatorGap = 11;
+            const linePadTop = barRowsTop + barsHeight + separatorGap;
+            const plotW = width - padLeft - padRight;
+            const plotH = height - linePadTop - padBottom;
+            const lineSeries = [
+                { key: "flow", color: "#ffb76a" },
+                { key: "dhw", color: "#ef4b4b" },
+                { key: "ret", color: "#98d5ff" },
+                { key: "flowSet", color: "#9ce9c9" }
+            ];
+
+            const numericValuesFor = (keys) => keys
+                .flatMap((key) => history[key] || [])
+                .filter((value) => typeof value === "number" && Number.isFinite(value));
+
+            const primaryScaleValues = numericValuesFor(["flow", "dhw", "ret"]);
+            const allValues = numericValuesFor(lineSeries.map((series) => series.key));
+            const scaleValues = primaryScaleValues.length > 0 ? primaryScaleValues : allValues;
+
+            if (allValues.length === 0) {
+                const emptyText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                emptyText.setAttribute("x", "50%");
+                emptyText.setAttribute("y", "50%");
+                emptyText.setAttribute("dominant-baseline", "middle");
+                emptyText.setAttribute("text-anchor", "middle");
+                emptyText.setAttribute("fill", "rgba(220,190,165,0.72)");
+                emptyText.setAttribute("font-size", "10");
+                emptyText.textContent = "Waiting for temperature values";
+                svg.appendChild(emptyText);
+                return;
+            }
+
+            let minVal = Math.min(...scaleValues);
+            let maxVal = Math.max(...scaleValues);
+
+            // Use adaptive scaling so real value changes stay visible on the live trend.
+            if (Math.abs(maxVal - minVal) < 0.6) {
+                const center = (maxVal + minVal) / 2;
+                minVal = center - 0.3;
+                maxVal = center + 0.3;
+            }
+            else {
+                const pad = (maxVal - minVal) * 0.12;
+                minVal -= pad;
+                maxVal += pad;
+            }
+
+            const yFor = (value) => {
+                const ratio = (value - minVal) / (maxVal - minVal);
+                return linePadTop + (1 - ratio) * plotH;
+            };
+
+            const maxLen = Math.max(
+                ...lineSeries.map((series) => (history[series.key] || []).length),
+                ...barDefs.map((barDef) => (history[barDef.key] || []).length)
+            );
+            const xFor = (idx) => {
+                if (maxLen <= 1)
+                    return padLeft;
+                return padLeft + (idx / (maxLen - 1)) * plotW;
+            };
+
+            // Draw bool timelines (CH, DHW, Flame) as horizontal bars above the temperature lines.
+            const stepW = (maxLen <= 1) ? plotW : (plotW / Math.max(1, maxLen - 1));
+            barDefs.forEach((barDef, barIdx) => {
+                const y = barRowsTop + (barIdx * (barRowHeight + barRowGap));
+
+                const track = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                track.setAttribute("x", String(padLeft));
+                track.setAttribute("y", y.toFixed(2));
+                track.setAttribute("width", String(plotW));
+                track.setAttribute("height", String(barRowHeight));
+                track.setAttribute("rx", "2");
+                track.setAttribute("fill", "rgba(255,255,255,0.06)");
+                track.setAttribute("stroke", "rgba(255,188,131,0.20)");
+                track.setAttribute("stroke-width", "0.8");
+                svg.appendChild(track);
+
+                const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                label.setAttribute("x", "2");
+                label.setAttribute("y", (y + barRowHeight - 1).toFixed(2));
+                label.setAttribute("fill", "rgba(220,190,165,0.86)");
+                label.setAttribute("font-size", "8");
+                label.textContent = barDef.label;
+                svg.appendChild(label);
+
+                const samples = history[barDef.key] || [];
+                let runStart = null;
+                const flushRun = (runEndIdx) => {
+                    if (runStart === null)
+                        return;
+
+                    const x0 = xFor(runStart);
+                    const x1 = (runEndIdx >= maxLen - 1) ? (xFor(runEndIdx) + stepW) : xFor(runEndIdx + 1);
+                    const activeRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    activeRect.setAttribute("x", (x0 + 0.5).toFixed(2));
+                    activeRect.setAttribute("y", (y + 1).toFixed(2));
+                    activeRect.setAttribute("width", Math.max(1, x1 - x0 - 1).toFixed(2));
+                    activeRect.setAttribute("height", String(barRowHeight - 2));
+                    activeRect.setAttribute("rx", "1");
+                    activeRect.setAttribute("fill", barDef.color);
+                    svg.appendChild(activeRect);
+                    runStart = null;
+                };
+
+                samples.forEach((value, idx) => {
+                    if (value === true) {
+                        if (runStart === null)
+                            runStart = idx;
+                        return;
+                    }
+
+                    flushRun(idx - 1);
+                });
+                flushRun(samples.length - 1);
+            });
+
+            const separatorTop = barRowsTop + barsHeight + 1;
+            const separatorBottom = linePadTop - 2;
+            if (separatorBottom > separatorTop) {
+                const separatorBand = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                separatorBand.setAttribute("x", String(padLeft));
+                separatorBand.setAttribute("y", separatorTop.toFixed(2));
+                separatorBand.setAttribute("width", String(plotW));
+                separatorBand.setAttribute("height", (separatorBottom - separatorTop).toFixed(2));
+                separatorBand.setAttribute("fill", "rgba(18,18,18,0.14)");
+                svg.appendChild(separatorBand);
+            }
+
+            const dividerY = linePadTop - 2;
+            const divider = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            divider.setAttribute("x1", String(padLeft));
+            divider.setAttribute("x2", String(width - padRight));
+            divider.setAttribute("y1", dividerY.toFixed(2));
+            divider.setAttribute("y2", dividerY.toFixed(2));
+            divider.setAttribute("stroke", "rgba(255,188,131,0.34)");
+            divider.setAttribute("stroke-width", "1");
+            svg.appendChild(divider);
+
+            for (let i = 0; i <= 3; i++) {
+                const y = linePadTop + (i / 3) * plotH;
+                const v = maxVal - (i / 3) * (maxVal - minVal);
+
+                const grid = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                grid.setAttribute("x1", String(padLeft));
+                grid.setAttribute("x2", String(width - padRight));
+                grid.setAttribute("y1", y.toFixed(2));
+                grid.setAttribute("y2", y.toFixed(2));
+                grid.setAttribute("stroke", "rgba(255,188,131,0.18)");
+                grid.setAttribute("stroke-width", "1");
+                svg.appendChild(grid);
+
+                const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                label.setAttribute("x", "2");
+                label.setAttribute("y", (y + 3).toFixed(2));
+                label.setAttribute("fill", "rgba(220,190,165,0.74)");
+                label.setAttribute("font-size", "8");
+                label.textContent = `${Math.round(v)}°`;
+                svg.appendChild(label);
+            }
+
+            lineSeries.forEach((series) => {
+                const samples = history[series.key] || [];
+                if (samples.length < 2)
+                    return;
+
+                let points = [];
+                const flushSegment = () => {
+                    if (points.length < 2) {
+                        points = [];
+                        return;
+                    }
+
+                    const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+                    polyline.setAttribute("fill", "none");
+                    polyline.setAttribute("stroke", series.color);
+                    polyline.setAttribute("stroke-width", "1.9");
+                    polyline.setAttribute("stroke-linecap", "round");
+                    polyline.setAttribute("stroke-linejoin", "round");
+                    polyline.setAttribute("points", points.join(" "));
+                    svg.appendChild(polyline);
+                    points = [];
+                };
+
+                samples.forEach((value, idx) => {
+                    if (value == null || !Number.isFinite(value)) {
+                        flushSegment();
+                        return;
+                    }
+
+                    points.push(`${xFor(idx).toFixed(2)},${yFor(value).toFixed(2)}`);
+                });
+                flushSegment();
+
+                for (let idx = samples.length - 1; idx >= 0; idx--) {
+                    const value = samples[idx];
+                    if (value == null || !Number.isFinite(value))
+                        continue;
+
+                    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    dot.setAttribute("cx", xFor(idx).toFixed(2));
+                    dot.setAttribute("cy", yFor(value).toFixed(2));
+                    dot.setAttribute("r", "2");
+                    dot.setAttribute("fill", series.color);
+                    svg.appendChild(dot);
+                    break;
+                }
+            });
+        }
+
+        function updateHeroTempTrendCard() {
+            const flowVal = parseNumber((currentCh === 0) ? statuscache?.slave?.flow_t : statuscache?.slave?.flow_t2);
+            const dhwVal = parseNumber((currentCh === 0) ? statuscache?.slave?.dhw_t : statuscache?.slave?.dhw_t2);
+            const returnVal = parseNumber(statuscache?.heatercircuit?.[0]?.returnTemp);
+            const flowSetVal = parseNumber((currentCh === 0) ? statuscache?.master?.ch_set_t?.data : statuscache?.master?.ch_set_t2?.data);
+            const chActive = (currentCh === 0)
+                ? statuscache?.slave?.status?.ch_mode === true
+                : statuscache?.slave?.status?.ch2_mode === true;
+            const dhwActive = statuscache?.slave?.status?.dhw_mode === true;
+            const flameActive = statuscache?.slave?.status?.flame === true;
+
+            const activeHistory = heroTempHistoryByCh[currentCh] || heroTempHistoryByCh[0];
+            appendTempHistorySample(activeHistory, "flow", flowVal);
+            appendTempHistorySample(activeHistory, "dhw", dhwVal);
+            appendTempHistorySample(activeHistory, "ret", returnVal);
+            appendTempHistorySample(activeHistory, "flowSet", flowSetVal);
+            appendTempHistorySample(activeHistory, "ch", chActive);
+            appendTempHistorySample(activeHistory, "dhwMode", dhwActive);
+            appendTempHistorySample(activeHistory, "flame", flameActive);
+
+            const flowLegend = _("#heroTrendFlowVal");
+            const dhwLegend = _("#heroTrendDhwVal");
+            const returnLegend = _("#heroTrendReturnVal");
+            const flowSetLegend = _("#heroTrendFlowSetVal");
+
+            if (flowLegend) flowLegend.textContent = formatTrendTemp(flowVal);
+            if (dhwLegend) dhwLegend.textContent = formatTrendTemp(dhwVal);
+            if (returnLegend) returnLegend.textContent = formatTrendTemp(returnVal);
+            if (flowSetLegend) flowSetLegend.textContent = formatTrendTemp(flowSetVal);
+
+            drawHeroTempTrendChart(_("#heroTempTrendChart"), activeHistory);
+
+            saveUiState({
+                heroTempHistoryByCh: normalizeHeroTempHistory(heroTempHistoryByCh)
+            });
+        }
+
         function initInfoboxTooltips() {
             __('.infobox').forEach((box) => {
                 const heading = box.previousElementSibling;
@@ -3548,6 +3969,11 @@
                 state.version = 5;
             }
 
+            if (state.version === 5) {
+                state.heroTempHistoryByCh = normalizeHeroTempHistory(state.heroTempHistoryByCh);
+                state.version = 6;
+            }
+
             if (typeof state.activeTab !== "string" || state.activeTab.length === 0)
                 state.activeTab = "status";
 
@@ -3558,6 +3984,7 @@
                 state.pinnedHeroFields = [];
             state.pinnedHeroFields = normalizePinnedHeroFields(state.pinnedHeroFields);
             state.pinnedHeroHistory = normalizePinnedHeroHistory(state.pinnedHeroHistory, state.pinnedHeroFields);
+            state.heroTempHistoryByCh = normalizeHeroTempHistory(state.heroTempHistoryByCh);
 
             state.currentCh = Math.max(0, Math.min(1, state.currentCh));
             state.version = UI_STATE_VERSION;
@@ -3618,6 +4045,60 @@
             });
 
             return result;
+        }
+
+        function normalizeHeroTempHistory(rawHistory) {
+            const alignEntry = (entry) => {
+                const keys = ["flow", "dhw", "ret", "flowSet", "ch", "dhwMode", "flame"];
+                const maxLen = Math.max(...keys.map((key) => (Array.isArray(entry[key]) ? entry[key].length : 0)), 0);
+                if (maxLen <= 0)
+                    return entry;
+
+                keys.forEach((key) => {
+                    const arr = Array.isArray(entry[key]) ? entry[key] : [];
+                    if (arr.length < maxLen) {
+                        entry[key] = Array(maxLen - arr.length).fill(null).concat(arr);
+                    }
+                });
+
+                return entry;
+            };
+
+            const fallback = () => ({ flow: [], dhw: [], ret: [], flowSet: [], ch: [], dhwMode: [], flame: [] });
+            const source = Array.isArray(rawHistory) ? rawHistory : [];
+
+            return [0, 1].map((idx) => {
+                const rawEntry = source[idx];
+                const normalized = fallback();
+
+                if (!rawEntry || typeof rawEntry !== "object" || Array.isArray(rawEntry))
+                    return normalized;
+
+                Object.keys(normalized).forEach((key) => {
+                    const values = Array.isArray(rawEntry[key]) ? rawEntry[key] : [];
+                    if (key === "ch" || key === "dhwMode" || key === "flame") {
+                        normalized[key] = values
+                            .slice(-HERO_TEMP_HISTORY_MAX)
+                            .map((value) => {
+                                if (value === null || value === undefined || value === "")
+                                    return null;
+                                return value === true || value === "true" || value === 1 || value === "1";
+                            });
+                    }
+                    else {
+                        normalized[key] = values
+                            .slice(-HERO_TEMP_HISTORY_MAX)
+                            .map((value) => {
+                                if (value === null || value === undefined || value === "")
+                                    return null;
+                                const num = Number.parseFloat(value);
+                                return Number.isFinite(num) ? num : null;
+                            });
+                    }
+                });
+
+                return alignEntry(normalized);
+            });
         }
 
         function syncPinnedHeroFieldsToConfig() {
@@ -4028,7 +4509,7 @@
             flashCardOnChange(card, `${activeMode ?? ""}|${action ?? ""}`);
         }
 
-        function updateHeroMetrics() {
+        function updateHeroMetrics(redrawTrend = true) {
             for (let ch = 0; ch < 2; ch++) {
                 const roomSet = statuscache?.heatercircuit?.[ch]?.roomsetpoint;
                 const roomMode = normalizeRoomMode(statuscache?.heatercircuit?.[ch]?.roomMode);
@@ -4068,6 +4549,8 @@
             updateMetric("heroFlow", "heroFlowTrendIcon", parseNumber(flow), "°C", `flow${currentCh}`);
             updateMetric("heroOutside", "heroOutsideTrendIcon", parseNumber(outside), "°C", "outside");
             updateMetric("heroMod", "heroModTrendIcon", parseNumber(mod), "%", "mod");
+            if (redrawTrend)
+                updateHeroTempTrendCard();
             updatePinnedHeroHistory();
             updatePinnedHeroCardsDisplay();
         }
@@ -4867,7 +5350,7 @@
 
                     chSet.data = nextValue;
                     chSet.result = true;
-                    updateHeroMetrics();
+                    updateHeroMetrics(false);
                     flashElement("#heroFlowSetCard");
                 })
                 .catch((err) => {
@@ -4892,7 +5375,7 @@
                         statuscache.heatercircuit[0] = {};
 
                     statuscache.heatercircuit[0].ctrlMode = modeKey;
-                    updateHeroMetrics();
+                    updateHeroMetrics(false);
                     flashElement("#heroFlowSetCard");
                     addRecentEvent(`Flow mode ${modeKey}`);
                 })
@@ -4916,7 +5399,7 @@
                         throw new Error("HTTP " + resp.status);
 
                     statuscache.coolingCtrl = nextValue;
-                    updateHeroMetrics();
+                    updateHeroMetrics(false);
                     flashElement("#heroCoolingCard");
                 })
                 .catch((err) => {
@@ -4936,7 +5419,7 @@
                         throw new Error("HTTP " + resp.status);
 
                     statuscache.coolingMode = modeKey;
-                    updateHeroMetrics();
+                    updateHeroMetrics(false);
                     flashElement("#heroCoolingCard");
                     addRecentEvent(`Cooling mode ${modeKey}`);
                 })
@@ -5029,7 +5512,7 @@
 
                     statuscache.heatercircuit[ch].roomsetpoint = nextValue;
                     roomsetpoint[ch] = nextValue;
-                    updateHeroMetrics();
+                    updateHeroMetrics(false);
                     drawCurve();
                     flashElement(`#heroRoomSetCard${ch + 1}`);
                 })
@@ -5055,7 +5538,7 @@
                         statuscache.heatercircuit[ch] = {};
 
                     statuscache.heatercircuit[ch].roomMode = modeKey;
-                    updateHeroMetrics();
+                    updateHeroMetrics(false);
                     flashElement(`#heroRoomSetCard${ch + 1}`);
                     addRecentEvent(`Room ${ch + 1} mode ${modeKey}`);
                 })
@@ -5209,6 +5692,316 @@
                 .map((d) => names[Number.parseInt(d, 10)])
                 .filter(Boolean)
                 .join(", ");
+        }
+
+        function getScheduleRoomAtMinute(sched, isoDay, minuteOfDay) {
+            if (!sched || !Array.isArray(sched.entries) || sched.entries.length === 0)
+                return null;
+
+            for (let back = 0; back < 7; back++) {
+                const day = (isoDay - back + 7) % 7;
+                const threshold = (back === 0) ? minuteOfDay : 1439;
+                let candidate = null;
+                let bestMins = -1;
+
+                sched.entries.forEach((entry) => {
+                    const mins = parseScheduleTime(entry?.time);
+                    if (mins == null)
+                        return;
+                    if (!String(entry?.days ?? "").includes(String(day)))
+                        return;
+                    if (mins <= threshold && mins > bestMins) {
+                        bestMins = mins;
+                        candidate = entry;
+                    }
+                });
+
+                if (candidate)
+                    return Number.parseFloat(candidate.room);
+            }
+
+            return null;
+        }
+
+        function drawScheduleProgramChart(ch = currentCh) {
+            const svg = _("#scheduleProgramChart");
+            const statusLabel = _("#scheduleProgramStatus");
+            if (!svg)
+                return;
+
+            const sched = normalizeSchedule(ch);
+            const entries = sched.entries || [];
+            const selectedIdx = scheduleEditIndex[ch];
+            const selectedEntry = (Number.isInteger(selectedIdx) && selectedIdx >= 0 && selectedIdx < entries.length)
+                ? entries[selectedIdx]
+                : null;
+            svg.innerHTML = "";
+
+            const width = 700;
+            const height = 156;
+            const padLeft = 34;
+            const padRight = 10;
+            const padTop = 16;
+            const padBottom = 22;
+            const plotW = width - padLeft - padRight;
+            const plotH = height - padTop - padBottom;
+            const totalMinutes = 7 * 24 * 60;
+
+            if (statusLabel) {
+                statusLabel.classList.toggle("off", sched.enabled !== true);
+                statusLabel.textContent = entries.length === 0
+                    ? "No entries"
+                    : (sched.enabled ? "Program active" : "Program disabled");
+            }
+
+            if (entries.length === 0) {
+                const emptyText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                emptyText.setAttribute("x", "50%");
+                emptyText.setAttribute("y", "50%");
+                emptyText.setAttribute("dominant-baseline", "middle");
+                emptyText.setAttribute("text-anchor", "middle");
+                emptyText.setAttribute("fill", "rgba(220,190,165,0.72)");
+                emptyText.setAttribute("font-size", "11");
+                emptyText.textContent = "Add schedule slots to see the weekly set temperature profile";
+                svg.appendChild(emptyText);
+                return;
+            }
+
+            const dayCodes = ["1", "2", "3", "4", "5", "6", "0"];
+            const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+            const xForMinute = (mins) => padLeft + (Math.max(0, Math.min(totalMinutes, mins)) / totalMinutes) * plotW;
+
+            const startRoom = getScheduleRoomAtMinute(sched, 1, 0);
+            let currentRoom = Number.isFinite(startRoom) ? startRoom : Number.parseFloat(entries[0].room);
+            if (!Number.isFinite(currentRoom))
+                currentRoom = 21.0;
+
+            const events = [];
+            const selectedEvents = [];
+            for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+                const dayCode = dayCodes[dayIdx];
+                entries.forEach((entry) => {
+                    if (!String(entry.days).includes(dayCode))
+                        return;
+                    const mins = parseScheduleTime(entry.time);
+                    if (mins == null)
+                        return;
+                    const room = Number.parseFloat(entry.room);
+                    if (!Number.isFinite(room))
+                        return;
+
+                    events.push({
+                        minute: (dayIdx * 1440) + mins,
+                        room
+                    });
+
+                    if (selectedEntry && entry === selectedEntry) {
+                        selectedEvents.push({
+                            minute: (dayIdx * 1440) + mins,
+                            room
+                        });
+                    }
+                });
+            }
+
+            events.sort((a, b) => a.minute - b.minute);
+
+            const roomValues = [currentRoom, ...events.map((e) => e.room)];
+            let minRoom = Math.min(...roomValues);
+            let maxRoom = Math.max(...roomValues);
+            if (Math.abs(maxRoom - minRoom) < 0.8) {
+                const center = (minRoom + maxRoom) / 2;
+                minRoom = center - 0.5;
+                maxRoom = center + 0.5;
+            }
+            else {
+                minRoom -= 0.3;
+                maxRoom += 0.3;
+            }
+
+            const yForRoom = (room) => {
+                const ratio = (room - minRoom) / (maxRoom - minRoom);
+                return padTop + (1 - ratio) * plotH;
+            };
+
+            for (let i = 0; i <= 4; i++) {
+                const room = minRoom + ((i / 4) * (maxRoom - minRoom));
+                const y = yForRoom(room);
+                const hline = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                hline.setAttribute("x1", String(padLeft));
+                hline.setAttribute("x2", String(width - padRight));
+                hline.setAttribute("y1", y.toFixed(2));
+                hline.setAttribute("y2", y.toFixed(2));
+                hline.setAttribute("stroke", "rgba(255,188,131,0.14)");
+                hline.setAttribute("stroke-width", "1");
+                svg.appendChild(hline);
+
+                const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                label.setAttribute("x", "2");
+                label.setAttribute("y", (y + 3).toFixed(2));
+                label.setAttribute("fill", "rgba(220,190,165,0.72)");
+                label.setAttribute("font-size", "9");
+                label.textContent = `${(Math.round(room * 10) / 10).toFixed(1)}°`;
+                svg.appendChild(label);
+            }
+
+            for (let day = 0; day <= 7; day++) {
+                const x = xForMinute(day * 1440);
+                const vline = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                vline.setAttribute("x1", x.toFixed(2));
+                vline.setAttribute("x2", x.toFixed(2));
+                vline.setAttribute("y1", String(padTop));
+                vline.setAttribute("y2", String(height - padBottom));
+                vline.setAttribute("stroke", day === 0 || day === 7 ? "rgba(255,188,131,0.34)" : "rgba(255,188,131,0.22)");
+                vline.setAttribute("stroke-width", day === 0 || day === 7 ? "1.2" : "1");
+                svg.appendChild(vline);
+
+                if (day < 7) {
+                    const name = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    name.setAttribute("x", (x + 4).toFixed(2));
+                    name.setAttribute("y", String(height - 6));
+                    name.setAttribute("fill", "rgba(220,190,165,0.74)");
+                    name.setAttribute("font-size", "9");
+                    name.textContent = dayNames[day];
+                    svg.appendChild(name);
+                }
+            }
+
+            const points = [`${xForMinute(0).toFixed(2)},${yForRoom(currentRoom).toFixed(2)}`];
+            for (let i = 0; i < events.length;) {
+                const minute = events[i].minute;
+                let nextRoom = events[i].room;
+                i += 1;
+                while (i < events.length && events[i].minute === minute) {
+                    nextRoom = events[i].room;
+                    i += 1;
+                }
+
+                const x = xForMinute(minute);
+                points.push(`${x.toFixed(2)},${yForRoom(currentRoom).toFixed(2)}`);
+                currentRoom = nextRoom;
+                points.push(`${x.toFixed(2)},${yForRoom(currentRoom).toFixed(2)}`);
+            }
+            points.push(`${xForMinute(totalMinutes).toFixed(2)},${yForRoom(currentRoom).toFixed(2)}`);
+
+            const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+            polyline.setAttribute("fill", "none");
+            polyline.setAttribute("stroke", sched.enabled ? "#9ce9c9" : "#d9b38d");
+            polyline.setAttribute("stroke-width", "2");
+            polyline.setAttribute("stroke-linecap", "round");
+            polyline.setAttribute("stroke-linejoin", "round");
+            if (!sched.enabled)
+                polyline.setAttribute("stroke-dasharray", "5 3");
+            polyline.setAttribute("points", points.join(" "));
+            svg.appendChild(polyline);
+
+            const selectedColor = "#ffd166";
+            selectedEvents.forEach((event) => {
+                const nextEvent = events.find((candidate) => candidate.minute > event.minute);
+                const x = xForMinute(event.minute);
+                const y = yForRoom(event.room);
+                const endMinute = nextEvent ? nextEvent.minute : totalMinutes;
+                const endX = xForMinute(endMinute);
+
+                if (endX > x) {
+                    const segmentGlow = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    segmentGlow.setAttribute("x1", x.toFixed(2));
+                    segmentGlow.setAttribute("x2", endX.toFixed(2));
+                    segmentGlow.setAttribute("y1", y.toFixed(2));
+                    segmentGlow.setAttribute("y2", y.toFixed(2));
+                    segmentGlow.setAttribute("stroke", "rgba(255,209,102,0.20)");
+                    segmentGlow.setAttribute("stroke-width", "9");
+                    segmentGlow.setAttribute("stroke-linecap", "round");
+                    svg.appendChild(segmentGlow);
+
+                    const segment = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    segment.setAttribute("x1", x.toFixed(2));
+                    segment.setAttribute("x2", endX.toFixed(2));
+                    segment.setAttribute("y1", y.toFixed(2));
+                    segment.setAttribute("y2", y.toFixed(2));
+                    segment.setAttribute("stroke", selectedColor);
+                    segment.setAttribute("stroke-width", "3.2");
+                    segment.setAttribute("stroke-linecap", "round");
+                    svg.appendChild(segment);
+                }
+
+                const guide = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                guide.setAttribute("x1", x.toFixed(2));
+                guide.setAttribute("x2", x.toFixed(2));
+                guide.setAttribute("y1", String(padTop));
+                guide.setAttribute("y2", String(height - padBottom));
+                guide.setAttribute("stroke", "rgba(255,209,102,0.46)");
+                guide.setAttribute("stroke-width", "1.2");
+                guide.setAttribute("stroke-dasharray", "4 3");
+                svg.appendChild(guide);
+
+                const halo = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                halo.setAttribute("cx", x.toFixed(2));
+                halo.setAttribute("cy", y.toFixed(2));
+                halo.setAttribute("r", "6.5");
+                halo.setAttribute("fill", "rgba(255,209,102,0.22)");
+                halo.setAttribute("stroke", "rgba(255,209,102,0.72)");
+                halo.setAttribute("stroke-width", "1.2");
+                svg.appendChild(halo);
+
+                const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                dot.setAttribute("cx", x.toFixed(2));
+                dot.setAttribute("cy", y.toFixed(2));
+                dot.setAttribute("r", "3.2");
+                dot.setAttribute("fill", selectedColor);
+                dot.setAttribute("stroke", "rgba(20,20,20,0.85)");
+                dot.setAttribute("stroke-width", "1");
+                svg.appendChild(dot);
+            });
+
+            const now = new Date();
+            const nowIsoDay = getIsoWeekday(now.getDay());
+            const nowDayIdx = (nowIsoDay + 6) % 7;
+            const nowMinuteOfDay = now.getHours() * 60 + now.getMinutes() + (now.getSeconds() / 60);
+            const nowWeekMinute = (nowDayIdx * 1440) + nowMinuteOfDay;
+            const nowX = xForMinute(nowWeekMinute);
+
+            const nowGuide = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            nowGuide.setAttribute("x1", nowX.toFixed(2));
+            nowGuide.setAttribute("x2", nowX.toFixed(2));
+            nowGuide.setAttribute("y1", String(padTop));
+            nowGuide.setAttribute("y2", String(height - padBottom));
+            nowGuide.setAttribute("stroke", "rgba(255,120,120,0.95)");
+            nowGuide.setAttribute("stroke-width", "1.4");
+            nowGuide.setAttribute("stroke-dasharray", "5 3");
+            svg.appendChild(nowGuide);
+
+            const nowRoom = getScheduleRoomAtMinute(sched, nowIsoDay, Math.floor(nowMinuteOfDay));
+            if (Number.isFinite(nowRoom)) {
+                const nowY = yForRoom(nowRoom);
+
+                const nowHalo = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                nowHalo.setAttribute("cx", nowX.toFixed(2));
+                nowHalo.setAttribute("cy", nowY.toFixed(2));
+                nowHalo.setAttribute("r", "6");
+                nowHalo.setAttribute("fill", "rgba(255,120,120,0.20)");
+                nowHalo.setAttribute("stroke", "rgba(255,120,120,0.75)");
+                nowHalo.setAttribute("stroke-width", "1.1");
+                svg.appendChild(nowHalo);
+
+                const nowDot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                nowDot.setAttribute("cx", nowX.toFixed(2));
+                nowDot.setAttribute("cy", nowY.toFixed(2));
+                nowDot.setAttribute("r", "2.8");
+                nowDot.setAttribute("fill", "#ff7878");
+                nowDot.setAttribute("stroke", "rgba(20,20,20,0.85)");
+                nowDot.setAttribute("stroke-width", "1");
+                svg.appendChild(nowDot);
+            }
+
+            const nowLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            const nowLabelX = Math.min(width - padRight - 4, Math.max(padLeft + 4, nowX + 4));
+            nowLabel.setAttribute("x", nowLabelX.toFixed(2));
+            nowLabel.setAttribute("y", String(padTop - 4));
+            nowLabel.setAttribute("fill", "rgba(255,160,160,0.95)");
+            nowLabel.setAttribute("font-size", "9");
+            nowLabel.textContent = `Now ${fmtScheduleTime(Math.floor(nowMinuteOfDay))}`;
+            svg.appendChild(nowLabel);
         }
 
         function getHeatingSchedule(ch = currentCh) {
@@ -5644,11 +6437,13 @@
             currentCh = uiState.currentCh;
             pinnedHeroFields = new Set(uiState.pinnedHeroFields || []);
             pinnedHeroHistory = normalizePinnedHeroHistory(uiState.pinnedHeroHistory, uiState.pinnedHeroFields);
+            heroTempHistoryByCh = normalizeHeroTempHistory(uiState.heroTempHistoryByCh);
             if (pinnedHeroFields.size === 0) {
                 pinnedHeroFields = new Set(["slave.flow_t", "slave.rel_mod", "slave.ch_pressure"]);
                 saveUiState({
                     pinnedHeroFields: Array.from(pinnedHeroFields),
-                    pinnedHeroHistory: normalizePinnedHeroHistory(pinnedHeroHistory, Array.from(pinnedHeroFields))
+                    pinnedHeroHistory: normalizePinnedHeroHistory(pinnedHeroHistory, Array.from(pinnedHeroFields)),
+                    heroTempHistoryByCh: normalizeHeroTempHistory(heroTempHistoryByCh)
                 });
             }
             syncPinnedHeroFieldsToConfig();
@@ -5829,6 +6624,7 @@
                     return;
 
                 const sched = normalizeSchedule(currentCh);
+                drawScheduleProgramChart(currentCh);
                 body.innerHTML = "";
 
                 if (sched.entries.length === 0) {
@@ -6253,7 +7049,7 @@
                     }
                 }
                 _("#runtime").innerText = rtstr;
-                updateHeroMetrics();
+                updateHeroMetrics(true);
 
                 const flameNow = statuscache?.slave?.status?.flame;
                 if (consumeStatusCache._prevFlame !== undefined && flameNow !== consumeStatusCache._prevFlame)

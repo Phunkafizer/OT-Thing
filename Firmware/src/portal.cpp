@@ -49,7 +49,12 @@ void Portal::begin(bool configMode) {
             return;
         }
         #endif
-        request->send(200, F("text/html"), (uint8_t*) html, strlen_P(html));
+
+        AsyncWebServerResponse *response = request->beginResponse_P(200, F("text/html; charset=utf-8"), html_gz, html_gz_len);
+        response->addHeader(F("Content-Encoding"), F("gzip"));
+        response->addHeader(F("Cache-Control"), F("no-cache"));
+        response->addHeader(F("Vary"), F("Accept-Encoding"));
+        request->send(response);
     });
 
     websrv.on(PSTR("/config"), HTTP_GET, [this] (AsyncWebServerRequest *request) {
