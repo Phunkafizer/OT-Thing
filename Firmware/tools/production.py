@@ -15,6 +15,7 @@ import socket
 import subprocess
 import time
 import webbrowser
+import shutil
 
 # ANSI colour output
 if sys.platform == "win32":
@@ -27,6 +28,65 @@ _RESET  = "\033[0m"
 def _ok(msg):   print(f"{_GREEN}{msg}{_RESET}")
 def _err(msg):  print(f"{_RED}{msg}{_RESET}")
 def _warn(msg): print(f"{_YELLOW}{msg}{_RESET}")
+
+
+def _release_artifact_paths(project_dir):
+    """Return expected release binary paths."""
+    build_dir = os.path.join(project_dir, ".pio", "build", "release")
+    return {
+        "bootloader": os.path.join(build_dir, "bootloader.bin"),
+        "partitions": os.path.join(build_dir, "partitions.bin"),
+        "firmware": os.path.join(build_dir, "firmware.bin"),
+    }
+
+
+def _find_platformio_executable(project_dir):
+    """Resolve a usable PlatformIO CLI executable."""
+    candidates = [
+        shutil.which("platformio"),
+        shutil.which("pio"),
+    ]
+
+    home = os.path.expanduser("~")
+    candidates.append(os.path.join(home, ".platformio", "penv", "Scripts", "platformio.exe"))
+    candidates.append(os.path.join(home, ".platformio", "penv", "bin", "platformio"))
+
+    workspace_penv = os.path.join(project_dir, ".venv", "Scripts", "platformio.exe")
+    candidates.append(workspace_penv)
+
+    for candidate in candidates:
+        if candidate and os.path.exists(candidate):
+            return candidate
+    return None
+
+
+def ensure_release_build(project_dir):
+    """Build release firmware if required artifacts are missing."""
+    artifacts = _release_artifact_paths(project_dir)
+    missing = [path for path in artifacts.values() if not os.path.exists(path)]
+    if not missing:
+        return True
+
+    _warn("Release build artifacts missing. Starting `platformio run --environment release`...")
+    pio = _find_platformio_executable(project_dir)
+    if not pio:
+        _err("✗ PlatformIO executable not found. Install PlatformIO or add it to PATH.")
+        return False
+
+    result = subprocess.run([pio, "run", "--environment", "release"], cwd=project_dir)
+    if result.returncode != 0:
+        _err("✗ Release build failed.")
+        return False
+
+    missing_after = [path for path in artifacts.values() if not os.path.exists(path)]
+    if missing_after:
+        _err("✗ Release build finished but artifacts are still missing:")
+        for path in missing_after:
+            print(f"  {path}")
+        return False
+
+    _ok("✓ Release build completed")
+    return True
 
 # USB Device IDs
 TARGET_USB_VID = 0x303A
@@ -167,19 +227,20 @@ def upload_firmware(port, project_dir):
         dict with keys 'chip', 'mac' on success, or None on failure.
     """
     # Paths to build artifacts
-    build_dir = os.path.join(project_dir, ".pio", "build", "release")
-    bootloader_path = os.path.join(build_dir, "bootloader.bin")
-    partition_path = os.path.join(build_dir, "partitions.bin")
-    firmware_path = os.path.join(build_dir, "firmware.bin")
+    artifacts = _release_artifact_paths(project_dir)
+    bootloader_path = artifacts["bootloader"]
+    partition_path = artifacts["partitions"]
+    firmware_path = artifacts["firmware"]
 
     # Check if all binaries exist
     if not all(os.path.exists(p) for p in [bootloader_path, partition_path, firmware_path]):
-        _err("✗ Build artifacts not found at:")
-        print(f"  {bootloader_path}")
-        print(f"  {partition_path}")
-        print(f"  {firmware_path}")
-        print("\nRun: pio run -e release")
-        return None
+        if not ensure_release_build(project_dir):
+            _err("✗ Build artifacts not found at:")
+            print(f"  {bootloader_path}")
+            print(f"  {partition_path}")
+            print(f"  {firmware_path}")
+            print("\nRun: pio run -e release")
+            return None
 
     print(f"\n=== Uploading firmware to {port} ===")
 
@@ -213,7 +274,8 @@ def upload_firmware(port, project_dir):
         return {"chip": chip_desc, "mac": mac}
     except Exception as e:
         _err(f"✗ Upload failed: {e}")
-        sys.exit(1)
+        _warn("Restarting programming cycle from device detection...")
+        return None
 
 
 def verify_tcp_stream(host, port, max_cycles=20, connect_timeout=30, read_timeout=10):
@@ -446,6 +508,9 @@ def configure_device():
     """
     Configure device after firmware upload.
     Uses DEVICE_IP for web interface connection.
+
+    Returns:
+        bool: True on success, False on failure.
     """
     import requests
     
@@ -478,7 +543,7 @@ def configure_device():
         return True
     except Exception as e:
         _err(f"✗ Configuration failed: {e}")
-        sys.exit(1)
+        return False
 
 
 def wait_for_device_disconnect():
@@ -508,17 +573,30 @@ def _get_firmware_version(project_dir):
 
 
 def _log_device(project_dir, device_info):
-    """Append a one-line entry for this device to devicelist.txt."""
+    """Append one-line device entry to devicelist.txt if MAC is not already present."""
     import datetime
+    import re
+
+    mac = device_info["mac"].lower()
     version = _get_firmware_version(project_dir)
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     line = (
         f"{timestamp}  "
         f"chip={device_info['chip']}  "
-        f"mac={device_info['mac']}  "
+        f"mac={mac}  "
         f"fw={version}\n"
     )
     log_path = os.path.join(project_dir, "devicelist.txt")
+
+    # Skip duplicate MAC entries while still allowing the file to be created.
+    if os.path.exists(log_path):
+        with open(log_path, "r", encoding="utf-8", errors="replace") as f:
+            existing = f.read().lower()
+        existing_macs = set(re.findall(r"\bmac=([0-9a-f]{2}(?::[0-9a-f]{2}){5})\b", existing))
+        if mac in existing_macs:
+            _warn(f"⚠ MAC already present in devicelist.txt, skipping log entry: {mac}")
+            return
+
     with open(log_path, "a", encoding="utf-8") as f:
         f.write(line)
     _ok(f"✓ Logged to devicelist.txt: {line.strip()}")
@@ -533,6 +611,11 @@ def batch_upload(project_dir):
     """
     print("\n=== Batch firmware upload mode ===")
     print("Connect devices one at a time. Each will be programmed automatically.\n")
+
+    # Open the device web UI once at startup; keep reusing the same tab/window.
+    config_url = f"http://{DEVICE_IP}"
+    print(f"Opening {config_url} (once at startup)...")
+    webbrowser.open(config_url)
     
     upload_count = 0
     failure_count = 0
@@ -562,22 +645,18 @@ def batch_upload(project_dir):
                 failure_count += 1
             else:
                 # Attempt configuration
-                try:
-                    configure_device()
+                if not configure_device():
+                    failure_count += 1
+                else:
                     # Log device info
                     _log_device(project_dir, device_info)
-                    # Open device web interface
-                    config_url = f"http://{DEVICE_IP}"
-                    print(f"Opening {config_url}...")
-                    webbrowser.open(config_url)
                     _ok("\n" + "=" * 50)
                     _ok(f"  ✓  DEVICE #{upload_count} COMPLETE — ALL STEPS PASSED")
                     _ok("=" * 50 + "\n")
-                except Exception as e:
-                    _err(f"Configuration error: {e}")
-                    failure_count += 1
         else:
             failure_count += 1
+            time.sleep(1)
+            continue
         
         # Wait for next device
         _warn("Connect the next one...")
