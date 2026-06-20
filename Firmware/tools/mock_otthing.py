@@ -1,5 +1,10 @@
 from pathlib import Path
 import asyncio
+import copy
+import hashlib
+import os
+import secrets
+import time
 
 from fastapi import FastAPI, Request, UploadFile, WebSocket
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
@@ -9,6 +14,9 @@ app = FastAPI(title="OTthing Mock Server")
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
 INDEX_FILE = DATA_DIR / "index.html"
+SESSION_COOKIE = "OTSESSID"
+SESSION_TTL_SEC = 30 * 60
+MOCK_CONFIG_MODE = os.getenv("OTTHING_MOCK_CONFIG_MODE", "0") == "1"
 
 state = {
     "config": {
@@ -346,6 +354,87 @@ state = {
     },
 }
 
+auth = {
+    "salt": "",
+    "hash": "",
+    "session": "",
+    "expiry": 0.0,
+}
+
+
+def auth_configured() -> bool:
+    return bool(auth["salt"] and auth["hash"])
+
+
+def password_hash(salt: str, password: str) -> str:
+    return hashlib.sha256(f"{salt}:{password}".encode("utf-8")).hexdigest()
+
+
+def set_credentials(password: str) -> None:
+    auth["salt"] = secrets.token_hex(16)
+    auth["hash"] = password_hash(auth["salt"], password)
+
+
+def clear_credentials() -> None:
+    auth["salt"] = ""
+    auth["hash"] = ""
+    auth["session"] = ""
+    auth["expiry"] = 0.0
+
+
+def verify_credentials(password: str) -> bool:
+    if not auth_configured():
+        return True
+    return password_hash(auth["salt"], password) == auth["hash"]
+
+
+def session_valid(request: Request) -> bool:
+    if MOCK_CONFIG_MODE:
+        return True
+    if not auth_configured():
+        return True
+
+    token = request.cookies.get(SESSION_COOKIE, "")
+    if not token or token != auth["session"]:
+        return False
+    if time.time() >= auth["expiry"]:
+        return False
+
+    auth["expiry"] = time.time() + SESSION_TTL_SEC
+    return True
+
+
+def unauthorized_response() -> JSONResponse:
+    return JSONResponse({"detail": "unauthorized"}, status_code=401)
+
+
+def require_auth(request: Request) -> JSONResponse | None:
+    if session_valid(request):
+        return None
+    return unauthorized_response()
+
+
+def auth_cookie_value() -> str:
+    auth["session"] = secrets.token_hex(16)
+    auth["expiry"] = time.time() + SESSION_TTL_SEC
+    return auth["session"]
+
+
+def set_session_cookie(response, token: str) -> None:
+    response.set_cookie(
+        key=SESSION_COOKIE,
+        value=token,
+        max_age=SESSION_TTL_SEC,
+        path="/",
+        samesite="strict",
+    )
+
+
+def clear_session_cookie(response) -> None:
+    auth["session"] = ""
+    auth["expiry"] = 0.0
+    response.delete_cookie(key=SESSION_COOKIE, path="/")
+
 
 def ensure_heatercircuit(idx: int) -> None:
     while len(state["status"]["heatercircuit"]) <= idx:
@@ -358,24 +447,106 @@ def get_index() -> FileResponse:
 
 
 @app.get("/status")
-def get_status() -> JSONResponse:
+def get_status(request: Request) -> JSONResponse:
+    denied = require_auth(request)
+    if denied:
+        return denied
+
     state["status"]["runtime"] += 1
     return JSONResponse(state["status"])
 
 
 @app.get("/config")
-def get_config() -> JSONResponse:
-    return JSONResponse(state["config"])
+def get_config(request: Request) -> JSONResponse:
+    denied = require_auth(request)
+    if denied:
+        return denied
+
+    return JSONResponse(copy.deepcopy(state["config"]))
 
 
 @app.post("/config")
 async def post_config(request: Request) -> PlainTextResponse:
-    state["config"] = await request.json()
+    denied = require_auth(request)
+    if denied:
+        return PlainTextResponse("unauthorized", status_code=401)
+
+    cfg = await request.json()
+    if not isinstance(cfg, dict):
+        return PlainTextResponse("bad request", status_code=400)
+
+    state["config"] = cfg
     return PlainTextResponse("ok")
+
+
+@app.get("/auth/state")
+def get_auth_state(request: Request) -> JSONResponse:
+    configured = auth_configured()
+    logged_in = True if (MOCK_CONFIG_MODE or not configured) else session_valid(request)
+    body = {
+        "configured": configured,
+        "loggedIn": logged_in,
+        "bypass": MOCK_CONFIG_MODE,
+    }
+    return JSONResponse(body)
+
+
+@app.post("/auth/login")
+async def post_auth_login(request: Request) -> PlainTextResponse:
+    if MOCK_CONFIG_MODE:
+        return PlainTextResponse("ok")
+
+    if not auth_configured():
+        resp = PlainTextResponse("ok")
+        set_session_cookie(resp, auth_cookie_value())
+        return resp
+
+    form = await request.form()
+    password = str(form.get("password", ""))
+    if not verify_credentials(password):
+        return PlainTextResponse("unauthorized", status_code=401)
+
+    resp = PlainTextResponse("ok")
+    set_session_cookie(resp, auth_cookie_value())
+    return resp
+
+
+@app.post("/auth/logout")
+def post_auth_logout() -> PlainTextResponse:
+    resp = PlainTextResponse("ok")
+    clear_session_cookie(resp)
+    return resp
+
+
+@app.post("/auth/setup")
+async def post_auth_setup(request: Request) -> PlainTextResponse:
+    if auth_configured() and not MOCK_CONFIG_MODE:
+        denied = require_auth(request)
+        if denied:
+            return PlainTextResponse("unauthorized", status_code=401)
+
+    form = await request.form()
+    password = str(form.get("password", ""))
+
+    if not password:
+        clear_credentials()
+        resp = PlainTextResponse("ok")
+        clear_session_cookie(resp)
+        return resp
+
+    set_credentials(password)
+    resp = PlainTextResponse("ok")
+    if not MOCK_CONFIG_MODE:
+        set_session_cookie(resp, auth_cookie_value())
+    return resp
 
 
 @app.post("/setwifi")
 async def post_setwifi(request: Request) -> JSONResponse:
+    denied = require_auth(request)
+    if denied:
+        return denied
+
     form = await request.form()
     ssid = str(form.get("ssid", ""))
     if ssid:
@@ -384,7 +555,11 @@ async def post_setwifi(request: Request) -> JSONResponse:
 
 
 @app.get("/scan")
-def get_scan() -> JSONResponse:
+def get_scan(request: Request) -> JSONResponse:
+    denied = require_auth(request)
+    if denied:
+        return denied
+
     return JSONResponse(
         {
             "status": 1,
@@ -399,6 +574,7 @@ def get_scan() -> JSONResponse:
 
 @app.get("/set")
 def get_set(
+    request: Request,
     roomSetTemp: float | None = None,
     roomSetpoint1: float | None = None,
     roomSetpoint2: float | None = None,
@@ -411,6 +587,10 @@ def get_set(
     coolingCtrl: float | None = None,
     coolingMode: str | None = None,
 ) -> JSONResponse:
+    denied = require_auth(request)
+    if denied:
+        return denied
+
     # Backward-compatible shortcut used earlier in UI experiments.
     if roomSetTemp is not None:
         roomSetpoint1 = roomSetTemp
@@ -463,23 +643,39 @@ def get_set(
 
 
 @app.get("/reboot")
-def get_reboot() -> JSONResponse:
+def get_reboot(request: Request) -> JSONResponse:
+    denied = require_auth(request)
+    if denied:
+        return denied
+
     return JSONResponse({"ok": True})
 
 
 @app.get("/otitems")
-def get_otitems() -> JSONResponse:
+def get_otitems(request: Request) -> JSONResponse:
+    denied = require_auth(request)
+    if denied:
+        return denied
+
     return JSONResponse({"items": [{"id": 0, "name": "Mock item"}]})
 
 
 @app.get("/slaverequest")
-def get_slaverequest(id: int = 0, rw: int = 0, data: str = "0000") -> JSONResponse:
+def get_slaverequest(request: Request, id: int = 0, rw: int = 0, data: str = "0000") -> JSONResponse:
+    denied = require_auth(request)
+    if denied:
+        return denied
+
     # data low byte >= 0x80 means accepted in UI
     return JSONResponse({"id": id, "rw": rw, "data": "0080", "request": data})
 
 
 @app.post("/update")
-async def post_update(firmware: UploadFile) -> PlainTextResponse:
+async def post_update(request: Request, firmware: UploadFile) -> PlainTextResponse:
+    denied = require_auth(request)
+    if denied:
+        return PlainTextResponse("unauthorized", status_code=401)
+
     _ = await firmware.read()
     return PlainTextResponse("ok")
 

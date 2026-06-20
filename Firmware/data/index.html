@@ -301,6 +301,12 @@
             letter-spacing: 0.04em;
         }
 
+        .group h4:not(:first-child) {
+            margin-top: 14px;
+            padding-top: 6px;
+            border-top: 1px dashed rgba(216, 162, 76, 0.25);
+        }
+
         h5, th, .h5-hint {
             font-size: 0.68em;
             text-transform: uppercase;
@@ -1473,6 +1479,25 @@
             justify-content: space-between;
             align-items: center;
             padding: 6px 10px;
+        }
+
+        .auth-login-body {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 10px;
+        }
+
+        .auth-login-body .auth-hint {
+            color: #e5cfb8;
+            font-size: 0.85em;
+            line-height: 1.35;
+        }
+
+        #authLoginError {
+            min-height: 1.1em;
+            color: #ff9f9f;
+            font-size: 0.82em;
         }
 
         #modalBody {
@@ -2895,7 +2920,7 @@
         </div>
 
         <div class="tab" id="setup">
-            <h3>WiFi</h3>
+            <h3>Network</h3>
             <div class="group" id="wifiGroup">
                 <div class="flexline">
                     <div class="param">
@@ -2903,6 +2928,7 @@
                         <input value="otthing" field="hostname" />
                     </div>
                 </div>
+                <h4>WiFi</h4>
                 <button id="scanbtn" onclick="startWifiScan()">scan</button>
                 <div id="scanResults" hidden>
                     <table class="data-table wifi-table">
@@ -2917,12 +2943,26 @@
                             <tr class="empty-row"><td colspan="3">No scan results yet. Press scan to discover nearby networks.</td></tr>
                         </tbody>
                     </table>
-                    <h5>SSID</h5>
-                    <input id="wifissid" />
-                    <h5>Passwort</h5>
-                    <input id="wifipass" type="password"/>
+                    <div class="flexline">
+                        <div class="param">
+                            <h5>SSID</h5>
+                            <input id="wifissid" />
+                        </div>
+                        <div class="param">
+                            <h5>Password</h5>
+                            <input id="wifipass" type="password"/>
+                        </div>
+                    </div>
                     <div><button onclick="saveWifi()">connect</button></div>
                 </div>
+                <h4>Web UI Login</h4>
+                <div class="flexline">
+                    <div class="param">
+                        <h5>Password</h5>
+                        <input id="authsetuppass" type="password" autocomplete="new-password" />
+                    </div>
+                </div>
+                <button onclick="saveWebAuthCredentials()">save credentials</button>
             </div>
 
             <h3>OpenTherm</h3>
@@ -3358,6 +3398,22 @@
             </div>
         </div>
     </div>
+    <div id="authLoginModal" class="modal" hidden>
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Web UI login</span>
+            </div>
+            <div class="auth-login-body">
+                <div class="auth-hint">Login is required to access OTthing configuration and live status.</div>
+                <h5>Password</h5>
+                <input id="authLoginPass" type="password" autocomplete="current-password" />
+                <div id="authLoginError"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="authLoginBtn" onclick="performLogin()">login</button>
+            </div>
+        </div>
+    </div>
     <div id="toastContainer" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
     <script>
         // Constants + Defaults
@@ -3528,7 +3584,10 @@
         currentCh = 0,
         scheduleEditIndex = [null, null],
         autoscroll = true,
-        wifiScanRunning = false;
+        wifiScanRunning = false,
+        authConfigured = false,
+        authPendingLogin = false,
+        uiInitialized = false;
 
 
         // DOM Helpers
@@ -3644,6 +3703,159 @@
             while (row.childElementCount > 5)
                 row.removeChild(row.lastElementChild);
         }
+
+        function showLoginDialog(message = "") {
+            authPendingLogin = true;
+            const modal = _("#authLoginModal");
+            if (modal)
+                modal.hidden = false;
+
+            const err = _("#authLoginError");
+            if (err)
+                err.textContent = message;
+        }
+
+        function hideLoginDialog() {
+            authPendingLogin = false;
+            const modal = _("#authLoginModal");
+            if (modal)
+                modal.hidden = true;
+
+            const err = _("#authLoginError");
+            if (err)
+                err.textContent = "";
+
+            const pass = _("#authLoginPass");
+            if (pass)
+                pass.value = "";
+        }
+
+        function handleUnauthorized() {
+            if (authPendingLogin)
+                return;
+
+            showLoginDialog("Session expired or not logged in.");
+            addRecentEvent("Web UI login required");
+        }
+
+        function isUnauthorizedStatus(xhr) {
+            if (xhr.status !== 401)
+                return false;
+
+            handleUnauthorized();
+            return true;
+        }
+
+        async function checkAuthState() {
+            try {
+                const resp = await fetch("/auth/state", { cache: "no-store" });
+                if (!resp.ok)
+                    return;
+
+                const state = await resp.json();
+                authConfigured = state.configured === true;
+
+                if (authConfigured && state.loggedIn !== true)
+                    showLoginDialog("");
+                else
+                    hideLoginDialog();
+            }
+            catch (err) {
+            }
+        }
+
+        async function performLogin() {
+            const password = _("#authLoginPass")?.value ?? "";
+            if (!password) {
+                showLoginDialog("Enter password.");
+                return;
+            }
+
+            const btn = _("#authLoginBtn");
+            if (btn)
+                btn.disabled = true;
+
+            try {
+                const body = "password=" + encodeURIComponent(password);
+                const resp = await fetch("/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body
+                });
+
+                if (!resp.ok) {
+                    showLoginDialog("Invalid password.");
+                    return;
+                }
+
+                hideLoginDialog();
+                showToast("Login successful", "success", 2500);
+                addRecentEvent("Web UI login successful");
+                if (typeof window.refreshProtectedData === "function")
+                    window.refreshProtectedData();
+            }
+            catch (err) {
+                showLoginDialog("Login request failed.");
+            }
+            finally {
+                if (btn)
+                    btn.disabled = false;
+            }
+        }
+
+        async function saveWebAuthCredentials() {
+            const password = _("#authsetuppass")?.value ?? "";
+            const deleteMode = !password;
+
+            try {
+                const body = "password=" + encodeURIComponent(password);
+                const resp = await fetch("/auth/setup", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body
+                });
+
+                if (resp.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
+
+                if (!resp.ok) {
+                    showToast("Could not save web login credentials", "error", 5000);
+                    return;
+                }
+
+                _("#authsetuppass").value = "";
+                authConfigured = !deleteMode;
+                hideLoginDialog();
+                if (deleteMode) {
+                    showToast("Web UI login removed", "success", 3500);
+                    addRecentEvent("Web UI login removed");
+                }
+                else {
+                    await fetch("/auth/logout", { method: "POST" });
+                    showToast("Web UI login credentials saved", "success", 3500);
+                    addRecentEvent("Web UI login updated");
+                    showLoginDialog("Credentials updated. Please log in.");
+                }
+            }
+            catch (err) {
+                showToast("Could not save web login credentials", "error", 5000);
+            }
+        }
+
+        const nativeFetch = window.fetch.bind(window);
+        window.fetch = (...args) => nativeFetch(...args).then((resp) => {
+            const url = String(args?.[0] ?? "");
+            const isAuthEndpoint = url.includes("/auth/login") || url.includes("/auth/state");
+            if (resp.status === 401 && !isAuthEndpoint)
+                handleUnauthorized();
+            return resp;
+        });
 
         function setStateIcon(id, value, isFlame = false) {
             const icon = _(`#${id}`);
@@ -5312,6 +5524,9 @@
         function saveWifi() {
             let xhr = new XMLHttpRequest();
             xhr.onload = (ev) => {
+                if (isUnauthorizedStatus(xhr))
+                    return;
+
                 if (xhr.status < 200 || xhr.status >= 300) {
                     showToast("Error sending WiFi credentials:\nHTTP " + xhr.status, "error", 5000);
                     addRecentEvent("WiFi connect failed");
@@ -5342,6 +5557,9 @@
         function saveConfig() {
             let xhr = new XMLHttpRequest();
             xhr.onload = (ev) => {
+                if (isUnauthorizedStatus(xhr))
+                    return;
+
                 if (xhr.status < 200 || xhr.status >= 300) {
                     showToast("Error saving configuration:\nHTTP " + xhr.status, "error", 5000);
                     addRecentEvent("Configuration save failed");
@@ -6404,6 +6622,20 @@
             let xhr = new XMLHttpRequest();
             xhr.timeout = UI_TIMINGS.scanXhrTimeoutMs;
             xhr.onload = (e) => {
+                if (isUnauthorizedStatus(xhr)) {
+                    wifiScanRunning = false;
+                    _("#scanbtn").disabled = false;
+                    return;
+                }
+
+                if (xhr.status < 200 || xhr.status >= 300) {
+                    wifiScanRunning = false;
+                    _("#scanbtn").disabled = false;
+                    showToast("WiFi scan failed", "error", UI_TIMINGS.scanErrorToastMs);
+                    addRecentEvent("WiFi scan failed");
+                    return;
+                }
+
                 let scanObj = JSON.parse(e.target.responseText);
                 if (scanObj.status < 0) {
                     setTimeout(scanWiFi, UI_TIMINGS.scanRetryMs);
@@ -6513,6 +6745,17 @@
             initInfoboxTooltips();
             initHeroMetricPinning();
             renderPinnedHeroCards();
+            checkAuthState();
+
+            const loginPassInput = _("#authLoginPass");
+            if (loginPassInput) {
+                loginPassInput.addEventListener("keydown", (ev) => {
+                    if (ev.key === "Enter") {
+                        ev.preventDefault();
+                        performLogin();
+                    }
+                });
+            }
 
             __("div.nav li").forEach(li => {
                 li.onclick = ev => {
@@ -6793,6 +7036,9 @@
 
             let xhrConfig = new XMLHttpRequest();
             xhrConfig.onload = (ev) => {
+                if (isUnauthorizedStatus(xhrConfig))
+                    return;
+
                 let parsedConfig = null;
                 try {
                     parsedConfig = JSON.parse(ev.target.responseText);
@@ -6805,10 +7051,19 @@
 
                 applyPinnedHeroFieldsFromConfig();
                 initScheduleTimeSelectors();
-                initUi();
+                if (!uiInitialized) {
+                    initUi();
+                    uiInitialized = true;
+                }
+                else {
+                    updateUi();
+                }
             };
             xhrConfig.onerror = (ev) => {
-                initUi();
+                if (!uiInitialized) {
+                    initUi();
+                    uiInitialized = true;
+                }
             };
             xhrConfig.open("GET", "config");
             xhrConfig.send();
@@ -7232,6 +7487,9 @@
             }
 
             function fetchStatus() {
+                if (authPendingLogin)
+                    return;
+
                 if (statusRequestInFlight)
                     return;
 
@@ -7245,6 +7503,11 @@
                 }
 
                 xhr.onload = (ev) => {
+                    if (isUnauthorizedStatus(xhr)) {
+                        finishWithDelay(UI_TIMINGS.statusPollRetryMs);
+                        return;
+                    }
+
                     if (xhr.status < 200 || xhr.status >= 300) {
                         _("#nocon").hidden = false;
                         finishWithDelay(UI_TIMINGS.statusPollRetryMs);
@@ -7293,6 +7556,13 @@
 
             fetchStatus();
             drawCurve();
+
+            window.refreshProtectedData = function refreshProtectedData() {
+                _("#nocon").hidden = true;
+                xhrConfig.open("GET", "config");
+                xhrConfig.send();
+                scheduleStatusFetch(0);
+            };
 
             _("#restore_file").onchange = (ev) => {
                 const file = ev.target.files[0];

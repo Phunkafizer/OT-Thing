@@ -11,6 +11,9 @@ private:
     bool writeBufFlag;
     String hostname;
     int timezone;
+    bool authConfigured;
+    String authSalt;
+    String authHash;
 public:
     DevConfig();
     void begin();
@@ -18,6 +21,10 @@ public:
     void write(String &str);
     void remove();
     void loop();
+    bool isAuthConfigured() const;
+    bool verifyUiCredentials(const String &password) const;
+    bool setUiCredentials(const String &password);
+    bool clearUiCredentials();
     String getHostname() const;
     int getTimezone() const;
 } devconfig;

@@ -1,6 +1,7 @@
 
 #include <Update.h>
 #include <ArduinoJson.h>
+#include <esp_system.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <WiFi.h>
@@ -12,6 +13,8 @@
 #include "otvalues.h"
 
 static const char APP_JSON[] PROGMEM = "application/json";
+static const char SESSION_COOKIE[] PROGMEM = "OTSESSID";
+static const uint32_t SESSION_TTL_MS = 30UL * 60UL * 1000UL;
 static const IPAddress apAddress(4, 3, 2, 1);
 static const IPAddress apMask(255, 255, 255, 0);
 Portal portal;
@@ -20,11 +23,91 @@ AsyncWebSocket ws("/ws");
 
 
 Portal::Portal():
+    sessionExpiryMs(0),
+    configModeActive(false),
     reboot(false),
     updateEnable(true) {
 }
 
+String Portal::createSessionToken() const {
+    static const char hex[] = "0123456789abcdef";
+    char buf[33] = {0};
+    for (int i=0; i<16; i++) {
+        uint8_t b = (uint8_t) (esp_random() & 0xFF);
+        buf[i * 2] = hex[(b >> 4) & 0x0F];
+        buf[i * 2 + 1] = hex[b & 0x0F];
+    }
+    return String(buf);
+}
+
+static String getCookieValue(AsyncWebServerRequest *request, const char *cookieName) {
+    if (!request->hasHeader(F("Cookie")))
+        return String();
+
+    String cookieHeader = request->header(F("Cookie"));
+    String search = String(cookieName) + "=";
+    int start = cookieHeader.indexOf(search);
+    if (start < 0)
+        return String();
+
+    start += search.length();
+    int end = cookieHeader.indexOf(';', start);
+    if (end < 0)
+        end = cookieHeader.length();
+
+    String value = cookieHeader.substring(start, end);
+    value.trim();
+    return value;
+}
+
+bool Portal::hasValidSession(AsyncWebServerRequest *request) {
+    if (sessionToken.isEmpty())
+        return false;
+
+    if ((int32_t) (millis() - sessionExpiryMs) >= 0)
+        return false;
+
+    String token = getCookieValue(request, SESSION_COOKIE);
+    if (token.isEmpty() || token != sessionToken)
+        return false;
+
+    sessionExpiryMs = millis() + SESSION_TTL_MS;
+    return true;
+}
+
+bool Portal::ensureAuthorized(AsyncWebServerRequest *request) {
+    if (configModeActive)
+        return true;
+
+    if (!devconfig.isAuthConfigured())
+        return true;
+
+    if (hasValidSession(request))
+        return true;
+
+    request->send(401);
+    return false;
+}
+
+void Portal::startSession(AsyncWebServerRequest *request) {
+    sessionToken = createSessionToken();
+    sessionExpiryMs = millis() + SESSION_TTL_MS;
+    AsyncWebServerResponse *response = request->beginResponse(200);
+    response->addHeader(F("Set-Cookie"), String(SESSION_COOKIE) + "=" + sessionToken + F("; Path=/; Max-Age=1800; SameSite=Strict"));
+    request->send(response);
+}
+
+void Portal::clearSession(AsyncWebServerRequest *request) {
+    sessionToken.clear();
+    sessionExpiryMs = 0;
+    AsyncWebServerResponse *response = request->beginResponse(200);
+    response->addHeader(F("Set-Cookie"), String(SESSION_COOKIE) + F("=; Path=/; Max-Age=0; SameSite=Strict"));
+    request->send(response);
+}
+
 void Portal::begin(bool configMode) {
+    configModeActive = configMode;
+
     if (configMode) {
         WiFi.persistent(false);
         WiFi.softAPConfig(apAddress, apAddress, apMask);
@@ -58,6 +141,9 @@ void Portal::begin(bool configMode) {
     });
 
     websrv.on(PSTR("/config"), HTTP_GET, [this] (AsyncWebServerRequest *request) {
+        if (!ensureAuthorized(request))
+            return;
+
         if (LittleFS.exists(FPSTR(CFG_FILENAME)))
             request->send(LittleFS, FPSTR(CFG_FILENAME), FPSTR(APP_JSON));
         else
@@ -70,6 +156,9 @@ void Portal::begin(bool configMode) {
         [] (AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len, bool final) {
         },
         [this] (AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
+            if (!ensureAuthorized(request))
+                return;
+
             static String confBuf;
             if (!index)
                 confBuf.clear();
@@ -77,6 +166,13 @@ void Portal::begin(bool configMode) {
             confBuf.concat((const char*) data, len);
 
             if (confBuf.length() == total) {
+                JsonDocument doc;
+                if (deserializeJson(doc, confBuf) != DeserializationError::Ok) {
+                    confBuf.clear();
+                    request->send(400);
+                    return;
+                }
+
                 devconfig.write(confBuf);
                 confBuf.clear();
                 request->send(200);
@@ -84,7 +180,76 @@ void Portal::begin(bool configMode) {
         }
     );
 
+    websrv.on(PSTR("/auth/state"), HTTP_GET, [this] (AsyncWebServerRequest *request) {
+        JsonDocument doc;
+        JsonObject jobj = doc.to<JsonObject>();
+        bool configured = devconfig.isAuthConfigured();
+        jobj[F("configured")] = configured;
+        jobj[F("loggedIn")] = (configModeActive || !configured) ? true : hasValidSession(request);
+        jobj[F("bypass")] = configModeActive;
+        AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));
+        serializeJson(doc, *response);
+        request->send(response);
+    });
+
+    websrv.on(PSTR("/auth/login"), HTTP_POST, [this] (AsyncWebServerRequest *request) {
+        if (configModeActive) {
+            request->send(200);
+            return;
+        }
+
+        if (!devconfig.isAuthConfigured()) {
+            startSession(request);
+            return;
+        }
+
+        if (!request->hasArg(F("password"))) {
+            request->send(400);
+            return;
+        }
+
+        String password = request->arg(F("password"));
+        if (!devconfig.verifyUiCredentials(password)) {
+            request->send(401);
+            return;
+        }
+
+        startSession(request);
+    });
+
+    websrv.on(PSTR("/auth/logout"), HTTP_POST, [this] (AsyncWebServerRequest *request) {
+        clearSession(request);
+    });
+
+    websrv.on(PSTR("/auth/setup"), HTTP_POST, [this] (AsyncWebServerRequest *request) {
+        if (devconfig.isAuthConfigured() && !ensureAuthorized(request))
+            return;
+
+        if (!request->hasArg(F("password"))) {
+            request->send(400);
+            return;
+        }
+
+        String password = request->arg(F("password"));
+
+        if (password.isEmpty()) {
+            devconfig.clearUiCredentials();
+            clearSession(request);
+            return;
+        }
+
+        if (!devconfig.setUiCredentials(password)) {
+            request->send(400);
+            return;
+        }
+
+        startSession(request);
+    });
+
     websrv.on(PSTR("/scan"), HTTP_GET, [this] (AsyncWebServerRequest *request) {
+        if (!ensureAuthorized(request))
+            return;
+
         JsonDocument doc;
         JsonObject jobj = doc.to<JsonObject>();
 
@@ -110,6 +275,9 @@ void Portal::begin(bool configMode) {
     });
 
     websrv.on(PSTR("/setwifi"), HTTP_POST, [this] (AsyncWebServerRequest *request) {
+        if (!ensureAuthorized(request))
+            return;
+
         if (request->hasArg(F("ssid")) && request->hasArg(F("pass"))) {
             request->send(200);
             delay(500);
@@ -126,6 +294,9 @@ void Portal::begin(bool configMode) {
     });
 
     websrv.on(PSTR("/status"), HTTP_GET, [this](AsyncWebServerRequest *request) {
+        if (!ensureAuthorized(request))
+            return;
+
         JsonDocument doc;
         devstatus.buildDoc(doc);
         AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));
@@ -134,6 +305,9 @@ void Portal::begin(bool configMode) {
     });
 
     websrv.on(PSTR("/otitems"), HTTP_GET, [this](AsyncWebServerRequest *request) {
+        if (!ensureAuthorized(request))
+            return;
+
         JsonDocument doc;
         JsonObject jSlave = doc[FPSTR(STR_STATKEY_SLAVE)].to<JsonObject>();
             for (auto *valobj: slaveValues)
@@ -149,12 +323,18 @@ void Portal::begin(bool configMode) {
     });
 
     websrv.on(PSTR("/reboot"), HTTP_GET, [this](AsyncWebServerRequest *request) {
+        if (!ensureAuthorized(request))
+            return;
+
         request->send(200);
         this->reboot = true;
     });
 
     websrv.on(PSTR("/update"), HTTP_POST, 
         [this] (AsyncWebServerRequest *request) { // onRequest handler
+            if (!ensureAuthorized(request))
+                return;
+
             int httpRes;
 
             if (!this->updateEnable) {
@@ -186,6 +366,9 @@ void Portal::begin(bool configMode) {
     );
 
     websrv.on(PSTR("/slaverequest"), HTTP_GET, [this](AsyncWebServerRequest *request) {
+        if (!ensureAuthorized(request))
+            return;
+
         static const char* STR_ID PROGMEM = "id";
         static const char* STR_RW PROGMEM = "rw";
         static const char* STR_DATA PROGMEM = "data";
@@ -226,6 +409,9 @@ void Portal::begin(bool configMode) {
     });
 
     websrv.on(PSTR("/topics"), HTTP_GET, [this](AsyncWebServerRequest *request) {
+        if (!ensureAuthorized(request))
+            return;
+
         String list;
         for (uint8_t topic = Mqtt::TOPIC_OUTSIDETEMP; topic < Mqtt::TOPIC_UNKNOWN; topic++) {
             String line;
@@ -236,6 +422,9 @@ void Portal::begin(bool configMode) {
     });
 
     websrv.on(PSTR("/set"), HTTP_GET, [this](AsyncWebServerRequest *request) {
+        if (!ensureAuthorized(request))
+            return;
+
         for (int i=0; i<request->params(); i++) {
             const AsyncWebParameter* par = request->getParam(i);
             String key = par->name();
