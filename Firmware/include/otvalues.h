@@ -277,19 +277,24 @@ public:
         BIT_CH_ENABLE = 8,
         BIT_DHW_ENABLE = 9,
         BIT_COOLING_ENABLE = 10,
-        BIT_CH2_ENABLE = 12
+        BIT_OTC_ACTIVE = 11,
+        BIT_CH2_ENABLE = 12,
+        BIT_SUMMER_MODE = 13,
+        BIT_DHW_BLOCKING = 14
     };
     OTValueMasterStatus();
 private:
     const char *DHW_ENABLE PROGMEM = "dhw_enable";
     const char *CH2_ENABLE PROGMEM = "ch2_enable";
     const char *COOLING_ENABLE PROGMEM = "cooling_enable";
-    const Flag flags[5] PROGMEM = {
+    const Flag flags[7] PROGMEM = {
         {BIT_CH_ENABLE,         "ch_enable",        "CH enable",        nullptr},
         {BIT_DHW_ENABLE,        DHW_ENABLE,         "DHW enable",       nullptr},
         {BIT_COOLING_ENABLE,    COOLING_ENABLE,     "cooling enable",   nullptr},
-        {11,                    "otc_active",       "OTC active",       nullptr},
-        {12,                    CH2_ENABLE,         "CH2 enable",       nullptr}
+        {BIT_OTC_ACTIVE,        "otc_active",       "OTC active",       nullptr},
+        {BIT_CH2_ENABLE,        CH2_ENABLE,         "CH2 enable",       nullptr},
+        {BIT_SUMMER_MODE,       "summer_mode",      "summer mode",      nullptr},
+        {BIT_DHW_BLOCKING,      "dhw_blocking",     "DHW blocking",     nullptr}
     };
 protected:
     void getValue(JsonVariant var) const override;

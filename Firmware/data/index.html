@@ -2020,6 +2020,26 @@
                         <h5>Vent. diagnostic</h5>
                         <span class="statusvalue error" field="slave.vent_status.diagnostic"></span>
                     </div>
+                    <div class="statusfield">
+                        <h5>Water over temp fault</h5>
+                        <span class="statusvalue error" field="slave.fault_flags.water_over_temp"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Air pressure fault</h5>
+                        <span class="statusvalue error" field="slave.fault_flags.air_pressure_fault"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Vent. service request</h5>
+                        <span class="statusvalue error" field="slave.vent_fault_flags.service_request"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Vent. inlet fan fault</h5>
+                        <span class="statusvalue error" field="slave.vent_fault_flags.inlet_fan_fault"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Vent. frost protection</h5>
+                        <span class="statusvalue" field="slave.vent_fault_flags.frost_protection"></span>
+                    </div>
                 </div>
                 <div class="flexline">
                     <div class="statusfield">
@@ -2186,8 +2206,16 @@
                         <span class="statusvalue" field="slave.oem_diag_code"></span>
                     </div>
                     <div class="statusfield">
+                        <h5>Vent. OEM fault code</h5>
+                        <span class="statusvalue" field="slave.vent_fault_flags.oem_vent_fault_code"></span>
+                    </div>
+                    <div class="statusfield">
                         <h5>CO2 exhaust</h5>
                         <span class="statusvalue" field="slave.co2_exhaust" unit="ppm"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Rel. humidity exhaust</h5>
+                        <span class="statusvalue" field="slave.rel_hum_exhaust" unit="%"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Exhaust fan speed</h5>
@@ -2339,9 +2367,39 @@
                         <span class="statusvalue" field="master.status.data.dhw_enable"></span>
                     </div>
                     <div class="statusfield">
+                        <h5>Summer mode</h5>
+                        <span class="statusvalue" field="master.status.data.summer_mode"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>DHW blocking</h5>
+                        <span class="statusvalue" field="master.status.data.dhw_blocking"></span>
+                    </div>
+                    <div class="statusfield">
                         <h5>Outside temp. compensation</h5>
                         <span class="statusvalue" field="master.status.data.otc_active"></span>
                     </div>
+                    <div class="statusfield">
+                        <h5>Smart power implemented</h5>
+                        <span class="statusvalue" field="master.master_config_member.data.smartPowerImplemented"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Vent. enable</h5>
+                        <span class="statusvalue" field="master.vent_status.data.vent_enable"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Vent. open bypass</h5>
+                        <span class="statusvalue" field="master.vent_status.data.open_bypass"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Vent. bypass auto</h5>
+                        <span class="statusvalue" field="master.vent_status.data.auto_bypass"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Free vent. enable</h5>
+                        <span class="statusvalue" field="master.vent_status.data.free_vent_enable"></span>
+                    </div>
+                </div>
+                <div class="flexline">
                     <div class="statusfield">
                         <h5>Flow set temperature</h5>
                         <span class="statusvalue" field="master.ch_set_t.data" unit="&deg;C"></span>
@@ -2378,6 +2436,8 @@
                         <h5>outside temp.</h5>
                         <span class="statusvalue" field="master.outside_t.data" unit="&deg;C" data-min="0" data-max="20"></span>
                     </div>
+                </div>
+                <div class="flexline">
                     <div class="statusfield">
                         <h5>Max. rel. modulation</h5>
                         <span class="statusvalue" field="master.max_rel_mod.data" unit="%"></span>
@@ -2386,6 +2446,12 @@
                         <h5>Cooling</h5>
                         <span class="statusvalue" field="master.cooling_ctrl.data" unit="%"></span>
                     </div>
+                    <div class="statusfield">
+                        <h5>Ventilation set point</h5>
+                        <span class="statusvalue" field="master.rel_vent_set.data" unit="%"></span>
+                    </div>
+                </div>
+                <div class="flexline">
                     <div class="statusfield">
                         <h5>Product version</h5>
                         <span class="statusvalue" field="master.master_prod_version.data"></span>
@@ -2403,10 +2469,6 @@
                         <span class="statusvalue" field="master.smartPower"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Smart power implemented</h5>
-                        <span class="statusvalue" field="master.master_config_member.data.smartPowerImplemented"></span>
-                    </div>
-                    <div class="statusfield">
                         <h5>Frames sent</h5>
                         <span class="statusvalue" field="master.txCount"></span>
                     </div>
@@ -2414,27 +2476,8 @@
                         <h5>Frames received</h5>
                         <span class="statusvalue" field="master.rxCount"></span>
                     </div>
-                    <div class="statusfield">
-                        <h5>Ventilation set point</h5>
-                        <span class="statusvalue" field="master.rel_vent_set.data" unit="%"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Vent. enable</h5>
-                        <span class="statusvalue" field="master.vent_status.data.vent_enable"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Vent. open bypass</h5>
-                        <span class="statusvalue" field="master.vent_status.data.open_bypass"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Vent. bypass auto</h5>
-                        <span class="statusvalue" field="master.vent_status.data.auto_bypass"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Free vent. enable</h5>
-                        <span class="statusvalue" field="master.vent_status.data.free_vent_enable"></span>
-                    </div>
                 </div>
+
             </div>
 
             <h3>1-wire</h3>

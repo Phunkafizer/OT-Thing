@@ -622,6 +622,10 @@ bool OTValueMasterStatus::sendDiscovery() {
             enb &= sc->hasCh2();
             break;
 
+        case BIT_DHW_BLOCKING:
+            enb &= sc->hasDHW();
+            break;
+
         default:
             break;
         }

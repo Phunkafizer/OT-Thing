@@ -136,6 +136,8 @@ state = {
                     "ch_enable": False,
                     "ch2_enable": True,
                     "dhw_enable": True,
+                    "summer_mode": False,
+                    "dhw_blocking": False,
                     "cooling_enable": False,
                     "otc_active": True,
                 },
@@ -740,6 +742,28 @@ _ADMIN_HTML = """<!DOCTYPE html>
     .quick-set .quick-btn { background: #1a2a3a; color: #4fc3f7; border: 1px solid #334; padding: 5px 14px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.82em; }
     .quick-set .quick-btn:hover { background: #0d1b2a; color: #fff; }
     .quick-set .hint { width: 100%; font-size: 0.78em; color: #889; }
+    .json-panes { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 14px; }
+    .json-pane { border: 1px solid #334; border-radius: 8px; background: #1a1a2a; overflow: hidden; }
+    .json-pane-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-bottom: 1px solid #2a3a4a; }
+    .json-pane-head span { color: #4fc3f7; font-size: 0.76em; letter-spacing: 1px; text-transform: uppercase; }
+    .json-controls { display: flex; gap: 6px; }
+    .json-controls button { background: #1a2a3a; color: #9ddfff; border: 1px solid #334; padding: 2px 7px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.73em; }
+    .json-controls button:hover { background: #0d1b2a; color: #fff; }
+    .json-tree { max-height: 260px; overflow: auto; padding: 8px; font-size: 0.82em; line-height: 1.35; }
+    .json-node { margin: 1px 0; }
+    .json-row { display: flex; align-items: center; gap: 4px; padding: 1px 2px; border-radius: 4px; }
+    .json-row:hover { background: #20253a; }
+    .json-toggle { width: 16px; min-width: 16px; height: 16px; border: none; background: transparent; color: #89d7ff; cursor: pointer; padding: 0; font-family: inherit; font-size: 0.95em; }
+    .json-toggle.leaf { visibility: hidden; cursor: default; }
+    .json-key { color: #f7c66b; }
+    .json-type { color: #9ba0bc; }
+    .json-value.string { color: #8be9b3; }
+    .json-value.number { color: #9fc5ff; }
+    .json-value.boolean { color: #ffd685; }
+    .json-value.null { color: #a0a7c2; font-style: italic; }
+    .json-value.object { color: #ddd; }
+    .json-children { margin-left: 14px; padding-left: 6px; border-left: 1px dotted #334; }
+    @media (min-width: 980px) { .json-panes { grid-template-columns: 1fr 1fr; } }
 </style>
 </head>
 <body>
@@ -762,6 +786,28 @@ _ADMIN_HTML = """<!DOCTYPE html>
     <input id="customValue" class="value-input" type="text" placeholder="value">
     <button class="quick-btn" onclick="setCustomPath()">Apply</button>
     <div class="hint">Use dot notation paths (for arrays: heatercircuit.0.roomsetpoint). Values can be auto-detected or forced with the type selector.</div>
+</div>
+<div class="json-panes">
+    <div class="json-pane" id="statusJsonPane">
+        <div class="json-pane-head">
+            <span>Status JSON</span>
+            <div class="json-controls">
+                <button type="button" data-json-expand="status">Expand all</button>
+                <button type="button" data-json-collapse="status">Collapse all</button>
+            </div>
+        </div>
+        <div class="json-tree" id="statusJsonTree"></div>
+    </div>
+    <div class="json-pane" id="configJsonPane">
+        <div class="json-pane-head">
+            <span>Config JSON</span>
+            <div class="json-controls">
+                <button type="button" data-json-expand="config">Expand all</button>
+                <button type="button" data-json-collapse="config">Collapse all</button>
+            </div>
+        </div>
+        <div class="json-tree" id="configJsonTree"></div>
+    </div>
 </div>
 <div class="grid" id="grid"></div>
 <div id="toast"></div>
@@ -905,6 +951,163 @@ function setCustomValueWidget(type, value) {
 }
 
 let latestStatus = null;
+let latestConfig = null;
+const jsonExpanded = {
+    status: new Set(['$']),
+    config: new Set(['$']),
+};
+
+function encodeJsonPathSegment(seg) {
+    return String(seg).replaceAll('~', '~0').replaceAll('/', '~1');
+}
+
+function toJsonPath(base, seg) {
+    return base + '/' + encodeJsonPathSegment(seg);
+}
+
+function collectJsonPaths(value, currentPath, output) {
+    if (value === null || value === undefined || typeof value !== 'object')
+        return;
+
+    output.add(currentPath);
+    const entries = Array.isArray(value)
+        ? value.map((entry, idx) => [idx, entry])
+        : Object.entries(value);
+    entries.forEach(([key, child]) => {
+        collectJsonPaths(child, toJsonPath(currentPath, key), output);
+    });
+}
+
+function getJsonValueClass(value) {
+    if (value === null)
+        return 'null';
+    return typeof value;
+}
+
+function formatJsonPrimitive(value) {
+    if (typeof value === 'string')
+        return '"' + value + '"';
+    if (value === null)
+        return 'null';
+    return String(value);
+}
+
+function buildJsonTreeNode(key, value, path, expandedSet) {
+    const node = document.createElement('div');
+    node.className = 'json-node';
+
+    const row = document.createElement('div');
+    row.className = 'json-row';
+
+    const isObject = value !== null && typeof value === 'object';
+    const size = isObject ? Object.keys(value).length : 0;
+    const hasChildren = isObject && size > 0;
+    const expanded = hasChildren && expandedSet.has(path);
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'json-toggle' + (hasChildren ? '' : ' leaf');
+    toggle.textContent = hasChildren ? (expanded ? '▾' : '▸') : '';
+    if (hasChildren)
+        toggle.dataset.path = path;
+    row.appendChild(toggle);
+
+    if (key !== null) {
+        const keyEl = document.createElement('span');
+        keyEl.className = 'json-key';
+        keyEl.textContent = String(key) + ': ';
+        row.appendChild(keyEl);
+    }
+
+    if (!isObject) {
+        const valueEl = document.createElement('span');
+        valueEl.className = 'json-value ' + getJsonValueClass(value);
+        valueEl.textContent = formatJsonPrimitive(value);
+        row.appendChild(valueEl);
+        node.appendChild(row);
+        return node;
+    }
+
+    const typeEl = document.createElement('span');
+    typeEl.className = 'json-type';
+    if (size === 0)
+        typeEl.textContent = Array.isArray(value) ? '[]' : '{}';
+    else if (Array.isArray(value))
+        typeEl.textContent = '[' + size + ' items]';
+    else
+        typeEl.textContent = '{' + size + ' keys}';
+    row.appendChild(typeEl);
+    node.appendChild(row);
+
+    if (expanded && hasChildren) {
+        const children = document.createElement('div');
+        children.className = 'json-children';
+        const entries = Array.isArray(value)
+            ? value.map((entry, idx) => [idx, entry])
+            : Object.entries(value);
+        entries.forEach(([childKey, childValue]) => {
+            children.appendChild(buildJsonTreeNode(childKey, childValue, toJsonPath(path, childKey), expandedSet));
+        });
+        node.appendChild(children);
+    }
+
+    return node;
+}
+
+function renderJsonTree(target, rootValue) {
+    const tree = document.getElementById(target + 'JsonTree');
+    if (!tree)
+        return;
+    tree.innerHTML = '';
+    tree.appendChild(buildJsonTreeNode(null, rootValue, '$', jsonExpanded[target]));
+}
+
+function renderJsonBoxes() {
+    renderJsonTree('status', latestStatus || {});
+    renderJsonTree('config', latestConfig || {});
+}
+
+function initJsonInspectorControls() {
+    ['status', 'config'].forEach((target) => {
+        const tree = document.getElementById(target + 'JsonTree');
+        const pane = document.getElementById(target + 'JsonPane');
+        if (tree) {
+            tree.addEventListener('click', (ev) => {
+                const btn = ev.target.closest('button[data-path]');
+                if (!btn)
+                    return;
+                const path = btn.dataset.path;
+                if (!path)
+                    return;
+                if (jsonExpanded[target].has(path))
+                    jsonExpanded[target].delete(path);
+                else
+                    jsonExpanded[target].add(path);
+                renderJsonTree(target, target === 'status' ? (latestStatus || {}) : (latestConfig || {}));
+            });
+        }
+        if (pane) {
+            const expand = pane.querySelector('button[data-json-expand="' + target + '"]');
+            const collapse = pane.querySelector('button[data-json-collapse="' + target + '"]');
+            if (expand) {
+                expand.addEventListener('click', () => {
+                    const next = new Set();
+                    collectJsonPaths(target === 'status' ? (latestStatus || {}) : (latestConfig || {}), '$', next);
+                    jsonExpanded[target] = next;
+                    renderJsonTree(target, target === 'status' ? (latestStatus || {}) : (latestConfig || {}));
+                });
+            }
+            if (collapse) {
+                collapse.addEventListener('click', () => {
+                    jsonExpanded[target] = new Set(['$']);
+                    renderJsonTree(target, target === 'status' ? (latestStatus || {}) : (latestConfig || {}));
+                });
+            }
+        }
+    });
+
+    renderJsonBoxes();
+}
 
 function syncCustomValueFromPath() {
     const pathEl = document.getElementById('customPath');
@@ -1108,6 +1311,7 @@ async function setCustomPath() {
 
 function applyStatus(status) {
         latestStatus = status;
+    renderJsonBoxes();
   for (const section of FIELDS) {
     for (const row of section.rows) {
       const id = 'f_' + row.key.replace(/\\./g, '_');
@@ -1125,6 +1329,7 @@ function applyStatus(status) {
 function buildUI(status) {
   const grid = document.getElementById('grid');
         latestStatus = status;
+    renderJsonBoxes();
     updatePathSuggestions(status);
   grid.innerHTML = '';
   for (const section of FIELDS) {
@@ -1188,7 +1393,14 @@ async function loadJsonFile(input, target) {
   const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
   if (r.ok) {
     showToast(`Loaded ${target} from ${file.name}`);
-    if (target === 'status') { const s = await fetch('/status'); buildUI(await s.json()); }
+        if (target === 'status') {
+            const s = await fetch('/status');
+            buildUI(await s.json());
+        } else {
+            const c = await fetch('/config');
+            latestConfig = await c.json();
+            renderJsonBoxes();
+        }
   } else {
     showToast(`Upload failed (${r.status})`, true);
   }
@@ -1215,8 +1427,14 @@ async function loadJsonFile(input, target) {
     if (customType)
         customType.addEventListener('change', syncCustomValueInputFromType);
 
-  const r = await fetch('/status');
-  buildUI(await r.json());
+        initJsonInspectorControls();
+
+    const [statusResp, configResp] = await Promise.all([
+            fetch('/status'),
+            fetch('/config'),
+    ]);
+    latestConfig = await configResp.json();
+    buildUI(await statusResp.json());
 })();
 </script>
 </body>
