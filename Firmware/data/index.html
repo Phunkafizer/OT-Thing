@@ -3422,6 +3422,7 @@
                 <select id="selExport">
                     <option>config</option>
                     <option>status</option>
+                    <option>history</option>
                     <option>log</option>
                     <option>OT items</option>
                 </select> 
@@ -3463,7 +3464,7 @@
         const 
         CURVE_MODE_SIMPLE = 0,
         CURVE_MODE_MULTIPOINT = 1,
-        UI_STATE_VERSION = 6,
+        UI_STATE_VERSION = 7,
         UI_STATE_STORAGE_KEY = "otthing.uiState",
         LOG_MAX_LINES = 1000,
         UI_TIMINGS = {
@@ -3612,18 +3613,12 @@
                 }
             ]
         };
-        const PINNED_HISTORY_MAX = 100;
-        const HERO_TEMP_HISTORY_MAX = 120;
-        const DEFAULT_HERO_TEMP_HISTORY_BY_CH = [
-            { flow: [], dhw: [], ret: [], flowSet: [], ch: [], dhwMode: [], flame: [] },
-            { flow: [], dhw: [], ret: [], flowSet: [], ch: [], dhwMode: [], flame: [] }
-        ];
+        const HISTORY_MAX = 120;
         let config = defaultConfig,
         statuscache = {},
         roomsetpoint = [21, 21], // used for drawing curve
         pinnedHeroFields = new Set(),
-        pinnedHeroHistory = {},
-        heroTempHistoryByCh = DEFAULT_HERO_TEMP_HISTORY_BY_CH.map((entry) => Object.assign({}, entry)),
+        historyTree = {},
         currentCh = 0,
         scheduleEditIndex = [null, null],
         autoscroll = true,
@@ -3935,14 +3930,103 @@
             return `${Math.round(value * 10) / 10} °C`;
         }
 
-        function appendTempHistorySample(history, key, value) {
-            if (!history || !history[key])
-                return;
+        function sanitizeHistoryValue(value) {
+            if (value === null || value === undefined || value === "")
+                return null;
 
-            const arr = history[key];
-            arr.push(value == null ? null : value);
-            if (arr.length > HERO_TEMP_HISTORY_MAX)
-                arr.shift();
+            if (typeof value === "boolean")
+                return value;
+
+            if (typeof value === "number")
+                return Number.isFinite(value) ? value : null;
+
+            if (typeof value === "string") {
+                const lower = value.trim().toLowerCase();
+                if (lower === "true")
+                    return true;
+                if (lower === "false")
+                    return false;
+
+                const num = Number.parseFloat(value);
+                return Number.isFinite(num) ? num : null;
+            }
+
+            return null;
+        }
+
+        function historyFieldToParts(fieldPath, channelOverride = currentCh) {
+            if (typeof fieldPath !== "string" || fieldPath.length === 0)
+                return [];
+            return fieldPath.replace('$', channelOverride).split('.').filter((part) => part.length > 0);
+        }
+
+        function appendHistoryValueToTree(tree, fieldPath, value, channelOverride = currentCh) {
+            const parts = historyFieldToParts(fieldPath, channelOverride);
+            if (parts.length === 0 || !tree || typeof tree !== "object")
+                return false;
+
+            let node = tree;
+            for (let i = 0; i < parts.length - 1; i++) {
+                const part = parts[i];
+                if (!node[part] || typeof node[part] !== "object" || Array.isArray(node[part]))
+                    node[part] = {};
+                node = node[part];
+            }
+
+            const leaf = parts[parts.length - 1];
+            if (!Array.isArray(node[leaf]))
+                node[leaf] = [];
+
+            node[leaf].push(sanitizeHistoryValue(value));
+            if (node[leaf].length > HISTORY_MAX)
+                node[leaf].splice(0, node[leaf].length - HISTORY_MAX);
+            return true;
+        }
+
+        function getHistorySeriesFromTree(tree, fieldPath, channelOverride = currentCh) {
+            const parts = historyFieldToParts(fieldPath, channelOverride);
+            if (parts.length === 0 || !tree || typeof tree !== "object")
+                return [];
+
+            let node = tree;
+            for (let i = 0; i < parts.length; i++) {
+                if (node == null || typeof node !== "object")
+                    return [];
+                node = node[parts[i]];
+            }
+
+            return Array.isArray(node) ? node : [];
+        }
+
+        function getNumericHistorySeries(fieldPath, channelOverride = currentCh) {
+            return getHistorySeriesFromTree(historyTree, fieldPath, channelOverride)
+                .filter((value) => typeof value === "number" && Number.isFinite(value));
+        }
+
+        function trendFieldPathFor(channelIdx, key) {
+            const ch = (channelIdx === 1) ? 1 : 0;
+            switch (key) {
+                case "flow": return ch === 0 ? "slave.flow_t" : "slave.flow_t2";
+                case "dhw": return ch === 0 ? "slave.dhw_t" : "slave.dhw_t2";
+                case "ret": return "heatercircuit.0.returnTemp";
+                case "flowSet": return ch === 0 ? "master.ch_set_t.data" : "master.ch_set_t2.data";
+                case "ch": return ch === 0 ? "slave.status.ch_mode" : "slave.status.ch2_mode";
+                case "dhwMode": return "slave.status.dhw_mode";
+                case "flame": return "slave.status.flame";
+                default: return "";
+            }
+        }
+
+        function getTrendHistoryForChannel(channelIdx) {
+            return {
+                flow: getHistorySeriesFromTree(historyTree, trendFieldPathFor(channelIdx, "flow"), channelIdx),
+                dhw: getHistorySeriesFromTree(historyTree, trendFieldPathFor(channelIdx, "dhw"), channelIdx),
+                ret: getHistorySeriesFromTree(historyTree, trendFieldPathFor(channelIdx, "ret"), channelIdx),
+                flowSet: getHistorySeriesFromTree(historyTree, trendFieldPathFor(channelIdx, "flowSet"), channelIdx),
+                ch: getHistorySeriesFromTree(historyTree, trendFieldPathFor(channelIdx, "ch"), channelIdx),
+                dhwMode: getHistorySeriesFromTree(historyTree, trendFieldPathFor(channelIdx, "dhwMode"), channelIdx),
+                flame: getHistorySeriesFromTree(historyTree, trendFieldPathFor(channelIdx, "flame"), channelIdx)
+            };
         }
 
         function drawHeroTempTrendChart(svg, history) {
@@ -4187,14 +4271,15 @@
             const dhwActive = statuscache?.slave?.status?.dhw_mode === true;
             const flameActive = statuscache?.slave?.status?.flame === true;
 
-            const activeHistory = heroTempHistoryByCh[currentCh] || heroTempHistoryByCh[0];
-            appendTempHistorySample(activeHistory, "flow", flowVal);
-            appendTempHistorySample(activeHistory, "dhw", dhwVal);
-            appendTempHistorySample(activeHistory, "ret", returnVal);
-            appendTempHistorySample(activeHistory, "flowSet", flowSetVal);
-            appendTempHistorySample(activeHistory, "ch", chActive);
-            appendTempHistorySample(activeHistory, "dhwMode", dhwActive);
-            appendTempHistorySample(activeHistory, "flame", flameActive);
+            appendHistoryValueToTree(historyTree, trendFieldPathFor(currentCh, "flow"), flowVal, currentCh);
+            appendHistoryValueToTree(historyTree, trendFieldPathFor(currentCh, "dhw"), dhwVal, currentCh);
+            appendHistoryValueToTree(historyTree, trendFieldPathFor(currentCh, "ret"), returnVal, currentCh);
+            appendHistoryValueToTree(historyTree, trendFieldPathFor(currentCh, "flowSet"), flowSetVal, currentCh);
+            appendHistoryValueToTree(historyTree, trendFieldPathFor(currentCh, "ch"), chActive, currentCh);
+            appendHistoryValueToTree(historyTree, trendFieldPathFor(currentCh, "dhwMode"), dhwActive, currentCh);
+            appendHistoryValueToTree(historyTree, trendFieldPathFor(currentCh, "flame"), flameActive, currentCh);
+
+            const activeHistory = getTrendHistoryForChannel(currentCh);
 
             const flowLegend = _("#heroTrendFlowVal");
             const dhwLegend = _("#heroTrendDhwVal");
@@ -4209,7 +4294,7 @@
             drawHeroTempTrendChart(_("#heroTempTrendChart"), activeHistory);
 
             saveUiState({
-                heroTempHistoryByCh: normalizeHeroTempHistory(heroTempHistoryByCh)
+                history: normalizeHistoryTree(historyTree)
             });
         }
 
@@ -4225,58 +4310,32 @@
             });
         }
 
-        // UI State Persistence + Migration
+        // UI State Persistence
+        function getDefaultUiState() {
+            return {
+                version: UI_STATE_VERSION,
+                activeTab: "status",
+                currentCh: 0,
+                pinnedHeroFields: [],
+                history: {}
+            };
+        }
+
         function migrateUiState(rawState) {
+            const defaults = getDefaultUiState();
             const state = (rawState && typeof rawState === "object") ? Object.assign({}, rawState) : {};
 
-            if (!Number.isInteger(state.version))
-                state.version = 1;
-
-            if (state.version === 1) {
-                if (typeof state.tab === "string" && !state.activeTab)
-                    state.activeTab = state.tab;
-                if (state.channel !== undefined && state.currentCh === undefined)
-                    state.currentCh = parseInt(state.channel) || 0;
-
-                delete state.tab;
-                delete state.channel;
-                state.version = 2;
-            }
-
-            if (state.version === 2) {
-                if (!Array.isArray(state.pinnedHeroFields))
-                    state.pinnedHeroFields = [];
-                state.version = 3;
-            }
-
-            if (state.version === 3) {
-                if (!state.pinnedHeroHistory || typeof state.pinnedHeroHistory !== "object" || Array.isArray(state.pinnedHeroHistory))
-                    state.pinnedHeroHistory = {};
-                state.version = 4;
-            }
-
-            if (state.version === 4) {
-                state.pinnedHeroHistory = normalizePinnedHeroHistory(state.pinnedHeroHistory, state.pinnedHeroFields);
-                state.version = 5;
-            }
-
-            if (state.version === 5) {
-                state.heroTempHistoryByCh = normalizeHeroTempHistory(state.heroTempHistoryByCh);
-                state.version = 6;
-            }
+            if (state.version !== UI_STATE_VERSION)
+                return defaults;
 
             if (typeof state.activeTab !== "string" || state.activeTab.length === 0)
-                state.activeTab = "status";
+                state.activeTab = defaults.activeTab;
 
             if (!Number.isInteger(state.currentCh))
-                state.currentCh = 0;
+                state.currentCh = defaults.currentCh;
 
-            if (!Array.isArray(state.pinnedHeroFields))
-                state.pinnedHeroFields = [];
             state.pinnedHeroFields = normalizePinnedHeroFields(state.pinnedHeroFields);
-            state.pinnedHeroHistory = normalizePinnedHeroHistory(state.pinnedHeroHistory, state.pinnedHeroFields);
-            state.heroTempHistoryByCh = normalizeHeroTempHistory(state.heroTempHistoryByCh);
-
+            state.history = normalizeHistoryTree(state.history);
             state.currentCh = Math.max(0, Math.min(1, state.currentCh));
             state.version = UI_STATE_VERSION;
             return state;
@@ -4285,13 +4344,20 @@
         function loadUiState() {
             try {
                 const raw = localStorage.getItem(UI_STATE_STORAGE_KEY);
-                const parsed = raw ? JSON.parse(raw) : {};
+                const parsed = raw ? JSON.parse(raw) : getDefaultUiState();
+
+                if (parsed?.version !== UI_STATE_VERSION)
+                    localStorage.removeItem(UI_STATE_STORAGE_KEY);
+
                 const migrated = migrateUiState(parsed);
                 localStorage.setItem(UI_STATE_STORAGE_KEY, JSON.stringify(migrated));
                 return migrated;
             }
             catch (err) {
-                return migrateUiState({});
+                localStorage.removeItem(UI_STATE_STORAGE_KEY);
+                const defaults = getDefaultUiState();
+                localStorage.setItem(UI_STATE_STORAGE_KEY, JSON.stringify(defaults));
+                return defaults;
             }
         }
 
@@ -4314,82 +4380,32 @@
                 .slice(0, 12);
         }
 
-        function normalizePinnedHeroHistory(rawHistory, rawFields) {
-            const history = (rawHistory && typeof rawHistory === "object" && !Array.isArray(rawHistory)) ? rawHistory : {};
-            const fields = normalizePinnedHeroFields(rawFields);
-            const allowedFields = new Set(fields.length > 0 ? fields : Object.keys(history));
-            const result = {};
+        function normalizeHistoryTree(rawTree) {
+            const walk = (node) => {
+                if (!node || typeof node !== "object")
+                    return {};
 
-            allowedFields.forEach((fieldPath) => {
-                const src = history[fieldPath];
-                if (!Array.isArray(src))
-                    return;
+                const out = {};
+                Object.keys(node).forEach((key) => {
+                    const value = node[key];
+                    if (Array.isArray(value)) {
+                        out[key] = value
+                            .map((entry) => sanitizeHistoryValue(entry))
+                            .slice(-HISTORY_MAX);
+                        return;
+                    }
 
-                const cleaned = src
-                    .map((value) => Number.parseFloat(value))
-                    .filter((value) => Number.isFinite(value));
-
-                if (cleaned.length === 0)
-                    return;
-
-                result[fieldPath] = cleaned.slice(-PINNED_HISTORY_MAX);
-            });
-
-            return result;
-        }
-
-        function normalizeHeroTempHistory(rawHistory) {
-            const alignEntry = (entry) => {
-                const keys = ["flow", "dhw", "ret", "flowSet", "ch", "dhwMode", "flame"];
-                const maxLen = Math.max(...keys.map((key) => (Array.isArray(entry[key]) ? entry[key].length : 0)), 0);
-                if (maxLen <= 0)
-                    return entry;
-
-                keys.forEach((key) => {
-                    const arr = Array.isArray(entry[key]) ? entry[key] : [];
-                    if (arr.length < maxLen) {
-                        entry[key] = Array(maxLen - arr.length).fill(null).concat(arr);
+                    if (value && typeof value === "object") {
+                        const nested = walk(value);
+                        if (Object.keys(nested).length > 0)
+                            out[key] = nested;
                     }
                 });
 
-                return entry;
+                return out;
             };
 
-            const fallback = () => ({ flow: [], dhw: [], ret: [], flowSet: [], ch: [], dhwMode: [], flame: [] });
-            const source = Array.isArray(rawHistory) ? rawHistory : [];
-
-            return [0, 1].map((idx) => {
-                const rawEntry = source[idx];
-                const normalized = fallback();
-
-                if (!rawEntry || typeof rawEntry !== "object" || Array.isArray(rawEntry))
-                    return normalized;
-
-                Object.keys(normalized).forEach((key) => {
-                    const values = Array.isArray(rawEntry[key]) ? rawEntry[key] : [];
-                    if (key === "ch" || key === "dhwMode" || key === "flame") {
-                        normalized[key] = values
-                            .slice(-HERO_TEMP_HISTORY_MAX)
-                            .map((value) => {
-                                if (value === null || value === undefined || value === "")
-                                    return null;
-                                return value === true || value === "true" || value === 1 || value === "1";
-                            });
-                    }
-                    else {
-                        normalized[key] = values
-                            .slice(-HERO_TEMP_HISTORY_MAX)
-                            .map((value) => {
-                                if (value === null || value === undefined || value === "")
-                                    return null;
-                                const num = Number.parseFloat(value);
-                                return Number.isFinite(num) ? num : null;
-                            });
-                    }
-                });
-
-                return alignEntry(normalized);
-            });
+            return walk(rawTree && typeof rawTree === "object" ? rawTree : {});
         }
 
         function syncPinnedHeroFieldsToConfig() {
@@ -4541,8 +4557,9 @@
                 svg.setAttribute("width", "80");
                 svg.setAttribute("height", "44");
                 svg.setAttribute("viewBox", "0 0 80 44");
-                if (pinnedHeroHistory[fieldPath]?.length >= 2)
-                    drawSparkline(svg, pinnedHeroHistory[fieldPath]);
+                const series = getNumericHistorySeries(fieldPath);
+                if (series.length >= 2)
+                    drawSparkline(svg, series);
 
                 const card = _$("div", {
                     className: "metric-card pinned-hero-card",
@@ -4551,8 +4568,7 @@
                         pinnedHeroFields.delete(fieldPath);
                         syncPinnedHeroFieldsToConfig();
                         saveUiState({
-                            pinnedHeroFields: Array.from(pinnedHeroFields),
-                            pinnedHeroHistory: normalizePinnedHeroHistory(pinnedHeroHistory, Array.from(pinnedHeroFields))
+                            pinnedHeroFields: Array.from(pinnedHeroFields)
                         });
                         renderPinnedHeroCards();
                     }
@@ -4577,12 +4593,10 @@
             if (staleFields.length > 0) {
                 staleFields.forEach((fieldPath) => {
                     pinnedHeroFields.delete(fieldPath);
-                    delete pinnedHeroHistory[fieldPath];
                 });
                 syncPinnedHeroFieldsToConfig();
                 saveUiState({
-                    pinnedHeroFields: Array.from(pinnedHeroFields),
-                    pinnedHeroHistory: normalizePinnedHeroHistory(pinnedHeroHistory, Array.from(pinnedHeroFields))
+                    pinnedHeroFields: Array.from(pinnedHeroFields)
                 });
             }
 
@@ -4631,16 +4645,12 @@
                 const val = getStatusValueByField(fieldPath);
                 const num = typeof val === "number" ? val : parseFloat(val);
                 if (!isFinite(num)) continue;
-                if (!pinnedHeroHistory[fieldPath]) pinnedHeroHistory[fieldPath] = [];
-                const arr = pinnedHeroHistory[fieldPath];
-                arr.push(num);
-                if (arr.length > PINNED_HISTORY_MAX) arr.shift();
-                historyChanged = true;
+                historyChanged = appendHistoryValueToTree(historyTree, fieldPath, num) || historyChanged;
             }
 
             if (historyChanged) {
                 saveUiState({
-                    pinnedHeroHistory: normalizePinnedHeroHistory(pinnedHeroHistory, Array.from(pinnedHeroFields))
+                    history: normalizeHistoryTree(historyTree)
                 });
             }
         }
@@ -4653,8 +4663,9 @@
                 if (valueEl && sourceValueEl)
                     setPinnedMetricValueContent(valueEl, fieldPath, sourceValueEl);
                 const svg = _("svg.pinned-sparkline", card);
-                if (svg && pinnedHeroHistory[fieldPath]?.length >= 2)
-                    drawSparkline(svg, pinnedHeroHistory[fieldPath]);
+                const series = getNumericHistorySeries(fieldPath);
+                if (svg && series.length >= 2)
+                    drawSparkline(svg, series);
             });
         }
 
@@ -6521,6 +6532,12 @@
                 exportJson(statuscache, "status");
                 break;
 
+            case "history": {
+                const uiState = loadUiState();
+                exportJson(uiState?.history || {}, "history");
+                break;
+            }
+
             case "log":
                 exportLog();
                 break;
@@ -6774,14 +6791,12 @@
             const uiState = loadUiState();
             currentCh = uiState.currentCh;
             pinnedHeroFields = new Set(uiState.pinnedHeroFields || []);
-            pinnedHeroHistory = normalizePinnedHeroHistory(uiState.pinnedHeroHistory, uiState.pinnedHeroFields);
-            heroTempHistoryByCh = normalizeHeroTempHistory(uiState.heroTempHistoryByCh);
+            historyTree = normalizeHistoryTree(uiState.history);
             if (pinnedHeroFields.size === 0) {
                 pinnedHeroFields = new Set(["slave.flow_t", "slave.rel_mod", "slave.ch_pressure"]);
                 saveUiState({
                     pinnedHeroFields: Array.from(pinnedHeroFields),
-                    pinnedHeroHistory: normalizePinnedHeroHistory(pinnedHeroHistory, Array.from(pinnedHeroFields)),
-                    heroTempHistoryByCh: normalizeHeroTempHistory(heroTempHistoryByCh)
+                    history: normalizeHistoryTree(historyTree)
                 });
             }
             syncPinnedHeroFieldsToConfig();
