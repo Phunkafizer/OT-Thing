@@ -7,7 +7,7 @@ https://www.seegel-systeme.de/2025/01/05/ot-thing-das-universelle-wifi-opentherm
 
 ![OTthing](assets/DSC_0550-scaled.jpg "OTthing board")
 ![OTthing Home Assistant Dashboard](assets/otthing_hadash.png "OTthing Home Assistant dashboard")
-![OTthing webUI](assets/otthing_webui.png "OTthing webUI")
+![OTthing webUI](assets/otthing_webui1.png "OTthing webUI status")
 
 ## Overview
 
@@ -16,11 +16,28 @@ OTthing is a versatile OpenTherm gateway that bridges your heating system to the
 ### Key Features
 
 * **Dual OpenTherm Modes**: Operate as both OpenTherm master and slave simultaneously
+* **Single-Board Compact Design**: Cost-efficient SMD-based one-board hardware with small enclosure footprint
+* **Broad HVAC Compatibility**: Designed for OpenTherm-enabled boilers, heat pumps, ventilation, solar storage, and similar systems
+* **USB-C Powered**: Simple and reliable power supply through a standard USB-C connector
 * **Web Dashboard**: Real-time status monitoring with system metrics
 * **Home Assistant Integration**: Native MQTT discovery and seamless HA integration
 * **Multi-Zone Support**: Control up to 2 heating circuits with independent parameters
+* **Time Program**: Built-in scheduling for automatic heating setpoint changes
+* **Heating Curve Control**: Outdoor-compensated flow temperature control with configurable curve parameters
+* **Flow & Setpoint Management**: Fine-grained control for CH temperature targets, modes, and operating limits
+* **Raw OpenTherm Tools**: Direct read/write request endpoint for diagnostics and advanced integrations
+* **Real-Time Telemetry**: Live updates via WebSocket for logs and status changes
+* **REST API**: Full HTTP interface for status, configuration, control commands, and topic discovery
+* **WiFi Provisioning**: Built-in network scan and credential setup through the web interface
+* **OTA Firmware Update**: In-browser firmware upload endpoint with automatic reboot on success
+* **Local Data Export**: Device data and diagnostics export from the web UI for troubleshooting
+* **External Inputs & Sensors**: Optional DS18B20, pulse input, or photointerrupter support (for example condensate monitoring)
+* **Selectable Operating Strategies**: Run OTThing as full heating controller or in monitoring-first mode for telemetry-only operation
+* **Automatic Bypass Behavior**: Allows restoring conventional room-thermostat operation without rewiring
+* **Failsafe Runtime Status**: Device health and communication state tracking for robust operation
 * **Local Control**: Responsive web UI with no cloud dependency
 * **Modular Design**: Extensible architecture supporting multiple integrations
+* **Open Source Platform**: Open hardware and firmware for custom extensions and modifications
 * **Advanced Configuration**: Room modes (off/heat/auto), flow control, heating curves, and more
 * **Detailed Logging**: Real-time log streaming to monitor system behavior
 
@@ -29,7 +46,12 @@ OTthing is a versatile OpenTherm gateway that bridges your heating system to the
 The firmware consists of several functional modules:
 
 * **OpenTherm Control** (`otcontrol.cpp`): Manages master/slave communication with the boiler
+* **Master Requests** (`masterrequests.cpp`): Builds and schedules OpenTherm master requests and polling cycles
+* **OpenTherm Values** (`otvalues.cpp`): Stores, normalizes, and exposes decoded OpenTherm data points
+* **Heating Curve** (`heatingcurve.cpp`): Calculates target flow temperature from heating-curve parameters
 * **MQTT Integration** (`mqtt.cpp`): Publishes device state and subscribes to control topics
+* **Device Status** (`devstatus.cpp`): Tracks runtime health, connectivity, and status flags
+* **Auxiliary Input** (`auxInput.cpp`): Handles external input signals for additional control logic
 * **Web Portal** (`portal.cpp`): Serves the responsive dashboard and API endpoints
 * **Heating Control** (`CHcontrol.cpp`): Manages heating circuits, setpoints, and modes
 * **Sensor Integration** (`sensors.cpp`): Collects data from external sensors
@@ -44,22 +66,16 @@ The firmware consists of several functional modules:
 
 ## Installation & Setup
 
-1. **Build the Firmware**:
-   ```bash
-   platformio run --environment release
-   ```
+1. **Hardware Setup**:
+  - Connect the OpenTherm slave side (boiler / ventilation / solar storage) to the screw terminal **Boiler** on OTThing
+  - Optionally connect the room unit to the screw clamps **Roomunit** on OTThing
+  - Connect OTThing to a USB-C power supply
 
-2. **Flash to Device**:
-   ```bash
-   platformio run --environment release --target upload
-   ```
+2. **Access the Web Interface**:
+  - The device creates a WiFi AP or connects to your network, the default password is "12345678"
+  - Access the web UI at `http://<otthing-ip>/` (default: 4.3.2.1)
 
-3. **Access the Web Interface**:
-   - Connect to your boiler's OpenTherm bus
-   - The device creates a WiFi AP or connects to your network
-   - Access the web UI at `http://<otthing-ip>/` (default: 4.3.2.1)
-
-4. **Configure**:
+3. **Configure**:
    - Set your boiler type and heating circuit parameters
    - Configure MQTT broker if using Home Assistant
    - Adjust setpoints, heating curves, and control modes
@@ -133,9 +149,11 @@ https://community.home-assistant.io/t/ot-thing-an-opentherm-wifi-gateway-with-in
 When reporting issues please supply:
 * Brand & model of boiler & roomunit
 * Log
-* status JSON (http://[OTTHING-IP]/status)
-* configuration JSON (http://[OTTHING-IP]/config)
-* OT status JSON (http://[OTTHING-IP]/otitems)
+* status JSON
+* configuration JSON
+* OT items JSON
+* data history JSON
+All these daat can be exported from the OTthing using the export function on bottom of webUI
 
 ## Contributing
 * make changes in a new branch based on [`develop`](../../tree/develop) branch
