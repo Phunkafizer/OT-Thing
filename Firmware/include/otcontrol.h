@@ -67,6 +67,7 @@ private:
     } ventCtrl;
     struct {
         bool otc;
+        bool chOffTemp;
     } boilerConfig;
     struct {
         bool dhwOn;

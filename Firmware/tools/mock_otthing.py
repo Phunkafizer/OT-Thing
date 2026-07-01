@@ -48,6 +48,12 @@ state = {
                 "gradient": 1.0,
                 "offset": 0,
                 "marker": [],
+                "roomComp": {
+                    "enabled": True,
+                    "p": 1.0,
+                    "i": 0.5,
+                    "boost": 1,
+                },
                 "roomsetpoint": {"source": 0, "temp": 21},
                 "roomtemp": {"source": 1},
                 "overrideFlow": False,
@@ -67,6 +73,12 @@ state = {
                 "gradient": 1.0,
                 "offset": 0,
                 "marker": [],
+                "roomComp": {
+                    "enabled": True,
+                    "p": 1.0,
+                    "i": 0.5,
+                    "boost": 1,
+                },
                 "roomsetpoint": {"source": 0, "temp": 22},
                 "roomtemp": {"source": 1},
                 "overrideFlow": False,
@@ -719,6 +731,7 @@ _ADMIN_HTML = """<!DOCTYPE html>
   body { font-family: monospace; background: #12121f; color: #ddd; margin: 0; padding: 20px; }
   h1 { color: #4fc3f7; margin-top: 0; font-size: 1.2em; letter-spacing: 1px; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+    .grid-section-title { grid-column: 1 / -1; margin-top: 4px; margin-bottom: -4px; color: #9ddfff; font-size: 0.86em; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid #2f4157; padding-bottom: 4px; }
   .card { background: #1e1e30; border-radius: 8px; padding: 14px 16px; }
   .card h3 { margin: 0 0 10px; font-size: 0.75em; text-transform: uppercase; color: #4fc3f7; letter-spacing: 1px; }
   .row { display: flex; align-items: center; margin-bottom: 6px; gap: 8px; }
@@ -813,26 +826,46 @@ _ADMIN_HTML = """<!DOCTYPE html>
 <div id="toast"></div>
 <script>
 const FIELDS = [
-  { section: "General", rows: [
-    { key: "outsideTemp",  label: "Outside temp (°C)", type: "number", step: 0.1 },
-    { key: "runtime",      label: "Runtime (s)",       type: "number", step: 1 },
+    { section: "General", rows: [
+        { key: "outsideTemp",  label: "Outside temp (°C)", type: "number", step: 0.1 },
+        { key: "runtime",      label: "Runtime (s)",       type: "number", step: 1 },
         { key: "coolingCtrl",  label: "Cooling ctrl (%)",  type: "number", step: 1 },
         { key: "coolingMode",  label: "Cooling mode",      type: "select", options: ["off","cool"] },
-  ]},
-    { section: "Master status", rows: [
+        { key: "USB_connected", label: "USB connected",    type: "bool" },
+        { key: "bypass",        label: "Bypass",           type: "bool" },
+        { key: "summerMode",    label: "Summer mode",      type: "bool" },
+        { key: "dhwBlocking",   label: "DHW blocking",     type: "bool" },
+    ]},
+    { section: "DHW", rows: [
+        { key: "dhw.ctrlMode", label: "DHW ctrl mode", type: "select", options: ["off","heat","auto"] },
+        { key: "dhw.action",   label: "DHW action",    type: "select", options: ["off","heating","cooling","idle"] },
+    ]},
+    { section: "OT Master status", rows: [
         { key: "master.status.data.ch_enable",      label: "CH enable",      type: "bool" },
         { key: "master.status.data.ch2_enable",     label: "CH2 enable",     type: "bool" },
         { key: "master.status.data.dhw_enable",     label: "DHW enable",     type: "bool" },
         { key: "master.status.data.cooling_enable", label: "Cooling enable", type: "bool" },
         { key: "master.status.data.otc_active",     label: "OTC active",     type: "bool" },
+        { key: "master.status.data.summer_mode",    label: "Summer mode",    type: "bool" },
+        { key: "master.status.data.dhw_blocking",   label: "DHW blocking",   type: "bool" },
     ]},
-    { section: "Master vent status", rows: [
+    { section: "OT Master vent status", rows: [
         { key: "master.vent_status.data.vent_enable",      label: "Vent enable",      type: "bool" },
         { key: "master.vent_status.data.open_bypass",      label: "Open bypass",      type: "bool" },
         { key: "master.vent_status.data.auto_bypass",      label: "Auto bypass",      type: "bool" },
         { key: "master.vent_status.data.free_vent_enable", label: "Free vent enable", type: "bool" },
     ]},
-  { section: "Slave status", rows: [
+    { section: "OT Master", rows: [
+        { key: "master.room_t.data",       label: "Room temp 1 (°C)",       type: "number", step: 0.1 },
+        { key: "master.room_set_t.data",   label: "Room setpoint 1 (°C)",   type: "number", step: 0.1 },
+        { key: "master.room_t2.data",      label: "Room temp 2 (°C)",       type: "number", step: 0.1 },
+        { key: "master.room_set_t2.data",  label: "Room setpoint 2 (°C)",   type: "number", step: 0.1 },
+        { key: "master.dhw_set_t.data",    label: "DHW setpoint (°C)",      type: "number", step: 0.1 },
+        { key: "master.ch_set_t.data",     label: "CH flow setpoint (°C)",  type: "number", step: 0.1 },
+        { key: "master.ch_set_t2.data",    label: "CH2 flow setpoint (°C)", type: "number", step: 0.1 },
+        { key: "master.cooling_ctrl.data", label: "Cooling ctrl (%)",       type: "number", step: 1 },
+    ]},
+    { section: "OT Slave status", rows: [
         { key: "slave.status.fault",      label: "Fault",      type: "bool" },
         { key: "slave.status.flame",      label: "Flame",      type: "bool" },
         { key: "slave.status.diagnostic", label: "Diagnostic", type: "bool" },
@@ -841,7 +874,7 @@ const FIELDS = [
         { key: "slave.status.dhw_mode",   label: "DHW mode",   type: "bool" },
         { key: "slave.status.cooling",    label: "Cooling",    type: "bool" },
     ]},
-    { section: "Slave vent status", rows: [
+    { section: "OT Slave vent status", rows: [
         { key: "slave.vent_status.fault",       label: "Vent fault",      type: "bool" },
         { key: "slave.vent_status.vent_active", label: "Vent active",     type: "bool" },
         { key: "slave.vent_status.bypass_open", label: "Bypass open",     type: "bool" },
@@ -849,50 +882,49 @@ const FIELDS = [
         { key: "slave.vent_status.free_vent",   label: "Free vent",       type: "bool" },
         { key: "slave.vent_status.diagnostic",  label: "Vent diagnostic", type: "bool" },
     ]},
-    { section: "Slave config", rows: [
-        { key: "slave.slave_config_member.ch2_present",           label: "CH2 present",               type: "bool" },
-        { key: "slave.slave_config_member.dhw_present",           label: "DHW present",               type: "bool" },
-        { key: "slave.slave_config_member.cooling_config",        label: "Cooling config",            type: "bool" },
-        { key: "slave.slave_config_member.heat_cool_ctrl",        label: "Heat/cool master ctrl",     type: "bool" },
-        { key: "slave.slave_config_member.dhw_config",            label: "DHW config",                type: "bool" },
-        { key: "slave.slave_config_member.master_lowoff_pumpctrl",label: "Master low/off pump ctrl",  type: "bool" },
-        { key: "slave.slave_config_member.memberId",              label: "Member ID",                 type: "number", step: 1 },
-        { key: "slave.slave_config_member.ctrl_type",             label: "Ctrl type",                 type: "bool" },
-  ]},
-  { section: "Slave temps & modulation", rows: [
-    { key: "slave.flow_t",   label: "Flow temp (°C)",        type: "number", step: 0.1 },
-    { key: "slave.flow_t2",  label: "Flow temp 2 (°C)",      type: "number", step: 0.1 },
-    { key: "slave.dhw_t",    label: "DHW temp (°C)",         type: "number", step: 0.1 },
-    { key: "slave.return_t", label: "Return temp (°C)",      type: "number", step: 0.1 },
-    { key: "slave.rel_mod",  label: "Rel. modulation (%)",   type: "number", step: 1 },
-  ]},
-  { section: "Heater circuit 1", rows: [
-    { key: "heatercircuit.0.roomsetpoint", label: "Room setpoint (°C)", type: "number", step: 0.5 },
-    { key: "heatercircuit.0.roomtemp",     label: "Room temp (°C)",     type: "number", step: 0.1 },
-    { key: "heatercircuit.0.roomMode",     label: "Room mode",          type: "select", options: ["off","heat","auto"] },
-    { key: "heatercircuit.0.ctrlMode",     label: "CH ctrl mode",       type: "select", options: ["off","heat","auto"] },
-    { key: "heatercircuit.0.action",       label: "Action",             type: "select", options: ["off","heating","cooling","idle"] },
-    { key: "heatercircuit.0.roomAction",   label: "Room action",        type: "select", options: ["off","heating","cooling","idle"] },
-    { key: "heatercircuit.0.suspended",    label: "Suspended",          type: "bool" },
-  ]},
-  { section: "Heater circuit 2", rows: [
-    { key: "heatercircuit.1.roomsetpoint", label: "Room setpoint (°C)", type: "number", step: 0.5 },
-    { key: "heatercircuit.1.roomtemp",     label: "Room temp (°C)",     type: "number", step: 0.1 },
-    { key: "heatercircuit.1.roomMode",     label: "Room mode",          type: "select", options: ["off","heat","auto"] },
-    { key: "heatercircuit.1.ctrlMode",     label: "CH ctrl mode",       type: "select", options: ["off","heat","auto"] },
-    { key: "heatercircuit.1.action",       label: "Action",             type: "select", options: ["off","heating","cooling","idle"] },
-    { key: "heatercircuit.1.roomAction",   label: "Room action",        type: "select", options: ["off","heating","cooling","idle"] },
-    { key: "heatercircuit.1.suspended",    label: "Suspended",          type: "bool" },
-  ]},
-  { section: "Master", rows: [
-    { key: "master.room_t.data",      label: "Room temp 1 (°C)",      type: "number", step: 0.1 },
-    { key: "master.room_set_t.data",  label: "Room setpoint 1 (°C)",  type: "number", step: 0.1 },
-    { key: "master.room_t2.data",     label: "Room temp 2 (°C)",      type: "number", step: 0.1 },
-    { key: "master.room_set_t2.data", label: "Room setpoint 2 (°C)",  type: "number", step: 0.1 },
-    { key: "master.ch_set_t.data",    label: "CH flow setpoint (°C)", type: "number", step: 0.1 },
-    { key: "master.ch_set_t2.data",   label: "CH2 flow setpoint (°C)",type: "number", step: 0.1 },
-        { key: "master.cooling_ctrl.data", label: "Cooling ctrl (%)",  type: "number", step: 1 },
-  ]},
+    { section: "OT Slave config", rows: [
+        { key: "slave.slave_config_member.ch2_present",            label: "CH2 present",              type: "bool" },
+        { key: "slave.slave_config_member.dhw_present",            label: "DHW present",              type: "bool" },
+        { key: "slave.slave_config_member.cooling_config",         label: "Cooling config",           type: "bool" },
+        { key: "slave.slave_config_member.heat_cool_ctrl",         label: "Heat/cool master ctrl",    type: "bool" },
+        { key: "slave.slave_config_member.dhw_config",             label: "DHW config",               type: "bool" },
+        { key: "slave.slave_config_member.master_lowoff_pumpctrl", label: "Master low/off pump ctrl", type: "bool" },
+        { key: "slave.slave_config_member.memberId",               label: "Member ID",                type: "number", step: 1 },
+        { key: "slave.slave_config_member.ctrl_type",              label: "Ctrl type",                type: "bool" },
+    ]},
+    { section: "OT slave sensors", rows: [
+        { key: "slave.flow_t",      label: "Flow temp (°C)",      type: "number", step: 0.1 },
+        { key: "slave.flow_t2",     label: "Flow temp 2 (°C)",    type: "number", step: 0.1 },
+        { key: "slave.dhw_t",       label: "DHW temp (°C)",       type: "number", step: 0.1 },
+        { key: "slave.return_t",    label: "Return temp (°C)",    type: "number", step: 0.1 },
+        { key: "slave.exhaust_t",   label: "Exhaust temp (°C)",   type: "number", step: 0.1 },
+        { key: "slave.ch_pressure", label: "Pressure (bar)",      type: "number", step: 0.1 },
+        { key: "slave.rel_mod",     label: "Rel. modulation (%)", type: "number", step: 1 },
+    ]},
+    { section: "Heater circuit 1", rows: [
+        { key: "heatercircuit.0.roomsetpoint", label: "Room setpoint (°C)", type: "number", step: 0.5 },
+        { key: "heatercircuit.0.roomtemp",     label: "Room temp (°C)",     type: "number", step: 0.1 },
+        { key: "heatercircuit.0.returnTemp",   label: "Return temp (°C)",   type: "number", step: 0.1 },
+        { key: "heatercircuit.0.roomcompInteg", label: "RoomComp integ",     type: "number", step: 0.1 },
+        { key: "heatercircuit.0.retLimitInteg", label: "ReturnLimit integ",  type: "number", step: 0.1 },
+        { key: "heatercircuit.0.roomMode",     label: "Room mode",          type: "select", options: ["off","heat","auto"] },
+        { key: "heatercircuit.0.ctrlMode",     label: "CH ctrl mode",       type: "select", options: ["off","heat","auto"] },
+        { key: "heatercircuit.0.action",       label: "Action",             type: "select", options: ["off","heating","cooling","idle"] },
+        { key: "heatercircuit.0.roomAction",   label: "Room action",        type: "select", options: ["off","heating","cooling","idle"] },
+        { key: "heatercircuit.0.suspended",    label: "Suspended",          type: "bool" },
+    ]},
+    { section: "Heater circuit 2", rows: [
+        { key: "heatercircuit.1.roomsetpoint", label: "Room setpoint (°C)", type: "number", step: 0.5 },
+        { key: "heatercircuit.1.roomtemp",     label: "Room temp (°C)",     type: "number", step: 0.1 },
+        { key: "heatercircuit.1.returnTemp",   label: "Return temp (°C)",   type: "number", step: 0.1 },
+        { key: "heatercircuit.1.roomcompInteg", label: "RoomComp integ",     type: "number", step: 0.1 },
+        { key: "heatercircuit.1.retLimitInteg", label: "ReturnLimit integ",  type: "number", step: 0.1 },
+        { key: "heatercircuit.1.roomMode",     label: "Room mode",          type: "select", options: ["off","heat","auto"] },
+        { key: "heatercircuit.1.ctrlMode",     label: "CH ctrl mode",       type: "select", options: ["off","heat","auto"] },
+        { key: "heatercircuit.1.action",       label: "Action",             type: "select", options: ["off","heating","cooling","idle"] },
+        { key: "heatercircuit.1.roomAction",   label: "Room action",        type: "select", options: ["off","heating","cooling","idle"] },
+        { key: "heatercircuit.1.suspended",    label: "Suspended",          type: "bool" },
+    ]},
 ];
 
 function deepGet(obj, path) {
@@ -965,6 +997,15 @@ function toJsonPath(base, seg) {
     return base + '/' + encodeJsonPathSegment(seg);
 }
 
+function jsonPathToDotPath(path) {
+    if (!path || path === '$')
+        return '';
+    const parts = String(path).split('/').slice(1).map((seg) =>
+        seg.replaceAll('~1', '/').replaceAll('~0', '~')
+    );
+    return parts.join('.');
+}
+
 function collectJsonPaths(value, currentPath, output) {
     if (value === null || value === undefined || typeof value !== 'object')
         return;
@@ -998,6 +1039,7 @@ function buildJsonTreeNode(key, value, path, expandedSet) {
 
     const row = document.createElement('div');
     row.className = 'json-row';
+    row.dataset.path = path;
 
     const isObject = value !== null && typeof value === 'object';
     const size = isObject ? Object.keys(value).length : 0;
@@ -1074,16 +1116,40 @@ function initJsonInspectorControls() {
         if (tree) {
             tree.addEventListener('click', (ev) => {
                 const btn = ev.target.closest('button[data-path]');
-                if (!btn)
+                if (btn) {
+                    const path = btn.dataset.path;
+                    if (!path)
+                        return;
+                    if (jsonExpanded[target].has(path))
+                        jsonExpanded[target].delete(path);
+                    else
+                        jsonExpanded[target].add(path);
+                    renderJsonTree(target, target === 'status' ? (latestStatus || {}) : (latestConfig || {}));
                     return;
-                const path = btn.dataset.path;
-                if (!path)
+                }
+
+                if (target !== 'status')
                     return;
-                if (jsonExpanded[target].has(path))
-                    jsonExpanded[target].delete(path);
-                else
-                    jsonExpanded[target].add(path);
-                renderJsonTree(target, target === 'status' ? (latestStatus || {}) : (latestConfig || {}));
+
+                const row = ev.target.closest('.json-row[data-path]');
+                const dotPath = jsonPathToDotPath(row?.dataset?.path || '');
+                if (!dotPath)
+                    return;
+
+                const pathEl = document.getElementById('customPath');
+                if (!pathEl)
+                    return;
+
+                pathEl.value = dotPath;
+                syncCustomValueFromPath();
+
+                const valueEl = document.getElementById('customValue');
+                if (!valueEl)
+                    return;
+
+                valueEl.focus();
+                if (valueEl.type !== 'checkbox' && typeof valueEl.select === 'function')
+                    valueEl.select();
             });
         }
         if (pane) {
@@ -1176,6 +1242,8 @@ async function sendValue(key, value) {
     });
         if (r.ok) {
             deepSet(latestStatus, key, value);
+                        applyStatus(latestStatus);
+                        updatePathSuggestions(latestStatus);
             showToast('✓  ' + key + ' = ' + JSON.stringify(value));
             return;
         }
@@ -1332,31 +1400,59 @@ function buildUI(status) {
     renderJsonBoxes();
     updatePathSuggestions(status);
   grid.innerHTML = '';
-  for (const section of FIELDS) {
-    const card = document.createElement('div');
-    card.className = 'card';
-    const h3 = document.createElement('h3');
-    h3.textContent = section.section;
-    card.appendChild(h3);
-    for (const row of section.rows) {
-      const val = deepGet(status, row.key);
-      const id = 'f_' + row.key.replace(/\\./g, '_');
-      const div = document.createElement('div');
-      div.className = 'row';
-      let inputHtml;
-      if (row.type === 'bool') {
-        inputHtml = `<input type="checkbox" id="${id}" data-key="${row.key}" data-type="${row.type}" ${val ? 'checked' : ''}>`;
-      } else if (row.type === 'select') {
-        const opts = (row.options || []).map(o => `<option${o === val ? ' selected' : ''}>${o}</option>`).join('');
-        inputHtml = `<select id="${id}" data-key="${row.key}" data-type="${row.type}">${opts}</select>`;
-      } else {
-        inputHtml = `<input type="number" id="${id}" data-key="${row.key}" data-type="${row.type}" value="${val ?? ''}" step="${row.step ?? 1}">`;
-      }
-      div.innerHTML = `<label for="${id}">${row.label}</label>${inputHtml}`;
-      card.appendChild(div);
+
+    const sectionKind = (sectionName) => {
+        const lower = String(sectionName || '').toLowerCase();
+        if (lower.includes('master')) return 'master';
+        if (lower.includes('slave')) return 'slave';
+        return 'other';
+    };
+
+    const groups = [
+        { title: 'Other', kind: 'other' },
+        { title: 'Master', kind: 'master' },
+        { title: 'Slave', kind: 'slave' },
+    ];
+
+    const renderSectionCard = (section) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        const h3 = document.createElement('h3');
+        h3.textContent = section.section;
+        card.appendChild(h3);
+        for (const row of section.rows) {
+            const val = deepGet(status, row.key);
+            const id = 'f_' + row.key.replace(/\\./g, '_');
+            const div = document.createElement('div');
+            div.className = 'row';
+            let inputHtml;
+            if (row.type === 'bool') {
+                inputHtml = `<input type="checkbox" id="${id}" data-key="${row.key}" data-type="${row.type}" ${val ? 'checked' : ''}>`;
+            } else if (row.type === 'select') {
+                const opts = (row.options || []).map(o => `<option${o === val ? ' selected' : ''}>${o}</option>`).join('');
+                inputHtml = `<select id="${id}" data-key="${row.key}" data-type="${row.type}">${opts}</select>`;
+            } else {
+                inputHtml = `<input type="number" id="${id}" data-key="${row.key}" data-type="${row.type}" value="${val ?? ''}" step="${row.step ?? 1}">`;
+            }
+            div.innerHTML = `<label for="${id}">${row.label}</label>${inputHtml}`;
+            card.appendChild(div);
+        }
+        grid.appendChild(card);
+    };
+
+    for (const group of groups) {
+        const groupedSections = FIELDS.filter((section) => sectionKind(section.section) === group.kind);
+        if (groupedSections.length === 0)
+            continue;
+
+        const title = document.createElement('div');
+        title.className = 'grid-section-title';
+        title.textContent = group.title;
+        grid.appendChild(title);
+
+        groupedSections.forEach(renderSectionCard);
     }
-    grid.appendChild(card);
-  }
+
         syncCustomValueFromPath();
     if (!grid.dataset.changeBound) {
         grid.addEventListener('change', async (e) => {

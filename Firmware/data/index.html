@@ -1839,7 +1839,7 @@
                 <div class="metric-card hero-roomset-card" id="heroRoomSetCard1">
                     <h5>Room setpoint<span class="flow-action-icon" id="heroRoomActionIcon1"></span></h5>
                     <div class="metric-inline-row">
-                        <div class="metric-value"><span id="heroRoomSet1" data-min="17" data-max="23">--</span></div>
+                        <div class="metric-value"><span id="heroRoomSet1">--</span></div>
                         <div class="metric-actions">
                             <div class="step-group">
                                 <button class="step-btn" type="button" onclick="adjustRoomSetpoint(0, -0.5)">▼</button>
@@ -1856,7 +1856,7 @@
                 <div class="metric-card hero-roomset-card CH2" id="heroRoomSetCard2">
                     <h5>Room setpoint 2<span class="flow-action-icon" id="heroRoomActionIcon2"></span></h5>
                     <div class="metric-inline-row">
-                        <div class="metric-value"><span id="heroRoomSet2" data-min="17" data-max="23">--</span></div>
+                        <div class="metric-value"><span id="heroRoomSet2">--</span></div>
                         <div class="metric-actions">
                             <div class="step-group">
                                 <button class="step-btn" type="button" onclick="adjustRoomSetpoint(1, -0.5)">▼</button>
@@ -1890,7 +1890,7 @@
                 <div class="metric-card hero-roomset-card cool" id="heroCoolingCard">
                     <h5>Cooling<span class="flow-action-icon" id="heroCoolingActionIcon"></span></h5>
                     <div class="metric-inline-row">
-                        <div class="metric-value"><span id="heroCoolingCtrl" data-min="0" data-max="100">--</span></div>
+                        <div class="metric-value"><span id="heroCoolingCtrl">--</span></div>
                         <div class="metric-actions">
                             <div class="step-group" id="coolingStepGroup">
                                 <button class="step-btn" type="button" onclick="adjustCoolingCtrl(-1)">▼</button>
@@ -2044,36 +2044,36 @@
                 <div class="flexline">
                     <div class="statusfield">
                         <h5>Flow temperature</h5>
-                        <span class="statusvalue" field="slave.flow_t" unit="&deg;C" data-min="25" data-max="60"></span>
+                        <span class="statusvalue" field="slave.flow_t" unit="&deg;C"></span>
                     </div>
                     
                     <div class="statusfield">
                         <h5>Flow temperature 2</h5>
-                        <span class="statusvalue" field="slave.flow_t2" unit="&deg;C" data-min="25" data-max="60"></span>
+                        <span class="statusvalue" field="slave.flow_t2" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>DHW temperature</h5>
-                        <span class="statusvalue" field="slave.dhw_t" unit="&deg;C" data-min="25" data-max="60"></span>
+                        <span class="statusvalue" field="slave.dhw_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>DHW temperature 2</h5>
-                        <span class="statusvalue" field="slave.dhw_t2" unit="&deg;C" data-min="25" data-max="60"></span>    
+                        <span class="statusvalue" field="slave.dhw_t2" unit="&deg;C"></span>    
                     </div>
                     <div class="statusfield">
                         <h5>Exhaust temperature</h5>
-                        <span class="statusvalue" field="slave.exhaust_t" unit="&deg;C" data-min="35" data-max="80"></span>
+                        <span class="statusvalue" field="slave.exhaust_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Outside temperature</h5>
-                        <span class="statusvalue" field="slave.outside_t" unit="&deg;C" data-min="0" data-max="20"></span>
+                        <span class="statusvalue" field="slave.outside_t" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Return temperature</h5>
-                        <span class="statusvalue" field="slave.return_t" unit="&deg;C" data-min="25" data-max="60"></span>    
+                        <span class="statusvalue" field="slave.return_t" unit="&deg;C"></span>    
                     </div>
                     <div class="statusfield">
                         <h5>Room override temp.</h5>
-                        <span class="statusvalue" field="slave.tr_override" unit="&deg;C" data-min="15" data-max="30"></span>    
+                        <span class="statusvalue" field="slave.tr_override" unit="&deg;C"></span>    
                     </div>
                     <div class="statusfield">
                         <h5>Supply inlet temp.</h5>
@@ -2099,11 +2099,11 @@
                 <div class="flexline">
                     <div class="statusfield">
                         <h5>Modulation</h5>
-                        <span class="statusvalue" field="slave.rel_mod" unit="%" data-min="5" data-max="70"></span>
+                        <span class="statusvalue" field="slave.rel_mod" unit="%"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Rel. ventilation</h5>
-                        <span class="statusvalue" field="slave.rel_vent" unit="%" data-min="0" data-max="100"></span>
+                        <span class="statusvalue" field="slave.rel_vent" unit="%"></span>
                     </div>
                     <div class="statusfield">
                         <h5>&#x2300; flame ratio (3 h)</h5>
@@ -2418,23 +2418,23 @@
                     </div>
                     <div class="statusfield">
                         <h5>Room temperature</h5>
-                        <span class="statusvalue" field="master.room_t.data" unit="&deg;C" data-min="17" data-max="23"></span>
+                        <span class="statusvalue" field="master.room_t.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room set temperature</h5>
-                        <span class="statusvalue" field="master.room_set_t.data" unit="&deg;C" data-min="17" data-max="23"></span>
+                        <span class="statusvalue" field="master.room_set_t.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room temperature 2</h5>
-                        <span class="statusvalue" field="master.room_t2.data" unit="&deg;C" data-min="17" data-max="23"></span>
+                        <span class="statusvalue" field="master.room_t2.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room set temperature 2</h5>
-                        <span class="statusvalue" field="master.room_set_t2.data" unit="&deg;C" data-min="17" data-max="23"></span>
+                        <span class="statusvalue" field="master.room_set_t2.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>outside temp.</h5>
-                        <span class="statusvalue" field="master.outside_t.data" unit="&deg;C" data-min="0" data-max="20"></span>
+                        <span class="statusvalue" field="master.outside_t.data" unit="&deg;C"></span>
                     </div>
                 </div>
                 <div class="flexline">
@@ -2866,6 +2866,26 @@
                         <span class="statusvalue" field="heatercircuit.$.reduction" unit="K"></span>
                     </div>
                 </div>
+
+                <h4>Marker</h4>
+                <div id="markerGroup">
+                    <table class="data-table marker-table">
+                        <thead>
+                            <tr>
+                                <th class="comment">comment</th>
+                                <th class="rs">roomset</th>
+                                <th class="ot">outside</th>
+                                <th class="ft">flow</th>
+                                <th class="rem"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="markerbody">
+                            <tr class="empty-row"><td colspan="5">No markers yet. Add one to capture current outside and flow temperatures.</td></tr>
+                        </tbody>
+                    </table>
+                    <input id="comment" />
+                    <button onclick="addMarker()">+</button>
+                </div>
             </div>
 
             <h3>Time program</h3>
@@ -2941,25 +2961,6 @@
                 <div id="scheduleEditHint" class="empty-state" hidden>editing slot</div>
             </div>
 
-            <h3>Marker</h3>
-            <div class="group" id="markerGroup">
-                <table class="data-table marker-table">
-                    <thead>
-                        <tr>
-                            <th class="comment">comment</th>
-                            <th class="rs">roomset</th>
-                            <th class="ot">outside</th>
-                            <th class="ft">flow</th>
-                            <th class="rem"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="markerbody">
-                        <tr class="empty-row"><td colspan="5">No markers yet. Add one to capture current outside and flow temperatures.</td></tr>
-                    </tbody>
-                </table>
-                <input id="comment" />
-                <button onclick="addMarker()">+</button>
-            </div>
         </div>
 
         <div class="tab" id="setup">
@@ -3484,6 +3485,36 @@
             firmwareReloadMs: 5000,
             wsReconnectMs: 1000
         },
+        VALUE_RANGE_LOOKUP = {
+            byField: {
+                "slave.flow_t": { min: 28, max: 60 },
+                "slave.flow_t2": { min: 28, max: 60 },
+                "slave.dhw_t": { min: 25, max: 60 },
+                "slave.dhw_t2": { min: 25, max: 60 },
+                "master.dhw_set_t.data": { min: 25, max: 60 },
+                "slave.exhaust_t": { min: 35, max: 80 },
+                "slave.outside_t": { min: 0, max: 20 },
+                "slave.return_t": { min: 25, max: 60 },
+                "slave.tr_override": { min: 17, max: 23 },
+                "slave.rel_mod": { min: 5, max: 70 },
+                "slave.rel_vent": { min: 0, max: 100 },
+                "slave.ch_pressure": { min: 0.8, max: 2.0 },
+                "master.ch_set_t.data": { min: 28, max: 60 },
+                "master.ch_set_t2.data": { min: 28, max: 60 },
+                "master.max_rel_mod.data": { min: 5, max: 70 },
+                "master.room_t.data": { min: 17, max: 23 },
+                "master.room_set_t.data": { min: 17, max: 23 },
+                "master.room_t2.data": { min: 17, max: 23 },
+                "master.room_set_t2.data": { min: 17, max: 23 },
+                "master.outside_t.data": { min: 0, max: 23 },
+                "outsideTemp": { min: 0, max: 23 },
+                "heatercircuit.$.roomtemp": { min: 17, max: 23 },
+                "heatercircuit.$.roomsetpoint": { min: 17, max: 23 }
+            },
+            byId: {
+                heroCoolingCtrl: { min: 0, max: 100 },
+            }
+        },
         defaultConfig = {
             hostname: "otthing",
             haPrefix: "homeassistant",
@@ -3922,6 +3953,52 @@
         function parseNumber(value) {
             const num = Number.parseFloat(value);
             return Number.isFinite(num) ? num : null;
+        }
+
+        function getConfiguredValueRange(fieldPath, elementId) {
+            if (fieldPath) {
+                const byField = VALUE_RANGE_LOOKUP.byField[fieldPath];
+                if (byField)
+                    return byField;
+            }
+
+            if (elementId) {
+                const byId = VALUE_RANGE_LOOKUP.byId[elementId];
+                if (byId)
+                    return byId;
+            }
+
+            return null;
+        }
+
+        function resolveValueRange(ele, fieldPath = null, elementId = null) {
+            // Explicit element attributes override lookup values.
+            const minRawAttr = ele?.getAttribute("data-min") ?? ele?.getAttribute("min");
+            const maxRawAttr = ele?.getAttribute("data-max") ?? ele?.getAttribute("max");
+            const minAttr = parseNumber(minRawAttr);
+            const maxAttr = parseNumber(maxRawAttr);
+            if (minAttr != null && maxAttr != null && maxAttr !== minAttr) {
+                return {
+                    minRaw: String(minRawAttr),
+                    maxRaw: String(maxRawAttr)
+                };
+            }
+
+            const resolvedField = fieldPath ?? ele?.getAttribute("field") ?? null;
+            const resolvedId = elementId ?? ele?.id ?? null;
+            const lookupRange = getConfiguredValueRange(resolvedField, resolvedId);
+            if (!lookupRange)
+                return { minRaw: null, maxRaw: null };
+
+            const minLookup = parseNumber(lookupRange.min);
+            const maxLookup = parseNumber(lookupRange.max);
+            if (minLookup == null || maxLookup == null || maxLookup === minLookup)
+                return { minRaw: null, maxRaw: null };
+
+            return {
+                minRaw: String(lookupRange.min),
+                maxRaw: String(lookupRange.max)
+            };
         }
 
         function formatTrendTemp(value) {
@@ -4428,23 +4505,35 @@
             renderPinnedHeroCards();
         }
 
-        function getStatusValueByField(fieldPath) {
-            if (!fieldPath)
+        function getStatusValueByPath(path, channelOverride = currentCh) {
+            if (!path)
                 return null;
 
             try {
-                const parts = fieldPath.replace('$', currentCh).split('.');
+                const parts = String(path).replace('$', channelOverride).split('.');
                 let val = statuscache;
                 for (let i = 0; i < parts.length; i++) {
                     if (val == null)
                         return null;
-                    val = val[parts[i]];
+
+                    const part = parts[i];
+                    if (Object.prototype.hasOwnProperty.call(val, part)) {
+                        val = val[part];
+                        continue;
+                    }
+
+                    return null;
                 }
+
                 return (val === undefined) ? null : val;
             }
             catch (err) {
                 return null;
             }
+        }
+
+        function getStatusValueByField(fieldPath) {
+            return getStatusValueByPath(fieldPath, currentCh);
         }
 
         function getSourceValueElementByField(fieldPath) {
@@ -4521,8 +4610,9 @@
                 const num = parseNumber(val);
                 if (num != null) {
                     const unit = sourceValueEl.getAttribute("unit") || "";
-                    const minRaw = sourceValueEl.getAttribute("data-min") ?? sourceValueEl.getAttribute("min");
-                    const maxRaw = sourceValueEl.getAttribute("data-max") ?? sourceValueEl.getAttribute("max");
+                    const range = resolveValueRange(sourceValueEl, fieldPath);
+                    const minRaw = range.minRaw;
+                    const maxRaw = range.maxRaw;
                     applyValueColorClass(valueEl, num, unit, minRaw, maxRaw);
                 }
                 return;
@@ -4714,7 +4804,7 @@
             refreshHeroPinTargetState();
         }
 
-        function updateMetric(idValue, idArrow, value, unit, key) {
+        function updateMetric(idValue, idArrow, value, unit, key, rangeFieldPath = null) {
             const valueEl = _(`#${idValue}`);
             const arrowEl = idArrow ? _(`#${idArrow}`) : null;
             if (!valueEl)
@@ -4738,7 +4828,8 @@
             const displayText = unit ? `${roundedValue} ${unit}` : String(roundedValue);
             valueEl.textContent = displayText;
             flashMetricValueOnChange(flashTarget, displayText);
-            applyValueColorClass(valueEl, roundedValue, unit, null, null);
+            const range = resolveValueRange(valueEl, rangeFieldPath, idValue);
+            applyValueColorClass(valueEl, roundedValue, unit, range.minRaw, range.maxRaw);
 
             updateMetric._hist = updateMetric._hist ?? {};
             const prev = updateMetric._hist[key];
@@ -4813,8 +4904,9 @@
 
         function updateHeroMetrics(redrawTrend = true) {
             for (let ch = 0; ch < 2; ch++) {
-                const roomSet = statuscache?.heatercircuit?.[ch]?.roomsetpoint;
-                const roomMode = normalizeRoomMode(statuscache?.heatercircuit?.[ch]?.roomMode);
+                const roomSet = getStatusValueByPath("heatercircuit.$.roomsetpoint", ch);
+                const roomMode = normalizeRoomMode(getStatusValueByPath("heatercircuit.$.roomMode", ch));
+                const roomAction = getStatusValueByPath("heatercircuit.$.roomAction", ch);
                 const roomSetEl = _(`#heroRoomSet${ch + 1}`);
 
                 if (roomSetEl) {
@@ -4826,13 +4918,12 @@
                     roomSetEl.textContent = roomDisplay;
                     flashMetricValueOnChange(roomSetEl.closest(".metric-value") || roomSetEl, roomDisplay);
                     if (parsedRoomSet != null) {
-                        const minRaw = roomSetEl.getAttribute("data-min");
-                        const maxRaw = roomSetEl.getAttribute("data-max");
-                        applyValueColorClass(roomSetEl, parsedRoomSet, "°C", minRaw, maxRaw);
+                        const range = resolveValueRange(roomSetEl, "heatercircuit.$.roomsetpoint");
+                        applyValueColorClass(roomSetEl, parsedRoomSet, "°C", range.minRaw, range.maxRaw);
                     }
                 }
 
-                updateRoomModeButtons(ch, roomMode, statuscache?.heatercircuit?.[ch]?.roomAction ?? null);
+                updateRoomModeButtons(ch, roomMode, roomAction ?? null);
             }
 
             const flowSet = (currentCh === 0) ? statuscache?.master?.ch_set_t?.data : statuscache?.master?.ch_set_t2?.data;
@@ -4841,16 +4932,18 @@
             const mod = statuscache?.slave?.rel_mod;
             const coolingCtrl = parseNumber(statuscache?.coolingCtrl);
             const coolingMode = statuscache?.coolingMode;
+            const flowSetField = (currentCh === 0) ? "master.ch_set_t.data" : "master.ch_set_t2.data";
+            const flowField = (currentCh === 0) ? "slave.flow_t" : "slave.flow_t2";
 
-            updateMetric("heroFlowSet", "", parseNumber(flowSet), "°C", `flowset${currentCh}`);
-            const flowCtrlMode = normalizeRoomMode(statuscache?.heatercircuit?.[0]?.ctrlMode);
-            const flowAction = statuscache?.heatercircuit?.[0]?.action ?? null;
+            updateMetric("heroFlowSet", "", parseNumber(flowSet), "°C", `flowset${currentCh}`, flowSetField);
+            const flowCtrlMode = normalizeRoomMode(getStatusValueByPath("heatercircuit.0.ctrlMode", 0));
+            const flowAction = getStatusValueByPath("heatercircuit.0.action", 0);
             updateFlowModeButtons(flowCtrlMode, flowAction);
             updateMetric("heroCoolingCtrl", "", coolingCtrl, "%", "coolingCtrl");
             updateCoolingModeButtons(coolingMode);
-            updateMetric("heroFlow", "heroFlowTrendIcon", parseNumber(flow), "°C", `flow${currentCh}`);
-            updateMetric("heroOutside", "heroOutsideTrendIcon", parseNumber(outside), "°C", "outside");
-            updateMetric("heroMod", "heroModTrendIcon", parseNumber(mod), "%", "mod");
+            updateMetric("heroFlow", "heroFlowTrendIcon", parseNumber(flow), "°C", `flow${currentCh}`, flowField);
+            updateMetric("heroOutside", "heroOutsideTrendIcon", parseNumber(outside), "°C", "outside", "outsideTemp");
+            updateMetric("heroMod", "heroModTrendIcon", parseNumber(mod), "%", "mod", "slave.rel_mod");
             if (redrawTrend)
                 updateHeroTempTrendCard();
             updatePinnedHeroHistory();
@@ -4962,9 +5055,8 @@
                 if (val == null)
                     return;
 
-                const minRaw = ele.getAttribute("data-min") ?? ele.getAttribute("min");
-                const maxRaw = ele.getAttribute("data-max") ?? ele.getAttribute("max");
-                applyValueColorClass(ele, val, unit, minRaw, maxRaw);
+                const range = resolveValueRange(ele);
+                applyValueColorClass(ele, val, unit, range.minRaw, range.maxRaw);
             });
         }
 
@@ -4973,40 +5065,21 @@
         }
 
         function getValueColorClass(value, unit, minRaw, maxRaw) {
-            const normalizedUnit = String(unit || "");
             const min = parseNumber(minRaw);
             const max = parseNumber(maxRaw);
 
-            if (min != null && max != null && max > min) {
-                const ratio = (value - min) / (max - min);
-                if (/°C|deg;C/.test(normalizedUnit)) {
-                    if (ratio < 0.35)
-                        return "temp-cold";
-                    if (ratio >= 0.85)
-                        return "temp-veryhot";
-                    if (ratio >= 0.60)
-                        return "temp-hot";
-                    return "";
-                }
-
-                if (ratio >= 0.80)
-                    return "value-high";
-
+            // Only color values when an explicit min/max range is configured on the element.
+            // A flipped range (min > max) is valid and inverts the color direction.
+            if (min == null || max == null || max === min)
                 return "";
-            }
 
-            if (/°C|deg;C/.test(normalizedUnit)) {
-                if (value < 30)
-                    return "temp-cold";
-                if (value >= 65)
-                    return "temp-veryhot";
-                if (value >= 45)
-                    return "temp-hot";
-                return "";
-            }
-
-            if (normalizedUnit.includes("%") && value >= 80)
-                return "value-high";
+            const ratio = (value - min) / (max - min);
+            if (ratio < 0.30)
+                return "temp-cold";
+            if (ratio >= 0.85)
+                return "temp-veryhot";
+            if (ratio >= 0.60)
+                return "temp-hot";
 
             return "";
         }
@@ -7313,11 +7386,7 @@
                     ele.classList.remove("bool-ok", "bool-off", "bool-error", "result-warn");
                     try {
                         fieldPath = ele.getAttribute('field');
-                        var f = fieldPath;
-                        f = f.replace('$', currentCh).split('.');
-                        val = statuscache;
-                        for (var i=0; i<f.length; i++)
-                            val = val[f[i]];
+                        val = getStatusValueByPath(fieldPath, currentCh);
                         
                         if ((val !== null) && (val !== undefined)) {
                             const isErr = ele.classList.contains("error");
@@ -7365,9 +7434,7 @@
                                 throw new Error("No data segment");
 
                             const resultPath = (fieldPath.substring(0, dataIdx) + ".result").replace('$', currentCh).split('.');
-                            let resultVal = statuscache;
-                            for (let i=0; i<resultPath.length; i++)
-                                resultVal = resultVal[resultPath[i]];
+                            let resultVal = getStatusValueByPath(resultPath.join('.'), currentCh);
 
                             if (resultVal === false)
                                 ele.classList.add("result-warn");
@@ -7519,10 +7586,11 @@
                     }
                 }
 
-                if ("heatercircuit" in statuscache) {
+                const heaterCircuits = statuscache?.heatercircuit;
+                if (Array.isArray(heaterCircuits)) {
                     for (let i=0; i<2; i++)
-                        if ("roomsetpoint" in statuscache.heatercircuit[i])
-                            roomsetpoint[i] = statuscache.heatercircuit[i].roomsetpoint;
+                        if (heaterCircuits[i] && ("roomsetpoint" in heaterCircuits[i]))
+                            roomsetpoint[i] = heaterCircuits[i].roomsetpoint;
                 }
 
                 if (typeof window.drawScheduleTable === "function")

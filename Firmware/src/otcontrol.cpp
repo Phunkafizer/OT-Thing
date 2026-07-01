@@ -1333,6 +1333,7 @@ void OTControl::setConfig(JsonObject &config) {
     boilerCtrl.dhwBlocking = boiler[F("dhwBlocking")] | false;
     boilerCtrl.coolOn = boiler[F("coolOn")] | false;
     boilerCtrl.coolingCtrl = 0;
+    boilerConfig.chOffTemp = boiler[F("chOffTemp")] | 10.0;
     OTValue::setTexhaustAsFloat(boiler[F("texhaustAsFloat")] | false);
 
     masterMemberId = config[F("masterMemberId")] | 22;
