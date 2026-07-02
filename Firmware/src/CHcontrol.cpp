@@ -199,6 +199,11 @@ bool CHcontrol::getChOn() {
     if (AuxInput::hasChDemand(channel))
         return true;
 
+    // Startup guard: in AUTO mode keep CH off for first 5 minutes when no
+    // outside temperature is available to avoid unnecessary heating at startup.
+    if ((mode == HADiscovery::MODE_AUTO) && (millis() < 300000UL) && !outsideTemp)
+        return false;
+
     if ( (mode == HADiscovery::MODE_OFF) || (roomComp.mode == HADiscovery::MODE_OFF) || (getFlow() == 0.0) )
         return false;
 
