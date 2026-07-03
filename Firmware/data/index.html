@@ -457,7 +457,9 @@
         }
 
         .hero-pin-target {
-            cursor: zoom-in;
+            cursor: pointer;
+            position: relative;
+            border-radius: 8px;
         }
 
         .hero-pin-target h5::after {
@@ -473,10 +475,16 @@
         }
 
         .hero-pin-target.is-pinned {
-            outline: 1px dashed rgba(240, 207, 138, 0.52);
-            outline-offset: -4px;
-            border-radius: 8px;
             background: linear-gradient(165deg, rgba(216, 162, 76, 0.1), rgba(22, 25, 31, 0.56));
+        }
+
+        .hero-pin-target.is-pinned::before {
+            content: "";
+            position: absolute;
+            inset: -2px 8px -2px -2px;
+            border: 1px dashed rgba(240, 207, 138, 0.52);
+            border-radius: 10px;
+            pointer-events: none;
         }
 
         .hero-pin-target.is-pinned h5::after {
@@ -3486,34 +3494,31 @@
             wsReconnectMs: 1000
         },
         VALUE_RANGE_LOOKUP = {
-            byField: {
-                "slave.flow_t": { min: 28, max: 60 },
-                "slave.flow_t2": { min: 28, max: 60 },
-                "slave.dhw_t": { min: 25, max: 60 },
-                "slave.dhw_t2": { min: 25, max: 60 },
-                "master.dhw_set_t.data": { min: 25, max: 60 },
-                "slave.exhaust_t": { min: 35, max: 80 },
-                "slave.outside_t": { min: 0, max: 20 },
-                "slave.return_t": { min: 25, max: 60 },
-                "slave.tr_override": { min: 17, max: 23 },
-                "slave.rel_mod": { min: 5, max: 70 },
-                "slave.rel_vent": { min: 0, max: 100 },
-                "slave.ch_pressure": { min: 0.8, max: 2.0 },
-                "master.ch_set_t.data": { min: 28, max: 60 },
-                "master.ch_set_t2.data": { min: 28, max: 60 },
-                "master.max_rel_mod.data": { min: 5, max: 70 },
-                "master.room_t.data": { min: 17, max: 23 },
-                "master.room_set_t.data": { min: 17, max: 23 },
-                "master.room_t2.data": { min: 17, max: 23 },
-                "master.room_set_t2.data": { min: 17, max: 23 },
-                "master.outside_t.data": { min: 0, max: 23 },
-                "outsideTemp": { min: 0, max: 23 },
-                "heatercircuit.$.roomtemp": { min: 17, max: 23 },
-                "heatercircuit.$.roomsetpoint": { min: 17, max: 23 }
-            },
-            byId: {
-                heroCoolingCtrl: { min: 0, max: 100 },
-            }
+            "slave.flow_t": { min: 28, max: 60 },
+            "slave.flow_t2": { min: 28, max: 60 },
+            "slave.dhw_t": { min: 25, max: 60 },
+            "slave.dhw_t2": { min: 25, max: 60 },
+            "master.dhw_set_t.data": { min: 25, max: 60 },
+            "slave.exhaust_t": { min: 35, max: 80 },
+            "slave.outside_t": { min: 0, max: 20 },
+            "slave.return_t": { min: 25, max: 60 },
+            "slave.tr_override": { min: 17, max: 23 },
+            "slave.rel_mod": { min: 5, max: 70 },
+            "slave.rel_vent": { min: 0, max: 100 },
+            "slave.ch_pressure": { min: 0.8, max: 2.0 },
+            "master.ch_set_t.data": { min: 28, max: 60 },
+            "master.ch_set_t2.data": { min: 28, max: 60 },
+            "master.max_rel_mod.data": { min: 5, max: 70 },
+            "master.room_t.data": { min: 17, max: 23 },
+            "master.room_set_t.data": { min: 17, max: 23 },
+            "master.room_t2.data": { min: 17, max: 23 },
+            "master.room_set_t2.data": { min: 17, max: 23 },
+            "master.outside_t.data": { min: 0, max: 23 },
+            "master.cooling_ctrl.data": { min: 90, max: 10 },
+            "coolingCtrl": { min: 90, max: 10 },
+            "outsideTemp": { min: 5, max: 23 },
+            "heatercircuit.$.roomtemp": { min: 17, max: 23 },
+            "heatercircuit.$.roomsetpoint": { min: 17, max: 23 }
         },
         defaultConfig = {
             hostname: "otthing",
@@ -3955,20 +3960,10 @@
             return Number.isFinite(num) ? num : null;
         }
 
-        function getConfiguredValueRange(fieldPath, elementId) {
-            if (fieldPath) {
-                const byField = VALUE_RANGE_LOOKUP.byField[fieldPath];
-                if (byField)
-                    return byField;
-            }
-
-            if (elementId) {
-                const byId = VALUE_RANGE_LOOKUP.byId[elementId];
-                if (byId)
-                    return byId;
-            }
-
-            return null;
+        function getConfiguredValueRange(fieldPath) {
+            if (!fieldPath)
+                return null;
+            return VALUE_RANGE_LOOKUP[fieldPath] ?? null;
         }
 
         function resolveValueRange(ele, fieldPath = null, elementId = null) {
@@ -3985,8 +3980,7 @@
             }
 
             const resolvedField = fieldPath ?? ele?.getAttribute("field") ?? null;
-            const resolvedId = elementId ?? ele?.id ?? null;
-            const lookupRange = getConfiguredValueRange(resolvedField, resolvedId);
+            const lookupRange = getConfiguredValueRange(resolvedField);
             if (!lookupRange)
                 return { minRaw: null, maxRaw: null };
 
@@ -4939,7 +4933,7 @@
             const flowCtrlMode = normalizeRoomMode(getStatusValueByPath("heatercircuit.0.ctrlMode", 0));
             const flowAction = getStatusValueByPath("heatercircuit.0.action", 0);
             updateFlowModeButtons(flowCtrlMode, flowAction);
-            updateMetric("heroCoolingCtrl", "", coolingCtrl, "%", "coolingCtrl");
+            updateMetric("heroCoolingCtrl", "", coolingCtrl, "%", "coolingCtrl", "coolingCtrl");
             updateCoolingModeButtons(coolingMode);
             updateMetric("heroFlow", "heroFlowTrendIcon", parseNumber(flow), "°C", `flow${currentCh}`, flowField);
             updateMetric("heroOutside", "heroOutsideTrendIcon", parseNumber(outside), "°C", "outside", "outsideTemp");

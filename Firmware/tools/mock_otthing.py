@@ -829,16 +829,16 @@ const FIELDS = [
     { section: "General", rows: [
         { key: "outsideTemp",  label: "Outside temp (°C)", type: "number", step: 0.1 },
         { key: "runtime",      label: "Runtime (s)",       type: "number", step: 1 },
-        { key: "coolingCtrl",  label: "Cooling ctrl (%)",  type: "number", step: 1 },
-        { key: "coolingMode",  label: "Cooling mode",      type: "select", options: ["off","cool"] },
         { key: "USB_connected", label: "USB connected",    type: "bool" },
         { key: "bypass",        label: "Bypass",           type: "bool" },
         { key: "summerMode",    label: "Summer mode",      type: "bool" },
         { key: "dhwBlocking",   label: "DHW blocking",     type: "bool" },
     ]},
-    { section: "DHW", rows: [
+    { section: "DHW / cooling", rows: [
         { key: "dhw.ctrlMode", label: "DHW ctrl mode", type: "select", options: ["off","heat","auto"] },
         { key: "dhw.action",   label: "DHW action",    type: "select", options: ["off","heating","cooling","idle"] },
+        { key: "coolingCtrl",  label: "Cooling ctrl (%)",  type: "number", step: 1 },
+        { key: "coolingMode",  label: "Mode",              type: "select", options: ["off","cool"] },
     ]},
     { section: "OT Master status", rows: [
         { key: "master.status.data.ch_enable",      label: "CH enable",      type: "bool" },
