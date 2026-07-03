@@ -142,7 +142,7 @@ double CHcontrol::getFlow() {
         if (roomSetPoint[channel].get(rsp))
             result = curve.getFlowTemp(rsp);
 
-        if (std::isnan(result) || result <= 0.0)
+        if (std::isnan(result) || result < 0.0)
             result = 0.0;
         else
             if (result == 0.0)

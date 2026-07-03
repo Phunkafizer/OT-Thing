@@ -127,7 +127,7 @@ CONFIG = {
             "roomtemp": {"source": 1},
             "overrideFlow": False,
             "roomComp": {"enabled": False, "p": 1.0, "i": 0.5, "boost": 1.0},
-            "enablyHyst": False,
+            "enableHyst": False,
             "hysteresis": 0.5,
             "curveMode": 0,
             "minSuspend": False,
