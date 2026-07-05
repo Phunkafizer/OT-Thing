@@ -4113,7 +4113,7 @@
                 case "flow": return ch === 0 ? "slave.flow_t" : "slave.flow_t2";
                 case "dhw": return ch === 0 ? "slave.dhw_t" : "slave.dhw_t2";
                 case "ret": return "heatercircuit.0.returnTemp";
-                case "flowSet": return ch === 0 ? "master.ch_set_t.data" : "master.ch_set_t2.data";
+                case "flowSet": return "heatercircuit.$.flowSetTemp";
                 case "ch": return ch === 0 ? "slave.status.ch_mode" : "slave.status.ch2_mode";
                 case "dhwMode": return "slave.status.dhw_mode";
                 case "flame": return "slave.status.flame";
@@ -4215,6 +4215,7 @@
                     return padLeft;
                 return padLeft + (idx / (maxLen - 1)) * plotW;
             };
+            const sampleOffsetFor = (samples) => Math.max(0, maxLen - ((samples && samples.length) || 0));
 
             // Draw bool timelines (CH, DHW, Flame) as horizontal bars above the temperature lines.
             const stepW = (maxLen <= 1) ? plotW : (plotW / Math.max(1, maxLen - 1));
@@ -4241,13 +4242,17 @@
                 svg.appendChild(label);
 
                 const samples = history[barDef.key] || [];
+                const sampleOffset = sampleOffsetFor(samples);
                 let runStart = null;
                 const flushRun = (runEndIdx) => {
                     if (runStart === null)
                         return;
 
-                    const x0 = xFor(runStart);
-                    const x1 = (runEndIdx >= maxLen - 1) ? (xFor(runEndIdx) + stepW) : xFor(runEndIdx + 1);
+                    const x0 = xFor(runStart + sampleOffset);
+                    const alignedEndIdx = runEndIdx + sampleOffset;
+                    const x1 = (runEndIdx >= samples.length - 1)
+                        ? (xFor(alignedEndIdx) + stepW)
+                        : xFor(alignedEndIdx + 1);
                     const activeRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     activeRect.setAttribute("x", (x0 + 0.5).toFixed(2));
                     activeRect.setAttribute("y", (y + 1).toFixed(2));
@@ -4317,6 +4322,7 @@
 
             lineSeries.forEach((series) => {
                 const samples = history[series.key] || [];
+                const sampleOffset = sampleOffsetFor(samples);
                 if (samples.length < 2)
                     return;
 
@@ -4344,7 +4350,7 @@
                         return;
                     }
 
-                    points.push(`${xFor(idx).toFixed(2)},${yFor(value).toFixed(2)}`);
+                    points.push(`${xFor(idx + sampleOffset).toFixed(2)},${yFor(value).toFixed(2)}`);
                 });
                 flushSegment();
 
@@ -4354,7 +4360,7 @@
                         continue;
 
                     const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    dot.setAttribute("cx", xFor(idx).toFixed(2));
+                    dot.setAttribute("cx", xFor(idx + sampleOffset).toFixed(2));
                     dot.setAttribute("cy", yFor(value).toFixed(2));
                     dot.setAttribute("r", "2");
                     dot.setAttribute("fill", series.color);
@@ -4368,7 +4374,7 @@
             const flowVal = parseNumber((currentCh === 0) ? statuscache?.slave?.flow_t : statuscache?.slave?.flow_t2);
             const dhwVal = parseNumber((currentCh === 0) ? statuscache?.slave?.dhw_t : statuscache?.slave?.dhw_t2);
             const returnVal = parseNumber(statuscache?.heatercircuit?.[0]?.returnTemp);
-            const flowSetVal = parseNumber((currentCh === 0) ? statuscache?.master?.ch_set_t?.data : statuscache?.master?.ch_set_t2?.data);
+            const flowSetVal = parseNumber(statuscache?.heatercircuit?.[currentCh]?.flowSetTemp);
             const chActive = (currentCh === 0)
                 ? statuscache?.slave?.status?.ch_mode === true
                 : statuscache?.slave?.status?.ch2_mode === true;

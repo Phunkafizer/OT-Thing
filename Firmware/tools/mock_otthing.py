@@ -630,10 +630,28 @@ def get_set(
     if chMode1 is not None:
         ensure_heatercircuit(0)
         state["status"]["heatercircuit"][0]["ctrlMode"] = chMode1
+        mode1 = str(chMode1).lower()
+        if mode1 == "off":
+            state["status"]["heatercircuit"][0].pop("flowSetTemp", None)
+        else:
+            restored = state["status"]["master"]["ch_set_t"].get("data")
+            if restored is None:
+                restored = state["config"]["heating"][0].get("flow")
+            if restored is not None:
+                state["status"]["heatercircuit"][0]["flowSetTemp"] = restored
 
     if chMode2 is not None:
         ensure_heatercircuit(1)
         state["status"]["heatercircuit"][1]["ctrlMode"] = chMode2
+        mode2 = str(chMode2).lower()
+        if mode2 == "off":
+            state["status"]["heatercircuit"][1].pop("flowSetTemp", None)
+        else:
+            restored = state["status"]["master"]["ch_set_t2"].get("data")
+            if restored is None:
+                restored = state["config"]["heating"][1].get("flow")
+            if restored is not None:
+                state["status"]["heatercircuit"][1]["flowSetTemp"] = restored
 
     effective_ch1_mode = chMode1 or (state["status"]["heatercircuit"][0].get("ctrlMode") if state["status"]["heatercircuit"] else None)
     if chSetTemp1 is not None and effective_ch1_mode in {"heat", "on"}:
