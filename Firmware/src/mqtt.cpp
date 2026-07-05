@@ -6,6 +6,7 @@
 #include "hwdef.h"
 #include "auxInput.h"
 #include "otcontrol.h"
+#include "util.h"
 
 static struct {
     Mqtt::MqttTopic topic;
@@ -92,11 +93,7 @@ Mqtt::Mqtt():
 }
 
 void Mqtt::begin() {
-    String shortMac = WiFi.macAddress();
-    shortMac.remove(0, 9);
-    int idx;
-    while ( (idx = shortMac.indexOf(':')) >= 0)
-        shortMac.remove(idx, 1);
+    String shortMac = getShortMac();
     baseTopic = F("otthing/");
     baseTopic += shortMac;
     statusTopic = baseTopic + F("/status");

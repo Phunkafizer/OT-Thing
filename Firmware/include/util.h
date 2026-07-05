@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Arduino.h>
 #include "freertos/FreeRTOS.h"
 
 class SemHelper {
@@ -13,3 +14,5 @@ public:
 };
 
 extern void clip(double &d, const double min, const double max);
+extern String getShortMac();
+extern void publishMdnsServices();

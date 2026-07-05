@@ -401,7 +401,7 @@ void OTControl::loop() {
         if ( (slaveApp == SLAVEAPP_HEATCOOL) || (otMode == OTMODE_LOOPBACKTEST) ) {
             for (int ch=0; ch<(hasCh2 ? 2 : 1); ch++) {
                 if (setBoilerRequest[ch]) {
-                    double flow = chcontrol[ch].getChOn() ? chcontrol[ch].getFlow() : 10.0;
+                    double flow = chcontrol[ch].getChOn() ? chcontrol[ch].getFlow() : boilerConfig.chOffTemp;
                     setBoilerRequest[ch].sendFloat(flow);
                     return;
                 }
@@ -1127,7 +1127,7 @@ bool OTControl::sendChDiscoveries(const uint8_t ch, const bool en) {
     haDisc.setCurrentTemperatureTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_SLAVE, PSTR("flow_t#"), ch + 1, 1));
     haDisc.setInitial(35);
     haDisc.setModeCommandTopic(mqtt.getCmdTopic(topic(Mqtt::TOPIC_CHMODE1, ch)));
-    haDisc.setTemperatureStateTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_MASTER, PSTR("ch_set_t#"), ch + 1, 1));
+    haDisc.setTemperatureStateTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_FLOWSET_TEMP, ch));
     haDisc.setModeStateTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_CTRLMODE, ch));
     haDisc.setActionTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ACTION, ch));
     haDisc.setOptimistic(true);

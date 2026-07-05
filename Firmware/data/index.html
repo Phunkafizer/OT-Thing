@@ -615,6 +615,7 @@
 
         /* Flow set card action-state theming */
         #heroFlowSetCard,
+        #heroFlowSetCard2,
         #heroCoolingCard,
         #heroRoomSetCard1,
         #heroRoomSetCard2 {
@@ -622,6 +623,7 @@
         }
 
         #heroFlowSetCard.action-heating,
+        #heroFlowSetCard2.action-heating,
         #heroCoolingCard.action-heating,
         #heroRoomSetCard1.action-heating,
         #heroRoomSetCard2.action-heating {
@@ -631,6 +633,7 @@
         }
 
         #heroFlowSetCard.action-idle,
+        #heroFlowSetCard2.action-idle,
         #heroCoolingCard.action-idle,
         #heroRoomSetCard1.action-idle,
         #heroRoomSetCard2.action-idle {
@@ -640,6 +643,7 @@
         }
 
         #heroFlowSetCard.action-off,
+        #heroFlowSetCard2.action-off,
         #heroCoolingCard.action-off,
         #heroRoomSetCard1.action-off,
         #heroRoomSetCard2.action-off {
@@ -649,6 +653,7 @@
         }
 
         #heroFlowSetCard.action-cooling,
+        #heroFlowSetCard2.action-cooling,
         #heroCoolingCard.action-cooling,
         #heroRoomSetCard1.action-cooling,
         #heroRoomSetCard2.action-cooling {
@@ -1884,13 +1889,30 @@
                         <div class="metric-value"><span id="heroFlowSet">--</span></div>
                         <div class="metric-actions">
                             <div class="step-group" id="flowSetStepGroup" hidden>
-                                <button class="step-btn" type="button" onclick="adjustFlowSetTemp(-0.5)">▼</button>
-                                <button class="step-btn" type="button" onclick="adjustFlowSetTemp(0.5)">▲</button>
+                                <button class="step-btn" type="button" onclick="adjustFlowSetTemp(0, -0.5)">▼</button>
+                                <button class="step-btn" type="button" onclick="adjustFlowSetTemp(0, 0.5)">▲</button>
                             </div>
                             <div class="mode-group">
-                                <button class="mode-btn" id="btnFlowModeOff" type="button" onclick="setFlowMode('off')" title="set CH1 to off">⏻</button>
-                                <button class="mode-btn" id="btnFlowModeOn" type="button" onclick="setFlowMode('heat')" title="set CH1 to on">⏽</button>
-                                <button class="mode-btn" id="btnFlowModeAuto" type="button" onclick="setFlowMode('auto')" title="set CH1 to auto">↺</button>
+                                <button class="mode-btn" id="btnFlowModeOff" type="button" onclick="setFlowMode(0, 'off')" title="set CH1 to off">⏻</button>
+                                <button class="mode-btn" id="btnFlowModeOn" type="button" onclick="setFlowMode(0, 'heat')" title="set CH1 to on">⏽</button>
+                                <button class="mode-btn" id="btnFlowModeAuto" type="button" onclick="setFlowMode(0, 'auto')" title="set CH1 to auto">↺</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-card hero-roomset-card CH2" id="heroFlowSetCard2">
+                    <h5>Flow set 2<span class="flow-action-icon" id="heroFlowActionIcon2"></span></h5>
+                    <div class="metric-inline-row">
+                        <div class="metric-value"><span id="heroFlowSet2">--</span></div>
+                        <div class="metric-actions">
+                            <div class="step-group" id="flowSetStepGroup2" hidden>
+                                <button class="step-btn" type="button" onclick="adjustFlowSetTemp(1, -0.5)">▼</button>
+                                <button class="step-btn" type="button" onclick="adjustFlowSetTemp(1, 0.5)">▲</button>
+                            </div>
+                            <div class="mode-group">
+                                <button class="mode-btn" id="btnFlowModeOff2" type="button" onclick="setFlowMode(1, 'off')" title="set CH2 to off">⏻</button>
+                                <button class="mode-btn" id="btnFlowModeOn2" type="button" onclick="setFlowMode(1, 'heat')" title="set CH2 to on">⏽</button>
+                                <button class="mode-btn" id="btnFlowModeAuto2" type="button" onclick="setFlowMode(1, 'auto')" title="set CH2 to auto">↺</button>
                             </div>
                         </div>
                     </div>
@@ -3107,6 +3129,16 @@
                                 <input type="range" min="0" max="100" step="1" />
                             </div>
                         </div>
+                        <div class="param range" field="boiler.chOffTemp">
+                            <h5>CH off temp</h5>
+                            <div class="flexline">
+                                <div class="valunit">
+                                    <span class="value"></span>
+                                    <span class="unit">&deg;C</span>
+                                </div>
+                                <input type="range" min="0" max="20" step="1" />
+                            </div>
+                        </div>
                         <div class="param DHW range" field="boiler.dhwTemperature">
                             <h5>DHW set temperature</h5>
                             <div class="flexline">
@@ -3518,7 +3550,8 @@
             "coolingCtrl": { min: 90, max: 10 },
             "outsideTemp": { min: 5, max: 23 },
             "heatercircuit.$.roomtemp": { min: 17, max: 23 },
-            "heatercircuit.$.roomsetpoint": { min: 17, max: 23 }
+            "heatercircuit.$.roomsetpoint": { min: 17, max: 23 },
+            "heatercircuit.$.flowSetTemp": { min: 28, max: 60 }
         },
         defaultConfig = {
             hostname: "otthing",
@@ -4920,19 +4953,21 @@
                 updateRoomModeButtons(ch, roomMode, roomAction ?? null);
             }
 
-            const flowSet = (currentCh === 0) ? statuscache?.master?.ch_set_t?.data : statuscache?.master?.ch_set_t2?.data;
             const flow = (currentCh === 0) ? statuscache?.slave?.flow_t : statuscache?.slave?.flow_t2;
             const outside = statuscache?.outsideTemp;
             const mod = statuscache?.slave?.rel_mod;
             const coolingCtrl = parseNumber(statuscache?.coolingCtrl);
             const coolingMode = statuscache?.coolingMode;
-            const flowSetField = (currentCh === 0) ? "master.ch_set_t.data" : "master.ch_set_t2.data";
             const flowField = (currentCh === 0) ? "slave.flow_t" : "slave.flow_t2";
 
-            updateMetric("heroFlowSet", "", parseNumber(flowSet), "°C", `flowset${currentCh}`, flowSetField);
-            const flowCtrlMode = normalizeRoomMode(getStatusValueByPath("heatercircuit.0.ctrlMode", 0));
-            const flowAction = getStatusValueByPath("heatercircuit.0.action", 0);
-            updateFlowModeButtons(flowCtrlMode, flowAction);
+            for (let ch = 0; ch < 2; ch++) {
+                const flowSet = getStatusValueByPath("heatercircuit.$.flowSetTemp", ch);
+                const flowCtrlMode = normalizeRoomMode(getStatusValueByPath("heatercircuit.$.ctrlMode", ch));
+                const flowAction = getStatusValueByPath("heatercircuit.$.action", ch);
+                const flowSetField = "heatercircuit.$.flowSetTemp";
+                updateMetric(`heroFlowSet${ch === 0 ? "" : "2"}`, "", parseNumber(flowSet), "°C", `flowset${ch}`, flowSetField);
+                updateFlowModeButtons(ch, flowCtrlMode, flowAction);
+            }
             updateMetric("heroCoolingCtrl", "", coolingCtrl, "%", "coolingCtrl", "coolingCtrl");
             updateCoolingModeButtons(coolingMode);
             updateMetric("heroFlow", "heroFlowTrendIcon", parseNumber(flow), "°C", `flow${currentCh}`, flowField);
@@ -5705,28 +5740,27 @@
             xhr.send(JSON.stringify(config));
         };
 
-        function adjustFlowSetTemp(delta) {
-            const currentValue = parseNumber(statuscache?.master?.ch_set_t?.data);
+        function adjustFlowSetTemp(ch, delta) {
+            const currentValue = parseNumber(getStatusValueByPath("heatercircuit.$.flowSetTemp", ch));
             if (currentValue == null) {
                 showToast("No flow setpoint available", "warning", 3000);
                 return;
             }
 
             const nextValue = Math.round((currentValue + delta) * 10) / 10;
-            fetch(`/set?chSetTemp1=${encodeURIComponent(nextValue)}`)
+            fetch(`/set?chSetTemp${ch + 1}=${encodeURIComponent(nextValue)}`)
                 .then((resp) => {
                     if (!resp.ok)
                         throw new Error("HTTP " + resp.status);
 
-                    const master = statuscache.master ?? (statuscache.master = {});
-                    const chSet = (master.ch_set_t && (typeof master.ch_set_t === "object"))
-                        ? master.ch_set_t
-                        : (master.ch_set_t = {});
+                    if (!statuscache.heatercircuit)
+                        statuscache.heatercircuit = [];
+                    if (!statuscache.heatercircuit[ch])
+                        statuscache.heatercircuit[ch] = {};
 
-                    chSet.data = nextValue;
-                    chSet.result = true;
+                    statuscache.heatercircuit[ch].flowSetTemp = nextValue;
                     updateHeroMetrics(false);
-                    flashElement("#heroFlowSetCard");
+                    flashElement(`#heroFlowSetCard${ch === 0 ? "" : "2"}`);
                 })
                 .catch((err) => {
                     showToast("Error setting flow setpoint:\n" + err.message, "error", 5000);
@@ -5734,24 +5768,36 @@
                 });
         }
 
-        function setFlowMode(mode) {
+        function requestStatusRefresh(delayMs) {
+            if (typeof window.scheduleStatusFetch === "function") {
+                window.scheduleStatusFetch(delayMs);
+                return;
+            }
+
+            if (typeof fetchStatus === "function") {
+                window.setTimeout(() => fetchStatus(), Math.max(0, delayMs || 0));
+            }
+        }
+
+        function setFlowMode(ch, mode) {
             const modeKey = normalizeRoomMode(mode);
             if (!modeKey)
                 return;
 
-            fetch(`/set?chMode1=${encodeURIComponent(modeKey)}`)
+            fetch(`/set?chMode${ch + 1}=${encodeURIComponent(modeKey)}`)
                 .then((resp) => {
                     if (!resp.ok)
                         throw new Error("HTTP " + resp.status);
 
                     if (!statuscache.heatercircuit)
                         statuscache.heatercircuit = [];
-                    if (!statuscache.heatercircuit[0])
-                        statuscache.heatercircuit[0] = {};
+                    if (!statuscache.heatercircuit[ch])
+                        statuscache.heatercircuit[ch] = {};
 
-                    statuscache.heatercircuit[0].ctrlMode = modeKey;
+                    statuscache.heatercircuit[ch].ctrlMode = modeKey;
                     updateHeroMetrics(false);
-                    flashElement("#heroFlowSetCard");
+                    requestStatusRefresh(0);
+                    flashElement(`#heroFlowSetCard${ch === 0 ? "" : "2"}`);
                     addRecentEvent(`Flow mode ${modeKey}`);
                 })
                 .catch((err) => {
@@ -5804,15 +5850,16 @@
                 });
         }
 
-        function updateFlowModeButtons(mode, action) {
+        function updateFlowModeButtons(ch, mode, action) {
+            const suffix = ch === 0 ? "" : "2";
             const activeMode = (mode === "on") ? "heat" : mode;
             const ids = {
-                off: "#btnFlowModeOff",
-                heat: "#btnFlowModeOn",
-                auto: "#btnFlowModeAuto"
+                off: `#btnFlowModeOff${suffix}`,
+                heat: `#btnFlowModeOn${suffix}`,
+                auto: `#btnFlowModeAuto${suffix}`
             };
 
-            const stepGroup = _("#flowSetStepGroup");
+            const stepGroup = _(`#flowSetStepGroup${suffix}`);
             if (stepGroup)
                 stepGroup.hidden = activeMode !== "heat";
 
@@ -5823,8 +5870,8 @@
                 btn.classList.toggle("pressed", key === activeMode);
             });
 
-            const card = _("#heroFlowSetCard");
-            const iconEl = _("#heroFlowActionIcon");
+            const card = _(`#heroFlowSetCard${suffix}`);
+            const iconEl = _(`#heroFlowActionIcon${suffix}`);
             if (card) {
                 card.classList.remove("action-heating", "action-idle", "action-off", "action-cooling");
                 if (action)
@@ -5914,6 +5961,7 @@
 
                     statuscache.heatercircuit[ch].roomMode = modeKey;
                     updateHeroMetrics(false);
+                    requestStatusRefresh(0);
                     flashElement(`#heroRoomSetCard${ch + 1}`);
                     addRecentEvent(`Room ${ch + 1} mode ${modeKey}`);
                 })
@@ -7605,6 +7653,8 @@
                     fetchStatus();
                 }, Math.max(0, delayMs));
             }
+
+            window.scheduleStatusFetch = scheduleStatusFetch;
 
             function fetchStatus() {
                 if (authPendingLogin)

@@ -325,6 +325,7 @@ state = {
                 "roomAction": "off",
                 "roomsetpoint": 17.0,
                 "roomtemp": 20.1,
+                "flowSetTemp": 44.0,
                 "suspended": True,
                 "roomcompInteg": 0.0,
                 "retLimitInteg": 0.0,
@@ -341,6 +342,7 @@ state = {
                 "roomAction": "off",
                 "roomsetpoint": 26.0,
                 "roomtemp": 21.1,
+                "flowSetTemp": 22.3,
                 "suspended": False,
                 "roomcompInteg": 0.0,
                 "retLimitInteg": 0.0,
@@ -636,10 +638,14 @@ def get_set(
     effective_ch1_mode = chMode1 or (state["status"]["heatercircuit"][0].get("ctrlMode") if state["status"]["heatercircuit"] else None)
     if chSetTemp1 is not None and effective_ch1_mode in {"heat", "on"}:
         state["status"]["master"]["ch_set_t"]["data"] = chSetTemp1
+        ensure_heatercircuit(0)
+        state["status"]["heatercircuit"][0]["flowSetTemp"] = chSetTemp1
 
     effective_ch2_mode = chMode2 or (state["status"]["heatercircuit"][1].get("ctrlMode") if len(state["status"]["heatercircuit"]) > 1 else None)
     if chSetTemp2 is not None and effective_ch2_mode in {"heat", "on"}:
         state["status"]["master"]["ch_set_t2"]["data"] = chSetTemp2
+        ensure_heatercircuit(1)
+        state["status"]["heatercircuit"][1]["flowSetTemp"] = chSetTemp2
 
     if coolingCtrl is not None:
         ctrl = max(0.0, min(100.0, coolingCtrl))
@@ -904,6 +910,7 @@ const FIELDS = [
     { section: "Heater circuit 1", rows: [
         { key: "heatercircuit.0.roomsetpoint", label: "Room setpoint (°C)", type: "number", step: 0.5 },
         { key: "heatercircuit.0.roomtemp",     label: "Room temp (°C)",     type: "number", step: 0.1 },
+        { key: "heatercircuit.0.flowSetTemp",  label: "Flow set temp (°C)", type: "number", step: 0.1 },
         { key: "heatercircuit.0.returnTemp",   label: "Return temp (°C)",   type: "number", step: 0.1 },
         { key: "heatercircuit.0.roomcompInteg", label: "RoomComp integ",     type: "number", step: 0.1 },
         { key: "heatercircuit.0.retLimitInteg", label: "ReturnLimit integ",  type: "number", step: 0.1 },
@@ -916,6 +923,7 @@ const FIELDS = [
     { section: "Heater circuit 2", rows: [
         { key: "heatercircuit.1.roomsetpoint", label: "Room setpoint (°C)", type: "number", step: 0.5 },
         { key: "heatercircuit.1.roomtemp",     label: "Room temp (°C)",     type: "number", step: 0.1 },
+        { key: "heatercircuit.1.flowSetTemp",  label: "Flow set temp (°C)", type: "number", step: 0.1 },
         { key: "heatercircuit.1.returnTemp",   label: "Return temp (°C)",   type: "number", step: 0.1 },
         { key: "heatercircuit.1.roomcompInteg", label: "RoomComp integ",     type: "number", step: 0.1 },
         { key: "heatercircuit.1.retLimitInteg", label: "ReturnLimit integ",  type: "number", step: 0.1 },

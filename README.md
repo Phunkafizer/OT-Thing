@@ -6,8 +6,13 @@
 https://www.seegel-systeme.de/2025/01/05/ot-thing-das-universelle-wifi-opentherm-interface/
 
 ![OTthing](assets/DSC_0550-scaled.jpg "OTthing board")
-![OTthing Home Assistant Dashboard](assets/otthing_hadash.png "OTthing Home Assistant dashboard")
+*OTthing board*
+
 ![OTthing webUI](assets/otthing_webui1.png "OTthing webUI status")
+*OTthing web interface*
+
+![OTthing Home Assistant Dashboard](assets/otthing_hadash.png "OTthing Home Assistant dashboard")
+*Home Assistant integration*
 
 ## Overview
 

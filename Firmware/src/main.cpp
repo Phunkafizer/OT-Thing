@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <Ticker.h>
+#include <ImprovWiFiBLE.h>
 #include "hwdef.h"
 #include "portal.h"
 #include "otcontrol.h"
@@ -13,6 +14,7 @@
 #include "HADiscLocal.h"
 #include "time.h"
 #include "main.h"
+#include "util.h"
 #include "esp_task_wdt.h"
 #include "auxInput.h"
 
@@ -23,12 +25,30 @@
 Ticker statusLedTicker;
 volatile uint16_t statusLedData = 0x8000;
 bool configMode = false;
+ImprovWiFiBLE improvBle;
 
 #ifdef DEBUG
 // Required for DEBUG build: definitions for BLE externs referenced by command.cpp.
 NimBLECharacteristic *bleSerialTx = nullptr;
 volatile bool bleClientConnected = false;
 #endif
+
+static bool improvConnectWifi(const char *ssid, const char *password) {
+    WiFi.disconnect();
+    WiFi.persistent(true);
+    WiFi.setAutoReconnect(true);
+    WiFi.begin(ssid, password);
+
+    uint8_t attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 30) {
+        delay(500);
+        esp_task_wdt_reset();
+        yield();
+        attempts++;
+    }
+
+    return WiFi.status() == WL_CONNECTED;
+}
 
 
 void statusLedLoop() {
@@ -46,7 +66,7 @@ void wifiEvent(WiFiEvent_t event) {
         String hn = devconfig.getHostname();
         WiFi.setHostname(hn.c_str());
         MDNS.begin(hn.c_str());
-        MDNS.addService("http", "tcp", 80);
+        publishMdnsServices();
         break;
     }
 
@@ -76,6 +96,21 @@ void setup() {
 
     Serial.begin();
     Serial.setTxTimeoutMs(100);
+
+    if (configMode) {
+        String improvUrl = F("http://");
+        improvUrl += HOSTNAME;
+        improvUrl += F(".local/");
+
+        improvBle.setDeviceInfo(
+            ImprovTypes::ChipFamily::CF_ESP32_C3,
+            HOSTNAME,
+            BUILD_VERSION,
+            HOSTNAME,
+            improvUrl.c_str()
+        );
+        improvBle.setCustomConnectWiFi(improvConnectWifi);
+    }
     
     WiFi.onEvent(wifiEvent);
     WiFi.setSleep(false);

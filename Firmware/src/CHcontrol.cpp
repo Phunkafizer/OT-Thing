@@ -84,6 +84,7 @@ void CHcontrol::getJson(JsonObject &obj) {
     obj[FPSTR(STR_STATKEY_ROOMCOMPINTEGRATOR)] = round(roomComp.integState * 10) / 10.0;
     obj[FPSTR(STR_STATKEY_RETURNLIMITINTEGRATOR)] = round(retLimit.integState * 10) / 10.0;
     obj[FPSTR(STR_STATKEY_FLOWMIN)] = flowMin;
+    obj[FPSTR(STR_STATKEY_FLOWSET_TEMP)] = getFlow();
 
     modeStr = haDisc.getClimateModeStr(roomComp.mode);
     if (modeStr != nullptr)
@@ -186,7 +187,7 @@ double CHcontrol::getFlow() {
         outSuspended = false;
 
     clip(result, flowMin, curve.getFlowMax());
-    return result;
+    return round(result * 10) / 10.0;
 }
 
 bool CHcontrol::getChOn() {

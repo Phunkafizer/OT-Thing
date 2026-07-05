@@ -392,7 +392,9 @@ BLESensor::BLESensor(const uint8_t *adr):
 }
 
 void BLESensor::begin() {
-    BLEDevice::init("");
+    if (!NimBLEDevice::isInitialized())
+        BLEDevice::init("");
+
     BLEDevice::setPower(9);
     NimBLEScan* pBLEScan = NimBLEDevice::getScan();
     pBLEScan->setScanCallbacks(&scanCallbacks, true);

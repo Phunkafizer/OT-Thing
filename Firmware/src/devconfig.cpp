@@ -7,6 +7,7 @@
 #include "otcontrol.h"
 #include "sensors.h"
 #include "auxInput.h"
+#include "util.h"
 #include <HADiscovery.h>
 
 const char CFG_FILENAME[] PROGMEM = "/config.json";
@@ -91,6 +92,7 @@ void DevConfig::update() {
         if (WiFi.isConnected()) {
             WiFi.setHostname(hostname.c_str());
             MDNS.begin(hostname);
+            publishMdnsServices();
         }
 
         if (doc[FPSTR(CFGKEY_MQTT)].is<JsonObject>()) {
