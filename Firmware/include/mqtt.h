@@ -63,7 +63,7 @@ public:
     void setConfig(const MqttConfig conf);
     bool publish(String topic, JsonDocument &payload, const bool retain);
     void onMessage(const char *topic, String &payload);
-    bool setValue(const String &key, const String &value);
+    bool setValue(const String &key, const String &value, const bool send = false);
     String getBaseTopic();
     static String getTopicString(const MqttTopic topic);
     String getCmdTopic(const MqttTopic topic);

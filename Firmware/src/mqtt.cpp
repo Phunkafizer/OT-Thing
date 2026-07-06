@@ -211,7 +211,7 @@ void Mqtt::onMessage(const char *topic, String &payload) {
     }
 }
 
-bool Mqtt::setValue(const String &key, const String &value) {
+bool Mqtt::setValue(const String &key, const String &value, const bool send) {
     enum MqttTopic etop = TOPIC_UNKNOWN;
     for (int i=0; i<sizeof(topicList) / sizeof(topicList[0]); i++)
         if (key.compareTo(FPSTR(topicList[i].str)) == 0) {
@@ -355,8 +355,16 @@ bool Mqtt::setValue(const String &key, const String &value) {
         break;
 
     default:
-        break;
+        return false;
     }
+
+    if (send && connected()) {
+        String topic = baseTopic + '/';
+        topic += key;
+        topic += F("/set");
+        cli.publish(topic.c_str(), 0, true, value.c_str());
+    }
+
     return true;
 }
 
