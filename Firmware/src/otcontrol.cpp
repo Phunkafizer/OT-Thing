@@ -995,6 +995,7 @@ void OTControl::getJson(JsonObject &obj) {
     JsonObject jDhw = obj[FPSTR(STR_STATKEY_DHW)].to<JsonObject>();
     jDhw[FPSTR(STR_STATKEY_OVERRIDE)] = dhwOvrd.active;
     jDhw[FPSTR(STR_STATKEY_CTRLMODE)] = haDisc.getClimateModeStr(boilerCtrl.dhwOn ? HADiscovery::MODE_HEAT : HADiscovery::MODE_OFF);
+    jDhw[FPSTR(STR_STATKEY_SETPOINT)] = dhwOvrd.active ? dhwOvrd.temp : boilerCtrl.dhwTemp;
     if (boilerCtrl.dhwOn) {
         if (getDhwActive())
             jDhw[FPSTR(STR_STATKEY_ACTION)] = FPSTR(HA_ACTION_HEATING);
@@ -1276,7 +1277,7 @@ void OTControl::setDhwTemp(double temp) {
 }
 
 void OTControl::setDhwCtrlMode(const HADiscovery::ClimateMode mode) {
-    boilerCtrl.dhwOn = (mode != HADiscovery::MODE_AUTO);
+    boilerCtrl.dhwOn = (mode != HADiscovery::MODE_OFF);
     setDhwRequest.force();
 }
 

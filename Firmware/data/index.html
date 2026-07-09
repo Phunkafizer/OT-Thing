@@ -545,7 +545,7 @@
             font-weight: 700;
         }
 
-        .hero-roomset-card .metric-inline-row {
+        .hero-control-card .metric-inline-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -553,12 +553,12 @@
             margin-top: 2px;
         }
 
-        .hero-roomset-card .metric-value {
+        .hero-control-card .metric-value {
             margin-top: 0;
             white-space: nowrap;
         }
 
-        .hero-roomset-card .metric-actions {
+        .hero-control-card .metric-actions {
             display: flex;
             align-items: center;
             margin-top: 0;
@@ -566,19 +566,19 @@
             flex-shrink: 0;
         }
 
-        .hero-roomset-card .metric-actions .mode-group,
-        .hero-roomset-card .metric-actions .step-group {
+        .hero-control-card .metric-actions .mode-group,
+        .hero-control-card .metric-actions .step-group {
             display: inline-flex;
             align-items: center;
             gap: 3px;
         }
 
-        .hero-roomset-card .metric-actions .step-group {
+        .hero-control-card .metric-actions .step-group {
             padding-right: 7px;
             border-right: 1px solid rgba(240, 207, 138, 0.2);
         }
 
-        .hero-roomset-card .metric-actions button {
+        .hero-control-card .metric-actions button {
             flex: none;
             min-width: 30px;
             height: 22px;
@@ -595,68 +595,48 @@
             filter: none;
         }
 
-        .hero-roomset-card .metric-actions button:hover {
+        .hero-control-card .metric-actions button:hover {
             transform: none;
             filter: brightness(1.03);
             box-shadow: none;
         }
 
-        .hero-roomset-card .metric-actions .mode-btn.pressed {
+        .hero-control-card .metric-actions .mode-btn.pressed {
             border-color: var(--accent-soft);
             background: rgba(216, 162, 76, 0.2);
             color: #fff;
         }
 
-        .hero-roomset-card .metric-actions .step-btn {
+        .hero-control-card .metric-actions .step-btn {
             min-width: 30px;
             padding: 0 8px;
             color: #ffe5cf;
         }
 
-        /* Flow set card action-state theming */
-        #heroFlowSetCard,
-        #heroFlowSetCard2,
-        #heroCoolingCard,
-        #heroRoomSetCard1,
-        #heroRoomSetCard2 {
+        /* Hero setpoint/action card state theming */
+        .hero-control-card {
             transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
         }
 
-        #heroFlowSetCard.action-heating,
-        #heroFlowSetCard2.action-heating,
-        #heroCoolingCard.action-heating,
-        #heroRoomSetCard1.action-heating,
-        #heroRoomSetCard2.action-heating {
+        .hero-control-card.action-heating {
             background: linear-gradient(165deg, rgba(255, 100, 50, 0.30), rgba(18, 20, 25, 0.88));
             border-color: rgba(255, 120, 60, 0.55);
             box-shadow: 0 0 12px rgba(255, 90, 30, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06);
         }
 
-        #heroFlowSetCard.action-idle,
-        #heroFlowSetCard2.action-idle,
-        #heroCoolingCard.action-idle,
-        #heroRoomSetCard1.action-idle,
-        #heroRoomSetCard2.action-idle {
+        .hero-control-card.action-idle {
             background: linear-gradient(165deg, rgba(216, 162, 76, 0.14), rgba(18, 20, 25, 0.88));
             border-color: rgba(216, 162, 76, 0.28);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
-        #heroFlowSetCard.action-off,
-        #heroFlowSetCard2.action-off,
-        #heroCoolingCard.action-off,
-        #heroRoomSetCard1.action-off,
-        #heroRoomSetCard2.action-off {
+        .hero-control-card.action-off {
             background: linear-gradient(165deg, rgba(80, 80, 100, 0.18), rgba(18, 20, 25, 0.88));
             border-color: rgba(160, 160, 180, 0.22);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
         }
 
-        #heroFlowSetCard.action-cooling,
-        #heroFlowSetCard2.action-cooling,
-        #heroCoolingCard.action-cooling,
-        #heroRoomSetCard1.action-cooling,
-        #heroRoomSetCard2.action-cooling {
+        .hero-control-card.action-cooling {
             background: linear-gradient(165deg, rgba(60, 160, 220, 0.22), rgba(18, 20, 25, 0.88));
             border-color: rgba(80, 180, 240, 0.45);
             box-shadow: 0 0 10px rgba(60, 160, 220, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -1849,7 +1829,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="metric-card hero-roomset-card" id="heroRoomSetCard1">
+                <div class="metric-card hero-control-card" id="heroRoomSetCard1">
                     <h5>Room setpoint<span class="flow-action-icon" id="heroRoomActionIcon1"></span></h5>
                     <div class="metric-inline-row">
                         <div class="metric-value"><span id="heroRoomSet1">--</span></div>
@@ -1866,7 +1846,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="metric-card hero-roomset-card CH2" id="heroRoomSetCard2">
+                <div class="metric-card hero-control-card CH2" id="heroRoomSetCard2">
                     <h5>Room setpoint 2<span class="flow-action-icon" id="heroRoomActionIcon2"></span></h5>
                     <div class="metric-inline-row">
                         <div class="metric-value"><span id="heroRoomSet2">--</span></div>
@@ -1883,7 +1863,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="metric-card hero-roomset-card" id="heroFlowSetCard">
+                <div class="metric-card hero-control-card" id="heroFlowSetCard">
                     <h5>Flow set<span class="flow-action-icon" id="heroFlowActionIcon"></span></h5>
                     <div class="metric-inline-row">
                         <div class="metric-value"><span id="heroFlowSet">--</span></div>
@@ -1900,7 +1880,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="metric-card hero-roomset-card CH2" id="heroFlowSetCard2">
+                <div class="metric-card hero-control-card CH2" id="heroFlowSetCard2">
                     <h5>Flow set 2<span class="flow-action-icon" id="heroFlowActionIcon2"></span></h5>
                     <div class="metric-inline-row">
                         <div class="metric-value"><span id="heroFlowSet2">--</span></div>
@@ -1917,7 +1897,23 @@
                         </div>
                     </div>
                 </div>
-                <div class="metric-card hero-roomset-card cool" id="heroCoolingCard">
+                <div class="metric-card hero-control-card DHW" id="heroDhwCard">
+                    <h5>DHW<span class="flow-action-icon" id="heroDhwActionIcon"></span></h5>
+                    <div class="metric-inline-row">
+                        <div class="metric-value"><span id="heroDhwSet">--</span></div>
+                        <div class="metric-actions">
+                            <div class="step-group" id="dhwStepGroup" hidden>
+                                <button class="step-btn" type="button" onclick="adjustDhwSetTemp(-0.5)">▼</button>
+                                <button class="step-btn" type="button" onclick="adjustDhwSetTemp(0.5)">▲</button>
+                            </div>
+                            <div class="mode-group">
+                                <button class="mode-btn" id="btnDhwModeOff" type="button" onclick="setDhwMode('off')" title="set DHW to off">⏻</button>
+                                <button class="mode-btn" id="btnDhwModeHeat" type="button" onclick="setDhwMode('heat')" title="set DHW to heat">⏽</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-card hero-control-card cool" id="heroCoolingCard">
                     <h5>Cooling<span class="flow-action-icon" id="heroCoolingActionIcon"></span></h5>
                     <div class="metric-inline-row">
                         <div class="metric-value"><span id="heroCoolingCtrl">--</span></div>
@@ -4964,6 +4960,8 @@
             const mod = statuscache?.slave?.rel_mod;
             const coolingCtrl = parseNumber(statuscache?.coolingCtrl);
             const coolingMode = statuscache?.coolingMode;
+            const dhwSetTemp = parseNumber(statuscache?.dhw?.setpoint);
+            const dhwMode = normalizeRoomMode(statuscache?.dhw?.ctrlMode);
             const flowField = (currentCh === 0) ? "slave.flow_t" : "slave.flow_t2";
 
             for (let ch = 0; ch < 2; ch++) {
@@ -4974,6 +4972,11 @@
                 updateMetric(`heroFlowSet${ch === 0 ? "" : "2"}`, "", parseNumber(flowSet), "°C", `flowset${ch}`, flowSetField);
                 updateFlowModeButtons(ch, flowCtrlMode, flowAction);
             }
+            const dhwCard = _("#heroDhwCard");
+            if (dhwCard)
+                dhwCard.hidden = statuscache?.slave?.slave_config_member?.dhw_present !== true;
+            updateMetric("heroDhwSet", "", dhwSetTemp, "°C", "dhwSet", "master.dhw_set_t.data");
+            updateDhwModeButtons(dhwMode);
             updateMetric("heroCoolingCtrl", "", coolingCtrl, "%", "coolingCtrl", "coolingCtrl");
             updateCoolingModeButtons(coolingMode);
             updateMetric("heroFlow", "heroFlowTrendIcon", parseNumber(flow), "°C", `flow${currentCh}`, flowField);
@@ -5812,6 +5815,57 @@
                 });
         }
 
+        function adjustDhwSetTemp(delta) {
+            const currentValue = parseNumber(statuscache?.dhw?.setpoint);
+            if (currentValue == null) {
+                showToast("No DHW setpoint available", "warning", 3000);
+                return;
+            }
+
+            const nextValue = Math.round((currentValue + delta) * 10) / 10;
+            fetch(`/set?dhwSetTemp=${encodeURIComponent(nextValue)}`)
+                .then((resp) => {
+                    if (!resp.ok)
+                        throw new Error("HTTP " + resp.status);
+
+                    if (!statuscache.dhw)
+                        statuscache.dhw = {};
+
+                    statuscache.dhw.setpoint = nextValue;
+                    updateHeroMetrics(false);
+                    flashElement("#heroDhwCard");
+                })
+                .catch((err) => {
+                    showToast("Error setting DHW setpoint:\n" + err.message, "error", 5000);
+                    addRecentEvent("DHW setpoint update failed");
+                });
+        }
+
+        function setDhwMode(mode) {
+            const modeKey = normalizeRoomMode(mode);
+            if (modeKey !== "off" && modeKey !== "heat")
+                return;
+
+            fetch(`/set?dhwMode=${encodeURIComponent(modeKey)}`)
+                .then((resp) => {
+                    if (!resp.ok)
+                        throw new Error("HTTP " + resp.status);
+
+                    if (!statuscache.dhw)
+                        statuscache.dhw = {};
+
+                    statuscache.dhw.ctrlMode = modeKey;
+                    updateHeroMetrics(false);
+                    requestStatusRefresh(0);
+                    flashElement("#heroDhwCard");
+                    addRecentEvent(`DHW mode ${modeKey}`);
+                })
+                .catch((err) => {
+                    showToast("Error setting DHW mode:\n" + err.message, "error", 5000);
+                    addRecentEvent("DHW mode update failed");
+                });
+        }
+
         function adjustCoolingCtrl(delta) {
             const currentValue = parseNumber(statuscache?.coolingCtrl);
             if (currentValue == null) {
@@ -5890,6 +5944,38 @@
             }
 
             flashCardOnChange(card, `${activeMode ?? ""}|${action ?? ""}`);
+        }
+
+        function updateDhwModeButtons(mode) {
+            const activeMode = (mode === "on") ? "heat" : mode;
+            const ids = {
+                off: "#btnDhwModeOff",
+                heat: "#btnDhwModeHeat"
+            };
+
+            const stepGroup = _("#dhwStepGroup");
+            if (stepGroup)
+                stepGroup.hidden = activeMode !== "heat";
+
+            Object.keys(ids).forEach((key) => {
+                const btn = _(ids[key]);
+                if (!btn)
+                    return;
+                btn.classList.toggle("pressed", key === activeMode);
+            });
+
+            const card = _("#heroDhwCard");
+            const iconEl = _("#heroDhwActionIcon");
+            if (card) {
+                card.classList.remove("action-heating", "action-idle", "action-off", "action-cooling");
+                card.classList.add(activeMode === "heat" ? "action-heating" : "action-off");
+            }
+            if (iconEl) {
+                iconEl.textContent = activeMode === "heat" ? "🔥" : "⏹";
+                iconEl.title = activeMode === "heat" ? "heat" : "off";
+            }
+
+            flashCardOnChange(card, activeMode ?? "");
         }
 
         function updateCoolingModeButtons(mode) {
