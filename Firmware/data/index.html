@@ -4962,6 +4962,7 @@
             const coolingMode = statuscache?.coolingMode;
             const dhwSetTemp = parseNumber(statuscache?.dhw?.setpoint);
             const dhwMode = normalizeRoomMode(statuscache?.dhw?.ctrlMode);
+            const dhwAction = String(statuscache?.dhw?.action || "").toLowerCase();
             const flowField = (currentCh === 0) ? "slave.flow_t" : "slave.flow_t2";
 
             for (let ch = 0; ch < 2; ch++) {
@@ -4976,7 +4977,7 @@
             if (dhwCard)
                 dhwCard.hidden = statuscache?.slave?.slave_config_member?.dhw_present !== true;
             updateMetric("heroDhwSet", "", dhwSetTemp, "°C", "dhwSet", "master.dhw_set_t.data");
-            updateDhwModeButtons(dhwMode);
+            updateDhwModeButtons(dhwMode, dhwAction);
             updateMetric("heroCoolingCtrl", "", coolingCtrl, "%", "coolingCtrl", "coolingCtrl");
             updateCoolingModeButtons(coolingMode);
             updateMetric("heroFlow", "heroFlowTrendIcon", parseNumber(flow), "°C", `flow${currentCh}`, flowField);
@@ -5946,8 +5947,9 @@
             flashCardOnChange(card, `${activeMode ?? ""}|${action ?? ""}`);
         }
 
-        function updateDhwModeButtons(mode) {
+        function updateDhwModeButtons(mode, action) {
             const activeMode = (mode === "on") ? "heat" : mode;
+            const activeAction = ["heating", "idle", "off", "cooling"].includes(action) ? action : (activeMode === "heat" ? "heating" : "off");
             const ids = {
                 off: "#btnDhwModeOff",
                 heat: "#btnDhwModeHeat"
@@ -5968,14 +5970,15 @@
             const iconEl = _("#heroDhwActionIcon");
             if (card) {
                 card.classList.remove("action-heating", "action-idle", "action-off", "action-cooling");
-                card.classList.add(activeMode === "heat" ? "action-heating" : "action-off");
+                card.classList.add(`action-${activeAction}`);
             }
             if (iconEl) {
-                iconEl.textContent = activeMode === "heat" ? "🔥" : "⏹";
-                iconEl.title = activeMode === "heat" ? "heat" : "off";
+                const icons = { heating: "🔥", idle: "⏸", off: "⏹", cooling: "❄" };
+                iconEl.textContent = icons[activeAction] ?? "";
+                iconEl.title = activeAction;
             }
 
-            flashCardOnChange(card, activeMode ?? "");
+            flashCardOnChange(card, `${activeMode ?? ""}|${activeAction ?? ""}`);
         }
 
         function updateCoolingModeButtons(mode) {
