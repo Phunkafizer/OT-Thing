@@ -1903,8 +1903,8 @@
                         <div class="metric-value"><span id="heroDhwSet">--</span></div>
                         <div class="metric-actions">
                             <div class="step-group" id="dhwStepGroup" hidden>
-                                <button class="step-btn" type="button" onclick="adjustDhwSetTemp(-0.5)">▼</button>
-                                <button class="step-btn" type="button" onclick="adjustDhwSetTemp(0.5)">▲</button>
+                                    <button class="step-btn" type="button" onclick="adjustDhwSetTemp(-1)">▼</button>
+                                    <button class="step-btn" type="button" onclick="adjustDhwSetTemp(1)">▲</button>
                             </div>
                             <div class="mode-group">
                                 <button class="mode-btn" id="btnDhwModeOff" type="button" onclick="setDhwMode('off')" title="set DHW to off">⏻</button>
@@ -1923,8 +1923,8 @@
                                 <button class="step-btn" type="button" onclick="adjustCoolingCtrl(1)">▲</button>
                             </div>
                             <div class="mode-group">
-                                <button class="mode-btn" id="btnCoolingModeOff" type="button" onclick="setCoolingMode('off')" title="set cooling mode to off">⏻</button>
-                                <button class="mode-btn" id="btnCoolingModeCool" type="button" onclick="setCoolingMode('cool')" title="set cooling mode to cool">❄</button>
+                                <button class="mode-btn" id="btnCoolingModeOff" type="button" onclick="setCoolingMode(false)" title="set cooling mode to off">⏻</button>
+                                <button class="mode-btn" id="btnCoolingModeCool" type="button" onclick="setCoolingMode(true)" title="set cooling mode to cool">❄</button>
                             </div>
                         </div>
                     </div>
@@ -3543,7 +3543,7 @@
             "master.room_set_t2.data": { min: 17, max: 23 },
             "master.outside_t.data": { min: 0, max: 23 },
             "master.cooling_ctrl.data": { min: 90, max: 10 },
-            "coolingCtrl": { min: 90, max: 10 },
+            "cooling.setpoint": { min: 90, max: 10 },
             "outsideTemp": { min: 5, max: 23 },
             "heatercircuit.$.roomtemp": { min: 17, max: 23 },
             "heatercircuit.$.roomsetpoint": { min: 17, max: 23 },
@@ -4958,8 +4958,9 @@
             const flow = (currentCh === 0) ? statuscache?.slave?.flow_t : statuscache?.slave?.flow_t2;
             const outside = statuscache?.outsideTemp;
             const mod = statuscache?.slave?.rel_mod;
-            const coolingCtrl = parseNumber(statuscache?.coolingCtrl);
-            const coolingMode = statuscache?.coolingMode;
+            const coolingCtrl = parseNumber(statuscache?.cooling?.setpoint);
+            const coolingMode = statuscache?.cooling?.ctrlMode;
+            const coolingAction = String(statuscache?.cooling?.action || "").toLowerCase();
             const dhwSetTemp = parseNumber(statuscache?.dhw?.setpoint);
             const dhwMode = normalizeRoomMode(statuscache?.dhw?.ctrlMode);
             const dhwAction = String(statuscache?.dhw?.action || "").toLowerCase();
@@ -4978,8 +4979,8 @@
                 dhwCard.hidden = statuscache?.slave?.slave_config_member?.dhw_present !== true;
             updateMetric("heroDhwSet", "", dhwSetTemp, "°C", "dhwSet", "master.dhw_set_t.data");
             updateDhwModeButtons(dhwMode, dhwAction);
-            updateMetric("heroCoolingCtrl", "", coolingCtrl, "%", "coolingCtrl", "coolingCtrl");
-            updateCoolingModeButtons(coolingMode);
+            updateMetric("heroCoolingCtrl", "", coolingCtrl, "%", "coolingCtrl", "cooling.setpoint");
+            updateCoolingModeButtons(coolingMode, coolingAction);
             updateMetric("heroFlow", "heroFlowTrendIcon", parseNumber(flow), "°C", `flow${currentCh}`, flowField);
             updateMetric("heroOutside", "heroOutsideTrendIcon", parseNumber(outside), "°C", "outside", "outsideTemp");
             updateMetric("heroMod", "heroModTrendIcon", parseNumber(mod), "%", "mod", "slave.rel_mod");
@@ -5868,7 +5869,7 @@
         }
 
         function adjustCoolingCtrl(delta) {
-            const currentValue = parseNumber(statuscache?.coolingCtrl);
+            const currentValue = parseNumber(statuscache?.cooling?.setpoint);
             if (currentValue == null) {
                 showToast("No cooling control value available", "warning", 3000);
                 return;
@@ -5880,7 +5881,9 @@
                     if (!resp.ok)
                         throw new Error("HTTP " + resp.status);
 
-                    statuscache.coolingCtrl = nextValue;
+                    if (!statuscache.cooling)
+                        statuscache.cooling = {};
+                    statuscache.cooling.setpoint = nextValue;
                     updateHeroMetrics(false);
                     flashElement("#heroCoolingCard");
                 })
@@ -5890,20 +5893,23 @@
                 });
         }
 
-        function setCoolingMode(mode) {
-            const modeKey = String(mode || "").toLowerCase();
-            if (modeKey !== "off" && modeKey !== "cool")
+        function setCoolingMode(enabled) {
+            if (typeof enabled !== "boolean")
                 return;
 
-            fetch(`/set?coolingMode=${encodeURIComponent(modeKey)}`)
+            const modePayload = enabled ? "ON" : "OFF";
+
+            fetch(`/set?coolingMode=${encodeURIComponent(modePayload)}`)
                 .then((resp) => {
                     if (!resp.ok)
                         throw new Error("HTTP " + resp.status);
 
-                    statuscache.coolingMode = modeKey;
+                    if (!statuscache.cooling)
+                        statuscache.cooling = {};
+                    statuscache.cooling.ctrlMode = enabled;
                     updateHeroMetrics(false);
                     flashElement("#heroCoolingCard");
-                    addRecentEvent(`Cooling mode ${modeKey}`);
+                    addRecentEvent(`Cooling mode ${enabled ? "on" : "off"}`);
                 })
                 .catch((err) => {
                     showToast("Error setting cooling mode:\n" + err.message, "error", 5000);
@@ -5981,8 +5987,9 @@
             flashCardOnChange(card, `${activeMode ?? ""}|${activeAction ?? ""}`);
         }
 
-        function updateCoolingModeButtons(mode) {
-            const activeMode = (String(mode || "").toLowerCase() === "cool") ? "cool" : "off";
+        function updateCoolingModeButtons(mode, action) {
+            const activeMode = (mode === true) ? "cool" : "off";
+            const activeAction = (action === "cooling") ? "cooling" : "off";
             const ids = {
                 off: "#btnCoolingModeOff",
                 cool: "#btnCoolingModeCool"
@@ -5999,14 +6006,14 @@
             const iconEl = _("#heroCoolingActionIcon");
             if (card) {
                 card.classList.remove("action-heating", "action-idle", "action-off", "action-cooling");
-                card.classList.add(activeMode === "cool" ? "action-cooling" : "action-off");
+                card.classList.add(`action-${activeAction}`);
             }
             if (iconEl) {
-                iconEl.textContent = activeMode === "cool" ? "❄" : "⏹";
-                iconEl.title = activeMode;
+                iconEl.textContent = activeAction === "cooling" ? "❄" : "⏹";
+                iconEl.title = activeAction;
             }
 
-            flashCardOnChange(card, activeMode);
+            flashCardOnChange(card, `${activeMode}|${activeAction}`);
         }
 
         function adjustRoomSetpoint(ch, delta) {

@@ -294,6 +294,14 @@ bool OTControl::getDhwActive() const {
     return false;
 }
 
+bool OTControl::getCoolingActive() const {
+    OTValueStatus *ots = static_cast<OTValueStatus*>(OTValue::getSlaveValue(Status));
+    if (ots)
+        return ots->getCoolingActive();
+
+    return false;
+}
+
 bool OTControl::getChActive(const uint8_t channel) const {
     OTValueStatus *ots = static_cast<OTValueStatus*>(OTValue::getSlaveValue(Status));
     if (ots)
@@ -1005,8 +1013,17 @@ void OTControl::getJson(JsonObject &obj) {
     else
         jDhw[FPSTR(STR_STATKEY_ACTION)] = FPSTR(HA_ACTION_OFF);
 
-    obj[FPSTR(STR_STATKEY_COOLINGMODE)] = haDisc.getClimateModeStr(boilerCtrl.coolOn ? HADiscovery::MODE_COOL : HADiscovery::MODE_OFF);
-    obj[FPSTR(STR_STATKEY_COOLINGCTRL)] = boilerCtrl.coolingCtrl;
+    JsonObject jCooling = obj[FPSTR(STR_STATKEY_COOLING)].to<JsonObject>();
+    jCooling[FPSTR(STR_STATKEY_CTRLMODE)] = boilerCtrl.coolOn;
+    jCooling[FPSTR(STR_STATKEY_SETPOINT)] = boilerCtrl.coolingCtrl;
+    if (boilerCtrl.coolOn) {
+        if (getCoolingActive())
+            jCooling[FPSTR(STR_STATKEY_ACTION)] = FPSTR(HA_ACTION_COOLING);
+        else
+            jCooling[FPSTR(STR_STATKEY_ACTION)] = FPSTR(HA_ACTION_IDLE);
+    }
+    else
+        jCooling[FPSTR(STR_STATKEY_ACTION)] = FPSTR(HA_ACTION_OFF);
 
     obj[F("bypass")] = bypass;
     obj[F("summerMode")] = boilerCtrl.summerMode;
@@ -1259,8 +1276,13 @@ bool OTControl::sendCapDiscoveries() {
     if (!haDisc.publish(vsc->hasDHW()))
         return false;
 
+    haDisc.createSwitch(F("Cooling"), Mqtt::TOPIC_COOLINGMODE);
+    haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_COOLING, STR_STATKEY_CTRLMODE));
+    if (!haDisc.publish(vsc->hasCooling()))
+        return false;
+
     haDisc.createNumber(F("cooling control signal"), Mqtt::getTopicString(Mqtt::TOPIC_COOLINGCTRL), mqtt.getCmdTopic(Mqtt::TOPIC_COOLINGCTRL));
-    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_ROOT, STR_STATKEY_COOLINGCTRL));
+    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_COOLING, STR_STATKEY_SETPOINT));
     haDisc.setMinMax(0, 100, 1);
     haDisc.setUnit(FPSTR(HA_UNIT_PERCENT));
     haDisc.setIcon(F("mdi:snowflake-thermometer"));
@@ -1281,8 +1303,8 @@ void OTControl::setDhwCtrlMode(const HADiscovery::ClimateMode mode) {
     setDhwRequest.force();
 }
 
-void OTControl::setCoolingMode(const HADiscovery::ClimateMode mode) {
-    boilerCtrl.coolOn = (mode == HADiscovery::MODE_COOL);
+void OTControl::setCoolingMode(const bool on) {
+    boilerCtrl.coolOn = on;
 }
 
 void OTControl::setCoolingCtrl(const int ctrl) {

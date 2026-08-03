@@ -130,7 +130,7 @@ public:
     void setChTemp(const double temp, const uint8_t channel);
     void setChCtrlMode(const HADiscovery::ClimateMode mode, const uint8_t channel);
     void setDhwCtrlMode(const HADiscovery::ClimateMode mode);
-    void setCoolingMode(const HADiscovery::ClimateMode mode);
+    void setCoolingMode(const bool on);
     void setCoolingCtrl(const int ctrl);
     bool sendDiscovery();
     bool sendCapDiscoveries();
@@ -148,6 +148,7 @@ public:
     void setDhwBlocking(const bool dhwBlocking);
     bool getFlame() const;
     bool getDhwActive() const;
+    bool getCoolingActive() const;
     bool getChActive(const uint8_t channel) const;
 };
 

@@ -124,8 +124,11 @@ state = {
         "numWifiDisc": 0,
         "dateTime": "23.04.2026 22:35:59",
         "outsideTemp": 8.4,
-        "coolingCtrl": 35.0,
-        "coolingMode": "off",
+        "cooling": {
+            "setpoint": 35.0,
+            "ctrlMode": False,
+            "action": "off",
+        },
         "wifi": {
             "status": 3,
             "mode": 1,
@@ -601,7 +604,7 @@ def get_set(
     chMode1: str | None = None,
     chMode2: str | None = None,
     coolingCtrl: float | None = None,
-    coolingMode: str | None = None,
+    coolingMode: bool | None = None,
 ) -> JSONResponse:
     denied = require_auth(request)
     if denied:
@@ -667,15 +670,19 @@ def get_set(
 
     if coolingCtrl is not None:
         ctrl = max(0.0, min(100.0, coolingCtrl))
-        state["status"]["coolingCtrl"] = ctrl
+        if "cooling" not in state["status"] or not isinstance(state["status"]["cooling"], dict):
+            state["status"]["cooling"] = {}
+        state["status"]["cooling"]["setpoint"] = ctrl
         state["status"]["master"]["cooling_ctrl"]["data"] = ctrl
 
     if coolingMode is not None:
-        mode = str(coolingMode).lower()
-        if mode in {"off", "cool"}:
-            state["status"]["coolingMode"] = mode
-            state["status"]["slave"]["status"]["cooling"] = (mode == "cool")
-            state["status"]["master"]["status"]["data"]["cooling_enable"] = (mode == "cool")
+        enabled = bool(coolingMode)
+        if "cooling" not in state["status"] or not isinstance(state["status"]["cooling"], dict):
+            state["status"]["cooling"] = {}
+        state["status"]["cooling"]["ctrlMode"] = enabled
+        state["status"]["cooling"]["action"] = "cooling" if enabled else "off"
+        state["status"]["slave"]["status"]["cooling"] = enabled
+        state["status"]["master"]["status"]["data"]["cooling_enable"] = enabled
 
     return JSONResponse({"ok": True})
 
@@ -861,8 +868,9 @@ const FIELDS = [
     { section: "DHW / cooling", rows: [
         { key: "dhw.ctrlMode", label: "DHW ctrl mode", type: "select", options: ["off","heat","auto"] },
         { key: "dhw.action",   label: "DHW action",    type: "select", options: ["off","heating","cooling","idle"] },
-        { key: "coolingCtrl",  label: "Cooling ctrl (%)",  type: "number", step: 1 },
-        { key: "coolingMode",  label: "Mode",              type: "select", options: ["off","cool"] },
+        { key: "cooling.setpoint", label: "Cooling ctrl (%)", type: "number", step: 1 },
+        { key: "cooling.ctrlMode", label: "Mode",            type: "bool" },
+        { key: "cooling.action",   label: "Cooling action",  type: "select", options: ["off","cooling","idle"] },
     ]},
     { section: "OT Master status", rows: [
         { key: "master.status.data.ch_enable",      label: "CH enable",      type: "bool" },

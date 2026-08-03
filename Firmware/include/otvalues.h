@@ -251,6 +251,7 @@ public:
     bool getChActive(const uint8_t channel) const;
     bool getFlame() const;
     bool getDhwActive() const;
+    bool getCoolingActive() const;
 private:
     const char *CH2_MODE PROGMEM = "ch2_mode";
     const char *DHW_MODE PROGMEM = "dhw_mode";

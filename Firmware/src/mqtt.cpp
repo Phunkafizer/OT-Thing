@@ -347,7 +347,7 @@ bool Mqtt::setValue(const String &key, const String &value, const bool send) {
         break;
 
     case TOPIC_COOLINGMODE:
-        otcontrol.setCoolingMode(haDisc.strToClimateMode(value));
+        otcontrol.setCoolingMode(strToBool(value));
         break;
 
     case TOPIC_COOLINGCTRL:
@@ -402,6 +402,9 @@ String Mqtt::getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t
     case VALTMPL_FLAMESTATS:
         result += F(".get('slave') or {}).get('flameStats') or {}");
         break;
+
+    case VALTMPL_COOLING:
+        result += F(".get('cooling') or {})");
     }
 
     int numbrak = 2;

@@ -540,15 +540,19 @@ OTValueStatus::OTValueStatus():
 }
 
 bool OTValueStatus::getChActive(const uint8_t channel) const{
-    return isSet() ? ((value & (1<<((channel == 0) ? 1 : 5))) != 0) : false;
+    return isSet() ? ((value & (1<<((channel == 0) ? BIT_CH_MODE : BIT_CH2_MODE))) != 0) : false;
 }
 
 bool OTValueStatus::getFlame() const {
-    return isSet() ? ((value & (1<<3)) != 0) : false;
+    return isSet() ? ((value & (1<<BIT_FLAME)) != 0) : false;
 }
 
 bool OTValueStatus::getDhwActive() const {
-    return isSet() ? ((value & (1<<2)) != 0) : false;
+    return isSet() ? ((value & (1<<BIT_DHW_MODE)) != 0) : false;
+}
+
+bool OTValueStatus::getCoolingActive() const {
+    return isSet() ? ((value & (1<<BIT_COOLING)) != 0) : false;
 }
 
 void OTValueStatus::getValue(JsonVariant var) const {

@@ -23,11 +23,13 @@ if sys.platform == "win32":
 _RED    = "\033[91m"
 _GREEN  = "\033[92m"
 _YELLOW = "\033[93m"
+_CYAN   = "\033[96m"
 _RESET  = "\033[0m"
 
 def _ok(msg):   print(f"{_GREEN}{msg}{_RESET}")
 def _err(msg):  print(f"{_RED}{msg}{_RESET}")
 def _warn(msg): print(f"{_YELLOW}{msg}{_RESET}")
+def _act(msg):  print(f"{_CYAN}{msg}{_RESET}")
 
 
 def _release_artifact_paths(project_dir):
@@ -194,7 +196,7 @@ def wait_for_stable_target_port(stable_seconds=STABLE_DEVICE_SECONDS):
     """
     last_port = None
 
-    print(
+    _act(
         f"Waiting for USB device VID:PID {TARGET_USB_VID:04X}:{TARGET_USB_PID:04X}... (Ctrl+C to stop)"
     )
 
@@ -203,12 +205,12 @@ def wait_for_stable_target_port(stable_seconds=STABLE_DEVICE_SECONDS):
 
         if port is None:
             if last_port is not None:
-                print("Device disappeared, waiting for it to re-appear...")
+                _act("Device disappeared, waiting for it to re-appear...")
             last_port = None
             time.sleep(DEVICE_POLL_INTERVAL_SECONDS)
             continue
 
-        print(f"Device {port} present. Starting upload.")
+        _act(f"Device {port} present. Starting upload.")
         return port
 
 
@@ -550,7 +552,7 @@ def wait_for_device_disconnect():
     """
     Wait for the USB device to be disconnected.
     """
-    _warn("Waiting for device to disconnect...")
+    _act("Waiting for device to disconnect...")
     
     while True:
         port = get_target_port()
@@ -610,7 +612,7 @@ def batch_upload(project_dir):
     Press Ctrl+C to stop.
     """
     print("\n=== Batch firmware upload mode ===")
-    print("Connect devices one at a time. Each will be programmed automatically.\n")
+    _act("Connect devices one at a time. Each will be programmed automatically.\n")
 
     # Open the device web UI once at startup; keep reusing the same tab/window.
     config_url = f"http://{DEVICE_IP}"
@@ -633,6 +635,7 @@ def batch_upload(project_dir):
             upload_count += 1
 
             # Wait for device to reconnect after booting into the application
+            _act("\n\nPress and hold config button!")
             wait_for_device_disconnect()
             wait_for_stable_target_port(stable_seconds=2)
             time.sleep(2)
@@ -659,7 +662,7 @@ def batch_upload(project_dir):
             continue
         
         # Wait for next device
-        _warn("Connect the next one...")
+        _act("Connect the next one...")
         wait_for_device_disconnect()
         time.sleep(1)
 
