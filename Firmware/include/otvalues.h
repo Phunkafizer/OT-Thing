@@ -223,9 +223,9 @@ class OTValueFlags: public OTValue {
 protected:
     struct Flag {
         uint8_t bit {0};
-        const char *field {nullptr};
-        const char *discName {nullptr};
-        const char *haDevClass {nullptr};
+        PGM_P field {nullptr};
+        PGM_P discName {nullptr};
+        PGM_P haDevClass {nullptr};
     };
     uint8_t numFlags;
     const Flag *flagTable;
