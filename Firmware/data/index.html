@@ -1112,7 +1112,7 @@
             color: #d9b38d;
         }
 
-        #scheduleProgramChart {
+        .schedule-program-chart {
             display: block;
             width: 100%;
             height: 156px;
@@ -2933,7 +2933,7 @@
                         <span class="schedule-program-title">Weekly room set program</span>
                         <span class="schedule-program-status" id="scheduleProgramStatus">No entries</span>
                     </div>
-                    <svg id="scheduleProgramChart" viewBox="0 0 700 156" preserveAspectRatio="none" aria-label="Weekly programmed room set temperature"></svg>
+                    <svg id="scheduleProgramChart" class="schedule-program-chart" viewBox="0 0 700 156" preserveAspectRatio="none" aria-label="Weekly programmed room set temperature"></svg>
                 </div>
 
                 <table class="data-table marker-table">
@@ -3288,6 +3288,79 @@
                 </div>
             </div>
 
+            <h3 class="DHW">DHW timer program</h3>
+            <div class="group DHW" id="dhwScheduleGroup">
+                <div class="flexline">
+                    <div class="param">
+                        <h5>enable</h5>
+                        <div>
+                            <label class="switch">
+                                <input type="checkbox" field="boiler.dhwSchedule.enabled" onchange="if (window.drawDhwScheduleTable) window.drawDhwScheduleTable()" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="schedule-program-wrap">
+                    <div class="schedule-program-head">
+                        <span class="schedule-program-title">Weekly DHW setpoint program</span>
+                        <span class="schedule-program-status" id="dhwScheduleProgramStatus">No entries</span>
+                    </div>
+                    <svg id="dhwScheduleProgramChart" class="schedule-program-chart" viewBox="0 0 700 156" preserveAspectRatio="none" aria-label="Weekly programmed DHW setpoint"></svg>
+                </div>
+
+                <table class="data-table marker-table">
+                    <thead>
+                        <tr>
+                            <th class="comment">days</th>
+                            <th class="rs">time</th>
+                            <th class="ot">setpoint</th>
+                            <th class="rem">active</th>
+                            <th class="rem"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="dhwScheduleBody">
+                        <tr class="empty-row"><td colspan="5">No schedule entries yet. Add your first switch point below.</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="flexline">
+                    <div class="param">
+                        <h5>days</h5>
+                        <select id="dhwSchedDays">
+                            <option value="1234560">Mon-Sun</option>
+                            <option value="12345" selected>Mon-Fri</option>
+                            <option value="60">Sat-Sun</option>
+                            <option value="123456">Mon-Sat</option>
+                            <option value="1">Mon</option>
+                            <option value="2">Tue</option>
+                            <option value="3">Wed</option>
+                            <option value="4">Thu</option>
+                            <option value="5">Fri</option>
+                            <option value="6">Sat</option>
+                            <option value="0">Sun</option>
+                        </select>
+                    </div>
+                    <div class="param">
+                        <h5>time</h5>
+                        <div class="flexline" style="gap:6px; align-items:center;">
+                            <select id="dhwSchedHour" style="min-width:72px;"></select>
+                            <span class="statusvalue">:</span>
+                            <select id="dhwSchedMinute" style="min-width:72px;"></select>
+                        </div>
+                    </div>
+                    <div class="param">
+                        <h5>setpoint</h5>
+                        <input id="dhwSchedSetpoint" type="number" min="30" max="70" step="1" value="50" />
+                    </div>
+                </div>
+                <div class="flexline">
+                    <button id="dhwScheduleAddBtn" onclick="addDhwScheduleEntry()">add slot</button>
+                </div>
+                <div id="dhwScheduleEditHint" class="empty-state" hidden>editing slot</div>
+            </div>
+
             <h3>MQTT</h3>
             <div class="group">
                 <div class="flexline">
@@ -3561,6 +3634,10 @@
             boiler: {
                 dhwOn: true,
                 dhwTemperature: 50,
+                dhwSchedule: {
+                    enabled: false,
+                    entries: []
+                },
                 overrideDhw: false,
                 coolOn: false,
                 otc: false,
@@ -3686,6 +3763,7 @@
         historyTree = {},
         currentCh = 0,
         scheduleEditIndex = [null, null],
+        scheduleEditIndexDhw = null,
         autoscroll = true,
         wifiScanRunning = false,
         authConfigured = false,
@@ -4974,9 +5052,6 @@
                 updateMetric(`heroFlowSet${ch === 0 ? "" : "2"}`, "", parseNumber(flowSet), "°C", `flowset${ch}`, flowSetField);
                 updateFlowModeButtons(ch, flowCtrlMode, flowAction);
             }
-            const dhwCard = _("#heroDhwCard");
-            if (dhwCard)
-                dhwCard.hidden = statuscache?.slave?.slave_config_member?.dhw_present !== true;
             updateMetric("heroDhwSet", "", dhwSetTemp, "°C", "dhwSet", "master.dhw_set_t.data");
             updateDhwModeButtons(dhwMode, dhwAction);
             updateMetric("heroCoolingCtrl", "", coolingCtrl, "%", "coolingCtrl", "cooling.setpoint");
@@ -6142,26 +6217,117 @@
             return `${hh}:${mm}`;
         }
 
-        function setScheduleEditorTime(timeStr) {
+        const SCHEDULE_PROGRAMS = {
+            heating: {
+                kind: "heating",
+                groupSelector: "#scheduleGroup",
+                chartSelector: "#scheduleProgramChart",
+                statusSelector: "#scheduleProgramStatus",
+                bodySelector: "#schedulebody",
+                daysSelector: "#schedDays",
+                hourSelector: "#schedHour",
+                minuteSelector: "#schedMinute",
+                valueSelector: "#schedRoom",
+                addButtonSelector: "#scheduleAddBtn",
+                editHintSelector: "#scheduleEditHint",
+                emptyText: "No schedule entries yet. Add your first switch point below.",
+                valueLabel: "room set",
+                liveValueLabel: "Room",
+                defaultValue: 21.0,
+                minValue: 10,
+                maxValue: 30,
+                step: 0.1,
+                decimals: 1,
+                liveValue: (ch) => statuscache?.heatercircuit?.[ch]?.roomtemp
+            },
+            dhw: {
+                kind: "dhw",
+                groupSelector: "#dhwScheduleGroup",
+                chartSelector: "#dhwScheduleProgramChart",
+                statusSelector: "#dhwScheduleProgramStatus",
+                bodySelector: "#dhwScheduleBody",
+                daysSelector: "#dhwSchedDays",
+                hourSelector: "#dhwSchedHour",
+                minuteSelector: "#dhwSchedMinute",
+                valueSelector: "#dhwSchedSetpoint",
+                addButtonSelector: "#dhwScheduleAddBtn",
+                editHintSelector: "#dhwScheduleEditHint",
+                emptyText: "No schedule entries yet. Add your first switch point below.",
+                valueLabel: "setpoint",
+                liveValueLabel: "DHW",
+                defaultValue: 50,
+                minValue: 30,
+                maxValue: 70,
+                step: 1,
+                decimals: 0,
+                liveValue: () => statuscache?.slave?.dhw_t
+            }
+        };
+
+        function getScheduleProgramStore(program, ch = currentCh) {
+            if (program.kind === "heating") {
+                const hcfg = config.heating?.[ch] ?? (config.heating[ch] = {});
+                if (!hcfg.schedule || typeof hcfg.schedule !== "object")
+                    hcfg.schedule = { enabled: false, entries: [] };
+                if (!Array.isArray(hcfg.schedule.entries))
+                    hcfg.schedule.entries = [];
+                if (typeof hcfg.schedule.enabled !== "boolean")
+                    hcfg.schedule.enabled = false;
+                return hcfg.schedule;
+            }
+
+            if (!config.boiler || typeof config.boiler !== "object")
+                config.boiler = {};
+            if (!config.boiler.dhwSchedule || typeof config.boiler.dhwSchedule !== "object")
+                config.boiler.dhwSchedule = { enabled: false, entries: [] };
+            if (!Array.isArray(config.boiler.dhwSchedule.entries))
+                config.boiler.dhwSchedule.entries = [];
+            if (typeof config.boiler.dhwSchedule.enabled !== "boolean")
+                config.boiler.dhwSchedule.enabled = false;
+            return config.boiler.dhwSchedule;
+        }
+
+        function getScheduleEditSelection(program, ch = currentCh) {
+            return program.kind === "heating" ? scheduleEditIndex[ch] : scheduleEditIndexDhw;
+        }
+
+        function setScheduleEditSelectionState(program, index, ch = currentCh) {
+            if (program.kind === "heating")
+                scheduleEditIndex[ch] = index;
+            else
+                scheduleEditIndexDhw = index;
+        }
+
+        function normalizeScheduleValue(program, rawValue) {
+            let value = Number.parseFloat(rawValue);
+            if (!Number.isFinite(value))
+                value = program.defaultValue;
+            value = Math.max(program.minValue, Math.min(program.maxValue, value));
+            const stepFactor = Math.round(1 / program.step);
+            value = Math.round(value * stepFactor) / stepFactor;
+            return Number(program.decimals === 0 ? value.toFixed(0) : value.toFixed(program.decimals));
+        }
+
+        function setScheduleEditorTimeForProgram(program, timeStr) {
             const mins = parseScheduleTime(timeStr);
             const safeMins = mins == null ? 360 : mins;
             const hh = String(Math.floor(safeMins / 60)).padStart(2, "0");
             const mm = String(safeMins % 60).padStart(2, "0");
-            if (_("#schedHour"))
-                _("#schedHour").value = hh;
-            if (_("#schedMinute"))
-                _("#schedMinute").value = mm;
+            if (_(program.hourSelector))
+                _(program.hourSelector).value = hh;
+            if (_(program.minuteSelector))
+                _(program.minuteSelector).value = mm;
         }
 
-        function getScheduleEditorTime() {
-            const hh = _("#schedHour")?.value ?? "06";
-            const mm = _("#schedMinute")?.value ?? "00";
+        function getScheduleEditorTimeForProgram(program) {
+            const hh = _(program.hourSelector)?.value ?? "06";
+            const mm = _(program.minuteSelector)?.value ?? "00";
             return `${hh}:${mm}`;
         }
 
-        function initScheduleTimeSelectors() {
-            const hourSel = _("#schedHour");
-            const minSel = _("#schedMinute");
+        function initScheduleTimeSelectorsForProgram(program) {
+            const hourSel = _(program.hourSelector);
+            const minSel = _(program.minuteSelector);
             if (!hourSel || !minSel)
                 return;
 
@@ -6179,7 +6345,20 @@
                 }
             }
 
-            setScheduleEditorTime("06:00");
+            setScheduleEditorTimeForProgram(program, "06:00");
+        }
+
+        function setScheduleEditorTime(timeStr) {
+            setScheduleEditorTimeForProgram(SCHEDULE_PROGRAMS.heating, timeStr);
+        }
+
+        function getScheduleEditorTime() {
+            return getScheduleEditorTimeForProgram(SCHEDULE_PROGRAMS.heating);
+        }
+
+        function initScheduleTimeSelectors() {
+            initScheduleTimeSelectorsForProgram(SCHEDULE_PROGRAMS.heating);
+            initScheduleTimeSelectorsForProgram(SCHEDULE_PROGRAMS.dhw);
         }
 
         const SCHEDULE_DAY_ORDER = ["1", "2", "3", "4", "5", "6", "0"];
@@ -6219,7 +6398,7 @@
                 .join(", ");
         }
 
-        function getScheduleRoomAtMinute(sched, isoDay, minuteOfDay) {
+        function getScheduleValueAtMinute(sched, isoDay, minuteOfDay) {
             if (!sched || !Array.isArray(sched.entries) || sched.entries.length === 0)
                 return null;
 
@@ -6242,23 +6421,27 @@
                 });
 
                 if (candidate)
-                    return Number.parseFloat(candidate.room);
+                    return Number.parseFloat(candidate.temp);
             }
 
             return null;
         }
 
-        function drawScheduleProgramChart(ch = currentCh) {
-            const svg = _("#scheduleProgramChart");
-            const statusLabel = _("#scheduleProgramStatus");
+        function getScheduleRoomAtMinute(sched, isoDay, minuteOfDay) {
+            return getScheduleValueAtMinute(sched, isoDay, minuteOfDay);
+        }
+
+        function drawScheduleProgramChartForProgram(program, ch = currentCh) {
+            const svg = _(program.chartSelector);
+            const statusLabel = _(program.statusSelector);
             if (!svg)
                 return;
 
-            const liveRoomTemp = Number.parseFloat(statuscache?.heatercircuit?.[ch]?.roomtemp);
+            const liveSetpointTemp = Number.parseFloat(program.liveValue(ch));
 
-            const sched = normalizeSchedule(ch);
+            const sched = normalizeScheduleForProgram(program, ch);
             const entries = sched.entries || [];
-            const selectedIdx = scheduleEditIndex[ch];
+            const selectedIdx = getScheduleEditSelection(program, ch);
             const selectedEntry = (Number.isInteger(selectedIdx) && selectedIdx >= 0 && selectedIdx < entries.length)
                 ? entries[selectedIdx]
                 : null;
@@ -6298,10 +6481,10 @@
             const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
             const xForMinute = (mins) => padLeft + (Math.max(0, Math.min(totalMinutes, mins)) / totalMinutes) * plotW;
 
-            const startRoom = getScheduleRoomAtMinute(sched, 1, 0);
-            let currentRoom = Number.isFinite(startRoom) ? startRoom : Number.parseFloat(entries[0].room);
-            if (!Number.isFinite(currentRoom))
-                currentRoom = 21.0;
+            const startSetpoint = getScheduleValueAtMinute(sched, 1, 0);
+            let currentSetpoint = Number.isFinite(startSetpoint) ? startSetpoint : Number.parseFloat(entries[0].temp);
+            if (!Number.isFinite(currentSetpoint))
+                currentSetpoint = program.defaultValue;
 
             const events = [];
             const selectedEvents = [];
@@ -6313,19 +6496,19 @@
                     const mins = parseScheduleTime(entry.time);
                     if (mins == null)
                         return;
-                    const room = Number.parseFloat(entry.room);
-                    if (!Number.isFinite(room))
+                    const setpoint = Number.parseFloat(entry.temp);
+                    if (!Number.isFinite(setpoint))
                         return;
 
                     events.push({
                         minute: (dayIdx * 1440) + mins,
-                        room
+                        setpoint
                     });
 
                     if (selectedEntry && entry === selectedEntry) {
                         selectedEvents.push({
                             minute: (dayIdx * 1440) + mins,
-                            room
+                            setpoint
                         });
                     }
                 });
@@ -6333,29 +6516,29 @@
 
             events.sort((a, b) => a.minute - b.minute);
 
-            const roomValues = [currentRoom, ...events.map((e) => e.room)];
-            if (Number.isFinite(liveRoomTemp))
-                roomValues.push(liveRoomTemp);
-            let minRoom = Math.min(...roomValues);
-            let maxRoom = Math.max(...roomValues);
-            if (Math.abs(maxRoom - minRoom) < 0.8) {
-                const center = (minRoom + maxRoom) / 2;
-                minRoom = center - 0.5;
-                maxRoom = center + 0.5;
+            const setpointValues = [currentSetpoint, ...events.map((e) => e.setpoint)];
+            if (Number.isFinite(liveSetpointTemp))
+                setpointValues.push(liveSetpointTemp);
+            let minSetpoint = Math.min(...setpointValues);
+            let maxSetpoint = Math.max(...setpointValues);
+            if (Math.abs(maxSetpoint - minSetpoint) < 0.8) {
+                const center = (minSetpoint + maxSetpoint) / 2;
+                minSetpoint = center - 0.5;
+                maxSetpoint = center + 0.5;
             }
             else {
-                minRoom -= 0.3;
-                maxRoom += 0.3;
+                minSetpoint -= 0.3;
+                maxSetpoint += 0.3;
             }
 
-            const yForRoom = (room) => {
-                const ratio = (room - minRoom) / (maxRoom - minRoom);
+            const yForSetpoint = (setpoint) => {
+                const ratio = (setpoint - minSetpoint) / (maxSetpoint - minSetpoint);
                 return padTop + (1 - ratio) * plotH;
             };
 
             for (let i = 0; i <= 4; i++) {
-                const room = minRoom + ((i / 4) * (maxRoom - minRoom));
-                const y = yForRoom(room);
+                const setpoint = minSetpoint + ((i / 4) * (maxSetpoint - minSetpoint));
+                const y = yForSetpoint(setpoint);
                 const hline = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 hline.setAttribute("x1", String(padLeft));
                 hline.setAttribute("x2", String(width - padRight));
@@ -6370,7 +6553,7 @@
                 label.setAttribute("y", (y + 3).toFixed(2));
                 label.setAttribute("fill", "rgba(220,190,165,0.72)");
                 label.setAttribute("font-size", "9");
-                label.textContent = `${(Math.round(room * 10) / 10).toFixed(1)}°`;
+                label.textContent = `${setpoint.toFixed(program.decimals)}°`;
                 svg.appendChild(label);
             }
 
@@ -6396,22 +6579,22 @@
                 }
             }
 
-            const points = [`${xForMinute(0).toFixed(2)},${yForRoom(currentRoom).toFixed(2)}`];
+            const points = [`${xForMinute(0).toFixed(2)},${yForSetpoint(currentSetpoint).toFixed(2)}`];
             for (let i = 0; i < events.length;) {
                 const minute = events[i].minute;
-                let nextRoom = events[i].room;
+                let nextSetpoint = events[i].setpoint;
                 i += 1;
                 while (i < events.length && events[i].minute === minute) {
-                    nextRoom = events[i].room;
+                    nextSetpoint = events[i].setpoint;
                     i += 1;
                 }
 
                 const x = xForMinute(minute);
-                points.push(`${x.toFixed(2)},${yForRoom(currentRoom).toFixed(2)}`);
-                currentRoom = nextRoom;
-                points.push(`${x.toFixed(2)},${yForRoom(currentRoom).toFixed(2)}`);
+                points.push(`${x.toFixed(2)},${yForSetpoint(currentSetpoint).toFixed(2)}`);
+                currentSetpoint = nextSetpoint;
+                points.push(`${x.toFixed(2)},${yForSetpoint(currentSetpoint).toFixed(2)}`);
             }
-            points.push(`${xForMinute(totalMinutes).toFixed(2)},${yForRoom(currentRoom).toFixed(2)}`);
+            points.push(`${xForMinute(totalMinutes).toFixed(2)},${yForSetpoint(currentSetpoint).toFixed(2)}`);
 
             const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
             polyline.setAttribute("fill", "none");
@@ -6424,8 +6607,8 @@
             polyline.setAttribute("points", points.join(" "));
             svg.appendChild(polyline);
 
-            if (Number.isFinite(liveRoomTemp)) {
-                const markerY = yForRoom(liveRoomTemp);
+            if (Number.isFinite(liveSetpointTemp)) {
+                const markerY = yForSetpoint(liveSetpointTemp);
 
                 const markerLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 markerLine.setAttribute("x1", String(padLeft));
@@ -6443,7 +6626,7 @@
                 markerLabel.setAttribute("text-anchor", "end");
                 markerLabel.setAttribute("fill", "rgba(171, 219, 255, 0.96)");
                 markerLabel.setAttribute("font-size", "8.5");
-                markerLabel.textContent = `Room ${liveRoomTemp.toFixed(1)}°C`;
+                markerLabel.textContent = `${program.liveValueLabel} ${liveSetpointTemp.toFixed(program.decimals)}°C`;
                 svg.appendChild(markerLabel);
             }
 
@@ -6451,7 +6634,7 @@
             selectedEvents.forEach((event) => {
                 const nextEvent = events.find((candidate) => candidate.minute > event.minute);
                 const x = xForMinute(event.minute);
-                const y = yForRoom(event.room);
+                const y = yForSetpoint(event.setpoint);
                 const endMinute = nextEvent ? nextEvent.minute : totalMinutes;
                 const endX = xForMinute(endMinute);
 
@@ -6523,9 +6706,9 @@
             nowGuide.setAttribute("stroke-dasharray", "5 3");
             svg.appendChild(nowGuide);
 
-            const nowRoom = getScheduleRoomAtMinute(sched, nowIsoDay, Math.floor(nowMinuteOfDay));
-            if (Number.isFinite(nowRoom)) {
-                const nowY = yForRoom(nowRoom);
+            const nowSetpoint = getScheduleValueAtMinute(sched, nowIsoDay, Math.floor(nowMinuteOfDay));
+            if (Number.isFinite(nowSetpoint)) {
+                const nowY = yForSetpoint(nowSetpoint);
 
                 const nowHalo = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 nowHalo.setAttribute("cx", nowX.toFixed(2));
@@ -6556,40 +6739,49 @@
             svg.appendChild(nowLabel);
         }
 
-        function getHeatingSchedule(ch = currentCh) {
-            const hcfg = config.heating?.[ch] ?? (config.heating[ch] = {});
-            if (!hcfg.schedule || typeof hcfg.schedule !== "object")
-                hcfg.schedule = { enabled: false, entries: [] };
-            if (!Array.isArray(hcfg.schedule.entries))
-                hcfg.schedule.entries = [];
-            if (typeof hcfg.schedule.enabled !== "boolean")
-                hcfg.schedule.enabled = false;
-            return hcfg.schedule;
+        function drawScheduleProgramChart(ch = currentCh) {
+            drawScheduleProgramChartForProgram(SCHEDULE_PROGRAMS.heating, ch);
         }
 
-        function normalizeScheduleEntry(entry) {
-            const room = Number.parseFloat(entry?.room);
+        function drawDhwScheduleProgramChart() {
+            drawScheduleProgramChartForProgram(SCHEDULE_PROGRAMS.dhw, currentCh);
+        }
+
+        function getHeatingSchedule(ch = currentCh) {
+            return getScheduleProgramStore(SCHEDULE_PROGRAMS.heating, ch);
+        }
+
+        function normalizeScheduleEntryForProgram(program, entry) {
             const minutes = parseScheduleTime(entry?.time);
+            const rawTemp = (entry?.temp ?? entry?.room ?? entry?.setpoint);
             return {
                 days: normalizeScheduleDays(entry?.days),
                 time: fmtScheduleTime(minutes == null ? 360 : minutes),
-                room: Number.isFinite(room) ? Math.round(room * 10) / 10 : 21.0
+                temp: normalizeScheduleValue(program, rawTemp)
             };
         }
 
-        function normalizeSchedule(ch = currentCh) {
-            const sched = getHeatingSchedule(ch);
+        function normalizeScheduleEntry(entry) {
+            return normalizeScheduleEntryForProgram(SCHEDULE_PROGRAMS.heating, entry);
+        }
+
+        function normalizeScheduleForProgram(program, ch = currentCh) {
+            const sched = getScheduleProgramStore(program, ch);
             sched.entries = sched.entries
-                .map(normalizeScheduleEntry)
+                .map((entry) => normalizeScheduleEntryForProgram(program, entry))
                 .sort((a, b) => parseScheduleTime(a.time) - parseScheduleTime(b.time));
             return sched;
         }
 
-        function setScheduleEditSelection(index = null) {
-            const btn = _("#scheduleAddBtn");
-            const hint = _("#scheduleEditHint");
+        function normalizeSchedule(ch = currentCh) {
+            return normalizeScheduleForProgram(SCHEDULE_PROGRAMS.heating, ch);
+        }
+
+        function setScheduleEditSelectionForProgram(program, index = null, ch = currentCh) {
+            const btn = _(program.addButtonSelector);
+            const hint = _(program.editHintSelector);
             const isValidIdx = Number.isInteger(index) && index >= 0;
-            scheduleEditIndex[currentCh] = isValidIdx ? index : null;
+            setScheduleEditSelectionState(program, isValidIdx ? index : null, ch);
             if (btn)
                 btn.textContent = isValidIdx ? "save slot" : "add slot";
 
@@ -6602,7 +6794,7 @@
                 return;
             }
 
-            const entry = normalizeSchedule(currentCh).entries[index];
+            const entry = normalizeScheduleForProgram(program, ch).entries[index];
             if (!entry) {
                 hint.hidden = true;
                 hint.textContent = "editing slot";
@@ -6613,41 +6805,53 @@
             hint.hidden = false;
         }
 
-        function loadScheduleEntryToControls(entry) {
+        function setScheduleEditSelection(index = null) {
+            setScheduleEditSelectionForProgram(SCHEDULE_PROGRAMS.heating, index, currentCh);
+        }
+
+        function loadScheduleEntryToControlsForProgram(program, entry) {
             if (!entry)
                 return;
-            if (_("#schedDays"))
-                _("#schedDays").value = normalizeScheduleDays(entry.days);
-            setScheduleEditorTime(entry.time);
-            if (_("#schedRoom"))
-                _("#schedRoom").value = String(entry.room);
+            if (_(program.daysSelector))
+                _(program.daysSelector).value = normalizeScheduleDays(entry.days);
+            setScheduleEditorTimeForProgram(program, entry.time);
+            if (_(program.valueSelector))
+                _(program.valueSelector).value = String(entry.temp);
+        }
+
+        function loadScheduleEntryToControls(entry) {
+            loadScheduleEntryToControlsForProgram(SCHEDULE_PROGRAMS.heating, entry);
+        }
+
+        function toggleScheduleEntrySelectionForProgram(program, index, ch = currentCh) {
+            const idx = Number.parseInt(index, 10);
+            if (!Number.isInteger(idx) || idx < 0) {
+                setScheduleEditSelectionForProgram(program, null, ch);
+                return;
+            }
+
+            if (getScheduleEditSelection(program, ch) === idx) {
+                setScheduleEditSelectionForProgram(program, null, ch);
+                return;
+            }
+
+            const sched = normalizeScheduleForProgram(program, ch);
+            const entry = sched.entries[idx];
+            if (!entry) {
+                setScheduleEditSelectionForProgram(program, null, ch);
+                return;
+            }
+
+            loadScheduleEntryToControlsForProgram(program, entry);
+            setScheduleEditSelectionForProgram(program, idx, ch);
         }
 
         function toggleScheduleEntrySelection(index) {
-            const idx = Number.parseInt(index, 10);
-            if (!Number.isInteger(idx) || idx < 0) {
-                setScheduleEditSelection(null);
-                return;
-            }
-
-            if (scheduleEditIndex[currentCh] === idx) {
-                setScheduleEditSelection(null);
-                return;
-            }
-
-            const sched = normalizeSchedule(currentCh);
-            const entry = sched.entries[idx];
-            if (!entry) {
-                setScheduleEditSelection(null);
-                return;
-            }
-
-            loadScheduleEntryToControls(entry);
-            setScheduleEditSelection(idx);
+            toggleScheduleEntrySelectionForProgram(SCHEDULE_PROGRAMS.heating, index, currentCh);
         }
 
-        function findScheduleSlots(ch = currentCh, nowDate = new Date()) {
-            const sched = normalizeSchedule(ch);
+        function findScheduleSlotsForProgram(program, ch = currentCh, nowDate = new Date()) {
+            const sched = normalizeScheduleForProgram(program, ch);
             const entries = sched.entries;
             if (!sched.enabled || entries.length === 0)
                 return null;
@@ -6679,64 +6883,100 @@
             return active;
         }
 
-        function addScheduleEntry() {
-            const sched = normalizeSchedule(currentCh);
-            const timeVal = getScheduleEditorTime();
-            const roomVal = Number.parseFloat(_("#schedRoom")?.value);
-            const daysVal = _("#schedDays")?.value;
+        function findScheduleSlots(ch = currentCh, nowDate = new Date()) {
+            return findScheduleSlotsForProgram(SCHEDULE_PROGRAMS.heating, ch, nowDate);
+        }
+
+        function addScheduleEntryForProgram(program, ch = currentCh) {
+            const sched = normalizeScheduleForProgram(program, ch);
+            const timeVal = getScheduleEditorTimeForProgram(program);
+            const setpointVal = Number.parseFloat(_(program.valueSelector)?.value);
+            const daysVal = _(program.daysSelector)?.value;
 
             if (parseScheduleTime(timeVal) == null) {
                 showToast("Please provide a valid time", "warning", 3000);
                 return;
             }
-            if (!Number.isFinite(roomVal)) {
-                showToast("Please provide a valid room set value", "warning", 3000);
+            if (!Number.isFinite(setpointVal)) {
+                showToast(`Please provide a valid ${program.valueLabel} value`, "warning", 3000);
                 return;
             }
 
-            const entry = normalizeScheduleEntry({
+            const entry = normalizeScheduleEntryForProgram(program, {
                 days: daysVal,
                 time: timeVal,
-                room: roomVal
+                temp: setpointVal
             });
 
-            const editIdx = scheduleEditIndex[currentCh];
+            const editIdx = getScheduleEditSelection(program, ch);
             if (Number.isInteger(editIdx) && editIdx >= 0 && editIdx < sched.entries.length)
                 sched.entries[editIdx] = entry;
             else
                 sched.entries.push(entry);
 
-            normalizeSchedule(currentCh);
+            normalizeScheduleForProgram(program, ch);
 
             if (Number.isInteger(editIdx)) {
                 const newIdx = sched.entries.findIndex((e) =>
-                    (e.days === entry.days) && (e.time === entry.time) && (e.room === entry.room)
+                    (e.days === entry.days) &&
+                    (e.time === entry.time) &&
+                    (e.temp === entry.temp)
                 );
-                setScheduleEditSelection(newIdx >= 0 ? newIdx : null);
+                setScheduleEditSelectionForProgram(program, newIdx >= 0 ? newIdx : null, ch);
             }
             else {
-                setScheduleEditSelection(null);
+                setScheduleEditSelectionForProgram(program, null, ch);
             }
 
-            if (typeof window.drawScheduleTable === "function")
-                window.drawScheduleTable();
-            flashElement("#scheduleGroup");
-            addRecentEvent(Number.isInteger(editIdx) ? "Time slot updated" : "Time slot added");
+            if (program.kind === "heating") {
+                if (typeof window.drawScheduleTable === "function")
+                    window.drawScheduleTable();
+            }
+            else {
+                if (typeof window.drawDhwScheduleTable === "function")
+                    window.drawDhwScheduleTable();
+            }
+            flashElement(program.groupSelector);
+            addRecentEvent(Number.isInteger(editIdx) ? `${program.liveValueLabel} time slot updated` : `${program.liveValueLabel} time slot added`);
         }
 
-        function removeScheduleEntry(index) {
-            const sched = normalizeSchedule(currentCh);
+        function addScheduleEntry() {
+            addScheduleEntryForProgram(SCHEDULE_PROGRAMS.heating, currentCh);
+        }
+
+        function addDhwScheduleEntry() {
+            addScheduleEntryForProgram(SCHEDULE_PROGRAMS.dhw, currentCh);
+        }
+
+        function removeScheduleEntryForProgram(program, index, ch = currentCh) {
+            const sched = normalizeScheduleForProgram(program, ch);
             const idx = Number.parseInt(index, 10);
             if (!Number.isInteger(idx) || idx < 0 || idx >= sched.entries.length)
                 return;
             sched.entries.splice(idx, 1);
-            if (scheduleEditIndex[currentCh] === idx)
-                setScheduleEditSelection(null);
-            else if (Number.isInteger(scheduleEditIndex[currentCh]) && scheduleEditIndex[currentCh] > idx)
-                scheduleEditIndex[currentCh] -= 1;
-            if (typeof window.drawScheduleTable === "function")
-                window.drawScheduleTable();
-            addRecentEvent("Time slot removed");
+            const selectedIdx = getScheduleEditSelection(program, ch);
+            if (selectedIdx === idx)
+                setScheduleEditSelectionForProgram(program, null, ch);
+            else if (Number.isInteger(selectedIdx) && selectedIdx > idx)
+                setScheduleEditSelectionState(program, selectedIdx - 1, ch);
+
+            if (program.kind === "heating") {
+                if (typeof window.drawScheduleTable === "function")
+                    window.drawScheduleTable();
+            }
+            else {
+                if (typeof window.drawDhwScheduleTable === "function")
+                    window.drawDhwScheduleTable();
+            }
+            addRecentEvent(`${program.liveValueLabel} time slot removed`);
+        }
+
+        function removeScheduleEntry(index) {
+            removeScheduleEntryForProgram(SCHEDULE_PROGRAMS.heating, index, currentCh);
+        }
+
+        function removeDhwScheduleEntry(index) {
+            removeScheduleEntryForProgram(SCHEDULE_PROGRAMS.dhw, index, currentCh);
         }
 
         function exportItem() {
@@ -7199,47 +7439,46 @@
                 });
             };
 
-            window.drawScheduleTable = function drawScheduleTable() {
-                const body = _("#schedulebody");
+            function drawScheduleTableForProgram(program, ch = currentCh) {
+                const body = _(program.bodySelector);
                 if (!body)
                     return;
 
-                const sched = normalizeSchedule(currentCh);
-                drawScheduleProgramChart(currentCh);
+                const sched = normalizeScheduleForProgram(program, ch);
+                drawScheduleProgramChartForProgram(program, ch);
                 body.innerHTML = "";
 
                 if (sched.entries.length === 0) {
-                    setScheduleEditSelection(null);
+                    setScheduleEditSelectionForProgram(program, null, ch);
                     body.append(_$("tr", {className: "empty-row"},
-                        _$("td", {colSpan: 5, textContent: "No schedule entries yet. Add your first switch point below."})
+                        _$("td", {colSpan: 5, textContent: program.emptyText})
                     ));
                     return;
                 }
 
-                const active = findScheduleSlots(currentCh, new Date());
+                const active = findScheduleSlotsForProgram(program, ch, new Date());
 
-                const selectedIdx = scheduleEditIndex[currentCh];
+                const selectedIdx = getScheduleEditSelection(program, ch);
                 if (!Number.isInteger(selectedIdx) || selectedIdx < 0 || selectedIdx >= sched.entries.length)
-                    setScheduleEditSelection(null);
+                    setScheduleEditSelectionForProgram(program, null, ch);
 
                 sched.entries.forEach((entry, idx) => {
                     const row = _$("tr", {
                         className: "schedule-entry-row",
                         onclick: () => {
-                            toggleScheduleEntrySelection(idx);
-                            if (typeof window.drawScheduleTable === "function")
-                                window.drawScheduleTable();
+                            toggleScheduleEntrySelectionForProgram(program, idx, ch);
+                            drawScheduleTableForProgram(program, ch);
                         }
                     });
-                    if (scheduleEditIndex[currentCh] === idx)
+                    if (getScheduleEditSelection(program, ch) === idx)
                         row.classList.add("is-selected");
 
                     row.append(
                         _$("td", {textContent: scheduleDaysLabel(entry.days)}),
                         _$("td", {textContent: entry.time}),
-                        _$("td", {textContent: `${entry.room.toFixed(1)} °C`}),
+                        _$("td", {textContent: `${entry.temp.toFixed(program.decimals)} °C`}),
                         _$("td", {},
-                            (active && active.days === entry.days && active.time === entry.time && active.room === entry.room)
+                            (active && active.days === entry.days && active.time === entry.time && active.temp === entry.temp)
                                 ? _$("span", { className: "slot-active-indicator", textContent: "on", title: "Active schedule slot" })
                                 : ""
                         ),
@@ -7249,7 +7488,7 @@
                                 textContent: "🗑",
                                 onclick: (ev) => {
                                     ev.stopPropagation();
-                                    removeScheduleEntry(idx);
+                                    removeScheduleEntryForProgram(program, idx, ch);
                                 }
                             })
                         )
@@ -7259,6 +7498,14 @@
                         row
                     );
                 });
+            }
+
+            window.drawScheduleTable = function drawScheduleTable() {
+                drawScheduleTableForProgram(SCHEDULE_PROGRAMS.heating, currentCh);
+            };
+
+            window.drawDhwScheduleTable = function drawDhwScheduleTable() {
+                drawScheduleTableForProgram(SCHEDULE_PROGRAMS.dhw, currentCh);
             };
 
             function getConfigValFromPath(path, def=false) {
@@ -7419,6 +7666,7 @@
 
                 drawMarkerTable();
                 drawScheduleTable();
+                drawDhwScheduleTable();
                 drawCurve();
             }
 
@@ -7643,11 +7891,10 @@
                     addRecentEvent(flameNow ? "Flame ON" : "Flame OFF");
                 consumeStatusCache._prevFlame = flameNow;
 
-                if (statuscache.slave?.slave_config_member?.dhw_present === false) {
-                    __(".DHW").forEach(ele => {
-                        ele.hidden = true;
-                    });
-                }
+                const dhwPresent = statuscache?.slave?.slave_config_member?.dhw_present;
+                __(".DHW").forEach((ele) => {
+                    ele.hidden = (dhwPresent === false);
+                });
 
                 if (statuscache.slave?.slave_config_member?.ch2_present === false) {
                     __(".CH2").forEach(ele => {
@@ -7739,6 +7986,8 @@
 
                 if (typeof window.drawScheduleTable === "function")
                     window.drawScheduleTable();
+                if (typeof window.drawDhwScheduleTable === "function")
+                    window.drawDhwScheduleTable();
                 
                 drawCurve();
             }

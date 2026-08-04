@@ -242,8 +242,6 @@ uint16_t OTControl::tmpToData(const double tmpf) {
 void OTControl::setOTMode(const OTMode mode) {
     otMode = mode;
 
-    CHcontrol::overrideEnabled = (otMode == OTMODE_MASTER) && enableSlave;
-
     // set bypass relay
     digitalWrite(GPIO_BYPASS_RELAY, (mode != OTMODE_BYPASS) && !bypass);
 
@@ -286,26 +284,10 @@ bool OTControl::getFlame() const {
     return false;
 }
 
-bool OTControl::getDhwActive() const {
-    OTValueStatus *ots = static_cast<OTValueStatus*>(OTValue::getSlaveValue(Status));
-    if (ots)
-        return ots->getDhwActive();
-
-    return false;
-}
-
 bool OTControl::getCoolingActive() const {
     OTValueStatus *ots = static_cast<OTValueStatus*>(OTValue::getSlaveValue(Status));
     if (ots)
         return ots->getCoolingActive();
-
-    return false;
-}
-
-bool OTControl::getChActive(const uint8_t channel) const {
-    OTValueStatus *ots = static_cast<OTValueStatus*>(OTValue::getSlaveValue(Status));
-    if (ots)
-        return ots->getChActive(channel);
 
     return false;
 }
@@ -328,17 +310,35 @@ void OTControl::loop() {
 
     hwYield();
 
+    bool hasDHW = false;
+    bool hasCh[NUM_HEATCIRCUITS] = {true, false};
+    bool hasCool = false;
+    OTValueSlaveConfigMember *sc = OTValue::getSlaveConfig();
+    if (sc != nullptr) {
+        hasDHW = sc->hasDHW();
+        hasCh[1] = sc->hasCh2();
+        hasCool = sc->hasCooling();
+    }
+
     for (int ch=0; ch<NUM_HEATCIRCUITS; ch++) {
-        chcontrol[ch].loop();
+        if (!hasCh[ch])
+            continue;
+        bool force = chcontrol[ch].loop();
 
         if (millis() > nextPiCtrl) {    
             chcontrol[ch].loopRoomComp();
             chcontrol[ch].loopReturnLimit();
-            setBoilerRequest[ch].force();
+            force = true;
         }
+
+        if (force)
+            setBoilerRequest[ch].force();
     }
     if (millis() > nextPiCtrl)
         nextPiCtrl = millis() + PI_INTERVAL * 1000;
+
+    if (hasDHW && dhwControl.loop())
+        setDhwRequest.force();
     
     if (!discFlag)
         discFlag = sendDiscovery();
@@ -348,20 +348,13 @@ void OTControl::loop() {
     SemMaster sem(10);
     if (!sem)
         return;
-    
-    bool hasDHW = false;
-    bool hasCh2 = false;
-    bool hasCool = false;
-    OTValueSlaveConfigMember *sc = OTValue::getSlaveConfig();
-    if (sc != nullptr) {
-        hasDHW = sc->hasDHW();
-        hasCh2 = sc->hasCh2();
-        hasCool = sc->hasCooling();
-    }
 
     switch (otMode) {
     case OTMODE_LOOPBACKTEST: {
-        for (int ch=0; ch<(hasCh2 ? 2 : 1); ch++) {
+        for (int ch=0; ch<NUM_HEATCIRCUITS; ch++) {
+            if (!hasCh[ch])
+                continue;
+
             if (setRoomTemp[ch]) {
                 setRoomTemp[ch].sendFloat(20.1 + ch);
                 return;
@@ -390,7 +383,10 @@ void OTControl::loop() {
             return;
         }
 
-        for (int ch=0; ch<(hasCh2 ? 2 : 1); ch++) {
+        for (int ch=0; ch<NUM_HEATCIRCUITS; ch++) {
+            if (!hasCh[ch])
+                continue;
+
             double temp;
             if (setRoomTemp[ch] && roomTemp[ch].get(temp)) {
                 setRoomTemp[ch].sendFloat(temp);
@@ -407,7 +403,9 @@ void OTControl::loop() {
             return;
 
         if ( (slaveApp == SLAVEAPP_HEATCOOL) || (otMode == OTMODE_LOOPBACKTEST) ) {
-            for (int ch=0; ch<(hasCh2 ? 2 : 1); ch++) {
+            for (int ch=0; ch<NUM_HEATCIRCUITS; ch++) {
+                if (!hasCh[ch])
+                    continue;
                 if (setBoilerRequest[ch]) {
                     double flow = chcontrol[ch].getChOn() ? chcontrol[ch].getFlow() : boilerConfig.chOffTemp;
                     setBoilerRequest[ch].sendFloat(flow);
@@ -416,7 +414,7 @@ void OTControl::loop() {
             }
 
             if (hasDHW && setDhwRequest &&!noDhwSet) {
-                double tmp = dhwOvrd.active ? dhwOvrd.temp : boilerCtrl.dhwTemp;
+                double tmp = dhwControl.getTemp();
                 setDhwRequest.sendFloat(tmp);
                 return;
             }
@@ -441,7 +439,7 @@ void OTControl::loop() {
 
             if (setMaxCh) {
                 double maxCh = chcontrol[0].getFlowMax();
-                if (hasCh2 && (chcontrol[1].getFlowMax() > maxCh))
+                if (hasCh[1] && (chcontrol[1].getFlowMax() > maxCh))
                     maxCh = chcontrol[1].getFlowMax();
                 setMaxCh.sendFloat(maxCh);
             }
@@ -450,7 +448,7 @@ void OTControl::loop() {
                 lastBoilerStatus = millis();
                 unsigned long req = OpenTherm::buildSetBoilerStatusRequest(
                     chcontrol[0].getChOn(),
-                    dhwOvrd.active ? dhwOvrd.on :  boilerCtrl.dhwOn,
+                    dhwControl.getOn(),
                     boilerCtrl.coolOn,
                     boilerConfig.otc, 
                     chcontrol[1].getChOn(),
@@ -538,7 +536,7 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
             break;
         }
         case TdhwSet: {
-            if (dhwOvrd.active && (mt == OpenThermMessageType::READ_ACK)) {
+            if (dhwControl.ovrd.active && (mt == OpenThermMessageType::READ_ACK)) {
                 // roomunit tried to read dhw set temp. Catch it in order to force writing DHW setpoint by roomunit.
                 newMsg = OpenTherm::buildResponse(OpenThermMessageType::DATA_INVALID, id, 0x0000);
             }
@@ -649,7 +647,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             }
 
             case TdhwSet: {
-                double tmp = dhwOvrd.active ? dhwOvrd.temp : boilerCtrl.dhwTemp;
+                double tmp = dhwControl.getTemp();
                 resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, tmpToData(tmp));
                 break;
             }
@@ -705,7 +703,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 resp = OpenTherm::buildResponse(otval->getLastMsgType(), id, data);
                 chcontrol[0].ovrdOn.value = (msg & (1<<OTValueMasterStatus::BIT_CH_ENABLE)) != 0;
                 chcontrol[1].ovrdOn.value = (msg & (1<<OTValueMasterStatus::BIT_CH2_ENABLE)) != 0;
-                dhwOvrd.on = (msg & (1<<OTValueMasterStatus::BIT_DHW_ENABLE)) != 0;
+                dhwControl.ovrd.on = (msg & (1<<OTValueMasterStatus::BIT_DHW_ENABLE)) != 0;
                 break;
             }
 
@@ -758,8 +756,8 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             }
 
             case TdhwSet:
-                dhwOvrd.temp = OpenTherm::getFloat(msg);
-                if (dhwOvrd.active)
+                dhwControl.ovrd.temp = OpenTherm::getFloat(msg);
+                if (dhwControl.ovrd.active)
                     setDhwRequest.force();
                 break;
 
@@ -789,8 +787,8 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             break;
 
         case TdhwSet:
-            if (dhwOvrd.active && (mt == OpenThermMessageType::WRITE_DATA) )
-                newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(boilerCtrl.dhwTemp));
+            if (dhwControl.ovrd.active && (mt == OpenThermMessageType::WRITE_DATA) )
+                newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(dhwControl.getTemp()));
             break;
 
         case Status:
@@ -804,8 +802,8 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 }
             }
             
-            if (dhwOvrd.active) {
-                if (boilerCtrl.dhwOn)
+            if (dhwControl.ovrd.active) {
+                if (dhwControl.getOn())
                     newMsg |= 1<<OTValueMasterStatus::BIT_DHW_ENABLE; // DHW enable
                 else
                     newMsg &= ~(1<<OTValueMasterStatus::BIT_DHW_ENABLE); // DHW disable
@@ -1001,17 +999,7 @@ void OTControl::getJson(JsonObject &obj) {
     }
 
     JsonObject jDhw = obj[FPSTR(STR_STATKEY_DHW)].to<JsonObject>();
-    jDhw[FPSTR(STR_STATKEY_OVERRIDE)] = dhwOvrd.active;
-    jDhw[FPSTR(STR_STATKEY_CTRLMODE)] = haDisc.getClimateModeStr(boilerCtrl.dhwOn ? HADiscovery::MODE_HEAT : HADiscovery::MODE_OFF);
-    jDhw[FPSTR(STR_STATKEY_SETPOINT)] = dhwOvrd.active ? dhwOvrd.temp : boilerCtrl.dhwTemp;
-    if (boilerCtrl.dhwOn) {
-        if (getDhwActive())
-            jDhw[FPSTR(STR_STATKEY_ACTION)] = FPSTR(HA_ACTION_HEATING);
-        else
-            jDhw[FPSTR(STR_STATKEY_ACTION)] = FPSTR(HA_ACTION_IDLE);
-    }
-    else
-        jDhw[FPSTR(STR_STATKEY_ACTION)] = FPSTR(HA_ACTION_OFF);
+    dhwControl.getJson(jDhw);
 
     JsonObject jCooling = obj[FPSTR(STR_STATKEY_COOLING)].to<JsonObject>();
     jCooling[FPSTR(STR_STATKEY_CTRLMODE)] = boilerCtrl.coolOn;
@@ -1294,12 +1282,12 @@ bool OTControl::sendCapDiscoveries() {
 }
 
 void OTControl::setDhwTemp(double temp) {
-    boilerCtrl.dhwTemp = temp;
+    dhwControl.setTemp(temp);
     setDhwRequest.force();
 }
 
 void OTControl::setDhwCtrlMode(const HADiscovery::ClimateMode mode) {
-    boilerCtrl.dhwOn = (mode != HADiscovery::MODE_OFF);
+    dhwControl.setOn(mode != HADiscovery::MODE_OFF);
     setDhwRequest.force();
 }
 
@@ -1332,6 +1320,7 @@ void OTControl::setConfig(JsonObject &config) {
         setOTMode(mode);
         discFlag = false;
     }
+    devconfig.overrideEnabled = (otMode == OTMODE_MASTER) && enableSlave;
 
     for (int i=0; i<NUM_HEATCIRCUITS; i++) {
         JsonObject obj = config[F("heating")][i];
@@ -1346,9 +1335,8 @@ void OTControl::setConfig(JsonObject &config) {
     ventCtrl.setpoint = ventObj["setpoint"] | 0;
 
     JsonObject boiler = config[F("boiler")];
-    boilerCtrl.dhwOn = boiler[F("dhwOn")];
-    boilerCtrl.dhwTemp = boiler[F("dhwTemperature")] | 45;
-    dhwOvrd.active = boiler[F("overrideDhw")] | false;
+    dhwControl.setConfig(boiler);
+    
     boilerCtrl.maxModulation = boiler[F("maxModulation")] | 100;
     statusReqOvl = boiler[F("statusReq")] | 0x0000;
     boilerConfig.otc = boiler[F("otc")] | false;
@@ -1403,7 +1391,7 @@ void OTControl::setOverrideChFlow(const bool ovrd, const uint8_t channel) {
 }
 
 void OTControl::setOverrideDhw(const bool ovrd) {
-    dhwOvrd.active = ovrd;
+    dhwControl.ovrd.active = ovrd;
     setDhwRequest.force();
 }
 

@@ -5,6 +5,7 @@
 #include "util.h"
 #include "masterrequests.h"
 #include "CHcontrol.h"
+#include "dhwControl.h"
 #include "flamestats.h"
 
 const uint8_t NUM_HEATCIRCUITS = 2;
@@ -55,6 +56,7 @@ private:
         SLAVEAPP_SOLAR = 2
     } slaveApp;
     CHcontrol chcontrol[NUM_HEATCIRCUITS];
+    DHWControl dhwControl;
     void loopRoomComp(const uint8_t ch);
     void loopRetLimit(const uint8_t ch);
     unsigned long nextPiCtrl { 0 };
@@ -70,19 +72,12 @@ private:
         double chOffTemp;
     } boilerConfig;
     struct {
-        bool dhwOn;
-        double dhwTemp;
         uint8_t maxModulation;
         bool summerMode;
         bool dhwBlocking;
         bool coolOn;
         uint8_t coolingCtrl;
     } boilerCtrl;
-    struct {
-        bool active;
-        double temp;
-        double on;
-    } dhwOvrd;
     FlameStats flameStats;
     bool discFlag {true};
     OTWRSetDhw setDhwRequest;
@@ -147,9 +142,7 @@ public:
     void setSummerMode(const bool summerMode);
     void setDhwBlocking(const bool dhwBlocking);
     bool getFlame() const;
-    bool getDhwActive() const;
     bool getCoolingActive() const;
-    bool getChActive(const uint8_t channel) const;
 };
 
 extern OTControl otcontrol;

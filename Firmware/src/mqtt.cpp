@@ -358,14 +358,19 @@ bool Mqtt::setValue(const String &key, const String &value, const bool send) {
         return false;
     }
 
-    if (send && connected()) {
-        String topic = baseTopic + '/';
-        topic += key;
-        topic += F("/set");
-        cli.publish(topic.c_str(), 0, true, value.c_str());
-    }
+    if (send)
+        sendValue(etop, value);
 
     return true;
+}
+
+void Mqtt::sendValue(const MqttTopic topic, const String &value, const bool retain) {
+    if (!connected())
+        return;
+
+    String topicStr = baseTopic + '/';
+    topicStr += getTopicString(topic);
+    cli.publish(topicStr.c_str(), 0, retain, value.c_str());
 }
 
 String Mqtt::getTopicString(const MqttTopic topic) {

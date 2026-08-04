@@ -44,7 +44,10 @@ void OtGwCommand::sendAll(String s) {
     s += F("\r\n");
     for (auto client: clients)
         client->write(s.c_str());
+
+#ifdef OT_SERIAL
     Serial.print(s);
+#endif
 
 #ifdef DEBUG
 if (bleClientConnected && bleSerialTx) {

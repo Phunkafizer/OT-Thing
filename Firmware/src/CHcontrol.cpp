@@ -3,8 +3,7 @@
 #include "devstatus.h"
 #include "otcontrol.h"
 #include "auxInput.h"
-
-bool CHcontrol::overrideEnabled; // set if otMode is master
+#include "otvalues.h"
 
 CHcontrol::CHcontrol(const uint8_t channel):
         channel(channel) {
@@ -47,30 +46,7 @@ void CHcontrol::setConfig(JsonObject &obj, const bool init) {
     if (!roomSetPoint[channel])
         roomSetPoint[channel].set(config.roomSet, Sensor::SOURCE_NA);
 
-    schedule.clear();
-    JsonArray schArr = obj[F("schedule")][F("entries")].as<JsonArray>();
-    for (JsonObject schObj : schArr) {
-        SchedulerEntry entry;
-        
-        entry.days = 0;
-        String daysStr = schObj[F("days")].as<String>();
-        while (!daysStr.isEmpty()) {
-            char d = daysStr.charAt(0);
-            entry.days |= 1<<(d - '0'); // bitmask for days, bit 0 = Sunday, bit 6 = Saturday
-            daysStr.remove(0, 1);
-        }
-        
-        entry.temp = schObj[F("room")] | 20.0;
-
-        String timeStr = schObj[F("time")].as<String>(); // format HH:MM
-        int hours = atoi(timeStr.substring(0, 2).c_str()); // get hours
-        int minutes = atoi(timeStr.substring(3, 5).c_str()); // get minutes
-        entry.time = hours * 60 + minutes;
-
-        schedule.push_back(entry);
-    }
-    scheduleActive = obj[F("schedule")][F("enabled")] | false;
-    lastSchudleIdx = -1;
+    schedule.setConfig(obj[F("schedule")]);
 }
 
 void CHcontrol::getJson(JsonObject &obj) {
@@ -91,14 +67,7 @@ void CHcontrol::getJson(JsonObject &obj) {
     if (modeStr != nullptr)
         obj[FPSTR(STR_STATKEY_ROOMMODE)] = FPSTR(modeStr);
 
-    HADiscovery::ClimateAction action;
-    if (getChOn())
-        if (otcontrol.getFlame() && otcontrol.getChActive(channel))
-            action = HADiscovery::ACTION_HEATING;
-        else
-            action = HADiscovery::ACTION_IDLE;
-    else
-        action = HADiscovery::ACTION_OFF;
+    const HADiscovery::ClimateAction action = haDisc.calcAction(otcontrol.getFlame() && getChActive(), getChOn());
     obj[FPSTR(STR_STATKEY_ACTION)] = haDisc.getClimateActionStr(action);
 
     obj[FPSTR(STR_STATKEY_SUSPENDED)] = roomSuspended || minSuspended || outSuspended;
@@ -111,23 +80,17 @@ void CHcontrol::getJson(JsonObject &obj) {
 
     // calculate roomaction
     HADiscovery::ClimateAction roomAction;
-    if (overrideEnabled && ovrdOn.active)
+    if (devconfig.overrideEnabled && ovrdOn.active)
         roomAction = ovrdOn.value ? HADiscovery::ACTION_HEATING : HADiscovery::ACTION_OFF;
     else
-        if (config.roomSuspend.enabled && roomSuspended)
-            roomAction = HADiscovery::ACTION_IDLE;
-        else
-            if (otcontrol.getChActive(channel))
-                roomAction = HADiscovery::ACTION_HEATING;
-            else
-                roomAction = HADiscovery::ACTION_OFF;
+        roomAction = haDisc.calcAction(getChActive(), config.roomSuspend.enabled && roomSuspended);
     obj[FPSTR(STR_STATKEY_ROOMACTION)] = haDisc.getClimateActionStr(roomAction);
 }
 
 double CHcontrol::getFlow() {
     double result = config.flow;
 
-    if (overrideEnabled && ovrdTemp.active) {
+    if (devconfig.overrideEnabled && ovrdTemp.active) {
         if (ovrdTemp.value <= 0)
             return 0;
         return ovrdTemp.value;
@@ -192,7 +155,7 @@ double CHcontrol::getFlow() {
 }
 
 bool CHcontrol::getChOn() {
-    if (overrideEnabled && ovrdOn.active)
+    if (devconfig.overrideEnabled && ovrdOn.active)
         return ovrdOn.value;
 
     if (AuxInput::hasChDisable(channel))
@@ -221,6 +184,14 @@ bool CHcontrol::getChOn() {
     return true;
 }
 
+bool CHcontrol::getChActive() const {
+    OTValueStatus *ots = static_cast<OTValueStatus*>(OTValue::getSlaveValue(OpenThermMessageID::Status));
+    if (ots)
+        return ots->getChActive(channel);
+
+    return false;
+}
+
 void CHcontrol::setMode(const HADiscovery::ClimateMode mode) {
     this->mode = mode;
 }
@@ -245,8 +216,16 @@ bool CHcontrol::suspendEnabled() const {
     return config.roomSuspend.enabled || config.minSuspend;
 }
 
-void CHcontrol::loop() {
+bool CHcontrol::loop() {
+    double schedTemp;
     double rt, rsp;
+    bool res = false;
+
+    if (schedule.getSetpoint(schedTemp)) {
+        roomSetPoint[channel].set(schedTemp, Sensor::SOURCE_NA);
+        mqtt.sendValue(static_cast<Mqtt::MqttTopic>(Mqtt::TOPIC_ROOMSETPOINT1 + channel), String(schedTemp, 1));
+        res = true;
+    }
 
     if (roomTemp[channel].get(rt) && roomSetPoint[channel].get(rsp) && config.roomSuspend.enabled) {
         if (roomSuspended) {
@@ -261,15 +240,7 @@ void CHcontrol::loop() {
     else
         roomSuspended = false;
 
-    if (scheduleActive) {
-        int8_t schIdx = getCurrentScheduleIdx();
-        if (schIdx != lastSchudleIdx) {
-            lastSchudleIdx = schIdx;
-            if (schIdx > -1) {
-                roomSetPoint[channel].set(schedule[schIdx].temp, Sensor::SOURCE_NA);
-            }
-        }
-    }
+    return res;
 }
 
 void CHcontrol::loopRoomComp() {
@@ -354,33 +325,4 @@ void CHcontrol::loopReturnLimit() {
     }
 
     retLimit.reduction += retLimit.integState;
-}
-
-int8_t CHcontrol::getCurrentScheduleIdx() const {
-    if (!scheduleActive || schedule.empty())
-        return -1;
-
-    struct tm timeinfo;
-    int8_t result = -1;
-    if (!getLocalTime(&timeinfo, 0)) {
-        return lastSchudleIdx;
-    }
-
-    for (int8_t back=0; back < 7; back++) {
-        uint8_t day = (timeinfo.tm_wday - back + 7) % 7;
-        uint16_t thresh = (back == 0) ? (timeinfo.tm_hour * 60 + timeinfo.tm_min) : 24*60; // for current day use current time as threshold, for previous days use 24:00
-        int16_t bestMins = -1;
-        for (auto &entry: schedule) {
-            if ( (entry.days & (1 << day)) == 0)
-                continue; // entry not active on this day
-            if ( (entry.time <= thresh) && (entry.time > bestMins)) {
-                bestMins = entry.time;
-                result = &entry - &schedule[0]; // index of entry
-            }
-        }
-        if (result > -1)
-            break;
-    }
-
-    return result;
 }

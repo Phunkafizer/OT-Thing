@@ -4,6 +4,7 @@
 #include "heatingcurve.h"
 #include "sensors.h"
 #include "HADiscLocal.h"
+#include "scheduler.h"
 #include <vector>
 
 template <typename T1>
@@ -16,6 +17,7 @@ public:
 class CHcontrol {
 private:
     bool roomCompEnabled() const;
+    bool getChActive() const;
     const uint8_t channel;
     struct {
         double roomSet; // default room set point
@@ -48,15 +50,7 @@ private:
     bool minSuspended {false};
     bool outSuspended {false};
     HeatingCurve curve;
-    struct SchedulerEntry{
-        uint8_t days;
-        uint16_t time; // minutes after midnight
-        double temp;
-    };
-    std::vector<SchedulerEntry> schedule;
-    int8_t lastSchudleIdx { -1 };
-    bool scheduleActive {false};
-    int8_t getCurrentScheduleIdx() const;
+    Scheduler schedule;
 public:
     CHcontrol(const uint8_t channel);
     void setConfig(JsonObject &obj, const bool init);
@@ -65,7 +59,7 @@ public:
     bool getChOn();
     double getFlowMax() const;
     bool suspendEnabled() const;
-    void loop();
+    bool loop();
     void loopRoomComp();
     void loopReturnLimit();
     void setMode(const HADiscovery::ClimateMode mode);
@@ -75,5 +69,4 @@ public:
     ChannelOverride<bool> ovrdOn;
     ChannelOverride<double> ovrdTemp;
     HADiscovery::ClimateMode mode {HADiscovery::MODE_AUTO};
-    static bool overrideEnabled; // set if otMode is master && enableSlave
 };

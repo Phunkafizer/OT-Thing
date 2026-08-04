@@ -39,3 +39,10 @@ bool OTThingHADiscovery::publish(const bool avail) {
 
     return mqtt.publish(topic, doc, true);
 }
+
+HADiscovery::ClimateAction OTThingHADiscovery::calcAction(const bool active, const bool enabled, const HADiscovery::ClimateAction actAction) {
+    if (active)
+        return actAction;
+
+    return enabled ? HADiscovery::ACTION_IDLE : HADiscovery::ACTION_OFF;
+}

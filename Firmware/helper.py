@@ -1,5 +1,6 @@
 import gzip
 import os
+import sys
 try:
     import minify_html
 except ImportError:
@@ -47,7 +48,9 @@ def copy_html():
                 preserve_chevron_percent_template_syntax=False, # preserve <% %> (EJS, ERB, JSP, etc.)
             )
         elif env["PIOENV"] in ("release", "production"):
-            print("minify_html not installed, skipping HTML minification")
+            print("\033[91mminify_html not installed, skipping HTML minification\033[0m")
+            print(f"\033[91mPlatformIO Python: {sys.executable}\033[0m")
+            print("\033[91mInstall with: <that-python> -m pip install minify-html\033[0m")
 
         compressed = gzip.compress(content.encode("utf-8"), compresslevel=9)
         print(f"embed html: {len(content.encode('utf-8'))} bytes raw, {len(compressed)} bytes gzip")
@@ -75,20 +78,21 @@ def post_build(source, target, env):
 
 def before_upload(source, target, env):
     """Detect OTthing device port if not explicitly set."""
-    from serial.tools import list_ports
-    
-    TARGET_USB_VID = 0x303A
-    TARGET_USB_PID = 0x1001
-    
-    # Check if port is explicitly set via environment
+    # Check if port is explicitly set via environment.
     forced_port = os.environ.get("OTTHING_UPLOAD_PORT")
     if forced_port:
         env.Replace(UPLOAD_PORT=forced_port)
         return
 
+    from serial.tools import list_ports
+    
+    TARGET_USB_VID = 0x303A
+    TARGET_USB_PID = 0x1001
+
     # Try to detect device by VID/PID
     for d in list_ports.comports():
         if (d.vid == TARGET_USB_VID) and (d.pid == TARGET_USB_PID):
+            print(f"Detected OTthing device on port {d.device}")
             env.Replace(UPLOAD_PORT=d.device)
             return
 
