@@ -1,6 +1,7 @@
 #pragma once
 
 #include <OpenTherm.h>
+#include <map>
 #include "ArduinoJson.h"
 #include "util.h"
 #include "masterrequests.h"
@@ -17,6 +18,11 @@ struct SlaveRequestStruct {
     OpenThermMessageType typeResp;
     uint16_t dataResp;
 };
+
+extern struct OTTestItem {
+    OpenThermMessageID id;
+    uint16_t value;
+} loopbackTestData[50];
 
 class OTControl {
 friend OTWriteRequest;
@@ -115,6 +121,7 @@ private:
     bool init {false};
     bool noDhwSet;
 public:
+    std::map<OpenThermMessageID, uint16_t> masterTestValues;
     OTControl();
     void begin();
     void loop();

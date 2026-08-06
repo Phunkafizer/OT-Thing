@@ -436,6 +436,119 @@ void Portal::begin(bool configMode) {
         }
         request->send(200);
     });
+
+    websrv.on(PSTR("/testdata"), HTTP_GET, [this](AsyncWebServerRequest *request) {
+        if (!ensureAuthorized(request))
+            return;
+
+        JsonDocument doc;
+        JsonObject jobj = doc.to<JsonObject>();
+        for (int i=0; i<sizeof(loopbackTestData)/sizeof(loopbackTestData[0]); i++) {
+            PGM_P name = getOTname(loopbackTestData[i].id);
+            if (name != nullptr)
+                jobj[FPSTR(name)] = OpenTherm::getUInt(loopbackTestData[i].value);
+        }
+
+        for (auto item: otcontrol.masterTestValues) {
+            PGM_P name = getOTname(item.first);
+            if (name != nullptr)
+                jobj[FPSTR(name)] = OpenTherm::getUInt(item.second);
+        }
+        AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));
+        serializeJson(doc, *response);
+        request->send(response);
+    });
+
+    websrv.on(PSTR("/testdata"), HTTP_POST, 
+        [this] (AsyncWebServerRequest *request) {
+        },
+        [] (AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len, bool final) {
+        },
+        [this] (AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
+            if (!ensureAuthorized(request))
+                return;
+
+            static String buf;
+            if (!index)
+                buf.clear();
+
+            buf.concat((const char*) data, len);
+            Serial.printf("/testdata POST chunk: index=%u len=%u total=%u bufLen=%u final=%s\n",
+                (unsigned) index,
+                (unsigned) len,
+                (unsigned) total,
+                (unsigned) buf.length(),
+                "n/a");
+
+            if (buf.length() == total) {
+                JsonDocument doc;
+                DeserializationError err = deserializeJson(doc, buf);
+                if (err != DeserializationError::Ok) {
+                    buf.clear();
+                    request->send(400);
+                    return;
+                }
+
+                if (!doc.is<JsonObject>()) {
+                    buf.clear();
+                    request->send(400);
+                    return;
+                }
+
+                bool updated = false;
+                {
+                    JsonObjectConst obj = doc.as<JsonObjectConst>();
+                    for (JsonPairConst kv: obj) {
+                        String name = kv.key().c_str();
+                        JsonVariantConst jsonValue = kv.value();
+
+                        if (jsonValue.isNull()) {
+                            continue;
+                        }
+
+                        auto decodeValue = [&] (JsonVariantConst valueVariant, uint16_t &decodedValue) -> bool {
+                            if (valueVariant.isNull())
+                                return false;
+
+                            if (valueVariant.is<String>()) {
+                                String hexValue = valueVariant.as<String>();
+                                decodedValue = (uint16_t) strtoul(hexValue.c_str(), nullptr, 16);
+                                return true;
+                            }
+
+                            if (valueVariant.is<int>() || valueVariant.is<long>() || valueVariant.is<unsigned int>() || valueVariant.is<unsigned long>()) {
+                                decodedValue = valueVariant.as<uint16_t>();
+                                return true;
+                            }
+
+                            return false;
+                        };
+
+                        bool matched = false;
+                        for (int i=0; i<sizeof(loopbackTestData)/sizeof(loopbackTestData[0]); i++) {
+                            PGM_P itemName = getOTname(loopbackTestData[i].id);
+                            if (name != FPSTR(itemName))
+                                continue;
+
+                            uint16_t value = 0;
+
+                            if (!decodeValue(jsonValue, value)) {
+                                break;
+                            }
+
+                            loopbackTestData[i].value = value;
+                            updated = true;
+                            matched = true;
+                            break;
+                        }
+                    }
+                }
+                
+                buf.clear();
+                request->send(updated ? 200 : 400);
+            }
+        }
+    );
 }
 
 void Portal::loop() {

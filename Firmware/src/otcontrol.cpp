@@ -25,10 +25,8 @@ constexpr uint16_t nib(uint8_t hb, uint8_t lb) {
 }
 
 // Testdata for local OT slave, can be read by a connected master
-const struct {
-    OpenThermMessageID id;
-    uint16_t value;
-} loopbackTestData[] PROGMEM = {
+struct OTTestItem loopbackTestData[50] = {
+    {Status,                    0x0000}, // no flags set
     {SConfigSMemberIDcode,      nib(1<<0 | 1<<2 | 1<<5, 1)}, // DHW, cooling, CH2 present, Member ID 1
     {ASFflags,                  0x0000}, // no error flags, oem error code 0
     {RBPflags,                  0x0101},
@@ -45,8 +43,8 @@ const struct {
     {Tdhw2,                     floatToOT(37.6)},
     {Texhaust,                  90},
     {TrOverride2,               0},
-    {TdhwSetUBTdhwSetLB,        nib(60, 40)}, // 60 °C upper bound, 40 C° lower bound
-    {MaxTSetUBMaxTSetLB,        nib(60, 25)}, // 60 °C upper bound, 20 C° lower bound
+    {TdhwSetUBTdhwSetLB,        nib(60, 40)}, // 60 °C upper bound, 40 °C lower bound
+    {MaxTSetUBMaxTSetLB,        nib(60, 25)}, // 60 °C upper bound, 20 °C lower bound
     {PowerCycles,               159},
     {SuccessfulBurnerStarts,    9999},
     {CHPumpStarts,              7777},
@@ -828,6 +826,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
         switch (mt) {
         case OpenThermMessageType::WRITE_DATA: {
             uint32_t reply = OpenTherm::buildResponse(OpenThermMessageType::WRITE_ACK, id, msg & 0xFFFF);
+            masterTestValues[id] = msg & 0xFFFF;
             slave.sendResponse(reply, 'P');
             break;
         }
@@ -836,22 +835,6 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             uint32_t reply = OpenTherm::buildResponse(OpenThermMessageType::UNKNOWN_DATA_ID, id, msg & 0xFFFF);
 
             switch (id) {
-            case Status: {
-                uint8_t temp = millis() / 206723;
-                uint8_t x = ((temp % 3) == 0) ? 0 : 1;
-                uint16_t data = x<<3; // flame on
-                if ((msg & (1<<OTValueMasterStatus::BIT_CH_ENABLE)) != 0)
-                    data |= 1<<OTValueStatus::BIT_CH_MODE; // CH1 enable -> CH1 active
-                if ((msg & (1<<OTValueMasterStatus::BIT_DHW_ENABLE)) != 0)
-                    data |= 1<<OTValueStatus::BIT_DHW_MODE;  // DHW enable -> DHW active
-                if ((msg & (1<<OTValueMasterStatus::BIT_COOLING_ENABLE)) != 0)
-                    data |= 1<<OTValueStatus::BIT_COOLING;  // Cooling enable -> cooling active
-                if ((msg & (1<<OTValueMasterStatus::BIT_CH2_ENABLE)) != 0)
-                    data |= 1<<OTValueStatus::BIT_CH2_MODE;  // CH2 enable -> CH2 active
-                reply = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, data);
-                break;
-            }
-
             case Brand: {
                 String brand = PSTR(SLAVE_BRAND);
                 reply = buildBrandResponse(id, brand, msg >> 8);

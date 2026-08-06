@@ -1793,8 +1793,12 @@
                             <span class="state-icon is-unknown" id="stateDhw" title="unknown" aria-label="DHW status">…</span>
                         </div>
                         <div class="state-item">
-                            <span class="state-label">Diag</span>
-                            <span class="state-icon is-unknown" id="stateDiag" title="unknown" aria-label="Diagnostic value">…</span>
+                            <span class="state-label">Service</span>
+                            <span class="state-icon is-unknown" id="stateDiag" title="unknown" aria-label="Diagnostic/service value">…</span>
+                        </div>
+                        <div class="state-item">
+                            <span class="state-label">Fault</span>
+                            <span class="state-icon is-unknown" id="stateFault" title="unknown" aria-label="Fault status">…</span>
                         </div>
                         <div class="state-item">
                             <span class="state-label">MQTT</span>
@@ -2015,6 +2019,10 @@
                         <span class="statusvalue error" field="slave.status.diagnostic"></span>
                     </div>
                     <div class="statusfield">
+                        <h5>Fault</h5>
+                        <span class="statusvalue error" field="slave.status.fault"></span>
+                    </div>
+                    <div class="statusfield">
                         <h5>Heater circuit 1 active</h5>
                         <span class="statusvalue" field="slave.status.ch_mode"></span>
                     </div>
@@ -2025,6 +2033,10 @@
                     <div class="statusfield">
                         <h5>DHW active</h5>
                         <span class="statusvalue" field="slave.status.dhw_mode"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Cooling</h5>
+                        <span class="statusvalue" field="slave.status.cooling"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Vent. fault</h5>
@@ -2051,12 +2063,28 @@
                         <span class="statusvalue error" field="slave.vent_status.diagnostic"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Water over temp fault</h5>
-                        <span class="statusvalue error" field="slave.fault_flags.water_over_temp"></span>
+                        <h5>Service request</h5>
+                        <span class="statusvalue error" field="slave.fault_flags.service_request"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Lockout-reset</h5>
+                        <span class="statusvalue error" field="slave.fault_flags.lockout_reset"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Low water pressure</h5>
+                        <span class="statusvalue error" field="slave.fault_flags.low_water_pressure"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Gas/flame fault</h5>
+                        <span class="statusvalue error" field="slave.fault_flags.gas_flame_fault"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Air pressure fault</h5>
                         <span class="statusvalue error" field="slave.fault_flags.air_pressure_fault"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Water over temp fault</h5>
+                        <span class="statusvalue error" field="slave.fault_flags.water_over_temp"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Vent. service request</h5>
@@ -2065,6 +2093,14 @@
                     <div class="statusfield">
                         <h5>Vent. inlet fan fault</h5>
                         <span class="statusvalue error" field="slave.vent_fault_flags.inlet_fan_fault"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Vent. exhaust fan fault</h5>
+                        <span class="statusvalue error" field="slave.vent_fault_flags.exhaust_fan_fault"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Vent. frost protection</h5>
+                        <span class="statusvalue" field="slave.vent_fault_flags.frost_protection"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Vent. frost protection</h5>
@@ -2104,6 +2140,10 @@
                     <div class="statusfield">
                         <h5>Room override temp.</h5>
                         <span class="statusvalue" field="slave.tr_override" unit="&deg;C"></span>    
+                    </div>
+                    <div class="statusfield">
+                        <h5>Room override temp. 2</h5>
+                        <span class="statusvalue" field="slave.tr_override2" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Supply inlet temp.</h5>
@@ -5110,20 +5150,31 @@
             if (diagEl) {
                 const diag = statuscache?.slave?.status?.diagnostic;
                 diagEl.classList.remove("is-true", "is-false", "is-inactive", "is-error", "is-unknown");
-                if (diag === null || diag === undefined || diag === "") {
+                if (diag === true || diag === false) {
+                    diagEl.classList.add(diag ? "is-error" : "is-true");
+                    diagEl.textContent = diag ? "!" : "●";
+                    diagEl.title = diag ? "diagnostic error" : "diagnostic ok";
+                }
+                else {
                     diagEl.classList.add("is-unknown");
                     diagEl.textContent = "…";
                     diagEl.title = "unknown";
                 }
+            }
+
+            const faultEl = _("#stateFault");
+            if (faultEl) {
+                const fault = statuscache?.slave?.status?.fault;
+                faultEl.classList.remove("is-true", "is-false", "is-inactive", "is-error", "is-unknown");
+                if (fault === true || fault === false) {
+                    faultEl.classList.add(fault ? "is-error" : "is-true");
+                    faultEl.textContent = fault ? "!" : "●";
+                    faultEl.title = fault ? "fault active" : "no fault";
+                }
                 else {
-                    const isError =
-                        diag === true ||
-                        diag === "true" ||
-                        diag === 1 ||
-                        diag === "1";
-                    diagEl.classList.add(isError ? "is-error" : "is-true");
-                    diagEl.textContent = isError ? "!" : "●";
-                    diagEl.title = isError ? "diagnostic error" : "diagnostic ok";
+                    faultEl.classList.add("is-unknown");
+                    faultEl.textContent = "…";
+                    faultEl.title = "unknown";
                 }
             }
 
@@ -5160,6 +5211,7 @@
                 statuscache?.slave?.status?.dhw_mode,
                 statuscache?.master?.status?.data?.dhw_enable,
                 statuscache?.slave?.status?.diagnostic,
+                statuscache?.slave?.status?.fault,
                 statuscache?.mqtt?.connected
             ].map((v) => String(v)).join("|");
             flashCardOnChange(stateCard, stateSignature);
