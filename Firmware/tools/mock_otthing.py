@@ -356,6 +356,7 @@ state = {
         ],
         "dhw": {
             "ovrd": False,
+            "setpoint": 49.0,
             "ctrlMode": "heat",
             "action": "heating",
         },
@@ -603,6 +604,8 @@ def get_set(
     chSetTemp2: float | None = None,
     chMode1: str | None = None,
     chMode2: str | None = None,
+    dhwSetTemp: float | None = None,
+    dhwMode: str | None = None,
     coolingCtrl: float | None = None,
     coolingMode: bool | None = None,
 ) -> JSONResponse:
@@ -667,6 +670,24 @@ def get_set(
         state["status"]["master"]["ch_set_t2"]["data"] = chSetTemp2
         ensure_heatercircuit(1)
         state["status"]["heatercircuit"][1]["flowSetTemp"] = chSetTemp2
+
+    if "dhw" not in state["status"] or not isinstance(state["status"]["dhw"], dict):
+        state["status"]["dhw"] = {}
+
+    if dhwSetTemp is not None:
+        state["status"]["dhw"]["setpoint"] = dhwSetTemp
+        state["status"]["master"]["dhw_set_t"]["data"] = dhwSetTemp
+
+    if dhwMode is not None:
+        mode = str(dhwMode).lower()
+        if mode not in {"off", "heat", "auto"}:
+            mode = "off"
+
+        state["status"]["dhw"]["ctrlMode"] = mode
+        state["status"]["dhw"]["action"] = "off" if mode == "off" else "heating"
+        dhw_enabled = mode != "off"
+        state["status"]["slave"]["status"]["dhw_mode"] = dhw_enabled
+        state["status"]["master"]["status"]["data"]["dhw_enable"] = dhw_enabled
 
     if coolingCtrl is not None:
         ctrl = max(0.0, min(100.0, coolingCtrl))

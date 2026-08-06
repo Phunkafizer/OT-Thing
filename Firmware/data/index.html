@@ -1758,7 +1758,8 @@
         <input id="inject_status" type="file" accept=".json" style="display: none;">
         <div class="nav">
             <ul>
-                <li tab="status" class="active">Status</li>
+                <li tab="dashboard" class="active">Dashboard</li>
+                <li tab="status">Status</li>
                 <li tab="setup">Setup</li>
                 <li tab="heatingcurve" channel="0" class="app-heat">Heating circuit 1</li>
                 <li tab="heatingcurve" channel="1" class="app-heat CH2">Heating circuit 2</li>
@@ -1766,7 +1767,7 @@
             </ul>
         </div>
 
-        <div class="tab" id="status">
+        <div class="tab" id="dashboard">
             <div class="hero-metrics" id="heroMetrics">
                 <div class="metric-card metric-state-card">
                     <h5 aria-label="Status"></h5>
@@ -1930,6 +1931,9 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div class="tab" id="status">
             <h3>System</h3>
             <div class="group">
                 <div class="flexline">
@@ -3524,7 +3528,7 @@
                 <div class="empty-state" id="consoleEmpty">No log messages yet.</div>
             </div>
         </div>
-        <div class="toolbar" id="globalToolbar">
+        <div class="toolbar" id="globalToolbar" hidden>
             <button onclick="saveConfig()">save</button>
             <button onclick="importConfig()">import config</button>
             <div style="display:flex; align-items:center; gap:0.4em;">
@@ -4498,7 +4502,7 @@
         function getDefaultUiState() {
             return {
                 version: UI_STATE_VERSION,
-                activeTab: "status",
+                activeTab: "dashboard",
                 currentCh: 0,
                 pinnedHeroFields: [],
                 history: {}
@@ -4760,7 +4764,7 @@
 
                 const card = _$("div", {
                     className: "metric-card pinned-hero-card",
-                    title: "Double-click to remove from hero",
+                    title: "Double-click to remove from dashboard",
                     ondblclick: () => {
                         pinnedHeroFields.delete(fieldPath);
                         syncPinnedHeroFieldsToConfig();
@@ -4885,7 +4889,7 @@
                     return;
 
                 statusField.classList.add("hero-pin-target");
-                statusField.title = "Double-click to pin/unpin in hero cards";
+                statusField.title = "Double-click to pin/unpin to dashboard";
                 statusField.dataset.pinBound = "1";
                 statusField.addEventListener("dblclick", (ev) => {
                     ev.preventDefault();
@@ -4895,11 +4899,11 @@
 
                     if (pinnedHeroFields.has(fieldPath)) {
                         pinnedHeroFields.delete(fieldPath);
-                        showToast("Removed from hero", "info", 1800);
+                        showToast("Removed from dashboard", "info", 1800);
                     }
                     else {
                         pinnedHeroFields.add(fieldPath);
-                        showToast("Pinned to hero", "success", 1800);
+                        showToast("Pinned to dashboard", "success", 1800);
                     }
 
                     syncPinnedHeroFieldsToConfig();
@@ -7246,6 +7250,13 @@
         window.onload = () => {
             let tabEnterTimer = null;
             const uiState = loadUiState();
+            const updateGlobalToolbarVisibility = (tabName) => {
+                const toolbar = _("#globalToolbar");
+                if (!toolbar)
+                    return;
+
+                toolbar.hidden = !(tabName === "setup" || tabName === "heatingcurve");
+            };
             currentCh = uiState.currentCh;
             pinnedHeroFields = new Set(uiState.pinnedHeroFields || []);
             historyTree = normalizeHistoryTree(uiState.history);
@@ -7285,6 +7296,7 @@
                     tabElement.hidden = false;
                     document.body.setAttribute("data-tab", tabName);
                     document.body.setAttribute("data-focus", tabName === "heatingcurve" ? "curve" : "normal");
+                    updateGlobalToolbarVisibility(tabName);
 
                     tabElement.classList.remove("tab-enter");
                     void tabElement.offsetWidth;
