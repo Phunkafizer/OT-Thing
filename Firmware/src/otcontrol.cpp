@@ -308,18 +308,8 @@ void OTControl::loop() {
 
     hwYield();
 
-    bool hasDHW = false;
-    bool hasCh[NUM_HEATCIRCUITS] = {true, false};
-    bool hasCool = false;
-    OTValueSlaveConfigMember *sc = OTValue::getSlaveConfig();
-    if (sc != nullptr) {
-        hasDHW = sc->hasDHW();
-        hasCh[1] = sc->hasCh2();
-        hasCool = sc->hasCooling();
-    }
-
     for (int ch=0; ch<NUM_HEATCIRCUITS; ch++) {
-        if (!hasCh[ch])
+        if (!boilerCtrl.hasCh[ch])
             continue;
         bool force = chcontrol[ch].loop();
 
@@ -335,7 +325,7 @@ void OTControl::loop() {
     if (millis() > nextPiCtrl)
         nextPiCtrl = millis() + PI_INTERVAL * 1000;
 
-    if (hasDHW && dhwControl.loop())
+    if (boilerCtrl.hasDHW && dhwControl.loop())
         setDhwRequest.force();
     
     if (!discFlag)
@@ -350,7 +340,7 @@ void OTControl::loop() {
     switch (otMode) {
     case OTMODE_LOOPBACKTEST: {
         for (int ch=0; ch<NUM_HEATCIRCUITS; ch++) {
-            if (!hasCh[ch])
+            if (!boilerCtrl.hasCh[ch])
                 continue;
 
             if (setRoomTemp[ch]) {
@@ -382,7 +372,7 @@ void OTControl::loop() {
         }
 
         for (int ch=0; ch<NUM_HEATCIRCUITS; ch++) {
-            if (!hasCh[ch])
+            if (!boilerCtrl.hasCh[ch])
                 continue;
 
             double temp;
@@ -402,7 +392,7 @@ void OTControl::loop() {
 
         if ( (slaveApp == SLAVEAPP_HEATCOOL) || (otMode == OTMODE_LOOPBACKTEST) ) {
             for (int ch=0; ch<NUM_HEATCIRCUITS; ch++) {
-                if (!hasCh[ch])
+                if (!boilerCtrl.hasCh[ch])
                     continue;
                 if (setBoilerRequest[ch]) {
                     double flow = chcontrol[ch].getChOn() ? chcontrol[ch].getFlow() : boilerConfig.chOffTemp;
@@ -411,13 +401,13 @@ void OTControl::loop() {
                 }
             }
 
-            if (hasDHW && setDhwRequest &&!noDhwSet) {
+            if (boilerCtrl.hasDHW && setDhwRequest &&!noDhwSet) {
                 double tmp = dhwControl.getTemp();
                 setDhwRequest.sendFloat(tmp);
                 return;
             }
 
-            if (hasCool && setCoolingCtrlSetpoint) {
+            if (boilerCtrl.hasCool && setCoolingCtrlSetpoint) {
                 setCoolingCtrlSetpoint.sendFloat(boilerCtrl.coolingCtrl);
                 return;
             }
@@ -437,7 +427,7 @@ void OTControl::loop() {
 
             if (setMaxCh) {
                 double maxCh = chcontrol[0].getFlowMax();
-                if (hasCh[1] && (chcontrol[1].getFlowMax() > maxCh))
+                if (boilerCtrl.hasCh[1] && (chcontrol[1].getFlowMax() > maxCh))
                     maxCh = chcontrol[1].getFlowMax();
                 setMaxCh.sendFloat(maxCh);
             }
@@ -577,6 +567,16 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
             case Tret:
                 returnTemp[0].set(OpenTherm::getFloat(msg), Sensor::SOURCE_OT);
                 break;
+            case SConfigSMemberIDcode: {
+                OTValueSlaveConfigMember *sc = OTValue::getSlaveConfig();
+                if (sc) {
+                    boilerCtrl.hasDHW = sc->hasDHW();
+                    boilerCtrl.hasCh[1] = sc->hasCh2();
+                    boilerCtrl.hasCool = sc->hasCooling();
+                    boilerCtrl.slaveConfigSet = true;
+                }
+                break;
+            }
             default:
                 break;
             }
@@ -969,6 +969,8 @@ void OTControl::getJson(JsonObject &obj) {
 
     JsonArray hcarr = obj[F("heatercircuit")].to<JsonArray>();
     for (int i=0; i<NUM_HEATCIRCUITS; i++) {
+        if (!boilerCtrl.hasCh[i])
+            continue;
         double d;
         JsonObject hc = hcarr.add<JsonObject>();
 
@@ -1116,7 +1118,7 @@ bool OTControl::sendChDiscoveries(const uint8_t ch, const bool en) {
     haDisc.setCurrentTemperatureTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_SLAVE, PSTR("flow_t#"), ch + 1, 1));
     haDisc.setInitial(35);
     haDisc.setModeCommandTopic(mqtt.getCmdTopic(topic(Mqtt::TOPIC_CHMODE1, ch)));
-    haDisc.setTemperatureStateTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_FLOWSET_TEMP, ch));
+    haDisc.setTemperatureStateTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_FLOWSETPOINT, ch));
     haDisc.setModeStateTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_CTRLMODE, ch));
     haDisc.setActionTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ACTION, ch));
     haDisc.setOptimistic(true);
@@ -1217,8 +1219,7 @@ bool OTControl::sendChDiscoveries(const uint8_t ch, const bool en) {
 }
 
 bool OTControl::sendCapDiscoveries() {
-    OTValueSlaveConfigMember *vsc = OTValue::getSlaveConfig();
-    if ((vsc == nullptr) || !(vsc->isSet()))
+    if (!boilerCtrl.slaveConfigSet)
         return true;
         
     haDisc.createClima(F("DHW"), Mqtt::getTopicString(Mqtt::TOPIC_DHWSETTEMP), mqtt.getCmdTopic(Mqtt::TOPIC_DHWSETTEMP));
@@ -1233,23 +1234,23 @@ bool OTControl::sendCapDiscoveries() {
     haDisc.setIcon(F("mdi:water-heater"));
     haDisc.setRetain(true);
     haDisc.setModes(0x03);
-    if (!haDisc.publish(vsc->hasDHW()))
+    if (!haDisc.publish(boilerCtrl.hasDHW))
         return false;
 
     bool ovr = (otMode == OTMODE_REPEATER) || ( (otMode == OTMODE_MASTER) && enableSlave );
     haDisc.createSwitch(F("override DHW"), Mqtt::TOPIC_OVERRIDEDHW);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_DHW, STR_STATKEY_OVERRIDE));
-    if (!haDisc.publish(ovr && vsc->hasDHW()))
+    if (!haDisc.publish(ovr && boilerCtrl.hasDHW))
         return false;
 
     haDisc.createSwitch(F("DHW blocking"), Mqtt::TOPIC_DHWBLOCKING);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOT, STR_STATKEY_DHWBLOCKING));
-    if (!haDisc.publish(vsc->hasDHW()))
+    if (!haDisc.publish(boilerCtrl.hasDHW))
         return false;
 
     haDisc.createSwitch(F("Cooling"), Mqtt::TOPIC_COOLINGMODE);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_COOLING, STR_STATKEY_CTRLMODE));
-    if (!haDisc.publish(vsc->hasCooling()))
+    if (!haDisc.publish(boilerCtrl.hasCool))
         return false;
 
     haDisc.createNumber(F("cooling control signal"), Mqtt::getTopicString(Mqtt::TOPIC_COOLINGCTRL), mqtt.getCmdTopic(Mqtt::TOPIC_COOLINGCTRL));
@@ -1258,10 +1259,10 @@ bool OTControl::sendCapDiscoveries() {
     haDisc.setUnit(FPSTR(HA_UNIT_PERCENT));
     haDisc.setIcon(F("mdi:snowflake-thermometer"));
     haDisc.setRetain(true);
-    if (!haDisc.publish(vsc->hasCooling()))
+    if (!haDisc.publish(boilerCtrl.hasCool))
         return false;
 
-    return sendChDiscoveries(1, vsc->hasCh2());
+    return sendChDiscoveries(1, boilerCtrl.hasCh[1]);
 }
 
 void OTControl::setDhwTemp(double temp) {

@@ -1026,28 +1026,6 @@
             background: rgba(216, 162, 76, 0.1);
         }
 
-        .wifi-table tbody tr.scan-result-row {
-            cursor: pointer;
-            transition: background-color 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        .wifi-table tbody tr.scan-result-row:hover {
-            background: rgba(216, 162, 76, 0.2);
-        }
-
-        .wifi-table tbody tr.scan-result-row.is-selected {
-            background: linear-gradient(90deg, rgba(240, 207, 138, 0.24), rgba(216, 162, 76, 0.12));
-            box-shadow: inset 3px 0 0 var(--accent);
-        }
-
-        .wifi-table tbody tr.scan-result-row td {
-            transition: color 0.15s ease;
-        }
-
-        .wifi-table tbody tr.scan-result-row.is-selected td {
-            color: #fff2e5;
-        }
-
         .marker-table tbody tr.schedule-entry-row {
             cursor: pointer;
             transition: background-color 0.15s ease;
@@ -1161,6 +1139,100 @@
             background: rgba(214, 79, 79, 0.2);
             border-color: rgba(214, 79, 79, 0.56);
             color: #ffd0d0;
+        }
+
+        .scan-badge.enc {
+            background: rgba(216, 162, 76, 0.18);
+            border-color: rgba(216, 162, 76, 0.55);
+            color: #f2d9ae;
+        }
+
+        .modal-content.wifi-modal {
+            width: 440px;
+        }
+
+        .wifi-setup-body {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px 6px;
+        }
+
+        .wifi-scan-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #e5cfb8;
+            font-size: 0.85em;
+            padding: 12px 4px;
+        }
+
+        .wifi-spinner {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid rgba(216, 162, 76, 0.25);
+            border-top-color: var(--accent, #d8a24c);
+            animation: wifi-spin 0.9s linear infinite;
+        }
+
+        @keyframes wifi-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .wifi-scan-list {
+            max-height: 40vh;
+            overflow: auto;
+            border: 1px solid rgba(216, 162, 76, 0.35);
+            border-radius: 8px;
+        }
+
+        .wifi-scan-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 7px 9px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(216, 162, 76, 0.12);
+            transition: background-color 0.15s ease;
+        }
+
+        .wifi-scan-item:last-child {
+            border-bottom: none;
+        }
+
+        .wifi-scan-item:hover {
+            background: rgba(216, 162, 76, 0.16);
+        }
+
+        .wifi-scan-item.is-selected {
+            background: linear-gradient(90deg, rgba(240, 207, 138, 0.24), rgba(216, 162, 76, 0.12));
+            box-shadow: inset 3px 0 0 var(--accent);
+        }
+
+        .wifi-scan-item .wifi-ssid {
+            font-weight: 700;
+            color: #fff2e5;
+        }
+
+        .wifi-scan-item .wifi-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .wifi-scan-item .wifi-bssid {
+            font-family: "Lucida Console", "Courier New", monospace;
+            font-size: 0.72em;
+            color: #c7a88f;
+        }
+
+        .wifi-scan-empty {
+            padding: 10px;
+            color: #c7a88f;
+            font-style: italic;
+            font-size: 0.85em;
         }
 
         .data-table .empty-row td {
@@ -3043,32 +3115,7 @@
                     </div>
                 </div>
                 <h4>WiFi</h4>
-                <button id="scanbtn" onclick="startWifiScan()">scan</button>
-                <div id="scanResults" hidden>
-                    <table class="data-table wifi-table">
-                        <thead>
-                            <tr>
-                                <th>SSID</th>
-                                <th>channel</th>
-                                <th>RSSI</th>
-                            </tr>
-                        </thead>
-                        <tbody id="scanbody">
-                            <tr class="empty-row"><td colspan="3">No scan results yet. Press scan to discover nearby networks.</td></tr>
-                        </tbody>
-                    </table>
-                    <div class="flexline">
-                        <div class="param">
-                            <h5>SSID</h5>
-                            <input id="wifissid" />
-                        </div>
-                        <div class="param">
-                            <h5>Password</h5>
-                            <input id="wifipass" type="password"/>
-                        </div>
-                    </div>
-                    <div><button onclick="saveWifi()">connect</button></div>
-                </div>
+                <button id="wifiSetupBtn" onclick="openWifiSetup()">setup</button>
                 <h4>Web UI Login</h4>
                 <div class="flexline">
                     <div class="param">
@@ -3596,6 +3643,32 @@
             </div>
         </div>
     </div>
+    <div id="dlgWifiSetup" class="modal" hidden>
+        <div class="modal-content wifi-modal">
+            <div class="modal-header">
+                <span>WiFi setup</span>
+            </div>
+            <div class="wifi-setup-body">
+                <div id="wifiScanStatus" class="wifi-scan-status">
+                    <span class="wifi-spinner"></span>
+                    <span>Scanning for WiFi networks...</span>
+                </div>
+                <div id="wifiScanList" class="wifi-scan-list" hidden></div>
+                <div class="param">
+                    <h5>SSID</h5>
+                    <input id="wifissid" />
+                </div>
+                <div class="param">
+                    <h5>Password</h5>
+                    <input id="wifipass" type="password" autocomplete="new-password" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeWifiSetup()">close</button>
+                <button onclick="saveWifi()">save</button>
+            </div>
+        </div>
+    </div>
     <div id="authLoginModal" class="modal" hidden>
         <div class="modal-content">
             <div class="modal-header">
@@ -3629,8 +3702,6 @@
             tabEnterCleanupMs: 760,
             scanXhrTimeoutMs: 15000,
             scanRetryMs: 2000,
-            scanStartToastMs: 2500,
-            scanSuccessToastMs: 3500,
             scanErrorToastMs: 4000,
             statusXhrTimeoutMs: 10000,
             statusPollSuccessMs: 5000,
@@ -3664,7 +3735,7 @@
             "outsideTemp": { min: 5, max: 23 },
             "heatercircuit.$.roomtemp": { min: 17, max: 23 },
             "heatercircuit.$.roomsetpoint": { min: 17, max: 23 },
-            "heatercircuit.$.flowSetTemp": { min: 28, max: 60 }
+            "heatercircuit.$.flowsetpoint": { min: 28, max: 60 }
         },
         defaultConfig = {
             hostname: "otthing",
@@ -4231,7 +4302,7 @@
                 case "flow": return ch === 0 ? "slave.flow_t" : "slave.flow_t2";
                 case "dhw": return ch === 0 ? "slave.dhw_t" : "slave.dhw_t2";
                 case "ret": return "heatercircuit.0.returnTemp";
-                case "flowSet": return "heatercircuit.$.flowSetTemp";
+                case "flowSet": return "heatercircuit.$.flowsetpoint";
                 case "ch": return ch === 0 ? "slave.status.ch_mode" : "slave.status.ch2_mode";
                 case "dhwMode": return "slave.status.dhw_mode";
                 case "flame": return "slave.status.flame";
@@ -4492,7 +4563,7 @@
             const flowVal = parseNumber((currentCh === 0) ? statuscache?.slave?.flow_t : statuscache?.slave?.flow_t2);
             const dhwVal = parseNumber((currentCh === 0) ? statuscache?.slave?.dhw_t : statuscache?.slave?.dhw_t2);
             const returnVal = parseNumber(statuscache?.heatercircuit?.[0]?.returnTemp);
-            const flowSetVal = parseNumber(statuscache?.heatercircuit?.[currentCh]?.flowSetTemp);
+            const flowSetVal = parseNumber(statuscache?.master?.ch_set_t?.data);
             const chActive = (currentCh === 0)
                 ? statuscache?.slave?.status?.ch_mode === true
                 : statuscache?.slave?.status?.ch2_mode === true;
@@ -5089,10 +5160,10 @@
             const flowField = (currentCh === 0) ? "slave.flow_t" : "slave.flow_t2";
 
             for (let ch = 0; ch < 2; ch++) {
-                const flowSet = getStatusValueByPath("heatercircuit.$.flowSetTemp", ch);
+                const flowSet = getStatusValueByPath("heatercircuit.$.flowsetpoint", ch);
                 const flowCtrlMode = normalizeRoomMode(getStatusValueByPath("heatercircuit.$.ctrlMode", ch));
                 const flowAction = getStatusValueByPath("heatercircuit.$.action", ch);
-                const flowSetField = "heatercircuit.$.flowSetTemp";
+                const flowSetField = "heatercircuit.$.flowsetpoint";
                 updateMetric(`heroFlowSet${ch === 0 ? "" : "2"}`, "", parseNumber(flowSet), "°C", `flowset${ch}`, flowSetField);
                 updateFlowModeButtons(ch, flowCtrlMode, flowAction);
             }
@@ -5801,19 +5872,25 @@
          * event handlers for buttons 
         */
 
+        // wifi setup dialog
+        function openWifiSetup() {
+            _("#dlgWifiSetup").hidden = false;
+            startWifiScan();
+        }
+
+        function closeWifiSetup() {
+            _("#dlgWifiSetup").hidden = true;
+        }
+
         // scan button
         function startWifiScan() {
             if (wifiScanRunning)
                 return;
 
             wifiScanRunning = true;
-            _("#scanbtn").disabled = true;
-            _("#scanResults").hidden = true;
-            _("#scanbody").innerHTML = "";
-            _("#scanbody").append(_$("tr", {className: "empty-row"},
-                _$("td", {colSpan: 3, textContent: "Scanning for networks..."})
-            ));
-            showToast("Scan running...", "info", UI_TIMINGS.scanStartToastMs);
+            _("#wifiScanStatus").hidden = false;
+            _("#wifiScanList").hidden = true;
+            _("#wifiScanList").innerHTML = "";
             addRecentEvent("WiFi scan started");
             scanWiFi();
         }
@@ -5832,6 +5909,7 @@
                 }
 
                 showToast("WiFi credentials sent", "success", 3000);
+                closeWifiSetup();
                 flashElement("#wifiGroup");
                 addRecentEvent("WiFi connect requested");
             };
@@ -5883,7 +5961,7 @@
         };
 
         function adjustFlowSetTemp(ch, delta) {
-            const currentValue = parseNumber(getStatusValueByPath("heatercircuit.$.flowSetTemp", ch));
+            const currentValue = parseNumber(getStatusValueByPath("heatercircuit.$.flowsetpoint", ch));
             if (currentValue == null) {
                 showToast("No flow setpoint available", "warning", 3000);
                 return;
@@ -5900,7 +5978,7 @@
                     if (!statuscache.heatercircuit[ch])
                         statuscache.heatercircuit[ch] = {};
 
-                    statuscache.heatercircuit[ch].flowSetTemp = nextValue;
+                    statuscache.heatercircuit[ch].flowsetpoint = nextValue;
                     updateHeroMetrics(false);
                     flashElement(`#heroFlowSetCard${ch === 0 ? "" : "2"}`);
                 })
@@ -7191,19 +7269,34 @@
             return result.replace(/:/g, '');
         }
 
+        function getEncTypeName(encType) {
+            const names = {
+                0: "open",
+                1: "WEP",
+                2: "WPA-PSK",
+                3: "WPA2-PSK",
+                4: "WPA/WPA2-PSK",
+                5: "WPA2-ENT",
+                6: "WPA3-PSK",
+                7: "WPA2/WPA3-PSK",
+                8: "WAPI-PSK",
+                9: "OWE",
+                10: "WPA3-ENT-192"
+            };
+            return names[encType] ?? `enc ${encType}`;
+        }
+
         function scanWiFi() {
             let xhr = new XMLHttpRequest();
             xhr.timeout = UI_TIMINGS.scanXhrTimeoutMs;
             xhr.onload = (e) => {
                 if (isUnauthorizedStatus(xhr)) {
                     wifiScanRunning = false;
-                    _("#scanbtn").disabled = false;
                     return;
                 }
 
                 if (xhr.status < 200 || xhr.status >= 300) {
                     wifiScanRunning = false;
-                    _("#scanbtn").disabled = false;
                     showToast("WiFi scan failed", "error", UI_TIMINGS.scanErrorToastMs);
                     addRecentEvent("WiFi scan failed");
                     return;
@@ -7215,26 +7308,26 @@
                     return;
                 }
 
-                _("#scanResults").hidden= false;
                 wifiScanRunning = false;
-                _("#scanbtn").disabled = false;
+                _("#wifiScanStatus").hidden = true;
+                _("#wifiScanList").hidden = false;
 
                 const numResults = scanObj.results?.length ?? 0;
-                showToast(`Scan finished: ${numResults} network(s) found`, "success", UI_TIMINGS.scanSuccessToastMs);
                 addRecentEvent(`WiFi scan: ${numResults} network(s)`);
 
-                _("#scanbody").innerHTML = "";
+                const scanList = _("#wifiScanList");
+                scanList.innerHTML = "";
                 if (numResults === 0) {
-                    _("#scanbody").append(_$("tr", {className: "empty-row"},
-                        _$("td", {colSpan: 3, textContent: "No nearby networks found."})
-                    ));
+                    scanList.append(_$("div", {
+                        className: "wifi-scan-empty",
+                        textContent: "No nearby networks found."
+                    }));
                     return;
                 }
 
-                const scanBody = _("#scanbody");
-                const selectScanRow = (selectedRow, ssid) => {
-                    __("tr.scan-result-row", scanBody).forEach(row => row.classList.remove("is-selected"));
-                    selectedRow.classList.add("is-selected");
+                const selectScanItem = (selectedItem, ssid) => {
+                    __(".wifi-scan-item", scanList).forEach(item => item.classList.remove("is-selected"));
+                    selectedItem.classList.add("is-selected");
                     _("#wifissid").value = ssid;
                 };
 
@@ -7250,46 +7343,47 @@
                             rssiQuality = "fair";
                     }
 
-                    const row = _$("tr", {
-                            className: "scan-result-row",
+                    const item = _$("div", {
+                            className: "wifi-scan-item",
                             title: "Click to select this network"
                         },
-                            _$("td", {textContent: element.ssid}),
-                            _$("td", {},
+                            _$("div", {className: "wifi-ssid", textContent: element.ssid}),
+                            _$("div", {className: "wifi-meta"},
                                 _$("span", {
                                     className: "scan-badge channel",
                                     textContent: `CH ${element.channel}`
-                                })
-                            ),
-                            _$("td", {},
+                                }),
                                 _$("span", {
                                     className: `scan-badge rssi ${rssiQuality}`,
                                     textContent: `${element.rssi} dBm`
-                                })
+                                }),
+                                _$("span", {
+                                    className: "scan-badge enc",
+                                    textContent: getEncTypeName(element.encType)
+                                }),
+                                _$("span", {className: "wifi-bssid", textContent: element.bssid ?? ""})
                             )
                         );
 
-                    row.addEventListener("click", () => {
-                        selectScanRow(row, element.ssid);
+                    item.addEventListener("click", () => {
+                        selectScanItem(item, element.ssid);
                     });
 
                     if (_("#wifissid").value === element.ssid)
-                        selectScanRow(row, element.ssid);
+                        selectScanItem(item, element.ssid);
 
-                    scanBody.append(row);
+                    scanList.append(item);
                 });
             };
 
             xhr.onerror = () => {
                 wifiScanRunning = false;
-                _("#scanbtn").disabled = false;
                 showToast("WiFi scan failed", "error", UI_TIMINGS.scanErrorToastMs);
                 addRecentEvent("WiFi scan failed");
             };
 
             xhr.ontimeout = () => {
                 wifiScanRunning = false;
-                _("#scanbtn").disabled = false;
                 showToast("WiFi scan timeout", "error", UI_TIMINGS.scanErrorToastMs);
                 addRecentEvent("WiFi scan timeout");
             };
@@ -8290,7 +8384,7 @@
                     logws(ev.data);
                 }
                 websocket.onerror = (ev) => {
-                    logws("Error");
+                    logws("websocket reconnecting...");
                     websocket.close();
                 }
             }

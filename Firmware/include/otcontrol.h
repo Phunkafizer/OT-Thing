@@ -83,6 +83,10 @@ private:
         bool dhwBlocking;
         bool coolOn;
         uint8_t coolingCtrl;
+        bool hasDHW { false };
+        bool hasCh[NUM_HEATCIRCUITS] = {true, false};
+        bool hasCool { false };
+        bool slaveConfigSet { false };
     } boilerCtrl;
     FlameStats flameStats;
     bool discFlag {true};

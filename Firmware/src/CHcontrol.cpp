@@ -60,8 +60,17 @@ void CHcontrol::getJson(JsonObject &obj) {
     obj[FPSTR(STR_STATKEY_ROOMCOMPINTEGRATOR)] = round(roomComp.integState * 10) / 10.0;
     obj[FPSTR(STR_STATKEY_RETURNLIMITINTEGRATOR)] = round(retLimit.integState * 10) / 10.0;
     obj[FPSTR(STR_STATKEY_FLOWMIN)] = flowMin;
-    if (mode != HADiscovery::MODE_OFF)
-        obj[FPSTR(STR_STATKEY_FLOWSET_TEMP)] = getFlow();
+
+    switch (mode) {
+    case HADiscovery::MODE_HEAT:
+        obj[FPSTR(STR_STATKEY_FLOWSETPOINT)] = flowTemp;
+        break;
+    case HADiscovery::MODE_AUTO:
+        obj[FPSTR(STR_STATKEY_FLOWSETPOINT)] = getFlow();
+        break;
+    default:
+        break;
+    }
 
     modeStr = haDisc.getClimateModeStr(roomComp.mode);
     if (modeStr != nullptr)

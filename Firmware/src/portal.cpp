@@ -4,6 +4,7 @@
 #include <esp_system.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <DNSServer.h>
 #include <WiFi.h>
 #include "portal.h"
 #include "devstatus.h"
@@ -20,6 +21,7 @@ static const IPAddress apMask(255, 255, 255, 0);
 Portal portal;
 static AsyncWebServer websrv(80);
 AsyncWebSocket ws("/ws");
+static DNSServer dnsServer;
 
 
 Portal::Portal():
@@ -30,7 +32,7 @@ Portal::Portal():
 }
 
 String Portal::createSessionToken() const {
-    static const char hex[] = "0123456789abcdef";
+    String hex(F("0123456789abcdef"));
     char buf[33] = {0};
     for (int i=0; i<16; i++) {
         uint8_t b = (uint8_t) (esp_random() & 0xFF);
@@ -112,12 +114,12 @@ void Portal::begin(bool configMode) {
         WiFi.persistent(false);
         WiFi.softAPConfig(apAddress, apAddress, apMask);
         WiFi.softAP(F(AP_SSID), F(AP_PASSWORD));
-        
+        dnsServer.start(53, "*", apAddress);
+
         if (WiFi.SSID().isEmpty())
             WiFi.mode(WIFI_AP);
         else
             WiFi.mode(WIFI_AP_STA);
-
         WiFi.setAutoReconnect(false);
         WiFi.persistent(true);
     }
@@ -137,6 +139,17 @@ void Portal::begin(bool configMode) {
         response->addHeader(F("Content-Encoding"), F("gzip"));
         response->addHeader(F("Cache-Control"), F("no-cache"));
         response->addHeader(F("Vary"), F("Accept-Encoding"));
+        request->send(response);
+    });
+
+    websrv.onNotFound([this](AsyncWebServerRequest *request) {
+        if (!configModeActive) {
+            request->send(404);
+            return;
+        }
+
+        AsyncWebServerResponse *response = request->beginResponse(302);
+        response->addHeader(F("Location"), String(F("http://")) + apAddress.toString() + F("/"));
         request->send(response);
     });
 
@@ -265,6 +278,18 @@ void Portal::begin(bool configMode) {
                     result[F("ssid")] = WiFi.SSID(i);
                     result[F("rssi")] = WiFi.RSSI(i);
                     result[F("channel")] = WiFi.channel(i);
+                    result[F("encType")] = WiFi.encryptionType(i);
+                    uint8_t bssid[6];
+                    WiFi.BSSID(i, bssid);
+                    String bssidStr;
+                    for (int bi=0; bi<sizeof(bssid); bi++) {
+                        if (!bssidStr.isEmpty())
+                            bssidStr += ':';
+                        if (bssid[bi] < 16)
+                            bssidStr += '0';
+                        bssidStr += String(bssid[bi], 16);
+                    }
+                    result[F("bssid")] = bssidStr;
                 }
                 WiFi.scanDelete();
             }
@@ -524,7 +549,6 @@ void Portal::begin(bool configMode) {
                             return false;
                         };
 
-                        bool matched = false;
                         for (int i=0; i<sizeof(loopbackTestData)/sizeof(loopbackTestData[0]); i++) {
                             PGM_P itemName = getOTname(loopbackTestData[i].id);
                             if (name != FPSTR(itemName))
@@ -532,13 +556,11 @@ void Portal::begin(bool configMode) {
 
                             uint16_t value = 0;
 
-                            if (!decodeValue(jsonValue, value)) {
+                            if (!decodeValue(jsonValue, value))
                                 break;
-                            }
 
                             loopbackTestData[i].value = value;
                             updated = true;
-                            matched = true;
                             break;
                         }
                     }

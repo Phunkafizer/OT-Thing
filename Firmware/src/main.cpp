@@ -1,6 +1,4 @@
 #include <Arduino.h>
-#include <WiFi.h>
-#include <ESPmDNS.h>
 #include <Ticker.h>
 #include <ImprovWiFiBLE.h>
 #include "hwdef.h"
@@ -17,6 +15,7 @@
 #include "util.h"
 #include "esp_task_wdt.h"
 #include "auxInput.h"
+#include "netw.h"
 
 #ifdef DEBUG
     #include <ArduinoOTA.h>
@@ -60,44 +59,22 @@ void statusLedLoop() {
         mask = 0x8000;
 }
 
-void wifiEvent(WiFiEvent_t event) {
-    switch (event) {
-    case ARDUINO_EVENT_WIFI_STA_GOT_IP: {
-        String hn = devconfig.getHostname();
-        WiFi.setHostname(hn.c_str());
-        MDNS.begin(hn.c_str());
-        publishMdnsServices();
-        break;
-    }
-
-    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-        devstatus.numWifiDiscon++;
-        WiFi.reconnect();
-        break;
-
-    default:
-        break;
-    }
-}
-
 void setup() {
     pinMode(GPIO_STATUS_LED, OUTPUT);
     pinMode(GPIO_CONFIG_BUTTON, INPUT);
     
     setLedStatus(false);
 
-    otcontrol.begin();
-
-    statusLedTicker.attach(0.2, statusLedLoop);
-
-    configMode = digitalRead(GPIO_CONFIG_BUTTON) == 0;
-    if (configMode)
-        statusLedData = 0xA000;
-
     Serial.begin();
     Serial.setTxTimeoutMs(100);
 
+    otcontrol.begin();
+    statusLedTicker.attach(0.2, statusLedLoop);
+
+    configMode = digitalRead(GPIO_CONFIG_BUTTON) == 0;
     if (configMode) {
+        statusLedData = 0xA000;
+
         String improvUrl = F("http://");
         improvUrl += HOSTNAME;
         improvUrl += F(".local/");
@@ -112,9 +89,7 @@ void setup() {
         improvBle.setCustomConnectWiFi(improvConnectWifi);
     }
     
-    WiFi.onEvent(wifiEvent);
-    WiFi.setSleep(false);
-    WiFi.begin();
+    netw.begin();
     
     AddressableSensor::begin();
     BLESensor::begin();
@@ -124,6 +99,9 @@ void setup() {
     configTime(devconfig.getTimezone(), 3600, PSTR("pool.ntp.org"));
 
     portal.begin(configMode);
+    if (configMode && WiFi.SSID().isEmpty())
+        netw.startWps();
+
     command.begin();
 
     esp_task_wdt_add(NULL);
@@ -142,8 +120,10 @@ void loop() {
             statusLedTicker.detach();
             setLedStatus(true);
             devconfig.remove();
+            netw.end();
             WiFi.persistent(true);
             WiFi.disconnect(true, true);
+            esp_wifi_restore();
             while (digitalRead(GPIO_CONFIG_BUTTON) == 0) {
                 esp_task_wdt_reset();
                 yield();

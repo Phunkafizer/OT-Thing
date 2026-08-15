@@ -144,7 +144,6 @@ OTValue *slaveValues[55] = { // replydata collected (read) from a connnected sla
     new BrandInfo(              Brand,                                          PSTR("brand")),
     new BrandInfo(              BrandVersion,                                   PSTR("brand version")),
     new BrandInfo(              BrandSerialNumber,                              PSTR("brand serial")),
-
     new OTValueBufSize(         TSP),
     new OTValueBufSize(         FHBsize)
 };

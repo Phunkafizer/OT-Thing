@@ -197,7 +197,7 @@ bool Mqtt::publish(String topic, JsonDocument &payload, const bool retain) {
 void Mqtt::onMessage(const char *topic, String &payload) {
     String topicStr = topic;
     topicStr.remove(0, baseTopic.length() + 1);
-    topicStr.remove(topicStr.length() - 4, 4);
+    topicStr.remove(topicStr.length() - 4, 4); // remove "/set" from end of topic
 
     String log = F("MQTT: ");
     log += topic;
@@ -370,6 +370,7 @@ void Mqtt::sendValue(const MqttTopic topic, const String &value, const bool reta
 
     String topicStr = baseTopic + '/';
     topicStr += getTopicString(topic);
+    topicStr += "/set";
     cli.publish(topicStr.c_str(), 0, retain, value.c_str());
 }
 
