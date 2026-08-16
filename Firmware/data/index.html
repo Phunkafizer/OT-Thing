@@ -417,6 +417,21 @@
             min-width: 150px;
         }
 
+        .metric-card.pinned-hero-card[draggable="true"] {
+            cursor: grab;
+            touch-action: none;
+        }
+
+        .metric-card.pinned-hero-card.is-dragging {
+            opacity: 0.45;
+            cursor: grabbing;
+        }
+
+        .metric-card.pinned-hero-card.is-drag-over {
+            border-color: var(--accent-soft);
+            box-shadow: 0 0 0 2px rgba(240, 207, 138, 0.34);
+        }
+
         .metric-card.pinned-hero-card:hover {
             border-color: rgba(240, 207, 138, 0.7);
         }
@@ -4680,6 +4695,24 @@
                 .slice(0, 12);
         }
 
+        function savePinnedHeroOrder() {
+            const orderedFields = Array.from(pinnedHeroFields);
+            syncPinnedHeroFieldsToConfig();
+            saveUiState({ pinnedHeroFields: orderedFields });
+        }
+
+        function reorderPinnedHeroFields(fieldPath, targetFieldPath, insertAfter) {
+            const orderedFields = Array.from(pinnedHeroFields)
+                .filter((field) => field !== fieldPath);
+            const targetIndex = orderedFields.indexOf(targetFieldPath);
+            if (targetIndex < 0)
+                return;
+
+            orderedFields.splice(targetIndex + (insertAfter ? 1 : 0), 0, fieldPath);
+            pinnedHeroFields = new Set(orderedFields);
+            savePinnedHeroOrder();
+        }
+
         function normalizeHistoryTree(rawTree) {
             const walk = (node) => {
                 if (!node || typeof node !== "object")
@@ -4877,14 +4910,52 @@
                 const card = _$("div", {
                     className: "metric-card pinned-hero-card",
                     title: "Double-click to remove from dashboard",
+                    draggable: true,
                     ondblclick: () => {
                         pinnedHeroFields.delete(fieldPath);
-                        syncPinnedHeroFieldsToConfig();
-                        saveUiState({
-                            pinnedHeroFields: Array.from(pinnedHeroFields)
-                        });
+                        savePinnedHeroOrder();
                         renderPinnedHeroCards();
                     }
+                });
+
+                card.addEventListener("dragstart", (ev) => {
+                    card.classList.add("is-dragging");
+                    ev.dataTransfer.effectAllowed = "move";
+                    ev.dataTransfer.setData("text/plain", fieldPath);
+                });
+
+                card.addEventListener("dragover", (ev) => {
+                    const draggedField = ev.dataTransfer.getData("text/plain");
+                    if (!draggedField || draggedField === fieldPath)
+                        return;
+
+                    ev.preventDefault();
+                    ev.dataTransfer.dropEffect = "move";
+                    card.classList.add("is-drag-over");
+                });
+
+                card.addEventListener("dragleave", () => {
+                    card.classList.remove("is-drag-over");
+                });
+
+                card.addEventListener("drop", (ev) => {
+                    ev.preventDefault();
+                    card.classList.remove("is-drag-over");
+                    const draggedField = ev.dataTransfer.getData("text/plain");
+                    if (!draggedField || draggedField === fieldPath)
+                        return;
+
+                    const cardRect = card.getBoundingClientRect();
+                    const insertAfter = ev.clientX > cardRect.left + (cardRect.width / 2);
+                    reorderPinnedHeroFields(draggedField, fieldPath, insertAfter);
+                    renderPinnedHeroCards();
+                });
+
+                card.addEventListener("dragend", () => {
+                    card.classList.remove("is-dragging");
+                    __(".pinned-hero-card", heroMetrics).forEach((target) => {
+                        target.classList.remove("is-drag-over");
+                    });
                 });
 
                 const valueEl = _$("div", { className: "metric-value" });
