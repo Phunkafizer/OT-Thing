@@ -160,6 +160,7 @@ void Mqtt::loop() {
     if (cli.connected()) {
         if (!discFlag) {
             discFlag = true;
+            cli.publish(statusTopic.c_str(), 0, false, PSTR("online"));
             discFlag &= otcontrol.sendDiscovery();
             discFlag &= OneWireNode::sendDiscoveryAll();
             discFlag &= BLESensor::sendDiscoveryAll();
@@ -174,7 +175,6 @@ void Mqtt::loop() {
             String statStr;
             serializeJson(doc, statStr);
             cli.publish(haDisc.defaultStateTopic.c_str(), 0, false, statStr.c_str());
-            cli.publish(statusTopic.c_str(), 0, false, PSTR("online"));
         }
     }
 }

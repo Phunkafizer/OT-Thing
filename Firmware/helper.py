@@ -8,11 +8,6 @@ except ImportError:
 Import("env")
 
 
-def get_bool_project_option(name, default=False):
-    val = env.GetProjectOption(name, str(default)).strip().lower()
-    return val in ("1", "true", "yes", "on")
-
-
 platform = env.PioPlatform()
 board = env.BoardConfig()
 mcu = board.get("build.mcu", "esp32")  # works for ESP8266 and ESP32
@@ -77,11 +72,8 @@ def post_build(source, target, env):
     print("build: " + env["BUILD_DIR"])
 
 def before_upload(source, target, env):
-    """Detect OTthing device port if not explicitly set."""
-    # Check if port is explicitly set via environment.
-    forced_port = os.environ.get("OTTHING_UPLOAD_PORT")
-    if forced_port:
-        env.Replace(UPLOAD_PORT=forced_port)
+    if env.get("UPLOAD_PORT") is not None:
+        print("Using manually specified upload port:", env.get("UPLOAD_PORT"))
         return
 
     from serial.tools import list_ports
