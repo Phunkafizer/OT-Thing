@@ -2757,26 +2757,19 @@
                 <div class="param">
                     <h5>Room setpoint source</h5>
                     <select field="heating.$.roomsetpoint.source" intval>
-                        <option value="0">MQTT</option>
-                        <option value="1">OT roomunit</option>
+                        <option value="0">MQTT/HTTP</option>
+                        <option value="1">roomunit</option>
                         <option value="5">auto</option>
                     </select>
-                    <div class="selopt">
-                        <h5>Topic</h5>
-                        <div class="statusfield statusvalue">
-                            <span class="mqttbasetopic"></span><span>/roomSetpoint1/set</span>
-                        </div>
-                    </div>
-                    <div class="selopt">
-                    </div>
-                    <div class="selopt">
-                    </div>
+                    <div class="selopt"></div>
+                    <div class="selopt"></div>
+                    <div class="selopt"></div>
                 </div>
                 <div class="param">
                     <h5>Current room temperature source</h5>
                     <select field="heating.$.roomtemp.source" intval>
-                        <option value="0">MQTT</option>
-                        <option value="1">OT roomunit</option>
+                        <option value="0">MQTT/HTTP</option>
+                        <option value="1">roomunit</option>
                         <option value="2">Bluetooth</option>
                         <option value="3">1wire</option>
                     </select>
@@ -3312,6 +3305,14 @@
                         <h5>Member ID</h5>
                         <input field="masterMemberId" intval />
                     </div>
+                    <div class="param">
+                        <h5>DHW control source</h5>
+                        <select field="boiler.dhwCtrlSource" intval>
+                            <option value="0">MQTT/HTTP</option>
+                            <option value="1">roomunit</option>
+                            <option value="2">auto</option>
+                        </select>
+                    </div>
                 </div>
                 <div>
                     <h4>override values</h4>
@@ -3341,13 +3342,6 @@
                             <h5>CH2 flow</h5>
                             <label class="switch">
                                 <input type="checkbox" field="heating.1.overrideFlow" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="param">
-                            <h5>DHW</h5>
-                            <label class="switch">
-                                <input type="checkbox" field="boiler.overrideDhw" />
                                 <span class="slider"></span>
                             </label>
                         </div>
@@ -3768,7 +3762,7 @@
                     enabled: false,
                     entries: []
                 },
-                overrideDhw: false,
+                dhwCtrlSource: 2,
                 coolOn: false,
                 otc: false,
                 summerMode: false,

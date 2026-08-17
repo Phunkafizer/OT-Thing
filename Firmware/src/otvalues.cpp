@@ -13,6 +13,9 @@ struct OTItem {
 
 using enum OpenThermMessageID;
 
+OTValueStatus* OTValue::status = nullptr;
+OTValueSlaveConfigMember* OTValue::slaveConfig = nullptr;
+
 static const OTItem OTITEMS[] PROGMEM = {
 //  ID of message                                   string id for MQTT                  
     {Status,                    PSTR("status")},
@@ -206,10 +209,6 @@ OTValue* OTValue::getSlaveValue(const OpenThermMessageID id) {
         }
     }
     return nullptr;
-}
-
-OTValueSlaveConfigMember* OTValue::getSlaveConfig() {
-    return static_cast<OTValueSlaveConfigMember*>(getSlaveValue(SConfigSMemberIDcode));
 }
 
 void OTValue::setTexhaustAsFloat(const bool asFloat) {
@@ -536,6 +535,7 @@ bool OTValueFlags::sendDiscovery() {
 
 OTValueStatus::OTValueStatus():
         OTValueFlags(Status, -1, flags, sizeof(flags) / sizeof(flags[0]), true) {
+    OTValue::status = this;
 }
 
 bool OTValueStatus::getChActive(const uint8_t channel) const{
@@ -557,37 +557,35 @@ bool OTValueStatus::getCoolingActive() const {
 void OTValueStatus::getValue(JsonVariant var) const {
     OTValueFlags::getValue(var);
 
-    OTValueSlaveConfigMember *cfg = getSlaveConfig();
-    if (cfg) {
-        if (!cfg->hasDHW())
+    if (slaveConfig->isSet()) {
+        if (!slaveConfig->hasDHW())
             var.remove(PSTR(DHW_MODE));
 
-        if (!cfg->hasCh2())
+        if (!slaveConfig->hasCh(1))
             var.remove(PSTR(CH2_MODE));
 
-        if (!cfg->hasCooling())
+        if (!slaveConfig->hasCooling())
             var.remove(PSTR(COOLING));
     }
 }
 
 bool OTValueStatus::sendDiscovery() {
-    auto sc = OTValue::getSlaveConfig();
-    if (!sc)
+    if (!slaveConfig->isSet())
         return false;
 
     for (uint8_t i=0; i<numFlags; i++) {
         bool enb = enabled;
         switch (flagTable[i].bit){
         case BIT_CH2_MODE:
-            enb &= sc->hasCh2();
+            enb &= slaveConfig->hasCh(1);
             break;
 
         case BIT_DHW_MODE:
-            enb &= sc->hasDHW();
+            enb &= slaveConfig->hasDHW();
             break;
 
         case BIT_COOLING:
-            enb &= sc->hasCooling();
+            enb &= slaveConfig->hasCooling();
             break;
 
         default:
@@ -606,27 +604,23 @@ OTValueMasterStatus::OTValueMasterStatus():
 }
 
 bool OTValueMasterStatus::sendDiscovery() {
-    auto sc = OTValue::getSlaveConfig();
-    if (!sc)
-        return false;
-
     for (uint8_t i=0; i<numFlags; i++) {
         bool enb = enabled;
         switch (flagTable[i].bit) {
         case BIT_DHW_ENABLE:
-            enb &= sc->hasDHW();
+            enb &= slaveConfig->hasDHW();
             break;
 
         case BIT_COOLING_ENABLE:
-            enb &= sc->hasCooling();
+            enb &= slaveConfig->hasCooling();
             break;
 
         case BIT_CH2_ENABLE:
-            enb &= sc->hasCh2();
+            enb &= slaveConfig->hasCh(1);
             break;
 
         case BIT_DHW_BLOCKING:
-            enb &= sc->hasDHW();
+            enb &= slaveConfig->hasDHW();
             break;
 
         default:
@@ -642,15 +636,14 @@ bool OTValueMasterStatus::sendDiscovery() {
 void OTValueMasterStatus::getValue(JsonVariant var) const {
     OTValueFlags::getValue(var);
 
-    OTValueSlaveConfigMember *cfg = getSlaveConfig();
-    if (cfg) {
-        if (!cfg->hasDHW())
+    if (slaveConfig->isSet()) {
+        if (!slaveConfig->hasDHW())
             var.remove(PSTR(DHW_ENABLE));
 
-        if (!cfg->hasCh2())
+        if (!slaveConfig->hasCh(1))
             var.remove(PSTR(CH2_ENABLE));
 
-        if (!cfg->hasCooling())
+        if (!slaveConfig->hasCooling())
             var.remove(PSTR(COOLING_ENABLE));
     }
 }
@@ -672,6 +665,7 @@ bool OTValueVentMasterStatus::sendDiscovery() {
 OTValueSlaveConfigMember::OTValueSlaveConfigMember():
         OTValueFlags(SConfigSMemberIDcode, 0, flags, sizeof(flags) / sizeof(flags[0]), true) {
     entityCategory = HA_ENTITY_CATEGORY_DIAGNOSTIC;
+    slaveConfig = this;
 }
 
 void OTValueSlaveConfigMember::getValue(JsonVariant var) const {
@@ -683,8 +677,11 @@ bool OTValueSlaveConfigMember::hasDHW() const {
     return (value & (1<<8)) != 0;
 }
 
-bool OTValueSlaveConfigMember::hasCh2() const {
-    return (value & (1<<13)) != 0;
+bool OTValueSlaveConfigMember::hasCh(const uint8_t ch) const {
+    if (ch == 1)
+        return (value & (1<<13)) != 0;
+    else
+        return true;
 }
 
 bool OTValueSlaveConfigMember::hasCooling() const {

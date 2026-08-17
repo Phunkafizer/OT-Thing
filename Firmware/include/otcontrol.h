@@ -62,7 +62,6 @@ private:
         SLAVEAPP_SOLAR = 2
     } slaveApp;
     CHcontrol chcontrol[NUM_HEATCIRCUITS];
-    DHWControl dhwControl;
     void loopRoomComp(const uint8_t ch);
     void loopRetLimit(const uint8_t ch);
     unsigned long nextPiCtrl { 0 };
@@ -83,14 +82,9 @@ private:
         bool dhwBlocking;
         bool coolOn;
         uint8_t coolingCtrl;
-        bool hasDHW { false };
-        bool hasCh[NUM_HEATCIRCUITS] = {true, false};
-        bool hasCool { false };
-        bool slaveConfigSet { false };
     } boilerCtrl;
     FlameStats flameStats;
     bool discFlag {true};
-    OTWRSetDhw setDhwRequest;
     OTWRSetBoilerTemp setBoilerRequest[NUM_HEATCIRCUITS];
     OTWRMasterConfigMember setMasterConfigMember;
     OTWRSetVentSetpoint setVentSetpointRequest;
@@ -126,13 +120,13 @@ private:
     bool noDhwSet;
 public:
     std::map<OpenThermMessageID, uint16_t> masterTestValues;
+    DHWControl dhwControl;
     OTControl();
     void begin();
     void loop();
     bool slaveRequest(SlaveRequestStruct &srs);
     void getJson(JsonObject &obj);
     void setConfig(JsonObject &config);
-    void setDhwTemp(const double temp);
     void setChTemp(const double temp, const uint8_t channel);
     void setChCtrlMode(const HADiscovery::ClimateMode mode, const uint8_t channel);
     void setDhwCtrlMode(const HADiscovery::ClimateMode mode);
@@ -145,7 +139,6 @@ public:
     void setVentEnable(const bool en);
     void setOverrideChOn(const bool ovrd, const uint8_t channel);
     void setOverrideChFlow(const bool ovrd, const uint8_t channel);
-    void setOverrideDhw(const bool ovrd);
     void setMaxMod(const int mm);
     void setRoomMode(const HADiscovery::ClimateMode mode, const uint8_t channel);
     void setFlowMin(const double flowMin, const uint8_t channel);
@@ -153,7 +146,6 @@ public:
     void setSummerMode(const bool summerMode);
     void setDhwBlocking(const bool dhwBlocking);
     bool getFlame() const;
-    bool getCoolingActive() const;
 };
 
 extern OTControl otcontrol;

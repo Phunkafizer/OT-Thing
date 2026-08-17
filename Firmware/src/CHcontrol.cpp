@@ -194,11 +194,7 @@ bool CHcontrol::getChOn() {
 }
 
 bool CHcontrol::getChActive() const {
-    OTValueStatus *ots = static_cast<OTValueStatus*>(OTValue::getSlaveValue(OpenThermMessageID::Status));
-    if (ots)
-        return ots->getChActive(channel);
-
-    return false;
+    return OTValue::status->getChActive(channel);
 }
 
 void CHcontrol::setMode(const HADiscovery::ClimateMode mode) {

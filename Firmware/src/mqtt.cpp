@@ -31,7 +31,6 @@ static struct {
     {Mqtt::TOPIC_OVERRIDECHFLOW2, "overrideChFlow2"},
     {Mqtt::TOPIC_OVERRIDECHON1, "overrideChOn1"},
     {Mqtt::TOPIC_OVERRIDECHON2, "overrideChOn2"},
-    {Mqtt::TOPIC_OVERRIDEDHW, "overrideDhw"},
     {Mqtt::TOPIC_VENTSETPOINT, "ventSetpoint"},
     {Mqtt::TOPIC_VENTENABLE, "ventEnable"},
     {Mqtt::TOPIC_OPENBYPASS, "openBypass"},
@@ -235,7 +234,7 @@ bool Mqtt::setValue(const String &key, const String &value, const bool send) {
 
     case TOPIC_DHWSETTEMP: {
         double d = value.toFloat();
-        otcontrol.setDhwTemp(d);
+        otcontrol.dhwControl.setSetpoint(d);
         break;
     }   
 
@@ -303,10 +302,6 @@ bool Mqtt::setValue(const String &key, const String &value, const bool send) {
     case TOPIC_OVERRIDECHFLOW1:
     case TOPIC_OVERRIDECHFLOW2:
         otcontrol.setOverrideChFlow(strToBool(value), (uint8_t) (etop - TOPIC_OVERRIDECHFLOW1));
-        break;
-
-    case TOPIC_OVERRIDEDHW:
-        otcontrol.setOverrideDhw(strToBool(value));
         break;
 
     case TOPIC_VENTSETPOINT: {

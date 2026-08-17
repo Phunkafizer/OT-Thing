@@ -167,12 +167,13 @@ public:
     void setTimeout();
     static OTValue* getSlaveValue(const OpenThermMessageID id);
     static OTValue* getMasterValue(const OpenThermMessageID id);
-    static class OTValueSlaveConfigMember* getSlaveConfig();
     static void setTexhaustAsFloat(bool asFloat);
     void refreshDisc();
     bool isSet() const;
     bool hasReply() const;
     OpenThermMessageType getLastMsgType() const;
+    static class OTValueStatus *status; // for quick access
+    static class OTValueSlaveConfigMember *slaveConfig; // for quick access
 };
 
 class OTValueu16: public OTValue {
@@ -353,7 +354,7 @@ protected:
 public:    
     OTValueSlaveConfigMember();
     bool hasDHW() const;
-    bool hasCh2() const;
+    bool hasCh(const uint8_t ch) const;
     bool hasCooling() const;
 };
 
