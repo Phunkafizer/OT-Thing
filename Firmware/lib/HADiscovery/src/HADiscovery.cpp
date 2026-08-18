@@ -280,6 +280,7 @@ void HADiscovery::createNumber(String name, String id, String cmdTopic) {
 
 void HADiscovery::createClima(String name, String id, String tmpCmdTopic) {
     init(name, id, F("climate"));
+    setStateTopic(""); // climate schema has no state_topic, HA rejects the config with it
     doc[FPSTR(HA_TEMPERATURE_COMMAND_TOPIC)] = tmpCmdTopic;
     setModes(0x07); // off, heat, auto
 }

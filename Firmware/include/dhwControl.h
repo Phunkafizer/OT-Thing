@@ -10,6 +10,7 @@ private:
     bool onRU;
     double setpoint;
     double setpointRU {0};
+    double setpointRUReadback {0};
     bool getDhwActive() const;
     enum CtrlSource {
         SOURCE_OTTHING = 0,
@@ -28,4 +29,5 @@ public:
     bool setSetpoint(const double temp);
     void setSetpointRU(const double temp);
     double getSetpointRU() const;
+    bool sendDiscoveries(const bool en);
 };

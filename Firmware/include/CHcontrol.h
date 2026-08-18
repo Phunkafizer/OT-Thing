@@ -64,6 +64,7 @@ public:
     void loopReturnLimit();
     void setMode(const HADiscovery::ClimateMode mode);
     void setRoomComp(const HADiscovery::ClimateMode mode);
+    bool sendDiscoveries(const bool en);
     double flowTemp;
     double flowMin;
     ChannelOverride<bool> ovrdOn;

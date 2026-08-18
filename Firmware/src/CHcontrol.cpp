@@ -331,3 +331,125 @@ void CHcontrol::loopReturnLimit() {
 
     retLimit.reduction += retLimit.integState;
 }
+
+bool CHcontrol::sendDiscoveries(const bool en) {
+    auto replace = [](const char *str, const uint8_t val, const uint8_t ommit = -1) {
+        String result = FPSTR(str);
+        if (val == ommit)
+            result.replace("#", "");
+        else
+            result.replace("#", String(val));
+
+        result.trim();
+        return result;
+    };
+
+    auto topic = [](const Mqtt::MqttTopic topic, const uint8_t ch) {
+        return (Mqtt::MqttTopic) ((int) topic + ch);
+    };
+
+    String str = replace(PSTR("flow temperature #"), channel + 1, 1);
+    Mqtt::MqttTopic tp = topic(Mqtt::TOPIC_CHSETTEMP1, channel);
+    haDisc.createClima(str, Mqtt::getTopicString(tp), mqtt.getCmdTopic(tp));
+    haDisc.setMinMaxTemp(20, getFlowMax(), 0.5);
+    haDisc.setCurrentTemperatureTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_SLAVE, PSTR("flow_t#"), channel + 1, 1));
+    haDisc.setInitial(35);
+    haDisc.setModeCommandTopic(mqtt.getCmdTopic(topic(Mqtt::TOPIC_CHMODE1, channel)));
+    haDisc.setTemperatureStateTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_FLOWSETPOINT, channel));
+    haDisc.setModeStateTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_CTRLMODE, channel));
+    haDisc.setActionTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ACTION, channel));
+    haDisc.setOptimistic(true);
+    haDisc.setIcon(F("mdi:heating-coil"));
+    haDisc.setRetain(true);
+    if (!haDisc.publish(en))
+        return false;
+
+    str = replace(PSTR("room temperature #"), channel + 1, 1);
+    tp = topic(Mqtt::TOPIC_ROOMSETPOINT1, channel);
+    haDisc.createClima(str, Mqtt::getTopicString(tp), mqtt.getCmdTopic(tp));
+    haDisc.setMinMaxTemp(10, 30, 0.5);
+    haDisc.setCurrentTemperatureTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMTEMP, channel));
+    haDisc.setModeCommandTopic(mqtt.getCmdTopic(topic(Mqtt::TOPIC_ROOMMODE1, channel)));
+    haDisc.setModeStateTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMMODE, channel));
+    haDisc.setInitial(20);
+    haDisc.setTemperatureStateTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMSETPOINT, channel));
+    haDisc.setActionTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMACTION, channel));
+    haDisc.setOptimistic(true);
+    haDisc.setRetain(true);
+    haDisc.setModes(0x00);
+    if (!haDisc.publish(roomSetPoint[channel].isMqttSource() && en))
+        return false;
+
+    str = replace(PSTR("room setpoint #"), channel + 1, 1);
+    tp = topic(Mqtt::TOPIC_ROOMSETPOINT1, channel);
+    haDisc.createTempSensor(str, Mqtt::getTopicString(tp));
+    haDisc.setStateTopic(mqtt.getCmdTopic(tp));
+    if (!haDisc.publish(en))
+        return false;
+
+    str = replace(PSTR("room temperature #"), channel + 1, 1);
+    tp = topic(Mqtt::TOPIC_ROOMTEMP1, channel);
+    haDisc.createNumber(str, Mqtt::getTopicString(tp), mqtt.getCmdTopic(tp));
+    haDisc.setDeviceClass(FPSTR(HA_DEVICE_CLASS_TEMPERATURE));
+    haDisc.setUnit(FPSTR(HA_UNIT_CELSIUS));
+    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMTEMP, channel));
+    haDisc.setMinMax(0, 30, 0.1);
+    if (!haDisc.publish(roomSetPoint[channel].isMqttSource() && en))
+        return false;
+
+    str = replace(PSTR("room temperature #"), channel + 1, 1);
+    String id = replace(PSTR("current_room_temp#"), channel + 1);
+    haDisc.createTempSensor(str, id);
+    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMTEMP, channel));
+    if (!haDisc.publish(en))
+        return false;
+
+    str = replace(PSTR("roomcomp. integrator #"), channel + 1, 1);
+    id = replace(PSTR("roomcomp_integ#"), channel + 1);
+    haDisc.createSensor(str, id);
+    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMCOMPINTEGRATOR, channel));
+    haDisc.setUnit(FPSTR(HA_UNIT_KELVIN));
+    if (!haDisc.publish(en))
+        return false;
+
+    str = replace(PSTR("ret. limit integrator #"), channel + 1, 1);
+    id = replace(PSTR("retlimit_integ#"), channel + 1);
+    haDisc.createSensor(str, id);
+    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_RETURNLIMITINTEGRATOR, channel));
+    haDisc.setUnit(FPSTR(HA_UNIT_KELVIN));
+    if (!haDisc.publish(en))
+        return false;
+
+    str = replace(PSTR("suspend CH #"), channel + 1, 1);
+    id = replace(PSTR("ch_susp#"), channel + 1, 1);
+    haDisc.createBinarySensor(str, id, "");
+    haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_HEATING_CIRCUIT, PSTR("suspended"), channel));
+    if (!haDisc.publish(suspendEnabled() && en))
+        return false;
+
+    str = replace(PSTR("min. flow temperature #"), channel + 1, 1);
+    tp = topic(Mqtt::TOPIC_CHMINTEMP1, channel);
+    haDisc.createNumber(str, Mqtt::getTopicString(tp), mqtt.getCmdTopic(tp));
+    haDisc.setDeviceClass(FPSTR(HA_DEVICE_CLASS_TEMPERATURE));
+    haDisc.setUnit(FPSTR(HA_UNIT_CELSIUS));
+    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_FLOWMIN, channel));
+    haDisc.setMinMax(10, 50, 1);
+    if (!haDisc.publish(en))
+        return false;
+
+    str = replace(PSTR("override CH on #"), channel + 1, 1);
+    tp = topic(Mqtt::TOPIC_OVERRIDECHON1, channel);
+    haDisc.createSwitch(str, tp);
+    haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_OVERRIDE_ON, channel));
+    if (!haDisc.publish(devconfig.overrideEnabled && en))
+        return false;
+
+    str = replace(PSTR("override CH flow #"), channel + 1, 1);
+    tp = topic(Mqtt::TOPIC_OVERRIDECHFLOW1, channel);
+    haDisc.createSwitch(str, tp);
+    haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_OVERRIDE_TEMP, channel));
+    if (!haDisc.publish(devconfig.overrideEnabled && en))
+        return false;
+
+    return true;
+}

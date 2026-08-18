@@ -57,16 +57,27 @@ MODE_SOURCES: dict[str, dict[str, str]] = {
 }
 DEFAULT_MODE = "master"
 
+# 'A' is a boiler answer modified by the gateway, 'R' a request forwarded to the boiler
+SOURCE_ALIASES = {"A": "B", "R": "T"}
+
+
+def normalize_source(src: str | None) -> str:
+    if not src:
+        return "?"
+    up = src.upper()
+    return SOURCE_ALIASES.get(up, up)
+
 
 def source_name(src: str | None) -> str:
     if not src:
         return "other"
-    return MODE_SOURCES[settings["mode"]].get(src.upper(), f"other ({src})")
+    return MODE_SOURCES[settings["mode"]].get(normalize_source(src), f"other ({src})")
 
 
 def source_order(src: str | None) -> int:
     order = list(MODE_SOURCES[settings["mode"]])
-    return order.index(src.upper()) if src and src.upper() in order else len(order)
+    key = normalize_source(src)
+    return order.index(key) if key in order else len(order)
 
 
 def categories() -> list[dict[str, str]]:
@@ -389,7 +400,7 @@ class Cards:
         if not f:
             return None
 
-        src = (entry.get("source") or "?").upper()
+        src = normalize_source(entry.get("source"))
         if src not in MODE_SOURCES[settings["mode"]]:
             src = "?"
         card = self._card(src, f["dataId"])
@@ -432,6 +443,16 @@ class Hub:
         msg: dict[str, Any] = {"type": "entry", "entry": entry}
         if card is not None:
             msg["card"] = card
+        await self.broadcast(msg)
+
+    async def clear(self, scope: str = "all") -> None:
+        if scope in ("all", "log"):
+            self.history.clear()
+        if scope in ("all", "cards"):
+            self.cards.cards.clear()
+        await self.broadcast({"type": "clear", "scope": scope})
+
+    async def broadcast(self, msg: dict[str, Any]) -> None:
         payload = json.dumps(msg)
         async with self.lock:
             dead = []
@@ -525,12 +546,24 @@ header { padding: 8px 12px; background: #222; display: flex; gap: 12px; align-it
 #panes { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 #cardPane { flex: 1 1 55%; overflow: auto; padding: 8px 12px; min-height: 60px; }
 #logPane { flex: 1 1 45%; overflow: auto; min-height: 60px; }
+#logBar { position: sticky; top: 0; z-index: 2; display: flex; gap: 12px; align-items: center;
+          padding: 6px 12px; background: #1b1b1b; border-bottom: 1px solid #2a2a2a; }
 #split { height: 6px; background: #2a2a2a; cursor: row-resize; flex: none; }
 #split:hover { background: #8ab4f8; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { text-align: left; padding: 2px 8px; border-bottom: 1px solid #222; white-space: nowrap; }
-th { position: sticky; top: 0; background: #1b1b1b; z-index: 1; }
+th { position: sticky; top: 33px; background: #1b1b1b; z-index: 1; }
 tr.err td { color: #ff8080; }
+tr.hl-id td { background: rgba(138, 180, 248, 0.16); }
+tr.hl-type td { background: rgba(126, 231, 135, 0.14); }
+tr.hl-id.hl-type td { background: rgba(200, 160, 255, 0.20); }
+tr.hl-id td:first-child { box-shadow: inset 3px 0 0 #8ab4f8; }
+tr.hl-type td:last-child { box-shadow: inset -3px 0 0 #7ee787; }
+td.pick { cursor: pointer; }
+td.pick:hover { text-decoration: underline; }
+.chip { border: 1px solid rgba(138, 180, 248, 0.6); background: rgba(138, 180, 248, 0.14);
+        border-radius: 999px; padding: 1px 8px; font-size: 12px; cursor: pointer; margin-left: 4px; }
+.chip:hover { background: rgba(138, 180, 248, 0.3); }
 td.raw { color: #8ab4f8; }
 td.detail { white-space: normal; color: #aaa; }
 h2 { font-size: 13px; margin: 4px 0 8px; color: #888; text-transform: uppercase; }
@@ -555,8 +588,8 @@ h2 { font-size: 13px; margin: 4px 0 8px; color: #888; text-transform: uppercase;
 <header>
   <span id="status">connecting...</span>
   <span id="device"></span>
-  <label><input type="checkbox" id="follow" checked> follow</label>
-  <button id="clear">clear</button>
+  <button id="clearCards">clear items</button>
+  <span id="filters"></span>
 </header>
 <div id="panes">
   <div id="cardPane">
@@ -565,6 +598,10 @@ h2 { font-size: 13px; margin: 4px 0 8px; color: #888; text-transform: uppercase;
   </div>
   <div id="split"></div>
   <div id="logPane">
+    <div id="logBar">
+      <label><input type="checkbox" id="follow" checked> follow</label>
+      <button id="clearLog">clear log</button>
+    </div>
     <table>
     <thead><tr>
     <th>time</th><th>raw</th><th>src</th><th>frame</th><th>type</th><th>id</th>
@@ -580,7 +617,12 @@ const statusEl = document.getElementById('status');
 const followEl = document.getElementById('follow');
 const cardPane = document.getElementById('cardPane');
 const logPane = document.getElementById('logPane');
-document.getElementById('clear').onclick = () => rows.innerHTML = '';
+document.getElementById('clearCards').onclick = () => {
+  fetch('/api/clear?scope=cards', { method: 'POST' }).catch(() => {});
+};
+document.getElementById('clearLog').onclick = () => {
+  fetch('/api/clear?scope=log', { method: 'POST' }).catch(() => {});
+};
 
 let dragging = false;
 document.getElementById('split').addEventListener('mousedown', () => dragging = true);
@@ -602,6 +644,46 @@ function cell(text, cls) {
   return td;
 }
 
+let selId = null;
+let selType = null;
+const filtersEl = document.getElementById('filters');
+
+function renderFilters() {
+  filtersEl.innerHTML = '';
+  const add = (label, value, clear) => {
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.textContent = label + ': ' + value + ' \u00d7';
+    chip.title = 'click to clear';
+    chip.onclick = clear;
+    filtersEl.appendChild(chip);
+  };
+  if (selId !== null) add('id', selId, () => { selId = null; applyHighlight(); });
+  if (selType !== null) add('type', selType, () => { selType = null; applyHighlight(); });
+}
+
+function highlightRow(tr) {
+  tr.classList.toggle('hl-id', selId !== null && tr.dataset.id === selId);
+  tr.classList.toggle('hl-type', selType !== null && tr.dataset.type === selType);
+}
+
+function applyHighlight() {
+  Array.from(rows.rows).forEach(highlightRow);
+  renderFilters();
+}
+
+function pickCell(td, kind, value) {
+  if (value === null || value === undefined || value === '') return td;
+  td.classList.add('pick');
+  td.title = 'click to highlight all ' + kind + ' ' + value;
+  td.onclick = () => {
+    if (kind === 'id') selId = (selId === value) ? null : value;
+    else selType = (selType === value) ? null : value;
+    applyHighlight();
+  };
+  return td;
+}
+
 function addEntry(e) {
   const tr = document.createElement('tr');
   const f = e.frameInfo;
@@ -610,13 +692,18 @@ function addEntry(e) {
   tr.appendChild(cell(e.raw, 'raw'));
   tr.appendChild(cell(e.source));
   tr.appendChild(cell(e.frame ? '0x' + e.frame : ''));
-  tr.appendChild(cell(f ? f.msgTypeName : ''));
-  tr.appendChild(cell(f ? f.dataId + ' ' + f.idName : ''));
+  tr.appendChild(pickCell(cell(f ? f.msgTypeName : ''), 'type', f ? f.msgTypeName : null));
+  tr.appendChild(pickCell(cell(f ? f.dataId + ' ' + f.idName : ''), 'id', f ? String(f.dataId) : null));
   tr.appendChild(cell(f ? '0x' + f.dataValue.toString(16).padStart(4, '0') : ''));
   tr.appendChild(cell(f ? f.hb + '/' + f.lb : ''));
   tr.appendChild(cell(f ? f.f88.toFixed(2) : ''));
   tr.appendChild(cell(f ? (f.parityOk ? 'ok' : 'BAD') : ''));
   tr.appendChild(cell(f && f.detail ? f.detail : (e.text || ''), 'detail'));
+  if (f) {
+    tr.dataset.id = String(f.dataId);
+    tr.dataset.type = f.msgTypeName;
+  }
+  highlightRow(tr);
   if (f && !f.parityOk) tr.className = 'err';
   rows.appendChild(tr);
   while (rows.rows.length > 500) rows.deleteRow(0);
@@ -683,8 +770,10 @@ function updateCard(c, flash) {
   cEl.innerHTML = '';
   const labels = { READ_DATA: 'RD', READ_ACK: 'RA', WRITE_DATA: 'WR', WRITE_ACK: 'WA' };
   Object.keys(labels).forEach(k => {
+    const n = c.counts[k] || 0;
+    if (n === 0) return;
     const s = document.createElement('span');
-    s.textContent = labels[k] + ' ' + (c.counts[k] || 0);
+    s.textContent = labels[k] + ' ' + n;
     cEl.appendChild(s);
   });
 
@@ -708,6 +797,13 @@ function connect() {
     } else if (msg.type === 'entry') {
       addEntry(msg.entry);
       if (msg.card) updateCard(msg.card, true);
+    } else if (msg.type === 'clear') {
+      const scope = msg.scope || 'all';
+      if (scope === 'all' || scope === 'log') rows.innerHTML = '';
+      if (scope === 'all' || scope === 'cards') {
+        cardEls.clear();
+        gridEls.forEach(grid => grid.innerHTML = '');
+      }
     }
   };
 }
@@ -739,6 +835,14 @@ async def info() -> dict[str, Any]:
 @app.get("/api/cards")
 async def cards() -> list[dict[str, Any]]:
     return hub.cards.snapshot()
+
+
+@app.post("/api/clear")
+async def clear(scope: str = "all") -> dict[str, str]:
+    if scope not in ("all", "log", "cards"):
+        scope = "all"
+    await hub.clear(scope)
+    return {"status": "ok", "scope": scope}
 
 
 # otmode values reported by the firmware: 1/4 master, 2 repeater (3 = master variant)

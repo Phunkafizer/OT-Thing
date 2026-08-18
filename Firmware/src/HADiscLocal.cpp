@@ -8,11 +8,13 @@ const char *DEVNAME PROGMEM = "OTthing";
 const char *MANUFACTURER PROGMEM = "Seegel Systeme";
 
 OTThingHADiscovery::OTThingHADiscovery() {
-    devName = FPSTR(DEVNAME);
     manufacturer = MANUFACTURER;
 }
 
 void OTThingHADiscovery::begin() {
+    // set here, not in the ctor: static init order of devName is undefined
+    devName = FPSTR(DEVNAME);
+
     String shortMac = WiFi.macAddress();
     shortMac.remove(0, 9);
     int idx;

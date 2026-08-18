@@ -575,10 +575,11 @@ void Portal::begin(bool configMode) {
 
 void Portal::loop() {
     if (reboot) {
+        ws.closeAll(0, "reboot");
+        websrv.end();
         delay(500);
         ESP.restart();
     }
-
     ws.cleanupClients();
 }
 

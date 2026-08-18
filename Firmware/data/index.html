@@ -5256,15 +5256,15 @@
 
                 icon.classList.remove("is-true", "is-false", "is-inactive", "is-error", "is-unknown");
 
-                if (enabled === false) {
-                    icon.classList.add("is-false");
-                    icon.textContent = "✖";
-                    icon.title = "disabled";
-                }
-                else if (active === true) {
+                if (active === true) {
                     icon.classList.add("is-true");
                     icon.textContent = "✔";
                     icon.title = "active";
+                } 
+                else if (enabled === false) {
+                    icon.classList.add("is-false");
+                    icon.textContent = "✖";
+                    icon.title = "disabled";
                 }
                 else if (enabled === true) {
                     icon.classList.add("is-inactive");
