@@ -174,6 +174,7 @@ public:
     OpenThermMessageType getLastMsgType() const;
     static class OTValueStatus *status; // for quick access
     static class OTValueSlaveConfigMember *slaveConfig; // for quick access
+    static class OTValueVentSlaveConfigMember *ventSlaveConfig; // for quick access
 };
 
 class OTValueu16: public OTValue {
@@ -358,6 +359,23 @@ public:
     bool hasCooling() const;
 };
 
+class OTValueVentSlaveConfigMember: public OTValueFlags {
+private:
+    void getValue(JsonVariant var) const override;
+    const Flag flags[3] PROGMEM = {
+        {8, "type",                     "System type",              nullptr},
+        {9, "bypass",                   "Bypass present",           nullptr},
+        {10, "speed_control",           "Speed control",            nullptr},
+    };
+protected:
+    bool sendDiscovery() override;
+public:    
+    OTValueVentSlaveConfigMember();
+    bool isHeatRecovery() const;
+    bool hasBypass() const;
+    bool hasVarSpeedControl() const;
+};
+
 
 class OTValueFaultFlags: public OTValueFlags {
 private:
@@ -520,6 +538,6 @@ public:
 };
 
 
-extern OTValue *slaveValues[55];
+extern OTValue *slaveValues[56];
 extern OTValue *masterValues[20];
 extern const char* getOTname(OpenThermMessageID id);

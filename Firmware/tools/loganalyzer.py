@@ -328,7 +328,8 @@ OT_IDS: dict[int, tuple[str, str, str, str]] = {
 }
 
 COUNTED_TYPES = ("READ_DATA", "READ_ACK", "WRITE_DATA", "WRITE_ACK")
-UPDATING_TYPES = ("READ_ACK", "WRITE_DATA")
+# WRITE_ACK echoes the accepted value, so it carries data too
+UPDATING_TYPES = ("READ_ACK", "WRITE_DATA", "WRITE_ACK")
 # status messages carry the master flags already in the READ request
 READ_CARRIES_DATA = (0, 70, 101)
 
@@ -692,7 +693,11 @@ td.detail { white-space: normal; color: #aaa; }
 h2 { font-size: 13px; margin: 4px 0 8px; color: #888; text-transform: uppercase; }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
 .cat { margin-bottom: 14px; }
+.cat.folded .cards { display: none; }
 .cat h3 { font-size: 12px; margin: 6px 0; color: #8ab4f8; }
+.cat h3.cat-head { cursor: pointer; user-select: none; }
+.cat h3 .caret { display: inline-block; width: 12px; }
+.card { cursor: pointer; }
 .card { background: #1b1b1b; border: 1px solid #2a2a2a; border-radius: 6px; padding: 8px; }
 .card.upd { border-color: #8ab4f8; }
 .card .cid { color: #666; font-size: 11px; }
@@ -712,7 +717,6 @@ h2 { font-size: 13px; margin: 4px 0 8px; color: #888; text-transform: uppercase;
   <span id="status">connecting...</span>
   <span id="device"></span>
   <button id="clearCards">clear items</button>
-  <span id="filters"></span>
 </header>
 <div id="panes">
   <div id="cardPane">
@@ -724,6 +728,7 @@ h2 { font-size: 13px; margin: 4px 0 8px; color: #888; text-transform: uppercase;
     <div id="logBar">
       <label><input type="checkbox" id="follow" checked> follow</label>
       <button id="clearLog">clear log</button>
+      <span id="filters"></span>
     </div>
     <table>
     <thead><tr>
@@ -795,15 +800,17 @@ function applyHighlight() {
   renderFilters();
 }
 
+function setSelection(kind, value) {
+  if (kind === 'id') selId = (selId === value) ? null : value;
+  else selType = (selType === value) ? null : value;
+  applyHighlight();
+}
+
 function pickCell(td, kind, value) {
   if (value === null || value === undefined || value === '') return td;
   td.classList.add('pick');
   td.title = 'click to highlight all ' + kind + ' ' + value;
-  td.onclick = () => {
-    if (kind === 'id') selId = (selId === value) ? null : value;
-    else selType = (selType === value) ? null : value;
-    applyHighlight();
-  };
+  td.onclick = () => setSelection(kind, value);
   return td;
 }
 
@@ -843,9 +850,19 @@ function gridFor(src, name) {
   const wrap = document.createElement('div');
   wrap.className = 'cat';
   const h = document.createElement('h3');
-  h.textContent = src + ' - ' + (name || src);
+  h.className = 'cat-head';
+  h.title = 'click to fold/unfold';
+  const caret = document.createElement('span');
+  caret.className = 'caret';
+  caret.textContent = '\u25be';
+  h.appendChild(caret);
+  h.appendChild(document.createTextNode(src + ' - ' + (name || src)));
   grid = document.createElement('div');
   grid.className = 'cards';
+  h.onclick = () => {
+    const folded = wrap.classList.toggle('folded');
+    caret.textContent = folded ? '\u25b8' : '\u25be';
+  };
   wrap.appendChild(h);
   wrap.appendChild(grid);
   catsEl.appendChild(wrap);
@@ -860,6 +877,8 @@ function cardNode(c) {
   el = document.createElement('div');
   el.className = 'card';
   el.dataset.id = c.id;
+  el.title = 'double-click to highlight this id in the log';
+  el.ondblclick = () => setSelection('id', String(c.id));
   el.innerHTML = '<div class="cid"></div><div class="cname"></div>'
     + '<div class="cval"></div><div class="ctype"></div>'
     + '<div class="bits"></div><div class="clast"></div><div class="counts"></div>';

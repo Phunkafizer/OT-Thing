@@ -15,6 +15,7 @@ using enum OpenThermMessageID;
 
 OTValueStatus* OTValue::status = nullptr;
 OTValueSlaveConfigMember* OTValue::slaveConfig = nullptr;
+OTValueVentSlaveConfigMember* OTValue::ventSlaveConfig = nullptr;
 
 static const OTItem OTITEMS[] PROGMEM = {
 //  ID of message                                   string id for MQTT                  
@@ -60,6 +61,7 @@ static const OTItem OTITEMS[] PROGMEM = {
     {StatusVentilationHeatRecovery, PSTR("vent_status")},
     {Vset,                      PSTR("rel_vent_set")},
     {ASFflagsOEMfaultCodeVentilationHeatRecovery, PSTR("vent_fault_flags")},
+    {SConfigSMemberIDCodeVentilationHeatRecovery, PSTR("vent_slave_config_member")},
     {OpenThermVersionVentilationHeatRecovery,   PSTR("vent_ot_version")},
     {VentilationHeatRecoveryVersion,    PSTR("vent_prod_version")},
     {RelVentLevel,              PSTR("rel_vent")},
@@ -93,8 +95,9 @@ static const OTItem OTITEMS[] PROGMEM = {
     {SlaveVersion,              PSTR("slave_prod_version")}
 };
 
-OTValue *slaveValues[55] = { // replydata collected (read) from a connnected slave (boiler / ventilation / solar)
+OTValue *slaveValues[56] = { // replydata collected (read) from a connnected slave (boiler / ventilation / solar)
     new OTValueSlaveConfigMember(),
+    new OTValueVentSlaveConfigMember(),
     new OTValueProductVersion(  OpenThermVersionSlave,      0,                 PSTR("OT-version slave")),
     new OTValueProductVersion(  SlaveVersion,               0,                 PSTR("productversion slave")),
     new OTValueStatus(),
@@ -698,6 +701,44 @@ bool OTValueSlaveConfigMember::sendDiscovery() {
     if (!otcontrol.sendCapDiscoveries())
         return false;
     return true;
+}
+
+
+OTValueVentSlaveConfigMember::OTValueVentSlaveConfigMember():
+        OTValueFlags(SConfigSMemberIDCodeVentilationHeatRecovery, 0, flags, sizeof(flags) / sizeof(flags[0]), true) {
+    entityCategory = HA_ENTITY_CATEGORY_DIAGNOSTIC;
+    ventSlaveConfig = this;
+}
+
+void OTValueVentSlaveConfigMember::getValue(JsonVariant var) const {
+    OTValueFlags::getValue(var);
+    var[F("memberId")] = value & 0xFF;
+}
+
+bool OTValueVentSlaveConfigMember::sendDiscovery() {
+    haDisc.createSensor(F("vent member ID"), F("vent_member_id"));
+    if (!OTValue::sendDiscovery(F("memberId")))
+        return false;
+
+    if (!OTValueFlags::sendDiscovery())
+        return false;
+
+    if (!otcontrol.ventCtrl.sendCapDiscoveries())
+        return false;
+
+    return true;
+}
+
+bool OTValueVentSlaveConfigMember::isHeatRecovery() const {
+    return (value & (1<<8)) != 0;
+}
+
+bool OTValueVentSlaveConfigMember::hasBypass() const {
+    return (value & (1<<9)) != 0;
+}
+
+bool OTValueVentSlaveConfigMember::hasVarSpeedControl() const {
+    return (value & (1<<10)) != 0;
 }
 
 
