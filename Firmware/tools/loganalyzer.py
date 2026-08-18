@@ -117,6 +117,111 @@ FLAG_BITS: dict[int, dict[str, dict[int, str]]] = {
     100: {"hb": {0: "manual change priority", 1: "program change priority"}},
 }
 
+# clear text names (see include/otvalues.h)
+OT_LABELS: dict[int, str] = {
+    0: "Master/slave status",
+    1: "Control setpoint (Tset)",
+    2: "Master configuration",
+    3: "Slave configuration",
+    4: "Remote request",
+    5: "ASF flags / OEM fault code",
+    6: "Remote-parameter transfer-enable flags",
+    7: "Cooling control signal",
+    8: "Control setpoint 2 (TsetCH2)",
+    9: "Remote override room setpoint",
+    10: "Number of transparent slave parameters",
+    11: "TSP index/value",
+    12: "Size of fault buffer",
+    13: "FHB entry index/value",
+    14: "Maximum relative modulation level setting",
+    15: "Max boiler capacity & min modulation level",
+    16: "Room setpoint",
+    17: "Relative modulation level",
+    18: "CH water pressure",
+    19: "DHW flow rate",
+    20: "Day of week & time of day",
+    21: "Date",
+    22: "Year",
+    23: "Room setpoint CH2",
+    24: "Room temperature",
+    25: "Boiler water temperature",
+    26: "DHW temperature",
+    27: "Outside temperature",
+    28: "Return water temperature",
+    29: "Solar storage temperature",
+    30: "Solar collector temperature",
+    31: "Flow temperature CH2",
+    32: "DHW2 temperature",
+    33: "Exhaust temperature",
+    34: "Boiler heat exchanger temperature",
+    35: "Boiler fan speed (setpoint/actual)",
+    36: "Flame current",
+    37: "Room temperature CH2",
+    38: "Relative humidity",
+    39: "Remote override room setpoint 2",
+    48: "DHW setpoint upper/lower bound",
+    49: "Max CH setpoint upper/lower bound",
+    56: "DHW setpoint",
+    57: "Max CH water setpoint",
+    70: "Master status ventilation/heat-recovery",
+    71: "Relative ventilation position (Vset)",
+    72: "ASF flags / OEM fault code (ventilation)",
+    73: "OEM diagnostic code ventilation/heat-recovery",
+    74: "Configuration ventilation/heat-recovery",
+    75: "OpenTherm version ventilation/heat-recovery",
+    76: "Ventilation product version & type",
+    77: "Relative ventilation",
+    78: "Relative humidity (exhaust)",
+    79: "CO2 level",
+    80: "Supply inlet temperature",
+    81: "Supply outlet temperature",
+    82: "Exhaust inlet temperature",
+    83: "Exhaust outlet temperature",
+    84: "Actual exhaust fan speed",
+    85: "Actual inlet fan speed",
+    86: "Remote-parameter flags ventilation/heat-recovery",
+    87: "Nominal ventilation value",
+    88: "Number of TSPs ventilation/heat-recovery",
+    89: "TSP index/value ventilation/heat-recovery",
+    90: "Size of fault buffer ventilation/heat-recovery",
+    91: "FHB entry index/value ventilation/heat-recovery",
+    93: "Brand index",
+    94: "Brand version index",
+    95: "Brand serial number index",
+    96: "Cooling operation hours",
+    97: "Power cycles",
+    98: "Type of sensor",
+    99: "Remote override operating mode heating",
+    100: "Remote override room setpoint function",
+    101: "Solar storage status",
+    102: "Solar storage fault flags",
+    103: "Solar storage configuration",
+    104: "Solar storage product version & type",
+    105: "Number of TSPs solar storage",
+    106: "TSP index/value solar storage",
+    107: "Size of fault buffer solar storage",
+    108: "FHB entry index/value solar storage",
+    109: "Electricity producer starts",
+    110: "Electricity producer hours",
+    111: "Electricity production",
+    112: "Cumulative electricity production",
+    113: "Number of un-successful burner starts",
+    114: "Number of times flame signal was too low",
+    115: "OEM diagnostic code",
+    116: "Successful burner starts",
+    117: "CH pump starts",
+    118: "DHW pump/valve starts",
+    119: "DHW burner starts",
+    120: "Burner operation hours",
+    121: "CH pump operation hours",
+    122: "DHW pump/valve operation hours",
+    123: "DHW burner operation hours",
+    124: "OpenTherm version master",
+    125: "OpenTherm version slave",
+    126: "Master product version & type",
+    127: "Slave product version & type",
+}
+
 # id -> (name, type, unit, group)
 OT_IDS: dict[int, tuple[str, str, str, str]] = {
     0: ("Status", "flag8/flag8", "", "control"),
@@ -168,8 +273,8 @@ OT_IDS: dict[int, tuple[str, str, str, str]] = {
     72: ("ASFflagsOEMfaultCodeVent", "flag8/u8", "", "ventilation"),
     73: ("OEMDiagnosticCodeVent", "u16", "", "ventilation"),
     74: ("SConfigSMemberIDCodeVent", "flag8/u8", "", "ventilation"),
-    75: ("OpenThermVersionVent", "f8.8", "", "ventilation"),
-    76: ("VentilationHeatRecoveryVersion", "u8/u8", "", "ventilation"),
+    75: ("OpenThermVersionVent", "version", "", "ventilation"),
+    76: ("VentilationHeatRecoveryVersion", "version", "", "ventilation"),
     77: ("RelVentLevel", "-/u8", "%", "ventilation"),
     78: ("RHexhaust", "-/u8", "%", "ventilation"),
     79: ("CO2exhaust", "u16", "ppm", "ventilation"),
@@ -196,7 +301,7 @@ OT_IDS: dict[int, tuple[str, str, str, str]] = {
     101: ("StatusSolarStorage", "flag8/flag8", "", "solar"),
     102: ("ASFflagsOEMfaultCodeSolar", "flag8/u8", "", "solar"),
     103: ("SConfigSMemberIDcodeSolar", "flag8/u8", "", "solar"),
-    104: ("SolarStorageVersion", "u8/u8", "", "solar"),
+    104: ("SolarStorageVersion", "version", "", "solar"),
     105: ("TSPSolarStorage", "u8/u8", "", "solar"),
     106: ("TSPindexTSPvalueSolar", "u8/u8", "", "solar"),
     107: ("FHBsizeSolarStorage", "u8/u8", "", "solar"),
@@ -216,10 +321,10 @@ OT_IDS: dict[int, tuple[str, str, str, str]] = {
     121: ("CHPumpOperationHours", "u16", "h", "counter"),
     122: ("DHWPumpValveOperationHours", "u16", "h", "counter"),
     123: ("DHWBurnerOperationHours", "u16", "h", "counter"),
-    124: ("OpenThermVersionMaster", "f8.8", "", "config"),
-    125: ("OpenThermVersionSlave", "f8.8", "", "config"),
-    126: ("MasterVersion", "u8/u8", "", "config"),
-    127: ("SlaveVersion", "u8/u8", "", "config"),
+    124: ("OpenThermVersionMaster", "version", "", "config"),
+    125: ("OpenThermVersionSlave", "version", "", "config"),
+    126: ("MasterVersion", "version", "", "config"),
+    127: ("SlaveVersion", "version", "", "config"),
 }
 
 COUNTED_TYPES = ("READ_DATA", "READ_ACK", "WRITE_DATA", "WRITE_ACK")
@@ -241,6 +346,10 @@ def id_info(data_id: int) -> tuple[str, str, str, str]:
     return name, vtype, "\u00b0C" if unit == "C" else unit, group
 
 
+def id_label(data_id: int) -> str:
+    return OT_LABELS.get(data_id, id_info(data_id)[0])
+
+
 def decode_bits(data_id: int, byte: str, value: int) -> list[dict[str, Any]]:
     names = FLAG_BITS.get(data_id, {}).get(byte, {})
     return [
@@ -257,7 +366,8 @@ def decode_value(data_id: int, data: int) -> dict[str, Any]:
     lb = data & 0xFF
     out: dict[str, Any] = {
         "id": data_id,
-        "name": name,
+        "name": id_label(data_id),
+        "code": name,
         "type": vtype,
         "unit": unit,
         "group": group,
@@ -288,6 +398,9 @@ def decode_value(data_id: int, data: int) -> dict[str, Any]:
     elif vtype == "u8/-":
         out["value"] = hb
         out["text"] = f"{hb} {unit}".strip()
+    elif vtype == "version":
+        out["value"] = data
+        out["text"] = f"{hb}.{lb}"
     elif vtype == "flag8/flag8":
         out["value"] = data
         out["bits"] = decode_bits(data_id, "hb", hb) + decode_bits(data_id, "lb", lb)
@@ -332,6 +445,7 @@ def parse_frame(frame: int) -> dict[str, Any]:
         "s16": _s16(data),
         "f88": _s16(data) / 256.0,
         "idName": decoded["name"],
+        "idCode": decoded["code"],
         "valueType": decoded["type"],
         "decoded": decoded,
         "detail": decoded["text"],
@@ -377,7 +491,8 @@ class Cards:
                 "source": src,
                 "sourceName": source_name(src),
                 "id": data_id,
-                "name": name,
+                "name": id_label(data_id),
+                "code": name,
                 "type": vtype,
                 "unit": unit,
                 "group": group,
@@ -474,15 +589,23 @@ class Hub:
 
 
 hub = Hub()
-settings: dict[str, str] = {"device": "", "url": "", "mode": DEFAULT_MODE}
+settings: dict[str, Any] = {"device": "", "url": "", "mode": DEFAULT_MODE,
+                           "modeOverride": None, "rxTimeout": 2.0}
 
 
 async def device_reader(url: str) -> None:
+    timeout = settings["rxTimeout"] or None
     while True:
         try:
             async with websockets.connect(url, ping_interval=20) as ws:
                 await hub.publish(parse_line(f"# connected to {url}"))
-                async for message in ws:
+                while True:
+                    try:
+                        message = await asyncio.wait_for(ws.recv(), timeout)
+                    except asyncio.TimeoutError:
+                        await hub.publish(parse_line(f"# no data for {timeout:g} s, reconnecting"))
+                        break
+
                     if isinstance(message, bytes):
                         message = message.decode("utf-8", "replace")
                     for line in message.splitlines():
@@ -693,7 +816,7 @@ function addEntry(e) {
   tr.appendChild(cell(e.source));
   tr.appendChild(cell(e.frame ? '0x' + e.frame : ''));
   tr.appendChild(pickCell(cell(f ? f.msgTypeName : ''), 'type', f ? f.msgTypeName : null));
-  tr.appendChild(pickCell(cell(f ? f.dataId + ' ' + f.idName : ''), 'id', f ? String(f.dataId) : null));
+  tr.appendChild(pickCell(cell(f ? f.dataId + ' ' + f.idCode : ''), 'id', f ? String(f.dataId) : null));
   tr.appendChild(cell(f ? '0x' + f.dataValue.toString(16).padStart(4, '0') : ''));
   tr.appendChild(cell(f ? f.hb + '/' + f.lb : ''));
   tr.appendChild(cell(f ? f.f88.toFixed(2) : ''));
@@ -751,6 +874,7 @@ function updateCard(c, flash) {
   const el = cardNode(c);
   el.querySelector('.cid').textContent = 'ID ' + c.id + (c.group ? ' - ' + c.group : '');
   el.querySelector('.cname').textContent = c.name;
+  el.querySelector('.cname').title = c.code || '';
   el.querySelector('.cval').textContent = c.text === null ? '-' : c.text;
   el.querySelector('.ctype').textContent = c.type + (c.raw ? '  ' + c.raw : '');
 
@@ -819,6 +943,7 @@ connect();
 
 @app.get("/", response_class=HTMLResponse)
 async def index() -> str:
+    await refresh_mode()
     return PAGE
 
 
@@ -869,6 +994,18 @@ def fetch_mode(ws_url: str) -> str:
     return mode
 
 
+async def refresh_mode() -> str:
+    """Re-read the mode from the device unless it was forced on the command line."""
+    if settings.get("modeOverride") or not settings["url"]:
+        return settings["mode"]
+
+    mode = await asyncio.to_thread(fetch_mode, settings["url"])
+    if mode != settings["mode"]:
+        settings["mode"] = mode
+        await hub.clear("cards")  # card categories depend on the mode
+    return mode
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="OTThing websocket log analyzer")
     ap.add_argument("--device", default="otthing.local",
@@ -877,6 +1014,8 @@ def main() -> None:
                     help="override the mode detected from /config")
     ap.add_argument("--host", default="127.0.0.1", help="bind address for the web frontend")
     ap.add_argument("--port", type=int, default=8080, help="port for the web frontend")
+    ap.add_argument("--rx-timeout", type=float, default=2.0,
+                    help="reconnect when no data arrives for this many seconds (0 disables)")
     ap.add_argument("--no-browser", action="store_true", help="do not open a browser window")
     args = ap.parse_args()
 
@@ -888,6 +1027,8 @@ def main() -> None:
     settings["device"] = dev
     settings["url"] = url
     settings["mode"] = args.mode or fetch_mode(url)
+    settings["modeOverride"] = args.mode
+    settings["rxTimeout"] = args.rx_timeout
 
     print(f"reading log from {url} (mode: {settings['mode']})")
     print(f"frontend on http://{args.host}:{args.port}")
