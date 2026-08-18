@@ -306,21 +306,24 @@ bool Mqtt::setValue(const String &key, const String &value, const bool send) {
 
     case TOPIC_VENTSETPOINT: {
         uint8_t val = value.toInt();
-        otcontrol.setVentSetpoint(val);
+        otcontrol.ventCtrl.setVentSetpoint(val);
         break;
     }
 
     case TOPIC_VENTENABLE:
-        otcontrol.setVentEnable(strToBool(value));
+        otcontrol.ventCtrl.setVentEnable(strToBool(value));
         break;
 
     case TOPIC_OPENBYPASS:
+        otcontrol.ventCtrl.setOpenBypass(strToBool(value));
         break;
 
     case TOPIC_AUTOBYPASS:
+        otcontrol.ventCtrl.setAutoBypass(strToBool(value));
         break;
 
     case TOPIC_FREEVENTENABLE:
+        otcontrol.ventCtrl.setFreeVentEnable(strToBool(value));
         break;
 
     case TOPIC_MAXMODULATION: {
@@ -406,6 +409,11 @@ String Mqtt::getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t
 
     case VALTMPL_COOLING:
         result += F(".get('cooling') or {})");
+        break;
+
+    case VALTMPL_VENT:
+        result += F(".get('vent') or {})");
+        break;
     }
 
     int numbrak = 2;

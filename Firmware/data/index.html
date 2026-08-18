@@ -1859,15 +1859,15 @@
                 <div class="metric-card metric-state-card">
                     <h5 aria-label="Status"></h5>
                     <div class="state-grid">
-                        <div class="state-item">
+                        <div class="state-item app-heat">
                             <span class="state-label">Flame</span>
                             <span class="state-icon is-unknown" id="stateFlame" title="unknown" aria-label="Flame status">…</span>
                         </div>
-                        <div class="state-item">
+                        <div class="state-item app-heat">
                             <span class="state-label">Heating</span>
                             <span class="state-icon is-unknown" id="stateCh1" title="unknown" aria-label="CH1 status">…</span>
                         </div>
-                        <div class="state-item CH2">
+                        <div class="state-item app-heat CH2">
                             <span class="state-label">Heating 2</span>
                             <span class="state-icon is-unknown" id="stateCh2" title="unknown" aria-label="CH2 status">…</span>
                         </div>
@@ -1875,15 +1875,39 @@
                             <span class="state-label">Cooling</span>
                             <span class="state-icon is-unknown" id="stateCooling" title="unknown" aria-label="Cooling status">…</span>
                         </div>
-                        <div class="state-item DHW">
+                        <div class="state-item app-heat DHW">
                             <span class="state-label">DHW</span>
                             <span class="state-icon is-unknown" id="stateDhw" title="unknown" aria-label="DHW status">…</span>
                         </div>
-                        <div class="state-item">
+                        <div class="state-item app-vent">
+                            <span class="state-label">Venting</span>
+                            <span class="state-icon is-unknown" id="stateVent" title="unknown" aria-label="Ventilation status">…</span>
+                        </div>
+                        <div class="state-item app-vent">
+                            <span class="state-label">Free vent</span>
+                            <span class="state-icon is-unknown" id="stateFreeVent" title="unknown" aria-label="Free ventilation status">…</span>
+                        </div>
+                        <div class="state-item app-vent">
+                            <span class="state-label">Bypass</span>
+                            <span class="state-icon is-unknown" id="stateBypass" title="unknown" aria-label="Bypass status">…</span>
+                        </div>
+                        <div class="state-item app-vent">
+                            <span class="state-label">Auto by</span>
+                            <span class="state-icon is-unknown" id="stateAutoBypass" title="unknown" aria-label="Automatic bypass status">…</span>
+                        </div>
+                        <div class="state-item app-vent">
+                            <span class="state-label">Service</span>
+                            <span class="state-icon is-unknown" id="stateVentDiag" title="unknown" aria-label="Ventilation diagnostic/service value">…</span>
+                        </div>
+                        <div class="state-item app-vent">
+                            <span class="state-label">Fault</span>
+                            <span class="state-icon is-unknown" id="stateVentFault" title="unknown" aria-label="Ventilation fault status">…</span>
+                        </div>
+                        <div class="state-item app-heat">
                             <span class="state-label">Service</span>
                             <span class="state-icon is-unknown" id="stateDiag" title="unknown" aria-label="Diagnostic/service value">…</span>
                         </div>
-                        <div class="state-item">
+                        <div class="state-item app-heat">
                             <span class="state-label">Fault</span>
                             <span class="state-icon is-unknown" id="stateFault" title="unknown" aria-label="Fault status">…</span>
                         </div>
@@ -1893,7 +1917,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="metric-card metric-state-card temp-trend-card" id="heroTempTrendCard">
+                <div class="metric-card metric-state-card temp-trend-card app-heat" id="heroTempTrendCard">
                     <h5>Live trend</h5>
                     <div class="temp-chart-wrap">
                         <svg id="heroTempTrendChart" viewBox="0 0 320 126" preserveAspectRatio="none" aria-label="Temperature trend chart"></svg>
@@ -1955,7 +1979,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="metric-card hero-control-card" id="heroFlowSetCard">
+                <div class="metric-card hero-control-card app-heat" id="heroFlowSetCard">
                     <h5>Flow set<span class="flow-action-icon" id="heroFlowActionIcon"></span></h5>
                     <div class="metric-inline-row">
                         <div class="metric-value"><span id="heroFlowSet">--</span></div>
@@ -1972,7 +1996,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="metric-card hero-control-card CH2" id="heroFlowSetCard2">
+                <div class="metric-card hero-control-card app-heat CH2" id="heroFlowSetCard2">
                     <h5>Flow set 2<span class="flow-action-icon" id="heroFlowActionIcon2"></span></h5>
                     <div class="metric-inline-row">
                         <div class="metric-value"><span id="heroFlowSet2">--</span></div>
@@ -1989,7 +2013,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="metric-card hero-control-card DHW" id="heroDhwCard">
+                <div class="metric-card hero-control-card app-heat DHW" id="heroDhwCard">
                     <h5>DHW<span class="flow-action-icon" id="heroDhwActionIcon"></span></h5>
                     <div class="metric-inline-row">
                         <div class="metric-value"><span id="heroDhwSet">--</span></div>
@@ -2001,6 +2025,22 @@
                             <div class="mode-group">
                                 <button class="mode-btn" id="btnDhwModeOff" type="button" onclick="setDhwMode('off')" title="set DHW to off">⏻</button>
                                 <button class="mode-btn" id="btnDhwModeHeat" type="button" onclick="setDhwMode('heat')" title="set DHW to heat">⏽</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-card hero-control-card app-vent" id="heroVentCard">
+                    <h5>Ventilation<span class="flow-action-icon" id="heroVentActionIcon"></span></h5>
+                    <div class="metric-inline-row">
+                        <div class="metric-value"><span id="heroVentSet">--</span></div>
+                        <div class="metric-actions">
+                            <div class="step-group" id="ventStepGroup" hidden>
+                                <button class="step-btn" type="button" onclick="adjustVentSetpoint(-1)">▼</button>
+                                <button class="step-btn" type="button" onclick="adjustVentSetpoint(1)">▲</button>
+                            </div>
+                            <div class="mode-group">
+                                <button class="mode-btn" id="btnVentModeOff" type="button" onclick="setVentMode(false)" title="set ventilation to off">⏻</button>
+                                <button class="mode-btn" id="btnVentModeOn" type="button" onclick="setVentMode(true)" title="set ventilation to on">⏽</button>
                             </div>
                         </div>
                     </div>
@@ -3132,6 +3172,44 @@
                     </div>
                 </div>
                 <button onclick="saveWebAuthCredentials()">save credentials</button>
+                <h4>MQTT</h4>
+                <div class="flexline">
+                    <div class="param">
+                        <h5>Host</h5>
+                        <input field="mqtt.host"/>
+                    </div>
+                    <div class="param">
+                        <h5>Port</h5>
+                        <input field="mqtt.port" intval/>
+                    </div>
+                    <div class="param">
+                        <h5>Keep alive</h5>
+                        <input field="mqtt.keepAlive" intval value="15"/>
+                    </div>
+                    <div class="param">
+                        <h5>HA disc. prefix</h5>
+                        <input field="haPrefix"/>
+                    </div>
+                    <div class="param">
+                        <h5>TLS</h5>
+                        <div>
+                            <label class="switch">
+                                <input type="checkbox" field="mqtt.tls" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="flexline">
+                    <div class="param">
+                        <h5>Username</h5>
+                        <input field="mqtt.user"/>
+                    </div>
+                    <div class="param">
+                        <h5>Password</h5>
+                        <input type="password" field="mqtt.pass"/>
+                    </div>
+                </div>
             </div>
 
             <h3>OpenTherm</h3>
@@ -3459,47 +3537,6 @@
                     <button id="dhwScheduleAddBtn" onclick="addDhwScheduleEntry()">add slot</button>
                 </div>
                 <div id="dhwScheduleEditHint" class="empty-state" hidden>editing slot</div>
-            </div>
-
-            <h3>MQTT</h3>
-            <div class="group">
-                <div class="flexline">
-                    <div class="param">
-                        <h5>Host</h5>
-                        <input field="mqtt.host"/>
-                    </div>
-                    <div class="param">
-                        <h5>Port</h5>
-                        <input field="mqtt.port" intval/>
-                    </div>
-                    <div class="param">
-                        <h5>Keep alive</h5>
-                        <input field="mqtt.keepAlive" intval value="15"/>
-                    </div>
-                    <div class="param">
-                        <h5>HA disc. prefix</h5>
-                        <input field="haPrefix"/>
-                    </div>
-                    <div class="param">
-                        <h5>TLS</h5>
-                        <div>
-                            <label class="switch">
-                                <input type="checkbox" field="mqtt.tls" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="flexline">
-                    <div class="param">
-                        <h5>Username</h5>
-                        <input field="mqtt.user"/>
-                    </div>
-                    <div class="param">
-                        <h5>Password</h5>
-                        <input type="password" field="mqtt.pass"/>
-                    </div>
-                </div>                
             </div>
 
             <h3>Outside temperature</h3>
@@ -5237,6 +5274,8 @@
             updateDhwModeButtons(dhwMode, dhwAction);
             updateMetric("heroCoolingCtrl", "", coolingCtrl, "%", "coolingCtrl", "cooling.setpoint");
             updateCoolingModeButtons(coolingMode, coolingAction);
+            updateMetric("heroVentSet", "", getVentSetpoint(), "%", "ventSet", "vent.setpoint");
+            updateVentModeButtons(statuscache?.vent?.enable, statuscache?.slave?.vent_status?.vent_active);
             updateMetric("heroFlow", "heroFlowTrendIcon", parseNumber(flow), "°C", `flow${currentCh}`, flowField);
             updateMetric("heroOutside", "heroOutsideTrendIcon", parseNumber(outside), "°C", "outside", "outsideTemp");
             updateMetric("heroMod", "heroModTrendIcon", parseNumber(mod), "%", "mod", "slave.rel_mod");
@@ -5244,6 +5283,15 @@
                 updateHeroTempTrendCard();
             updatePinnedHeroHistory();
             updatePinnedHeroCardsDisplay();
+        }
+
+        function applyAppVisibility(app = null) {
+            const slaveApp = (app === null)
+                ? parseInt(_("#slaveapp")?.value ?? config?.slaveApp ?? 0)
+                : app;
+
+            __(".app-heat").forEach((ele) => ele.hidden = (slaveApp != 0));
+            __(".app-vent").forEach((ele) => ele.hidden = (slaveApp != 1));
         }
 
         function updateHeroStateCard() {
@@ -5282,10 +5330,16 @@
             setTriStateEnabledIcon("stateCh2", statuscache?.slave?.status?.ch2_mode, statuscache?.master?.status?.data?.ch2_enable);
             setTriStateEnabledIcon("stateCooling", statuscache?.slave?.status?.cooling, statuscache?.master?.status?.data?.cooling_enable);
             setTriStateEnabledIcon("stateDhw", statuscache?.slave?.status?.dhw_mode, statuscache?.master?.status?.data?.dhw_enable);
+            setTriStateEnabledIcon("stateVent", statuscache?.slave?.vent_status?.vent_active, statuscache?.master?.vent_status?.data?.vent_enable);
+            setTriStateEnabledIcon("stateFreeVent", statuscache?.slave?.vent_status?.free_vent, statuscache?.master?.vent_status?.data?.free_vent_enable);
+            setTriStateEnabledIcon("stateBypass", statuscache?.slave?.vent_status?.bypass_open, statuscache?.master?.vent_status?.data?.open_bypass);
+            setTriStateEnabledIcon("stateAutoBypass", statuscache?.slave?.vent_status?.bypass_auto, true);
 
-            const diagEl = _("#stateDiag");
-            if (diagEl) {
-                const diag = statuscache?.slave?.status?.diagnostic;
+            function setDiagIcon(id, diag) {
+                const diagEl = _(`#${id}`);
+                if (!diagEl)
+                    return;
+
                 diagEl.classList.remove("is-true", "is-false", "is-inactive", "is-error", "is-unknown");
                 if (diag === true || diag === false) {
                     diagEl.classList.add(diag ? "is-error" : "is-true");
@@ -5299,9 +5353,14 @@
                 }
             }
 
-            const faultEl = _("#stateFault");
-            if (faultEl) {
-                const fault = statuscache?.slave?.status?.fault;
+            setDiagIcon("stateDiag", statuscache?.slave?.status?.diagnostic);
+            setDiagIcon("stateVentDiag", statuscache?.slave?.vent_status?.diagnostic);
+
+            function setFaultIcon(id, fault) {
+                const faultEl = _(`#${id}`);
+                if (!faultEl)
+                    return;
+
                 faultEl.classList.remove("is-true", "is-false", "is-inactive", "is-error", "is-unknown");
                 if (fault === true || fault === false) {
                     faultEl.classList.add(fault ? "is-error" : "is-true");
@@ -5314,6 +5373,9 @@
                     faultEl.title = "unknown";
                 }
             }
+
+            setFaultIcon("stateFault", statuscache?.slave?.status?.fault);
+            setFaultIcon("stateVentFault", statuscache?.slave?.vent_status?.fault);
 
             const mqttEl = _("#stateMqtt");
             if (mqttEl) {
@@ -5348,7 +5410,13 @@
                 statuscache?.slave?.status?.dhw_mode,
                 statuscache?.master?.status?.data?.dhw_enable,
                 statuscache?.slave?.status?.diagnostic,
+                statuscache?.slave?.vent_status?.diagnostic,
                 statuscache?.slave?.status?.fault,
+                statuscache?.slave?.vent_status?.vent_active,
+                statuscache?.slave?.vent_status?.free_vent,
+                statuscache?.slave?.vent_status?.bypass_open,
+                statuscache?.slave?.vent_status?.bypass_auto,
+                statuscache?.slave?.vent_status?.fault,
                 statuscache?.mqtt?.connected
             ].map((v) => String(v)).join("|");
             flashCardOnChange(stateCard, stateSignature);
@@ -6260,6 +6328,94 @@
             }
 
             flashCardOnChange(card, `${activeMode ?? ""}|${activeAction ?? ""}`);
+        }
+
+        function getVentSetpoint() {
+            return parseNumber(statuscache?.vent?.setpoint);
+        }
+
+        function adjustVentSetpoint(delta) {
+            const currentValue = getVentSetpoint();
+            if (currentValue == null) {
+                showToast("No ventilation setpoint available", "warning", 3000);
+                return;
+            }
+
+            const nextValue = Math.max(0, Math.min(100, Math.round(currentValue + delta)));
+            fetch(`/set?ventSetpoint=${encodeURIComponent(nextValue)}`)
+                .then((resp) => {
+                    if (!resp.ok)
+                        throw new Error("HTTP " + resp.status);
+
+                    if (!statuscache.vent)
+                        statuscache.vent = {};
+
+                    statuscache.vent.setpoint = nextValue;
+                    updateHeroMetrics(false);
+                    flashElement("#heroVentCard");
+                })
+                .catch((err) => {
+                    showToast("Error setting ventilation setpoint:\n" + err.message, "error", 5000);
+                    addRecentEvent("Ventilation setpoint update failed");
+                });
+        }
+
+        function setVentMode(enabled) {
+            if (typeof enabled !== "boolean")
+                return;
+
+            fetch(`/set?ventEnable=${enabled ? "ON" : "OFF"}`)
+                .then((resp) => {
+                    if (!resp.ok)
+                        throw new Error("HTTP " + resp.status);
+
+                    if (!statuscache.vent)
+                        statuscache.vent = {};
+
+                    statuscache.vent.enable = enabled;
+                    updateHeroMetrics(false);
+                    requestStatusRefresh(0);
+                    flashElement("#heroVentCard");
+                    addRecentEvent(`Ventilation ${enabled ? "on" : "off"}`);
+                })
+                .catch((err) => {
+                    showToast("Error setting ventilation mode:\n" + err.message, "error", 5000);
+                    addRecentEvent("Ventilation mode update failed");
+                });
+        }
+
+        function updateVentModeButtons(enabled, active) {
+            const ids = {
+                off: "#btnVentModeOff",
+                on: "#btnVentModeOn"
+            };
+            const activeMode = (enabled === true) ? "on" : ((enabled === false) ? "off" : null);
+
+            const stepGroup = _("#ventStepGroup");
+            if (stepGroup)
+                stepGroup.hidden = activeMode !== "on";
+
+            Object.keys(ids).forEach((key) => {
+                const btn = _(ids[key]);
+                if (!btn)
+                    return;
+                btn.classList.toggle("pressed", key === activeMode);
+            });
+
+            const activeAction = (activeMode !== "on") ? "off" : (active === true ? "cooling" : "idle");
+            const card = _("#heroVentCard");
+            const iconEl = _("#heroVentActionIcon");
+            if (card) {
+                card.classList.remove("action-heating", "action-idle", "action-off", "action-cooling");
+                card.classList.add(`action-${activeAction}`);
+            }
+            if (iconEl) {
+                const icons = { cooling: "💨", idle: "⏸", off: "⏹" };
+                iconEl.textContent = icons[activeAction] ?? "";
+                iconEl.title = activeAction;
+            }
+
+            flashCardOnChange(card, `${activeMode ?? ""}|${activeAction}`);
         }
 
         function updateCoolingModeButtons(mode, action) {
@@ -7569,11 +7725,7 @@
             });
 
             _("#slaveapp").onchange = (ev) => {
-                let app = parseInt(ev.target.value);
-                for (const ele of __(".app-heat"))
-                    ele.hidden = (app != 0);
-                for (const ele of __(".app-vent"))
-                    ele.hidden = (app != 1);
+                applyAppVisibility(parseInt(ev.target.value));
             }
 
             __('input[type="checkbox"][hideele]').forEach(cb => {
@@ -8116,9 +8268,12 @@
                 consumeStatusCache._prevFlame = flameNow;
 
                 const dhwPresent = statuscache?.slave?.slave_config_member?.dhw_present;
-                __(".DHW").forEach((ele) => {
-                    ele.hidden = (dhwPresent === false);
-                });
+                applyAppVisibility();
+                if (dhwPresent === false) {
+                    __(".DHW").forEach((ele) => {
+                        ele.hidden = true;
+                    });
+                }
 
                 if (statuscache.slave?.slave_config_member?.ch2_present === false) {
                     __(".CH2").forEach(ele => {

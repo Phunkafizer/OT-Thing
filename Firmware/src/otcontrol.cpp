@@ -25,9 +25,10 @@ constexpr uint16_t nib(uint8_t hb, uint8_t lb) {
 }
 
 // Testdata for local OT slave, can be read by a connected master
-struct OTTestItem loopbackTestData[50] = {
+struct OTTestItem loopbackTestData[51] = {
     {Status,                    0x0000}, // no flags set
     {SConfigSMemberIDcode,      nib(1<<0 | 1<<2 | 1<<5, 1)}, // DHW, cooling, CH2 present, Member ID 1
+    {SConfigSMemberIDCodeVentilationHeatRecovery, nib(1<<0 | 1<<1 | 1<<2, 1)}, // heat recovery, bypass present, variable speed control present, Member ID 1
     {ASFflags,                  0x0000}, // no error flags, oem error code 0
     {RBPflags,                  0x0101},
     {TrOverride,                0},
@@ -185,7 +186,6 @@ void OTControl::OTInterface::sendResponse(const unsigned long msg, const char so
 
 OTControl::OTControl():
         lastBoilerStatus(0),
-        lastVentStatus(0),
         otMode(OTMODE_LOOPBACKTEST),
         slaveApp(SLAVEAPP_HEATCOOL),
         chcontrol{CHcontrol(0), CHcontrol(1)},
@@ -378,7 +378,7 @@ void OTControl::loop() {
         if (slaveValues[iSlaveVal]->process())
             return;
 
-        if ( (slaveApp == SLAVEAPP_HEATCOOL) || (otMode == OTMODE_LOOPBACKTEST) ) {
+        if (slaveApp == SLAVEAPP_HEATCOOL) {
             for (int ch=0; ch<NUM_HEATCIRCUITS; ch++) {
                 if (!OTValue::slaveConfig->hasCh(ch))
                     continue;
@@ -436,27 +436,9 @@ void OTControl::loop() {
             }  
         }
 
-        if ( (slaveApp == SLAVEAPP_VENT) || (otMode == OTMODE_LOOPBACKTEST) ) {
-            if (setVentSetpointRequest) {
-                setVentSetpointRequest.send(ventCtrl.setpoint);
+        if (slaveApp == SLAVEAPP_VENT) {
+            if (ventCtrl.loop())
                 return;
-            }
-
-            if (millis() > lastVentStatus + 800) {
-                lastVentStatus = millis();
-                uint16_t data = 0;
-                if (ventCtrl.ventEnable)
-                    data |= 1<<OTValueVentMasterStatus::BIT_VENT_ENABLE;
-                if (ventCtrl.openBypass)
-                    data |= 1<<OTValueVentMasterStatus::BIT_OPEN_BYPASS;
-                if (ventCtrl.autoBypass)
-                    data |= 1<<OTValueVentMasterStatus::BIT_AUTO_BYPASS;
-                if (ventCtrl.freeVentEnable)
-                    data |= 1<<OTValueVentMasterStatus::BIT_FREE_VENT_ENABLE;
-                unsigned long req = OpenTherm::buildRequest(OpenThermMessageType::READ_DATA, StatusVentilationHeatRecovery, data);
-                sendRequest('T', req);
-                return;
-            }
         }
 
         iSlaveVal = (iSlaveVal + 1) % ((sizeof(slaveValues) / sizeof(slaveValues[0])));
@@ -960,20 +942,33 @@ void OTControl::getJson(JsonObject &obj) {
             hc[FPSTR(STR_STATKEY_ROOMTEMP)] = d;
     }
 
-    JsonObject jDhw = obj[FPSTR(STR_STATKEY_DHW)].to<JsonObject>();
-    dhwControl.getJson(jDhw);
+    switch (slaveApp) {
+    case SLAVEAPP_HEATCOOL: {
+        JsonObject jDhw = obj[FPSTR(STR_STATKEY_DHW)].to<JsonObject>();
+        dhwControl.getJson(jDhw);
 
-    JsonObject jCooling = obj[FPSTR(STR_STATKEY_COOLING)].to<JsonObject>();
-    jCooling[FPSTR(STR_STATKEY_CTRLMODE)] = boilerCtrl.coolOn;
-    jCooling[FPSTR(STR_STATKEY_SETPOINT)] = boilerCtrl.coolingCtrl;
-    if (boilerCtrl.coolOn) {
-        if (OTValue::status->getCoolingActive())
-            jCooling[FPSTR(STR_STATKEY_ACTION)] = FPSTR(HA_ACTION_COOLING);
+        JsonObject jCooling = obj[FPSTR(STR_STATKEY_COOLING)].to<JsonObject>();
+        jCooling[FPSTR(STR_STATKEY_CTRLMODE)] = boilerCtrl.coolOn;
+        jCooling[FPSTR(STR_STATKEY_SETPOINT)] = boilerCtrl.coolingCtrl;
+        if (boilerCtrl.coolOn) {
+            if (OTValue::status->getCoolingActive())
+                jCooling[FPSTR(STR_STATKEY_ACTION)] = FPSTR(HA_ACTION_COOLING);
+            else
+                jCooling[FPSTR(STR_STATKEY_ACTION)] = FPSTR(HA_ACTION_IDLE);
+        }
         else
-            jCooling[FPSTR(STR_STATKEY_ACTION)] = FPSTR(HA_ACTION_IDLE);
+            jCooling[FPSTR(STR_STATKEY_ACTION)] = FPSTR(HA_ACTION_OFF);
+            
+        break;
     }
-    else
-        jCooling[FPSTR(STR_STATKEY_ACTION)] = FPSTR(HA_ACTION_OFF);
+    case SLAVEAPP_VENT: {
+        JsonObject jVent = obj[FPSTR(STR_STATKEY_VENT)].to<JsonObject>();
+        ventCtrl.getJson(jVent);
+        break;
+    }
+    default:
+        break;
+    };
 
     obj[F("bypass")] = bypass;
     obj[F("summerMode")] = boilerCtrl.summerMode;
@@ -997,36 +992,15 @@ bool OTControl::sendDiscovery() {
     haDisc.setRetain(true);
     discFlag &= haDisc.publish(outsideTemp.isMqttSource());
 
-    discFlag &= chcontrol[0].sendDiscoveries(true);
+    discFlag &= chcontrol[0].sendDiscoveries(slaveApp == SLAVEAPP_HEATCOOL);
 
-    haDisc.createNumber(F("ventilation set point"), Mqtt::getTopicString(Mqtt::TOPIC_VENTSETPOINT), mqtt.getCmdTopic(Mqtt::TOPIC_VENTSETPOINT));
-    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_SLAVE, PSTR("rel_vent")));
-    haDisc.setMinMax(0, 100, 1);
-    haDisc.setOptimistic(true);
-    haDisc.setRetain(true);
-    discFlag &= haDisc.publish(slaveApp == SLAVEAPP_VENT);
-
-    haDisc.createSwitch(F("ventilation enable"), Mqtt::TOPIC_VENTENABLE);
-    haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_SLAVE, PSTR("vent_status.vent_active")));
-    discFlag &= haDisc.publish(slaveApp == SLAVEAPP_VENT);
-
-    haDisc.createSwitch(F("open bypass"), Mqtt::TOPIC_OPENBYPASS);
-    haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_SLAVE, PSTR("vent_status.bypass_open")));
-    discFlag &= haDisc.publish(slaveApp == SLAVEAPP_VENT);
-
-    haDisc.createSwitch(F("auto bypass"), Mqtt::TOPIC_AUTOBYPASS);
-    haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_SLAVE, PSTR("vent_status.bypass_auto")));
-    discFlag &= haDisc.publish(slaveApp == SLAVEAPP_VENT);
-
-    haDisc.createSwitch(F("enable free vent."), Mqtt::TOPIC_FREEVENTENABLE);
-    haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_SLAVE, PSTR("vent_status.free_vent")));
-    discFlag &= haDisc.publish(slaveApp == SLAVEAPP_VENT);
+    discFlag &= ventCtrl.sendDiscoveries(slaveApp == SLAVEAPP_VENT);
 
     haDisc.createNumber(F("Max. modulation"), Mqtt::getTopicString(Mqtt::TOPIC_MAXMODULATION), mqtt.getCmdTopic(Mqtt::TOPIC_MAXMODULATION));
     haDisc.setMinMax(0, 100, 1);
     haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_MASTER, PSTR("max_rel_mod")));
     haDisc.setUnit(FPSTR(HA_UNIT_PERCENT));
-    discFlag &= haDisc.publish();
+    discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
 
     haDisc.createSensor(F("flame ratio"), F("flame_ratio"));
     haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_DUTY));
@@ -1067,15 +1041,12 @@ bool OTControl::sendDiscovery() {
 
     haDisc.createSwitch(F("summer mode"), Mqtt::TOPIC_SUMMERMODE);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOT, STR_STATKEY_SUMMERMODE));
-    discFlag &= haDisc.publish();
+    discFlag &= haDisc.publish(slaveApp == SLAVEAPP_HEATCOOL);
 
     return discFlag;
 }
 
 bool OTControl::sendCapDiscoveries() {
-    if (!OTValue::slaveConfig->isSet())
-        return true;
-
     if (!dhwControl.sendDiscoveries(OTValue::slaveConfig->hasDHW()))
         return false;
 
@@ -1137,11 +1108,7 @@ void OTControl::setConfig(JsonObject &config) {
     }
 
     JsonObject ventObj = config[F("vent")];
-    ventCtrl.ventEnable = ventObj["ventEnable"] | false;
-    ventCtrl.openBypass = ventObj["openBypass"] | false;
-    ventCtrl.autoBypass = ventObj["autoBypass"] | false;
-    ventCtrl.freeVentEnable = ventObj["freeVentEnable"] | false;
-    ventCtrl.setpoint = ventObj["setpoint"] | 0;
+    ventCtrl.setConfig(ventObj);
 
     JsonObject boiler = config[F("boiler")];
     dhwControl.setConfig(boiler);
@@ -1166,7 +1133,6 @@ void OTControl::setConfig(JsonObject &config) {
         setRoomSetPoint[i].force();
     }
     setMasterConfigMember.force();
-    setVentSetpointRequest.force();
     setMaxModulation.force();
     setProdVersion.force();
     setOTVersion.force();
@@ -1224,15 +1190,6 @@ void OTControl::setFlowMin(const double flowMin, const uint8_t channel) {
 
 void OTControl::forceFlowCalc(const uint8_t channel) {
     setBoilerRequest[channel].force();
-}
-
-void OTControl::setVentSetpoint(const uint8_t v) {
-    ventCtrl.setpoint = v;
-    setVentSetpointRequest.force();
-}
-
-void OTControl::setVentEnable(const bool en) {
-    ventCtrl.ventEnable = en;
 }
 
 bool OTControl::slaveRequest(SlaveRequestStruct &srs) {
