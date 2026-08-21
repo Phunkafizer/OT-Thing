@@ -167,6 +167,11 @@ public:
     void setTimeout();
     static OTValue* getSlaveValue(const OpenThermMessageID id);
     static OTValue* getMasterValue(const OpenThermMessageID id);
+    static OTValue* getroomUnitValue(const OpenThermMessageID id);
+    bool isSlaveValue() const;
+    bool isMasterValue() const;
+    bool isRoomunitValue() const;
+
     static void setTexhaustAsFloat(bool asFloat);
     void refreshDisc();
     bool isSet() const;
@@ -231,8 +236,7 @@ protected:
     };
     uint8_t numFlags;
     const Flag *flagTable;
-    bool slave;
-    OTValueFlags(const OpenThermMessageID id, const int interval, const Flag *flagtable, const uint8_t numFlags, const bool slave);
+    OTValueFlags(const OpenThermMessageID id, const int interval, const Flag *flagtable, const uint8_t numFlags);
     void getValue(JsonVariant var) const override;
     bool sendDiscFlag(const Flag *flag, const bool enb);
     bool sendDiscovery() override;
@@ -540,4 +544,6 @@ public:
 
 extern OTValue *slaveValues[56];
 extern OTValue *masterValues[20];
+extern OTValue *roomUnitValues[9];
+
 extern const char* getOTname(OpenThermMessageID id);

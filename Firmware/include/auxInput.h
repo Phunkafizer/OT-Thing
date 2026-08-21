@@ -28,7 +28,7 @@ public:
     void setup();
     void loop();
     void setConfig(JsonObject cfg);
-    void getJson(JsonDocument &doc) const;
+    void getJson(JsonObject obj) const;
     bool sendDiscovery();
     static bool hasChDemand(const uint8_t channel);
     static bool hasChDisable(const uint8_t channel);

@@ -5,3 +5,5 @@
     extern NimBLECharacteristic *bleSerialTx;
     extern volatile bool bleClientConnected;
 #endif
+
+extern bool configMode;

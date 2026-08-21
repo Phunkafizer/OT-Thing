@@ -39,7 +39,6 @@ public:
 private:
     void OnRxMaster(const unsigned long msg, const OpenThermResponseStatus status);
     void OnRxSlave(const unsigned long msg, const OpenThermResponseStatus status);
-    bool setMasterVal(const unsigned long msg);
     void masterPinIrq();
     void slavePinIrq();
     uint16_t tmpToData(const double tmpf);

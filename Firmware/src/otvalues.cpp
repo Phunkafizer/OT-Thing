@@ -155,7 +155,7 @@ OTValue *slaveValues[56] = { // replydata collected (read) from a connnected sla
 };
 
 
-OTValue *masterValues[20] = { // requestdata sent (written) from a connected roomunit
+OTValue *masterValues[20] = { // requestdata sent (written) from OTthing (mode master) or connected roomunit (mode repeater)
     new OTValueFloat(           TSet,                   -1),
     new OTValueFloat(           TsetCH2,                -1),
     new OTValueFloat(           Tr,                     -1),
@@ -176,6 +176,19 @@ OTValue *masterValues[20] = { // requestdata sent (written) from a connected roo
     new OTValueFloat(           Toutside,               -1),
     new OTValueFloat(           MaxTSet,                -1),
     new OTValueFloat(           CoolingControl,         -1),
+};
+
+
+OTValue *roomUnitValues[9] = { // requestdata sent (written) from a connected roomunit
+    new OTValueFloat(           TSet,                   -1),
+    new OTValueFloat(           TsetCH2,                -1),
+    new OTValueFloat(           Tr,                     -1),
+    new OTValueFloat(           TrCH2,                  -1),
+    new OTValueFloat(           TrSet,                  -1),
+    new OTValueFloat(           TrSetCH2,               -1),
+    new OTValueFloat(           TdhwSet,                -1),
+    new OTValueMasterStatus(),
+    new OTValueVentMasterStatus(),
 };
 
 const char* getOTname(OpenThermMessageID id) {
@@ -207,9 +220,8 @@ OTValue::OTValue(const OpenThermMessageID id, const int interval, PGM_P haName):
 
 OTValue* OTValue::getSlaveValue(const OpenThermMessageID id) {
     for (auto *val: slaveValues) {
-        if (val->id == id) {
+        if (val->id == id)
             return val;
-        }
     }
     return nullptr;
 }
@@ -232,9 +244,16 @@ void OTValue::setTexhaustAsFloat(const bool asFloat) {
 
 OTValue* OTValue::getMasterValue(const OpenThermMessageID id) {
     for (auto *val: masterValues) {
-        if (val->id == id) {
+        if (val->id == id)
             return val;
-        }
+    }
+    return nullptr;
+}
+
+OTValue* OTValue::getroomUnitValue(const OpenThermMessageID id) {
+    for (auto *val: roomUnitValues) {
+        if (val->id == id)
+            return val;
     }
     return nullptr;
 }
@@ -278,6 +297,14 @@ bool OTValue::sendDiscovery() {
 
     String sName = FPSTR(name);
     String sHaName;
+
+    for (auto *obj: roomUnitValues) {
+        if (obj == this) {
+            sName += F("_ru");
+            sHaName += F(" roomunit");
+            break;
+        }
+    }
     
 /* missing discoveries: 
     {OpenThermMessageID::DayTime,                   PSTR("day_time")},
@@ -342,21 +369,49 @@ bool OTValue::sendDiscovery() {
     return sendDiscovery("");
 }
 
-bool OTValue::sendDiscovery(String field) {
-    bool inSlave = false;
+bool OTValue::isSlaveValue() const {
     for (auto *valobj: slaveValues) {
+        if (valobj == this)
+            return true;
+    }
+    return false;
+}
+
+bool OTValue::isMasterValue() const {
+    for (auto *valobj: masterValues) {
         if (valobj == this) {
-            inSlave = true;
-            break;
+            return true;
         }
     }
+    return false;
+}
 
+bool OTValue::isRoomunitValue() const {
+    for (auto *valobj: roomUnitValues) {
+        if (valobj == this)
+            return true;
+    }
+    return false;
+}
+
+bool OTValue::sendDiscovery(String field) {
     String fn = FPSTR(getName());
     if (!field.isEmpty()) {
         fn += '.';
         fn += field;
     }
-    String valTmpl = mqtt.getValueTemplate(inSlave ? Mqtt::VALTMPL_SLAVE : Mqtt::VALTMPL_MASTER, fn.c_str());
+    
+    String valTmpl;
+
+    if (isSlaveValue())
+        valTmpl = mqtt.getValueTemplate(Mqtt::VALTMPL_SLAVE, fn.c_str());
+    else if (isMasterValue())
+        valTmpl = mqtt.getValueTemplate(Mqtt::VALTMPL_MASTER, fn.c_str());
+    else if (isRoomunitValue())
+        valTmpl = mqtt.getValueTemplate(Mqtt::VALTMPL_ROOMUNIT, fn.c_str());
+
+    if (valTmpl.isEmpty())
+        return haDisc.publish(false);    
 
     if (interval == 0)
         haDisc.setStateClass("");
@@ -493,11 +548,10 @@ bool OTValueFloatTemp::sendDiscovery() {
 }
 
 
-OTValueFlags::OTValueFlags(const OpenThermMessageID id, const int interval, const Flag *flagtable, const uint8_t numFlags, const bool slave):
+OTValueFlags::OTValueFlags(const OpenThermMessageID id, const int interval, const Flag *flagtable, const uint8_t numFlags):
         OTValue(id, interval),
         numFlags(numFlags),
-        flagTable(flagtable),
-        slave(slave) {
+        flagTable(flagtable) {
 }
 
 void OTValueFlags::getValue(JsonVariant var) const {
@@ -518,10 +572,16 @@ bool OTValueFlags::sendDiscFlag(const Flag *flag, const bool enb)  {
     String fn = getName();
     fn += '.';
     fn += FPSTR(flag->field);
-    String valTmpl = mqtt.getValueTemplateBool(
-        slave ? Mqtt::VALTMPL_SLAVE : Mqtt::VALTMPL_MASTER,
-        fn.c_str()
-    );
+
+    String valTmpl;
+
+    if (isSlaveValue())
+        valTmpl = mqtt.getValueTemplateBool(Mqtt::VALTMPL_SLAVE, fn.c_str());
+    else if (isMasterValue())
+        valTmpl = mqtt.getValueTemplateBool(Mqtt::VALTMPL_MASTER, fn.c_str());
+    else if (isRoomunitValue())
+        valTmpl = mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOMUNIT, fn.c_str());
+
     haDisc.setValueTemplate(valTmpl);
     haDisc.setEntityCategory(entityCategory);
     return haDisc.publish(enb);
@@ -537,7 +597,7 @@ bool OTValueFlags::sendDiscovery() {
 
 
 OTValueStatus::OTValueStatus():
-        OTValueFlags(Status, -1, flags, sizeof(flags) / sizeof(flags[0]), true) {
+        OTValueFlags(Status, -1, flags, sizeof(flags) / sizeof(flags[0])) {
     OTValue::status = this;
 }
 
@@ -603,7 +663,7 @@ bool OTValueStatus::sendDiscovery() {
 
 
 OTValueMasterStatus::OTValueMasterStatus():
-        OTValueFlags(Status, -1, flags, sizeof(flags) / sizeof(flags[0]), false) {
+        OTValueFlags(Status, -1, flags, sizeof(flags) / sizeof(flags[0])) {
 }
 
 bool OTValueMasterStatus::sendDiscovery() {
@@ -653,12 +713,12 @@ void OTValueMasterStatus::getValue(JsonVariant var) const {
 
 
 OTValueVentStatus::OTValueVentStatus():
-        OTValueFlags(StatusVentilationHeatRecovery, -1, flags, sizeof(flags) / sizeof(flags[0]), true) {
+        OTValueFlags(StatusVentilationHeatRecovery, -1, flags, sizeof(flags) / sizeof(flags[0])) {
 }
 
 
 OTValueVentMasterStatus::OTValueVentMasterStatus():
-        OTValueFlags(StatusVentilationHeatRecovery, -1, flags, sizeof(flags) / sizeof(flags[0]), false) {
+        OTValueFlags(StatusVentilationHeatRecovery, -1, flags, sizeof(flags) / sizeof(flags[0])) {
 }
 
 bool OTValueVentMasterStatus::sendDiscovery() {
@@ -666,7 +726,7 @@ bool OTValueVentMasterStatus::sendDiscovery() {
 }
 
 OTValueSlaveConfigMember::OTValueSlaveConfigMember():
-        OTValueFlags(SConfigSMemberIDcode, 0, flags, sizeof(flags) / sizeof(flags[0]), true) {
+        OTValueFlags(SConfigSMemberIDcode, 0, flags, sizeof(flags) / sizeof(flags[0])) {
     entityCategory = HA_ENTITY_CATEGORY_DIAGNOSTIC;
     slaveConfig = this;
 }
@@ -705,7 +765,7 @@ bool OTValueSlaveConfigMember::sendDiscovery() {
 
 
 OTValueVentSlaveConfigMember::OTValueVentSlaveConfigMember():
-        OTValueFlags(SConfigSMemberIDCodeVentilationHeatRecovery, 0, flags, sizeof(flags) / sizeof(flags[0]), true) {
+        OTValueFlags(SConfigSMemberIDCodeVentilationHeatRecovery, 0, flags, sizeof(flags) / sizeof(flags[0])) {
     entityCategory = HA_ENTITY_CATEGORY_DIAGNOSTIC;
     ventSlaveConfig = this;
 }
@@ -743,7 +803,7 @@ bool OTValueVentSlaveConfigMember::hasVarSpeedControl() const {
 
 
 OTValueFaultFlags::OTValueFaultFlags(const int interval):
-        OTValueFlags(ASFflags, interval, flags, sizeof(flags) / sizeof(flags[0]), true) {
+        OTValueFlags(ASFflags, interval, flags, sizeof(flags) / sizeof(flags[0])) {
 }
 
 void OTValueFaultFlags::getValue(JsonVariant var) const {
@@ -761,7 +821,7 @@ bool OTValueFaultFlags::sendDiscovery() {
 
 
 OTValueVentFaultFlags::OTValueVentFaultFlags(const int interval):
-        OTValueFlags(ASFflagsOEMfaultCodeVentilationHeatRecovery, interval, flags, sizeof(flags) / sizeof(flags[0]), true) {
+        OTValueFlags(ASFflagsOEMfaultCodeVentilationHeatRecovery, interval, flags, sizeof(flags) / sizeof(flags[0])) {
 }
 
 void OTValueVentFaultFlags::getValue(JsonVariant var) const {
@@ -846,7 +906,7 @@ bool OTValueTempBounds::sendDiscovery() {
 
 
 OTValueMasterConfig::OTValueMasterConfig():
-        OTValueFlags(MConfigMMemberIDcode, -1, flags, sizeof(flags) / sizeof(flags[0]), false) {
+        OTValueFlags(MConfigMMemberIDcode, -1, flags, sizeof(flags) / sizeof(flags[0])) {
 }
 
 void OTValueMasterConfig::getValue(JsonVariant var) const {
@@ -859,12 +919,12 @@ bool OTValueMasterConfig::sendDiscovery() {
 }
 
 OTValueRemoteParameter::OTValueRemoteParameter():
-        OTValueFlags(RBPflags, 0, flags, sizeof(flags) / sizeof(flags[0]), true) {
+        OTValueFlags(RBPflags, 0, flags, sizeof(flags) / sizeof(flags[0])) {
 }
 
 
 OTValueRemoteOverrideFunction::OTValueRemoteOverrideFunction():
-        OTValueFlags(RemoteOverrideFunction, 0, flags, sizeof(flags) / sizeof(flags[0]), true) {
+        OTValueFlags(RemoteOverrideFunction, 0, flags, sizeof(flags) / sizeof(flags[0])) {
 }
 
 bool OTValueRemoteOverrideFunction::sendDiscovery() {

@@ -2,9 +2,10 @@
 #include <Update.h>
 #include <ArduinoJson.h>
 #include <esp_system.h>
+#include <esp_heap_caps.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <DNSServer.h>
+#include <AsyncJSON.h>
 #include <WiFi.h>
 #include "portal.h"
 #include "devstatus.h"
@@ -12,16 +13,15 @@
 #include "html.h"
 #include "otcontrol.h"
 #include "otvalues.h"
+#include "netw.h"
 
 static const char APP_JSON[] PROGMEM = "application/json";
 static const char SESSION_COOKIE[] PROGMEM = "OTSESSID";
 static const uint32_t SESSION_TTL_MS = 30UL * 60UL * 1000UL;
-static const IPAddress apAddress(4, 3, 2, 1);
-static const IPAddress apMask(255, 255, 255, 0);
+
 Portal portal;
 static AsyncWebServer websrv(80);
 AsyncWebSocket ws("/ws");
-static DNSServer dnsServer;
 
 
 Portal::Portal():
@@ -110,24 +110,15 @@ void Portal::clearSession(AsyncWebServerRequest *request) {
 void Portal::begin(bool configMode) {
     configModeActive = configMode;
 
-    if (configMode) {
-        WiFi.persistent(false);
-        WiFi.softAPConfig(apAddress, apAddress, apMask);
-        WiFi.softAP(F(AP_SSID), F(AP_PASSWORD));
-        dnsServer.start(53, "*", apAddress);
-
-        if (WiFi.SSID().isEmpty())
-            WiFi.mode(WIFI_AP);
-        else
-            WiFi.mode(WIFI_AP_STA);
-        WiFi.setAutoReconnect(false);
-        WiFi.persistent(true);
-    }
-
     websrv.begin();
     websrv.addHandler(&ws);
 
     websrv.on("/", HTTP_ANY, [](AsyncWebServerRequest *request) {
+        if (netw.isScanning) {
+            request->send(503); // service unavailable
+            return;
+        }
+
         #ifdef DEBUG
         if (LittleFS.exists(F("/index.html"))) {
             request->send(LittleFS, F("/index.html"), F("text/html"));
@@ -149,7 +140,7 @@ void Portal::begin(bool configMode) {
         }
 
         AsyncWebServerResponse *response = request->beginResponse(302);
-        response->addHeader(F("Location"), String(F("http://")) + apAddress.toString() + F("/"));
+        response->addHeader(F("Location"), String(F("http://")) + WiFi.softAPIP().toString() + F("/"));
         request->send(response);
     });
 
@@ -200,7 +191,7 @@ void Portal::begin(bool configMode) {
         jobj[F("configured")] = configured;
         jobj[F("loggedIn")] = (configModeActive || !configured) ? true : hasValidSession(request);
         jobj[F("bypass")] = configModeActive;
-        AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));
+        AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON), 256);
         serializeJson(doc, *response);
         request->send(response);
     });
@@ -269,7 +260,7 @@ void Portal::begin(bool configMode) {
         int n = WiFi.scanComplete();
         jobj[F("status")] = n;
         if (n == -2)
-            WiFi.scanNetworks(true);
+            netw.startScan();
         else
             if (n >= 0) {
                 JsonArray results = jobj[F("results")].to<JsonArray>();
@@ -322,10 +313,16 @@ void Portal::begin(bool configMode) {
         if (!ensureAuthorized(request))
             return;
 
-        JsonDocument doc;
-        devstatus.buildDoc(doc);
-        AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));
-        serializeJson(doc, *response);
+        if (netw.isScanning) {
+            request->send(503); // service unavailable
+            return;
+        }
+
+        AsyncJsonResponse *response = new AsyncJsonResponse();
+        JsonObject root = response->getRoot().to<JsonObject>();
+
+        devstatus.buildDoc(root);
+        response->setLength();
         request->send(response);
     });
 

@@ -254,6 +254,9 @@ void OTControl::setOTMode(const OTMode mode) {
     for (auto *valobj: masterValues)
         valobj->init(false);
 
+    for (auto *valobj: roomUnitValues)
+        valobj->init(false);
+
     master.hal.setAlwaysReceive(mode == OTMODE_REPEATER);
 
     SemMaster sem(100);
@@ -452,7 +455,11 @@ void OTControl::loop() {
 void OTControl::sendRequest(const char source, const unsigned long msg) {
     master.sendRequest(source, msg);
     if (otMode == OTMODE_MASTER) {
-        setMasterVal(msg);
+        OTValue *val = OTValue::getMasterValue(OpenTherm::getDataID(msg));
+        if (val) {
+            const auto mt = OpenTherm::getMessageType(msg);
+            val->setValue(mt, msg & 0xFFFF);
+        }
         setLedOTRed(true); // when we're OTMASTER use red LED as TX LED
     }
 }
@@ -858,22 +865,25 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
         default:
             break;
         }
-        if (otMode != OTMODE_MASTER)
-            if (!setMasterVal(newMsg))
-                portal.textAll(F("T no otval!"));
-    }
-}
 
-bool OTControl::setMasterVal(const unsigned long msg) {
-    auto id = OpenTherm::getDataID(msg);
-
-    for (auto *valobj: masterValues) {
-        if (valobj->getId() == id) {
-            valobj->setValue(OpenThermMessageType::WRITE_DATA, msg & 0xFFFF);
-            return true;
+        switch (otMode) {
+        case OTMODE_MASTER:
+        case OTMODE_LOOPBACKTEST: {
+            OTValue *otval = OTValue::getroomUnitValue(id);
+            if (otval)
+                otval->setValue(OpenThermMessageType::WRITE_DATA, msg & 0xFFFF);
+            break;
+        }
+        case OTMODE_REPEATER: {
+            OTValue *otval = OTValue::getMasterValue(id);
+            if (otval)
+                otval->setValue(OpenThermMessageType::WRITE_DATA, msg & 0xFFFF);   
+            break;
+        }
+        default:
+            break;
         }
     }
-    return false;
 }
 
 void OTControl::getJson(JsonObject &obj) {
@@ -924,6 +934,10 @@ void OTControl::getJson(JsonObject &obj) {
             break;
         }
         master[F("smartPower")] = sp;
+
+        JsonObject jRu = obj[FPSTR(STR_STATKEY_ROOMUNIT)].to<JsonObject>();
+        for (auto *valobj: roomUnitValues)
+            valobj->getJson(jRu);
     }
 
     JsonArray hcarr = obj[F("heatercircuit")].to<JsonArray>();
@@ -980,6 +994,9 @@ bool OTControl::sendDiscovery() {
         valobj->refreshDisc();
 
     for (auto *valobj: masterValues)
+        valobj->refreshDisc();
+
+    for (auto *valobj: roomUnitValues)
         valobj->refreshDisc();
 
     bool discFlag = true;

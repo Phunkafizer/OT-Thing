@@ -60,14 +60,14 @@ void AuxInput::loop() {
     }
 }
 
-void AuxInput::getJson(JsonDocument &doc) const {
-    JsonObject obj = doc[FPSTR(name)].to<JsonObject>();
+void AuxInput::getJson(JsonObject obj) const {
+    JsonObject jAux = obj[FPSTR(name)].to<JsonObject>();
     switch (mode) {
     case MODE_BINARY:
-        obj[F("state")] = state;
+        jAux[F("state")] = state;
         break;
     case MODE_ANALOG:
-        obj[F("value")] = analogRead(gpio);
+        jAux[F("value")] = analogRead(gpio);
         break;
     default:
         break;

@@ -938,6 +938,18 @@
             cursor: pointer;
         }
 
+        .hostname-input {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .hostname-suffix {
+            color: var(--text-muted);
+            font-family: "Menlo", "Monaco", "Segoe UI", sans-serif;
+            font-size: 0.9em;
+        }
+
         div.curve {
             text-align: center;
             background-color: #0f1218;
@@ -3159,7 +3171,10 @@
                 <div class="flexline">
                     <div class="param">
                         <h5>Hostname</h5>
-                        <input value="otthing" field="hostname" />
+                        <div class="hostname-input">
+                            <input value="otthing" field="hostname" />
+                            <span class="hostname-suffix">.local</span>
+                        </div>
                     </div>
                 </div>
                 <h4>WiFi</h4>
@@ -3710,8 +3725,9 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button onclick="closeWifiSetup()">close</button>
                 <button onclick="saveWifi()">save</button>
+                <button id="wifiRescanBtn" type="button" onclick="startWifiScan()">rescan</button>
+                <button onclick="closeWifiSetup()">close</button>
             </div>
         </div>
     </div>
@@ -3747,6 +3763,7 @@
             valueFlashMs: 640,
             tabEnterCleanupMs: 760,
             scanXhrTimeoutMs: 15000,
+            scanInitialWaitMs: 5000,
             scanRetryMs: 2000,
             scanErrorToastMs: 4000,
             statusXhrTimeoutMs: 10000,
@@ -6014,6 +6031,8 @@
 
         function closeWifiSetup() {
             _("#dlgWifiSetup").hidden = true;
+            if (typeof window.scheduleStatusFetch === "function")
+                window.scheduleStatusFetch(0);
         }
 
         // scan button
@@ -6022,11 +6041,12 @@
                 return;
 
             wifiScanRunning = true;
+            _("#wifiRescanBtn").disabled = true;
             _("#wifiScanStatus").hidden = false;
             _("#wifiScanList").hidden = true;
             _("#wifiScanList").innerHTML = "";
             addRecentEvent("WiFi scan started");
-            scanWiFi();
+            scanWiFi(UI_TIMINGS.scanInitialWaitMs);
         }
 
         // save wifi button
@@ -7508,17 +7528,19 @@
             return names[encType] ?? `enc ${encType}`;
         }
 
-        function scanWiFi() {
+        function scanWiFi(initialRetryDelayMs = UI_TIMINGS.scanRetryMs) {
             let xhr = new XMLHttpRequest();
             xhr.timeout = UI_TIMINGS.scanXhrTimeoutMs;
             xhr.onload = (e) => {
                 if (isUnauthorizedStatus(xhr)) {
                     wifiScanRunning = false;
+                    _("#wifiRescanBtn").disabled = false;
                     return;
                 }
 
                 if (xhr.status < 200 || xhr.status >= 300) {
                     wifiScanRunning = false;
+                    _("#wifiRescanBtn").disabled = false;
                     showToast("WiFi scan failed", "error", UI_TIMINGS.scanErrorToastMs);
                     addRecentEvent("WiFi scan failed");
                     return;
@@ -7526,11 +7548,12 @@
 
                 let scanObj = JSON.parse(e.target.responseText);
                 if (scanObj.status < 0) {
-                    setTimeout(scanWiFi, UI_TIMINGS.scanRetryMs);
+                    setTimeout(scanWiFi, initialRetryDelayMs);
                     return;
                 }
 
                 wifiScanRunning = false;
+                _("#wifiRescanBtn").disabled = false;
                 _("#wifiScanStatus").hidden = true;
                 _("#wifiScanList").hidden = false;
 
@@ -7600,12 +7623,14 @@
 
             xhr.onerror = () => {
                 wifiScanRunning = false;
+                _("#wifiRescanBtn").disabled = false;
                 showToast("WiFi scan failed", "error", UI_TIMINGS.scanErrorToastMs);
                 addRecentEvent("WiFi scan failed");
             };
 
             xhr.ontimeout = () => {
                 wifiScanRunning = false;
+                _("#wifiRescanBtn").disabled = false;
                 showToast("WiFi scan timeout", "error", UI_TIMINGS.scanErrorToastMs);
                 addRecentEvent("WiFi scan timeout");
             };
@@ -8389,6 +8414,11 @@
             function fetchStatus() {
                 if (authPendingLogin)
                     return;
+
+                if (!_('#dlgWifiSetup').hidden) {
+                    scheduleStatusFetch(UI_TIMINGS.statusPollRetryMs);
+                    return;
+                }
 
                 if (statusRequestInFlight)
                     return;

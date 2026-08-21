@@ -1,6 +1,7 @@
 #pragma once
 
 #define GPIO_CONFIG_BUTTON 0
+#define GPIO_BOOT_BUTTON 9
 #define GPIO_STATUS_LED 8
 #define GPIO_OTRED_LED 2
 #define GPIO_OTGREEN_LED 21

@@ -170,9 +170,10 @@ void Mqtt::loop() {
         if ((millis() - lastStatus) > 5000) {
             lastStatus = millis();
             JsonDocument doc;
-            devstatus.buildDoc(doc);
+            JsonObject jobj = doc.to<JsonObject>();
+            devstatus.buildDoc(jobj);
             String statStr;
-            serializeJson(doc, statStr);
+            serializeJson(jobj, statStr);
             cli.publish(haDisc.defaultStateTopic.c_str(), 0, false, statStr.c_str());
         }
     }
@@ -393,6 +394,10 @@ String Mqtt::getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t
 
     case VALTMPL_MASTER:
         result += F(".get('master') or {})");
+        break;
+
+    case VALTMPL_ROOMUNIT:
+        result += F(".get('roomunit') or {})");
         break;
 
     case VALTMPL_HEATING_CIRCUIT:

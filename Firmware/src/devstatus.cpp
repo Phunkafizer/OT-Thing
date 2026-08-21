@@ -9,6 +9,7 @@
 
 PGM_P STR_STATKEY_MASTER PROGMEM = "master";
 PGM_P STR_STATKEY_SLAVE PROGMEM = "slave";
+PGM_P STR_STATKEY_ROOMUNIT PROGMEM = "roomunit";
 PGM_P STR_STATKEY_ROOMCOMPINTEGRATOR PROGMEM = "roomcompInteg";
 PGM_P STR_STATKEY_ROOMTEMP PROGMEM = "roomtemp";
 PGM_P STR_STATKEY_ROOMSETPOINT PROGMEM = "roomsetpoint";
@@ -64,8 +65,7 @@ void DevStatus::unlock() {
     xSemaphoreGive(mutex);
 }
 
- void DevStatus::buildDoc(JsonDocument &doc) {
-    doc.clear();
+ void DevStatus::buildDoc(JsonObject doc) {
     doc[F("runtime")] = millis() / 1000UL;
     doc[F("freeHeap")] = ESP.getFreeHeap();
     doc[F("largestBlock")] = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
@@ -96,8 +96,7 @@ void DevStatus::unlock() {
     jmqtt[F("basetopic")] = mqtt.getBaseTopic();
     jmqtt[F("numDisc")] = mqtt.getNumDisc();
 
-    JsonObject jot = doc.as<JsonObject>();
-    otcontrol.getJson(jot);
+    otcontrol.getJson(doc);
 
     double outT;
     if (outsideTemp.get(outT, true))

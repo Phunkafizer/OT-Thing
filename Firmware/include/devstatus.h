@@ -8,6 +8,7 @@
 
 extern PGM_P STR_STATKEY_MASTER PROGMEM;
 extern PGM_P STR_STATKEY_SLAVE PROGMEM;
+extern PGM_P STR_STATKEY_ROOMUNIT PROGMEM;
 extern PGM_P STR_STATKEY_ROOMCOMPINTEGRATOR PROGMEM;
 extern PGM_P STR_STATKEY_ROOMTEMP PROGMEM;
 extern PGM_P STR_STATKEY_ROOMSETPOINT PROGMEM;
@@ -50,7 +51,7 @@ public:
     DevStatus();
     bool lock();
     void unlock();
-    void buildDoc(JsonDocument &doc);
+    void buildDoc(JsonObject doc);
     uint32_t numWifiDiscon;
 } devstatus;
 
