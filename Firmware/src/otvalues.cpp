@@ -180,13 +180,13 @@ OTValue *masterValues[20] = { // requestdata sent (written) from OTthing (mode m
 
 
 OTValue *roomUnitValues[9] = { // requestdata sent (written) from a connected roomunit
-    new OTValueFloat(           TSet,                   -1),
-    new OTValueFloat(           TsetCH2,                -1),
-    new OTValueFloat(           Tr,                     -1),
-    new OTValueFloat(           TrCH2,                  -1),
-    new OTValueFloat(           TrSet,                  -1),
-    new OTValueFloat(           TrSetCH2,               -1),
-    new OTValueFloat(           TdhwSet,                -1),
+    new OTValueFloatTemp(       TSet,                   PSTR("flow temp. setpoint")),
+    new OTValueFloatTemp(       TsetCH2,                PSTR("flow temp. 2 setpoint")),
+    new OTValueFloatTemp(       Tr,                     PSTR("room temp.")),
+    new OTValueFloatTemp(       TrCH2,                  PSTR("room temp. 2")),
+    new OTValueFloatTemp(       TrSet,                  PSTR("room temp. setpoint")),
+    new OTValueFloatTemp(       TrSetCH2,               PSTR("room temp. 2 setpoint")),
+    new OTValueFloatTemp(       TdhwSet,                PSTR("DHW setpoint")),
     new OTValueMasterStatus(),
     new OTValueVentMasterStatus(),
 };
@@ -226,22 +226,6 @@ OTValue* OTValue::getSlaveValue(const OpenThermMessageID id) {
     return nullptr;
 }
 
-void OTValue::setTexhaustAsFloat(const bool asFloat) {
-    static bool current = false;
-    if (asFloat == current)
-        return;
-    current = asFloat;
-    for (auto *&val: slaveValues) {
-        if (val->id == Texhaust) {
-            delete val;
-            val = asFloat
-                ? (OTValue*) new OTValueFloatTemp(Texhaust,      PSTR("exhaust temp."))
-                : (OTValue*) new OTValuei16(      Texhaust, 10,  PSTR("exhaust temp."));
-            return;
-        }
-    }
-}
-
 OTValue* OTValue::getMasterValue(const OpenThermMessageID id) {
     for (auto *val: masterValues) {
         if (val->id == id)
@@ -256,6 +240,22 @@ OTValue* OTValue::getroomUnitValue(const OpenThermMessageID id) {
             return val;
     }
     return nullptr;
+}
+
+void OTValue::setTexhaustAsFloat(const bool asFloat) {
+    static bool current = false;
+    if (asFloat == current)
+        return;
+    current = asFloat;
+    for (auto *&val: slaveValues) {
+        if (val->id == Texhaust) {
+            delete val;
+            val = asFloat
+                ? (OTValue*) new OTValueFloatTemp(Texhaust,      PSTR("exhaust temp."))
+                : (OTValue*) new OTValuei16(      Texhaust, 10,  PSTR("exhaust temp."));
+            return;
+        }
+    }
 }
 
 bool OTValue::process() {
@@ -298,12 +298,12 @@ bool OTValue::sendDiscovery() {
     String sName = FPSTR(name);
     String sHaName;
 
-    for (auto *obj: roomUnitValues) {
-        if (obj == this) {
-            sName += F("_ru");
-            sHaName += F(" roomunit");
-            break;
-        }
+    if (haName != nullptr)
+        sHaName = FPSTR(haName);
+
+    if (isRoomunitValue()) {
+        sName += F("_ru");
+        sHaName += F(" roomunit");
     }
     
 /* missing discoveries: 
@@ -314,7 +314,6 @@ bool OTValue::sendDiscovery() {
     {OpenThermMessageID::RemoteOverrideFunction,    PSTR("remote_override_function")},
 */
     if (haName != nullptr) {
-        sHaName = FPSTR(haName);
         haDisc.createSensor(sHaName, sName);
     }
 
@@ -538,12 +537,19 @@ void OTValueFloat::getValue(JsonVariant var) const {
 
 
 OTValueFloatTemp::OTValueFloatTemp(const OpenThermMessageID id, PGM_P haName):
-        OTValueFloat(id, 10) {
-    this->haName = haName;
+        OTValueFloat(id, 10, haName) {
 }
 
 bool OTValueFloatTemp::sendDiscovery() {
-    haDisc.createTempSensor(FPSTR(haName), FPSTR(getName()));
+    String sName = FPSTR(haName);
+    String sId = FPSTR(getName());
+
+    if (isRoomunitValue()) {
+        sId += F("_ru");
+        sName += F(" roomunit");
+    }
+
+    haDisc.createTempSensor(sName, sId);
     return OTValue::sendDiscovery("");
 }
 
@@ -564,11 +570,19 @@ bool OTValueFlags::sendDiscFlag(const Flag *flag, const bool enb)  {
     if (flag->discName == nullptr)
         return true;
 
+    String sName = flag->discName;
+    String sId = FPSTR(flag->field);
+
+    if (isRoomunitValue()) {
+        sName += F(" RU");
+        sId += F("_ru");
+    }
+
     String dc;
     if (flag->haDevClass != nullptr)
         dc = FPSTR(flag->haDevClass);
 
-    haDisc.createBinarySensor(FPSTR(flag->discName), FPSTR(flag->field), dc);
+    haDisc.createBinarySensor(sName, sId, dc);
     String fn = getName();
     fn += '.';
     fn += FPSTR(flag->field);

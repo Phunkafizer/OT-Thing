@@ -383,7 +383,7 @@ bool CHcontrol::sendDiscoveries(const bool en) {
     str = replace(PSTR("room setpoint #"), channel + 1, 1);
     tp = topic(Mqtt::TOPIC_ROOMSETPOINT1, channel);
     haDisc.createTempSensor(str, Mqtt::getTopicString(tp));
-    haDisc.setStateTopic(mqtt.getCmdTopic(tp));
+    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMSETPOINT, channel));
     if (!haDisc.publish(en))
         return false;
 

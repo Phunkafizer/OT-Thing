@@ -330,17 +330,22 @@ void Portal::begin(bool configMode) {
         if (!ensureAuthorized(request))
             return;
 
-        JsonDocument doc;
-        JsonObject jSlave = doc[FPSTR(STR_STATKEY_SLAVE)].to<JsonObject>();
+        AsyncJsonResponse *response = new AsyncJsonResponse();
+        JsonObject root = response->getRoot().to<JsonObject>();
+
+        JsonObject jSlave = root[FPSTR(STR_STATKEY_SLAVE)].to<JsonObject>();
             for (auto *valobj: slaveValues)
                 valobj->getStatus(jSlave);
 
-        JsonObject jMaster = doc[FPSTR(STR_STATKEY_MASTER)].to<JsonObject>();
+        JsonObject jMaster = root[FPSTR(STR_STATKEY_MASTER)].to<JsonObject>();
             for (auto *valobj: masterValues)
                 valobj->getStatus(jMaster);
 
-        AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));
-        serializeJson(doc, *response);
+        JsonObject jRoomunit = root[FPSTR(STR_STATKEY_ROOMUNIT)].to<JsonObject>();
+            for (auto *valobj: roomUnitValues)
+                valobj->getStatus(jRoomunit);
+
+        response->setLength();
         request->send(response);
     });
 

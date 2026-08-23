@@ -382,6 +382,7 @@ String Mqtt::getTopicString(const MqttTopic topic) {
 
 String Mqtt::getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit) {
     String result = F("{% set tmp=(((value_json");
+    String ftmp = FPSTR(field);
 
     switch (vt) {
     case VALTMPL_ROOT:
@@ -392,9 +393,16 @@ String Mqtt::getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t
         result += F(".get('slave') or {})");
         break;
 
-    case VALTMPL_MASTER:
+    case VALTMPL_MASTER: {
         result += F(".get('master') or {})");
+
+        const int pidx = ftmp.indexOf('.');
+        if (pidx > -1)
+            ftmp = ftmp.substring(0, pidx) + F(".data") + ftmp.substring(pidx);
+        else
+            ftmp += F(".data");
         break;
+    }
 
     case VALTMPL_ROOMUNIT:
         result += F(".get('roomunit') or {})");
@@ -422,15 +430,6 @@ String Mqtt::getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t
     }
 
     int numbrak = 2;
-
-    String ftmp = FPSTR(field);
-    if (vt == VALTMPL_MASTER) {
-        const int pidx = ftmp.indexOf('.');
-        if (pidx > -1)
-            ftmp = ftmp.substring(0, pidx) + F(".data") + ftmp.substring(pidx);
-        else
-            ftmp += F(".data");
-    }
 
     while (true) {
         auto pidx = ftmp.indexOf('.');
