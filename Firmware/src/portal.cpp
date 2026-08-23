@@ -5,7 +5,7 @@
 #include <esp_heap_caps.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <AsyncJSON.h>
+#include <AsyncJson.h>
 #include <WiFi.h>
 #include "portal.h"
 #include "devstatus.h"
@@ -138,6 +138,9 @@ void Portal::begin(bool configMode) {
             request->send(404);
             return;
         }
+
+        request->send(404);
+        return;
 
         AsyncWebServerResponse *response = request->beginResponse(302);
         response->addHeader(F("Location"), String(F("http://")) + WiFi.softAPIP().toString() + F("/"));
