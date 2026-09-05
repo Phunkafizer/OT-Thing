@@ -139,9 +139,6 @@ void Portal::begin(bool configMode) {
             return;
         }
 
-        request->send(404);
-        return;
-
         AsyncWebServerResponse *response = request->beginResponse(302);
         response->addHeader(F("Location"), String(F("http://")) + WiFi.softAPIP().toString() + F("/"));
         request->send(response);

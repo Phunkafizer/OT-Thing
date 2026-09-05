@@ -16,6 +16,7 @@ import subprocess
 import time
 import webbrowser
 import shutil
+import winsound
 
 # ANSI colour output
 if sys.platform == "win32":
@@ -635,6 +636,9 @@ def batch_upload(project_dir):
             upload_count += 1
 
             # Wait for device to reconnect after booting into the application
+            winsound.Beep(800, 100)
+            time.sleep(0.1)
+            winsound.Beep(800, 100)
             _act("\n\nPress and hold config button!")
             wait_for_device_disconnect()
             wait_for_stable_target_port(stable_seconds=2)
@@ -656,6 +660,9 @@ def batch_upload(project_dir):
                     _ok("\n" + "=" * 50)
                     _ok(f"  ✓  DEVICE #{upload_count} COMPLETE — ALL STEPS PASSED")
                     _ok("=" * 50 + "\n")
+                    winsound.Beep(800, 100)
+                    winsound.Beep(1200, 100)
+                    winsound.Beep(1600, 100)
         else:
             failure_count += 1
             time.sleep(1)
