@@ -731,7 +731,8 @@
         #heroTempTrendChart {
             display: block;
             width: 100%;
-            height: 126px;
+            height: 200px;
+            overflow: hidden;
         }
 
         .temp-legend {
@@ -1932,7 +1933,7 @@
                 <div class="metric-card metric-state-card temp-trend-card app-heat" id="heroTempTrendCard">
                     <h5>Live trend</h5>
                     <div class="temp-chart-wrap">
-                        <svg id="heroTempTrendChart" viewBox="0 0 320 126" preserveAspectRatio="none" aria-label="Temperature trend chart"></svg>
+                        <svg id="heroTempTrendChart" viewBox="0 0 320 200" preserveAspectRatio="xMinYMin meet" aria-label="Temperature trend chart"></svg>
                     </div>
                     <div class="temp-legend">
                         <div class="temp-legend-item">
@@ -4392,13 +4393,17 @@
 
             svg.innerHTML = "";
 
-            const width = 320;
-            const height = 126;
-            const padLeft = 28;
+            // Match SVG units to CSS pixels so labels and strokes are not stretched.
+            const width = svg.clientWidth;
+            const height = svg.clientHeight;
+            if (width <= 50 || height <= 90)
+                return; // Hidden tabs are redrawn when their size becomes available.
+            svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+            const padLeft = 40;
             const padRight = 6;
             const padTop = 6;
             const padBottom = 16;
-            const barRowHeight = 8;
+            const barRowHeight = 12;
             const barRowGap = 3;
             const barRowsTop = padTop;
             const barDefs = [
@@ -4411,6 +4416,18 @@
             const linePadTop = barRowsTop + barsHeight + separatorGap;
             const plotW = width - padLeft - padRight;
             const plotH = height - linePadTop - padBottom;
+            const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+            const clip = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+            clip.setAttribute("id", "hero-temp-plot-clip");
+            clip.setAttribute("clipPathUnits", "userSpaceOnUse");
+            const clipRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            clipRect.setAttribute("x", String(padLeft));
+            clipRect.setAttribute("y", String(linePadTop));
+            clipRect.setAttribute("width", String(plotW));
+            clipRect.setAttribute("height", String(plotH));
+            clip.appendChild(clipRect);
+            defs.appendChild(clip);
+            svg.appendChild(defs);
             const lineSeries = [
                 { key: "flow", color: "#ffb76a" },
                 { key: "dhw", color: "#ef4b4b" },
@@ -4422,9 +4439,7 @@
                 .flatMap((key) => history[key] || [])
                 .filter((value) => typeof value === "number" && Number.isFinite(value));
 
-            const primaryScaleValues = numericValuesFor(["flow", "dhw", "ret"]);
             const allValues = numericValuesFor(lineSeries.map((series) => series.key));
-            const scaleValues = primaryScaleValues.length > 0 ? primaryScaleValues : allValues;
 
             if (allValues.length === 0) {
                 const emptyText = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -4439,8 +4454,8 @@
                 return;
             }
 
-            let minVal = Math.min(...scaleValues);
-            let maxVal = Math.max(...scaleValues);
+            let minVal = Math.min(...allValues);
+            let maxVal = Math.max(...allValues);
 
             // Use adaptive scaling so real value changes stay visible on the live trend.
             if (Math.abs(maxVal - minVal) < 0.6) {
@@ -4471,7 +4486,7 @@
             const sampleOffsetFor = (samples) => Math.max(0, maxLen - ((samples && samples.length) || 0));
 
             // Draw bool timelines (CH, DHW, Flame) as horizontal bars above the temperature lines.
-            const stepW = (maxLen <= 1) ? plotW : (plotW / Math.max(1, maxLen - 1));
+            const stepW = (maxLen <= 1) ? plotW : (plotW / (maxLen - 1));
             barDefs.forEach((barDef, barIdx) => {
                 const y = barRowsTop + (barIdx * (barRowHeight + barRowGap));
 
@@ -4490,7 +4505,7 @@
                 label.setAttribute("x", "2");
                 label.setAttribute("y", (y + barRowHeight - 1).toFixed(2));
                 label.setAttribute("fill", "rgba(220,190,165,0.86)");
-                label.setAttribute("font-size", "8");
+                label.setAttribute("font-size", "10");
                 label.textContent = barDef.label;
                 svg.appendChild(label);
 
@@ -4501,15 +4516,18 @@
                     if (runStart === null)
                         return;
 
-                    const x0 = xFor(runStart + sampleOffset);
+                    // Each sample occupies half an interval on either side of its
+                    // timestamp, bounded by the same plot edges as the lines.
+                    const x0 = Math.max(padLeft, xFor(runStart + sampleOffset) - stepW / 2);
                     const alignedEndIdx = runEndIdx + sampleOffset;
-                    const x1 = (runEndIdx >= samples.length - 1)
-                        ? (xFor(alignedEndIdx) + stepW)
-                        : xFor(alignedEndIdx + 1);
+                    const x1 = maxLen <= 1
+                        ? padLeft + plotW
+                        : Math.min(padLeft + plotW, xFor(alignedEndIdx) + stepW / 2);
+                    const inset = Math.min(0.5, (x1 - x0) / 4);
                     const activeRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                    activeRect.setAttribute("x", (x0 + 0.5).toFixed(2));
+                    activeRect.setAttribute("x", (x0 + inset).toFixed(2));
                     activeRect.setAttribute("y", (y + 1).toFixed(2));
-                    activeRect.setAttribute("width", Math.max(1, x1 - x0 - 1).toFixed(2));
+                    activeRect.setAttribute("width", (x1 - x0 - 2 * inset).toFixed(2));
                     activeRect.setAttribute("height", String(barRowHeight - 2));
                     activeRect.setAttribute("rx", "1");
                     activeRect.setAttribute("fill", barDef.color);
@@ -4568,11 +4586,15 @@
                 label.setAttribute("x", "2");
                 label.setAttribute("y", (y + 3).toFixed(2));
                 label.setAttribute("fill", "rgba(220,190,165,0.74)");
-                label.setAttribute("font-size", "8");
-                label.textContent = `${Math.round(v)}°`;
+                label.setAttribute("font-size", "10");
+                label.textContent = `${(maxVal - minVal < 3) ? v.toFixed(1) : Math.round(v)} C`;
                 svg.appendChild(label);
             }
 
+            // Clip the complete painted stroke and endpoint dots, not just their centers.
+            const lineLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            lineLayer.setAttribute("clip-path", "url(#hero-temp-plot-clip)");
+            svg.appendChild(lineLayer);
             lineSeries.forEach((series) => {
                 const samples = history[series.key] || [];
                 const sampleOffset = sampleOffsetFor(samples);
@@ -4593,7 +4615,7 @@
                     polyline.setAttribute("stroke-linecap", "round");
                     polyline.setAttribute("stroke-linejoin", "round");
                     polyline.setAttribute("points", points.join(" "));
-                    svg.appendChild(polyline);
+                    lineLayer.appendChild(polyline);
                     points = [];
                 };
 
@@ -4617,7 +4639,7 @@
                     dot.setAttribute("cy", yFor(value).toFixed(2));
                     dot.setAttribute("r", "2");
                     dot.setAttribute("fill", series.color);
-                    svg.appendChild(dot);
+                    lineLayer.appendChild(dot);
                     break;
                 }
             });
@@ -7641,6 +7663,11 @@
 
         // App Bootstrap + UI Wiring
         window.onload = () => {
+            const trendChart = _("#heroTempTrendChart");
+            const trendResizeObserver = new ResizeObserver(() => {
+                drawHeroTempTrendChart(trendChart, getTrendHistoryForChannel(currentCh));
+            });
+            trendResizeObserver.observe(trendChart);
             let tabEnterTimer = null;
             const uiState = loadUiState();
             const updateGlobalToolbarVisibility = (tabName) => {
