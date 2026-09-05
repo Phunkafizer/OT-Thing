@@ -1,3 +1,14 @@
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "fastapi>=0.104.0",
+#     "uvicorn[standard]>=0.24.0",
+#     "python-multipart>=0.0.6",
+# ]
+# ///
+
+"""Run with `uv run Firmware/tools/mock_otthing.py` from the repository root."""
+
 from pathlib import Path
 import asyncio
 import copy
