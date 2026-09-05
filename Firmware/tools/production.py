@@ -1,6 +1,18 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "esptool>=5,<6",
+#     "pyserial>=3.5",
+#     "requests>=2.31",
+#     "platformio>=6.1,<7",
+# ]
+# ///
+
 """
 Production batch firmware upload script for OTthing devices.
+
+Run with `uv run Firmware/tools/production.py` from the repository root.
 
 Handles:
 - Stable USB device detection (VID/PID)
