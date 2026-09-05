@@ -13,11 +13,11 @@ board = env.BoardConfig()
 mcu = board.get("build.mcu", "esp32")  # works for ESP8266 and ESP32
 
 def copy_html():
-    print("Creating html.h from index.html");
+    print("Creating html.h from index.html")
     with open(os.path.join(env["PROJECT_DATA_DIR"], "index.html"), "r", encoding="utf-8") as fin:
         content = fin.read()
         if env["PIOENV"] in ("release", "production") and minify_html is not None:
-            print("minify html");
+            print("minify html")
             content = minify_html.minify(
                 content,
                 # --- JS / CSS ---
