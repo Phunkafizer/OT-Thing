@@ -138,10 +138,7 @@ void Portal::begin(bool configMode) {
             request->send(404);
             return;
         }
-
-        AsyncWebServerResponse *response = request->beginResponse(302);
-        response->addHeader(F("Location"), String(F("http://")) + WiFi.softAPIP().toString() + F("/"));
-        request->send(response);
+        request->send(404);
     });
 
     websrv.on(PSTR("/config"), HTTP_GET, [this] (AsyncWebServerRequest *request) {
@@ -254,16 +251,16 @@ void Portal::begin(bool configMode) {
         if (!ensureAuthorized(request))
             return;
 
-        JsonDocument doc;
-        JsonObject jobj = doc.to<JsonObject>();
+        AsyncJsonResponse *response = new AsyncJsonResponse();
+        JsonDocument doc = response->getRoot();
 
         int n = WiFi.scanComplete();
-        jobj[F("status")] = n;
+        doc[F("status")] = n;
         if (n == -2)
             netw.startScan();
         else
             if (n >= 0) {
-                JsonArray results = jobj[F("results")].to<JsonArray>();
+                JsonArray results = doc[F("results")].to<JsonArray>();
                 for (int i=0; i<n; i++) {
                     JsonObject result = results.add<JsonObject>();
                     result[F("ssid")] = WiFi.SSID(i);
@@ -285,8 +282,7 @@ void Portal::begin(bool configMode) {
                 WiFi.scanDelete();
             }
 
-        AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON));
-        serializeJson(doc, *response);
+        response->setLength();
         request->send(response);
     });
 

@@ -5,16 +5,21 @@ try:
     import minify_html
 except ImportError:
     minify_html = None
-Import("env")
 
+try:
+    Import("env")  # type: ignore[name-defined]
+    SOURCE_HTML = os.path.join(env["PROJECT_DATA_DIR"], "index.html")
+    TARGET_HTML = os.path.join(env["PROJECT_DIR"], "include/html.h")
+except NameError:
+    env = None
 
 platform = env.PioPlatform()
 board = env.BoardConfig()
 mcu = board.get("build.mcu", "esp32")  # works for ESP8266 and ESP32
 
-def copy_html():
+def copy_html(env):
     print("Creating html.h from index.html")
-    with open(os.path.join(env["PROJECT_DATA_DIR"], "index.html"), "r", encoding="utf-8") as fin:
+    with open(SOURCE_HTML, "r", encoding="utf-8") as fin:
         content = fin.read()
         if env["PIOENV"] in ("release", "production") and minify_html is not None:
             print("minify html")
@@ -50,7 +55,7 @@ def copy_html():
         compressed = gzip.compress(content.encode("utf-8"), compresslevel=9)
         print(f"embed html: {len(content.encode('utf-8'))} bytes raw, {len(compressed)} bytes gzip")
 
-        with open(os.path.join(env["PROJECT_DIR"], "include/html.h"), "w", encoding="utf-8") as fout:
+        with open(TARGET_HTML, "w", encoding="utf-8") as fout:
             fout.write("#pragma once\n")
             fout.write("#include <pgmspace.h>\n\n")
             fout.write(f"const size_t html_gz_len = {len(compressed)};\n")
@@ -88,7 +93,15 @@ def before_upload(source, target, env):
             env.Replace(UPLOAD_PORT=d.device)
             return
 
+if env is not None:
+    source_mtime = os.path.getmtime(SOURCE_HTML)
+    target_mtime = 0
+    if os.path.exists(TARGET_HTML):
+        target_mtime = os.path.getmtime(TARGET_HTML)
 
-copy_html()
-env.AddPreAction("upload", before_upload)
-env.AddPostAction("buildprog", post_build)
+    if source_mtime > target_mtime:
+        print("index.html has changed; regenerating html.h")
+        copy_html(env)
+        
+    env.AddPreAction("upload", before_upload)
+    env.AddPostAction("buildprog", post_build)

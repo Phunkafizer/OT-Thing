@@ -322,7 +322,7 @@ void OneWireNode::clear() {
     // free all nodes
     while (last) {
         auto node = static_cast<OneWireNode*>(last->next);
-        free(last);
+        delete static_cast<OneWireNode*>(last);
         last = node;
     }
 }
