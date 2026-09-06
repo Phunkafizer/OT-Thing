@@ -431,7 +431,12 @@ const char* OTValue::getName() const {
 
 void OTValue::setValue(const OpenThermMessageType ty, const uint16_t val) {
     numSet++;
-    if ((ty == OpenThermMessageType::READ_ACK) || (ty == OpenThermMessageType::WRITE_DATA)) {
+
+    bool ok = (ty == OpenThermMessageType::READ_ACK) 
+            || (ty == OpenThermMessageType::WRITE_DATA)
+            || (id == OpenThermMessageID::Status);
+    
+    if (ok) {
         value = val;
         setFlag = true;
         enabled = true;

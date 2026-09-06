@@ -4670,7 +4670,7 @@
                 label.setAttribute("y", (y + 3).toFixed(2));
                 label.setAttribute("fill", "rgba(220,190,165,0.74)");
                 label.setAttribute("font-size", "10");
-                label.textContent = `${(maxVal - minVal < 3) ? v.toFixed(1) : Math.round(v)} C`;
+                label.textContent = `${(maxVal - minVal < 3) ? v.toFixed(1) : Math.round(v)} C°`;
                 svg.appendChild(label);
             }
 
