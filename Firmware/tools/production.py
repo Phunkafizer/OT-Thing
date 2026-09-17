@@ -55,6 +55,35 @@ def _release_artifact_paths(project_dir):
     }
 
 
+def _parse_partition_size(value):
+    """Parse a partitions.csv offset/size field (hex, or K/M suffixed) into bytes."""
+    value = value.strip()
+    if value.lower().startswith("0x"):
+        return int(value, 16)
+    if value[-1:].upper() == "K":
+        return int(value[:-1]) * 1024
+    if value[-1:].upper() == "M":
+        return int(value[:-1]) * 1024 * 1024
+    return int(value)
+
+
+def _read_partition_table(project_dir):
+    """Parse partitions.csv into {name: (offset, size)} in bytes."""
+    csv_path = os.path.join(project_dir, "partitions.csv")
+    partitions = {}
+    with open(csv_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            fields = [p.strip() for p in line.split(",")]
+            if len(fields) < 5:
+                continue
+            name, _ptype, _subtype, offset_str, size_str = fields[:5]
+            partitions[name] = (_parse_partition_size(offset_str), _parse_partition_size(size_str))
+    return partitions
+
+
 def _find_platformio_executable(project_dir):
     """Resolve a usable PlatformIO CLI executable."""
     candidates = [
@@ -270,8 +299,15 @@ def upload_firmware(port, project_dir):
             print(f"Chip : {chip_desc}")
             print(f"MAC  : {mac}")
 
-            print("Erasing flash...")
-            esp.erase_flash()
+            # Erase only NVS and LittleFS partitions so old config/data can't survive reprogramming
+            partitions = _read_partition_table(project_dir)
+            for part_name in ("nvs", "spiffs"):
+                if part_name in partitions:
+                    offset, size = partitions[part_name]
+                    print(f"Erasing '{part_name}' partition (offset=0x{offset:x}, size={size} bytes)...")
+                    esptool.cmds.erase_region(esp, offset, size)
+                else:
+                    _warn(f"⚠ Partition '{part_name}' not found in partitions.csv, skipping erase")
 
             print("Writing bootloader, partition table, and firmware...")
             esptool.cmds.write_flash(
@@ -453,10 +489,82 @@ def verify_http_page(host, port=80, connect_timeout=30, read_timeout=40):
     return False
 
 
-def connect_to_otthing_wifi(profile="OTthing", timeout=20, retries=3):
+def _parse_wifi_interfaces(output):
+    """Split `netsh wlan show interfaces` output into per-interface field dicts."""
+    interfaces = []
+    current = {}
+    for raw_line in output.splitlines():
+        line = raw_line.strip()
+        if not line:
+            if current:
+                interfaces.append(current)
+                current = {}
+            continue
+        if ":" in line:
+            key, _, value = line.partition(":")
+            key = key.strip()
+            value = value.strip()
+            if key == "Name":
+                if current:
+                    interfaces.append(current)
+                current = {"Name": value}
+            elif current:
+                current[key] = value
+    if current:
+        interfaces.append(current)
+    return interfaces
+
+
+def _query_netsh_wlan_status():
+    """Return list of WiFi interface field dicts as reported by netsh (SSID/status).
+
+    Note: netsh can silently omit data for some adapters when Windows Location
+    Services are disabled, so this must not be used to enumerate interfaces.
+    """
+    result = subprocess.run(
+        ["cmd", "/c", "netsh wlan show interfaces"],
+        capture_output=True, text=True, encoding="cp850", errors="replace"
+    )
+    return _parse_wifi_interfaces(result.stdout)
+
+
+def list_wifi_interfaces():
+    """Return list of WiFi adapter names via PowerShell (unaffected by netsh's
+    Location-Services dependent output, which can silently hide adapters)."""
+    ps_cmd = (
+        "Get-NetAdapter | Where-Object { $_.PhysicalMediaType -like '*802.11*' "
+        "-or $_.MediaType -like '*802.11*' } | Select-Object -ExpandProperty Name"
+    )
+    result = subprocess.run(
+        ["powershell", "-NoProfile", "-Command", ps_cmd],
+        capture_output=True, text=True
+    )
+    return [{"Name": name.strip()} for name in result.stdout.splitlines() if name.strip()]
+
+
+def prompt_wifi_interface():
+    """If multiple WiFi interfaces exist, ask the user which one to use."""
+    names = [i.get("Name") for i in list_wifi_interfaces() if i.get("Name")]
+    if len(names) <= 1:
+        return names[0] if names else None
+
+    print("Multiple WiFi interfaces detected:")
+    for idx, name in enumerate(names, 1):
+        print(f"  {idx}. {name}")
+    while True:
+        choice = input(f"Select interface to use [1-{len(names)}]: ").strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(names):
+            return names[int(choice) - 1]
+        print("Invalid selection, try again.")
+
+
+def connect_to_otthing_wifi(profile="OTthing", timeout=20, retries=3, interface=None):
     def _netsh_connect():
-        print(f"Connecting to OTthing WiFi (profile: {profile})...")
+        target = f" on interface {interface}" if interface else ""
+        print(f"Connecting to OTthing WiFi (profile: {profile}){target}...")
         cmd = f'netsh wlan connect name="{profile}"'
+        if interface:
+            cmd += f' interface="{interface}"'
         result = subprocess.run(["cmd", "/c", cmd], capture_output=True, text=True)
         if result.stdout.strip():
             print(result.stdout.strip())
@@ -472,15 +580,20 @@ def connect_to_otthing_wifi(profile="OTthing", timeout=20, retries=3):
         wait = 8 if attempt == 1 else 5
         disconnected_early = False
         for remaining in range(wait, 0, -1):
-            # Query current WiFi SSID every second during the wait
-            check = subprocess.run(
-                ["cmd", "/c", "netsh wlan show interfaces"],
-                capture_output=True, text=True, encoding="cp850", errors="replace"
-            )
-            ssid_line = next((l.strip() for l in check.stdout.splitlines() if "SSID" in l and "BSSID" not in l), "SSID: ?")
-            state_line = next((l.strip() for l in check.stdout.splitlines() if "Status" in l or "tatus" in l or "Status" in l), "State: ?")
+            # Query current WiFi SSID every second during the wait, scoped to the selected interface
+            all_interfaces = _query_netsh_wlan_status()
+            if interface:
+                selected = next((i for i in all_interfaces if i.get("Name") == interface), None)
+                check_lines = [f"{k}                   : {v}" for k, v in selected.items()] if selected else []
+            else:
+                check_lines = subprocess.run(
+                    ["cmd", "/c", "netsh wlan show interfaces"],
+                    capture_output=True, text=True, encoding="cp850", errors="replace"
+                ).stdout.splitlines()
+            ssid_line = next((l.strip() for l in check_lines if "SSID" in l and "BSSID" not in l), "SSID: ?")
+            state_line = next((l.strip() for l in check_lines if "Status" in l or "tatus" in l or "Status" in l), "State: ?")
             print(f"  [{remaining:2d}s] {state_line} | {ssid_line}")
-            output_lower = check.stdout.lower()
+            output_lower = "\n".join(check_lines).lower()
             # Break early if already associated
             if ("verbunden" in output_lower or "connected" in output_lower) and profile.lower() in output_lower:
                 print(f"  WiFi associated after {wait - remaining + 1}s")
@@ -631,7 +744,9 @@ def batch_upload(project_dir):
     config_url = f"http://{DEVICE_IP}"
     print(f"Opening {config_url} (once at startup)...")
     webbrowser.open(config_url)
-    
+
+    wifi_interface = prompt_wifi_interface()
+
     upload_count = 0
     failure_count = 0
     
@@ -656,7 +771,7 @@ def batch_upload(project_dir):
             wait_for_stable_target_port(stable_seconds=2)
             time.sleep(2)
 
-            if not connect_to_otthing_wifi():
+            if not connect_to_otthing_wifi(interface=wifi_interface):
                 failure_count += 1
             elif not verify_tcp_stream(DEVICE_IP, DEVICE_DATA_PORT):
                 failure_count += 1
