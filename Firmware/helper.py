@@ -1,17 +1,36 @@
 import gzip
 import os
+import subprocess
 import sys
-try:
-    import minify_html
-except ImportError:
-    minify_html = None
 
 try:
     Import("env")  # type: ignore[name-defined]
     SOURCE_HTML = os.path.join(env["PROJECT_DATA_DIR"], "index.html")
     TARGET_HTML = os.path.join(env["PROJECT_DIR"], "include/html.h")
+    REQUIREMENTS_FILE = os.path.join(env["PROJECT_DIR"], "requirements.txt")
 except NameError:
     env = None
+    REQUIREMENTS_FILE = os.path.join(os.getcwd(), "requirements.txt")
+
+def ensure_requirements_installed():
+    if not os.path.exists(REQUIREMENTS_FILE):
+        return
+    try:
+        subprocess.check_call([
+            sys.executable, "-m", "pip", "install", "-q", "-r", REQUIREMENTS_FILE
+        ])
+    except Exception as install_err:
+        print(f"\033[91mFailed to auto-install requirements.txt: {install_err}\033[0m")
+
+try:
+    import minify_html
+except ImportError:
+    minify_html = None
+    ensure_requirements_installed()
+    try:
+        import minify_html
+    except ImportError as import_err:
+        print(f"\033[91mminify_html still unavailable after install attempt: {import_err}\033[0m")
 
 platform = env.PioPlatform()
 board = env.BoardConfig()

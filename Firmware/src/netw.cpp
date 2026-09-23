@@ -70,16 +70,13 @@ void OtNetwork::begin(const bool cfgMode) {
 
     if (cfgMode) {
         WiFi.persistent(false);
+        WiFi.mode(WiFi.SSID().isEmpty() ? WIFI_AP : WIFI_AP_STA);
         WiFi.softAPConfig(apAddress, apAddress, apMask);
         WiFi.softAP(F(AP_SSID), F(AP_PASSWORD));
         
         dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
         dnsServer.start(53, "*", apAddress);
 
-        if (WiFi.SSID().isEmpty())
-            WiFi.mode(WIFI_AP);
-        else
-            WiFi.mode(WIFI_AP_STA);
         WiFi.setAutoReconnect(false);
         WiFi.persistent(true);
 
@@ -150,8 +147,11 @@ void OtNetwork::stopWps() {
     wpsActive = false;
 }
 
-void OtNetwork::startScan() {
-    isScanning = true;
+bool OtNetwork::startScan() {
+    if (isScanning)
+        return false;
+
     WiFi.scanDelete();
-    WiFi.scanNetworks(true, false, false, 150); // asynchronous scan
+    isScanning = WiFi.scanNetworks(true, false, false, 150) == WIFI_SCAN_RUNNING;
+    return isScanning;
 }

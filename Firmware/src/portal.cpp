@@ -182,14 +182,15 @@ void Portal::begin(bool configMode) {
     );
 
     websrv.on(PSTR("/auth/state"), HTTP_GET, [this] (AsyncWebServerRequest *request) {
-        JsonDocument doc;
+        AsyncJsonResponse *response = new AsyncJsonResponse();
+        JsonDocument doc = response->getRoot();
         JsonObject jobj = doc.to<JsonObject>();
         bool configured = devconfig.isAuthConfigured();
+        
         jobj[F("configured")] = configured;
         jobj[F("loggedIn")] = (configModeActive || !configured) ? true : hasValidSession(request);
         jobj[F("bypass")] = configModeActive;
-        AsyncResponseStream *response = request->beginResponseStream(FPSTR(APP_JSON), 256);
-        serializeJson(doc, *response);
+        response->setLength();
         request->send(response);
     });
 
@@ -256,32 +257,36 @@ void Portal::begin(bool configMode) {
 
         int n = WiFi.scanComplete();
         doc[F("status")] = n;
-        if (n == -2)
-            netw.startScan();
-        else
-            if (n >= 0) {
-                JsonArray results = doc[F("results")].to<JsonArray>();
-                for (int i=0; i<n; i++) {
-                    JsonObject result = results.add<JsonObject>();
-                    result[F("ssid")] = WiFi.SSID(i);
-                    result[F("rssi")] = WiFi.RSSI(i);
-                    result[F("channel")] = WiFi.channel(i);
-                    result[F("encType")] = WiFi.encryptionType(i);
-                    uint8_t bssid[6];
-                    WiFi.BSSID(i, bssid);
-                    String bssidStr;
-                    for (int bi=0; bi<sizeof(bssid); bi++) {
-                        if (!bssidStr.isEmpty())
-                            bssidStr += ':';
-                        if (bssid[bi] < 16)
-                            bssidStr += '0';
-                        bssidStr += String(bssid[bi], 16);
-                    }
-                    result[F("bssid")] = bssidStr;
-                }
-                WiFi.scanDelete();
-            }
 
+        Serial.print("Called scan, status: ");
+        Serial.println(n);
+        
+        if (n == WIFI_SCAN_FAILED)
+            netw.startScan();
+
+        if (n >= 0) {
+            JsonArray results = doc[F("results")].to<JsonArray>();
+            for (int i=0; i<n; i++) {
+                JsonObject result = results.add<JsonObject>();
+                result[F("ssid")] = WiFi.SSID(i);
+                result[F("rssi")] = WiFi.RSSI(i);
+                result[F("channel")] = WiFi.channel(i);
+                result[F("encType")] = WiFi.encryptionType(i);
+                uint8_t bssid[6];
+                WiFi.BSSID(i, bssid);
+                String bssidStr;
+                for (int bi=0; bi<sizeof(bssid); bi++) {
+                    if (!bssidStr.isEmpty())
+                        bssidStr += ':';
+                    if (bssid[bi] < 16)
+                        bssidStr += '0';
+                    bssidStr += String(bssid[bi], 16);
+                }
+                result[F("bssid")] = bssidStr;
+            }
+            WiFi.scanDelete();
+        }   
+        
         response->setLength();
         request->send(response);
     });

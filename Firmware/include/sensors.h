@@ -56,6 +56,7 @@ protected:
     bool sendDiscovery() override;
 public:
     OneWireNode(uint8_t *addr);
+    virtual ~OneWireNode() {}
     static void begin(const uint8_t gpio);
     static void clear();
     static OneWireNode* find(String adr);
@@ -103,18 +104,20 @@ private:
 class AutoSensor: public Sensor {
 public:
     AutoSensor();
-    void set(const double val, const Source src);
+    void set(const double val, const Source src) override;
 private:
     double values[SOURCE_AUTO + 1];
 };
 
 class OutsideTemp: public Sensor {
 public:
-    void setConfig(JsonObject &obj);
-    OutsideTemp();
     String owResult;
+    OutsideTemp();
+    void setConfig(JsonObject &obj) override;
+    void set(const double val, const Source src) override;
+    void writeJson(JsonVariant val, const bool raw);
 protected:
-    void loop();
+    void loop() override;
 private:
     uint32_t nextMillis;
     uint32_t interval;
@@ -127,6 +130,9 @@ private:
         HTTP_CONNECTING,
         HTTP_RECEIVING
     } httpState;
+    double minValues[24];
+    double maxValues[24];
+    int lastHistPos {-1};
 };
 
 extern Sensor roomTemp[2];

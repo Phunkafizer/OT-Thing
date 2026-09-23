@@ -832,6 +832,12 @@
             color: #e1d1c2;
         }
 
+        .state-icon.is-suspended {
+            background: rgba(160, 160, 180, 0.16);
+            border-color: rgba(160, 160, 180, 0.4);
+            color: #d8d8e0;
+        }
+
         .curve-hint {
             font-size: 0.72em;
             color: #d5b59a;
@@ -2766,6 +2772,84 @@
 
             </div>
 
+            <h3 class="roomunit-section">Roomunit</h3>
+            <div class="group hero-pin-source roomunit-section">
+                <div class="flexline">
+                    <div class="statusfield">
+                        <h5>CH set temperature</h5>
+                        <span class="statusvalue" field="roomunit.ch_set_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Room temperature</h5>
+                        <span class="statusvalue" field="roomunit.room_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Room set temperature</h5>
+                        <span class="statusvalue" field="roomunit.room_set_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>DHW set temperature</h5>
+                        <span class="statusvalue" field="roomunit.dhw_set_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Outside temperature</h5>
+                        <span class="statusvalue" field="roomunit.outside_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>max. CH setpoint</h5>
+                        <span class="statusvalue" field="roomunit.max_set_t" unit="&deg;C"></span>
+                    </div>
+                </div>
+                <div class="flexline">
+                    <div class="statusfield">
+                        <h5>Status value</h5>
+                        <span class="statusvalue" field="roomunit.status.value"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Heater circuit enabled</h5>
+                        <span class="statusvalue" field="roomunit.status.ch_enable"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>DHW enabled</h5>
+                        <span class="statusvalue" field="roomunit.status.dhw_enable"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Outside temp. compensation</h5>
+                        <span class="statusvalue" field="roomunit.status.otc_active"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Summer mode</h5>
+                        <span class="statusvalue" field="roomunit.status.summer_mode"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>DHW blocking</h5>
+                        <span class="statusvalue" field="roomunit.status.dhw_blocking"></span>
+                    </div>
+                </div>
+                <div class="flexline">
+                    <div class="statusfield">
+                        <h5>Max. rel. modulation</h5>
+                        <span class="statusvalue" field="roomunit.max_rel_mod" unit="%"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Product version</h5>
+                        <span class="statusvalue" field="roomunit.master_prod_version"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>OT version</h5>
+                        <span class="statusvalue" field="roomunit.master_ot_version"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Member ID</h5>
+                        <span class="statusvalue" field="roomunit.master_config_member.memberId"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Smart power implemented</h5>
+                        <span class="statusvalue" field="roomunit.master_config_member.smartPowerImplemented"></span>
+                    </div>
+                </div>
+            </div>
+
             <h3>1-wire</h3>
             <div class="group">
                 <div class="flexline" id="oneWireSensors">
@@ -3122,7 +3206,7 @@
                 <div class="flexline hero-pin-source">
                     <div class="statusfield nohide">
                         <h5>Outside temperature</h5>
-                        <span class="statusvalue" field="outsideTemp" unit="°C"></span>
+                        <span class="statusvalue" field="outsideTemp.current" unit="°C"></span>
                     </div>
                     <div class="statusfield nohide">
                         <h5>Room set point</h5>
@@ -3788,8 +3872,7 @@
             </div>
             <div class="wifi-setup-body">
                 <div id="wifiScanStatus" class="wifi-scan-status">
-                    <span class="wifi-spinner"></span>
-                    <span>Scanning for WiFi networks...</span>
+                    <span>Select Scan to find WiFi networks.</span>
                 </div>
                 <div id="wifiScanList" class="wifi-scan-list" hidden></div>
                 <div class="param">
@@ -3803,7 +3886,7 @@
             </div>
             <div class="modal-footer">
                 <button onclick="saveWifi()">save</button>
-                <button id="wifiRescanBtn" type="button" onclick="startWifiScan()">rescan</button>
+                <button id="wifiRescanBtn" type="button" onclick="startWifiScan()">scan</button>
                 <button onclick="closeWifiSetup()">close</button>
             </div>
         </div>
@@ -3840,7 +3923,7 @@
             valueFlashMs: 640,
             tabEnterCleanupMs: 760,
             scanXhrTimeoutMs: 15000,
-            scanInitialWaitMs: 5000,
+            scanInitialWaitMs: 3000,
             scanRetryMs: 2000,
             scanErrorToastMs: 4000,
             statusXhrTimeoutMs: 10000,
@@ -5374,7 +5457,7 @@
             }
 
             const flow = (currentCh === 0) ? statuscache?.slave?.flow_t : statuscache?.slave?.flow_t2;
-            const outside = statuscache?.outsideTemp;
+            const outside = statuscache?.outsideTemp.current;
             const mod = statuscache?.slave?.rel_mod;
             const coolingCtrl = parseNumber(statuscache?.cooling?.setpoint);
             const coolingMode = statuscache?.cooling?.ctrlMode;
@@ -5399,7 +5482,7 @@
             updateMetric("heroVentSet", "", getVentSetpoint(), "%", "ventSet", "vent.setpoint");
             updateVentModeButtons(statuscache?.vent?.enable, statuscache?.slave?.vent_status?.vent_active);
             updateMetric("heroFlow", "heroFlowTrendIcon", parseNumber(flow), "°C", `flow${currentCh}`, flowField);
-            updateMetric("heroOutside", "heroOutsideTrendIcon", parseNumber(outside), "°C", "outside", "outsideTemp");
+            updateMetric("heroOutside", "heroOutsideTrendIcon", parseNumber(outside), "°C", "outside", "outsideTemp.current");
             updateMetric("heroMod", "heroModTrendIcon", parseNumber(mod), "%", "mod", "slave.rel_mod");
             if (redrawTrend)
                 updateHeroTempTrendCard();
@@ -5419,14 +5502,19 @@
         function updateHeroStateCard() {
             setStateIcon("stateFlame", statuscache?.slave?.status?.flame, true);
 
-            function setTriStateEnabledIcon(id, active, enabled) {
+            function setTriStateEnabledIcon(id, active, enabled, suspended = false) {
                 const icon = _(`#${id}`);
                 if (!icon)
                     return;
 
-                icon.classList.remove("is-true", "is-false", "is-inactive", "is-error", "is-unknown");
+                icon.classList.remove("is-true", "is-false", "is-inactive", "is-error", "is-unknown", "is-suspended");
 
-                if (active === true) {
+                if (suspended === true) {
+                    icon.classList.add("is-suspended");
+                    icon.innerHTML = iconMarkup("pause");
+                    icon.title = "suspended";
+                }
+                else if (active === true) {
                     icon.classList.add("is-true");
                     icon.innerHTML = iconMarkup("check");
                     icon.title = "active";
@@ -5448,8 +5536,8 @@
                 }
             }
 
-            setTriStateEnabledIcon("stateCh1", statuscache?.slave?.status?.ch_mode, statuscache?.master?.status?.data?.ch_enable);
-            setTriStateEnabledIcon("stateCh2", statuscache?.slave?.status?.ch2_mode, statuscache?.master?.status?.data?.ch2_enable);
+            setTriStateEnabledIcon("stateCh1", statuscache?.slave?.status?.ch_mode, statuscache?.master?.status?.data?.ch_enable, getStatusValueByPath("heatercircuit.$.suspended", 0) === true);
+            setTriStateEnabledIcon("stateCh2", statuscache?.slave?.status?.ch2_mode, statuscache?.master?.status?.data?.ch2_enable, getStatusValueByPath("heatercircuit.$.suspended", 1) === true);
             setTriStateEnabledIcon("stateCooling", statuscache?.slave?.status?.cooling, statuscache?.master?.status?.data?.cooling_enable);
             setTriStateEnabledIcon("stateDhw", statuscache?.slave?.status?.dhw_mode, statuscache?.master?.status?.data?.dhw_enable);
             setTriStateEnabledIcon("stateVent", statuscache?.slave?.vent_status?.vent_active, statuscache?.master?.vent_status?.data?.vent_enable);
@@ -6023,6 +6111,32 @@
 
             drawFlowCurve("#F00");
 
+            // draw outsideTemp min/max band and avg marker along the x-axis
+            if (statuscache.outsideTemp?.min !== undefined && statuscache.outsideTemp?.max !== undefined) {
+                const otMin = clip(statuscache.outsideTemp.min, xaxis.min, xaxis.max);
+                const otMax = clip(statuscache.outsideTemp.max, xaxis.min, xaxis.max);
+                const pMin = getPoint(otMin, yaxis.min);
+                const pMax = getPoint(otMax, yaxis.min);
+                ctx.strokeStyle = "rgba(80, 160, 255, 0.75)";
+                ctx.lineWidth = 8;
+                ctx.beginPath();
+                ctx.moveTo(pMax.x, pMax.y);
+                ctx.lineTo(pMin.x, pMin.y);
+                ctx.stroke();
+
+                if (statuscache.outsideTemp?.avg !== undefined) {
+                    const otAvg = clip(statuscache.outsideTemp.avg, xaxis.min, xaxis.max);
+                    const pAvg = getPoint(otAvg, yaxis.min);
+                    ctx.fillStyle = "#58F";
+                    ctx.beginPath();
+                    ctx.moveTo(pAvg.x, pAvg.y - 6);
+                    ctx.lineTo(pAvg.x - 4, pAvg.y + 2);
+                    ctx.lineTo(pAvg.x + 4, pAvg.y + 2);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+
             //draw curve's basepoint
             if ((p1.y <= origin.y) && (roomset <= xaxis.min))
                 drawMarkerPoint(p1, '#F00');
@@ -6035,19 +6149,23 @@
                 });
             }
 
-            if (statuscache.outsideTemp !== undefined) {
+            if (statuscache.outsideTemp?.current !== undefined) {
                 //draw outsidetemp & it's flowtemperature
-                let ftsensor = getFlowTemperature(statuscache.outsideTemp, roomset, hcfg) + roomcomp;
+                let ftsensor = getFlowTemperature(statuscache.outsideTemp.current, roomset, hcfg) + roomcomp;
                 ftsensor = clip(ftsensor, flowmax, flowmin);
-                let psensor = getPoint(statuscache.outsideTemp, ftsensor);
+                let psensor = getPoint(statuscache.outsideTemp.current, ftsensor);
                 drawMarkerPoint(psensor, '#F83');
                 ctx.strokeStyle = "#F83";
                 ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.moveTo(origin.x, psensor.y);
                 ctx.lineTo(psensor.x, psensor.y);
-                ctx.lineTo(psensor.x, origin.y);
                 ctx.fillText(Math.round(ftsensor * 10) / 10, psensor.x - 20, psensor.y - 12);
+                ctx.stroke();
+                ctx.strokeStyle = "#58F";
+                ctx.beginPath();
+                ctx.moveTo(psensor.x, origin.y);
+                ctx.lineTo(psensor.x, psensor.y);
                 ctx.stroke();
             }
 
@@ -6073,8 +6191,8 @@
 
             if (hcfg.returnLimit.deltaT !== 0) {
                 // draw return limit
-                let ftsensor = getFlowTemperature(statuscache.outsideTemp, roomset, hcfg) - hcfg.returnLimit.deltaT;
-                let psensor = getPoint(statuscache.outsideTemp, ftsensor);
+                let ftsensor = getFlowTemperature(statuscache.outsideTemp?.current, roomset, hcfg) - hcfg.returnLimit.deltaT;
+                let psensor = getPoint(statuscache.outsideTemp?.current, ftsensor);
                 drawMarkerPoint(psensor, '#68F');
                 ctx.strokeStyle = "#68F";
                 ctx.lineWidth = 1;
@@ -6131,7 +6249,6 @@
         // wifi setup dialog
         function openWifiSetup() {
             _("#dlgWifiSetup").hidden = false;
-            startWifiScan();
         }
 
         function closeWifiSetup() {
@@ -6148,6 +6265,7 @@
             wifiScanRunning = true;
             _("#wifiRescanBtn").disabled = true;
             _("#wifiScanStatus").hidden = false;
+            _("#wifiScanStatus").innerHTML = '<span class="wifi-spinner"></span><span>Scanning for WiFi networks...</span>';
             _("#wifiScanList").hidden = true;
             _("#wifiScanList").innerHTML = "";
             addRecentEvent("WiFi scan started");
@@ -7653,7 +7771,7 @@
 
                 let scanObj = JSON.parse(e.target.responseText);
                 if (scanObj.status < 0) {
-                    setTimeout(scanWiFi, initialRetryDelayMs);
+                    setTimeout(() => scanWiFi(UI_TIMINGS.scanRetryMs), initialRetryDelayMs);
                     return;
                 }
 
@@ -8423,6 +8541,10 @@
                         ele.hidden = true;
                     });
                 }
+
+                __(".roomunit-section").forEach(ele => {
+                    ele.hidden = (statuscache.roomunit == null);
+                });
 
                 updateStatusValues();
                 updateHeroStateCard();

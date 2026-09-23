@@ -1002,7 +1002,7 @@ bool OTControl::sendDiscovery() {
     bool discFlag = true;
 
     haDisc.createNumber(F("outside temperature"), Mqtt::getTopicString(Mqtt::TOPIC_OUTSIDETEMP), mqtt.getCmdTopic(Mqtt::TOPIC_OUTSIDETEMP));
-    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_ROOT, PSTR("outsideTemp")));
+    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_ROOT, PSTR("outsideTemp.current")));
     haDisc.setDeviceClass(FPSTR(HA_DEVICE_CLASS_TEMPERATURE));
     haDisc.setUnit(FPSTR(HA_UNIT_CELSIUS));
     haDisc.setMinMax(-30, 45, 0.1);

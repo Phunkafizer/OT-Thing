@@ -155,11 +155,11 @@ OutsideTemp::OutsideTemp():
     });
 
     acli.onDisconnect([](void *arg, AsyncClient *client) {
-        client->close(true);
+        client->close();
     });
 
     acli.onError([](void *arg, AsyncClient *client, int8_t error) {
-        client->close(true);
+        client->close();
     });
 }
 
@@ -173,6 +173,51 @@ void OutsideTemp::setConfig(JsonObject &obj) {
         interval = 30000;
     owResult.clear();
     nextMillis = 0;
+}
+
+void OutsideTemp::set(const double val, const Source src) {
+    Sensor::set(val, src);
+
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo, 0))
+        return;
+
+    const int currentHour = timeinfo.tm_hour;
+    if (lastHistPos < 0) {
+        // first call ever: seed all hourly slots so avg is not skewed by zeros
+        for (int i=0; i<sizeof(minValues)/sizeof(minValues[0]); i++)
+            minValues[i] = maxValues[i] = val;
+    }
+    else if (currentHour != lastHistPos)
+        minValues[currentHour] = maxValues[currentHour] = val;
+
+    lastHistPos = currentHour;
+    if (val < minValues[currentHour])
+        minValues[currentHour] = val;
+    if (val > maxValues[currentHour])
+        maxValues[currentHour] = val;
+}
+
+void OutsideTemp::writeJson(JsonVariant val, const bool raw) {
+    double d;
+    if (!get(d, raw)) {
+        val.set(nullptr);
+        return;
+    }
+
+    JsonObject obj = val.to<JsonObject>();
+    obj[F("current")] = d;
+    double minVal = d, maxVal = d, avgVal = 0;
+    for (int i=0; i<sizeof(minValues)/sizeof(minValues[0]); i++) {
+        if (minValues[i] < minVal)
+            minVal = minValues[i];
+        if (maxValues[i] > maxVal)
+            maxVal = maxValues[i];
+        avgVal += (minValues[i] + maxValues[i]) / 2.0;
+    }
+    obj[F("min")] = minVal;
+    obj[F("max")] = maxVal;
+    obj[F("avg")] = avgVal / (sizeof(minValues)/sizeof(minValues[0]));
 }
 
 void OutsideTemp::loop() {

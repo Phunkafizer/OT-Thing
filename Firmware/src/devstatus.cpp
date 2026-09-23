@@ -98,9 +98,7 @@ void DevStatus::unlock() {
 
     otcontrol.getJson(doc);
 
-    double outT;
-    if (outsideTemp.get(outT, true))
-        doc[F("outsideTemp")] = outT;
+    outsideTemp.writeJson(doc[F("outsideTemp")].to<JsonVariant>(), true);
 
     if (!outsideTemp.owResult.isEmpty())
         doc[F("owResult")] = outsideTemp.owResult;

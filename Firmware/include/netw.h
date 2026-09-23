@@ -20,7 +20,7 @@ public:
     void end();
     bool startWps();
     void stopWps();
-    void startScan();
+    bool startScan();
     bool isScanning {false};
 };
 
