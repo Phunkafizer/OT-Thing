@@ -7909,17 +7909,11 @@
             };
 
             xhr.onerror = () => {
-                wifiScanRunning = false;
-                _("#wifiRescanBtn").disabled = false;
-                showToast("WiFi scan failed", "error", UI_TIMINGS.scanErrorToastMs);
-                addRecentEvent("WiFi scan failed");
+                setTimeout(scanWiFi, UI_TIMINGS.scanPollIntervalMs);
             };
 
             xhr.ontimeout = () => {
-                wifiScanRunning = false;
-                _("#wifiRescanBtn").disabled = false;
-                showToast("WiFi scan timeout", "error", UI_TIMINGS.scanErrorToastMs);
-                addRecentEvent("WiFi scan timeout");
+                setTimeout(scanWiFi, UI_TIMINGS.scanPollIntervalMs);
             };
             
             xhr.open("GET", "scan");    

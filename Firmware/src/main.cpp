@@ -51,7 +51,7 @@ void setup() {
     netw.begin(configMode);
     
     AddressableSensor::begin();
-    //BLESensor::begin();j
+    BLESensor::begin();
     haDisc.begin();
     mqtt.begin();
     configTime(devconfig.getTimezone(), 3600, PSTR("pool.ntp.org"));

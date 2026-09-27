@@ -78,8 +78,8 @@ void OtNetwork::begin(const bool cfgMode) {
         WiFi.softAPConfig(apAddress, apAddress, apMask);
         WiFi.softAP(F(AP_SSID), F(AP_PASSWORD));
         
-        dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-        dnsServer.start(53, "*", apAddress);
+        //dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+        //dnsServer.start(53, "*", apAddress);
 
         WiFi.setAutoReconnect(false);
         WiFi.persistent(true);
@@ -104,7 +104,7 @@ void OtNetwork::begin(const bool cfgMode) {
 }
 
 void OtNetwork::loop() {
-    dnsServer.processNextRequest();
+    //dnsServer.processNextRequest();
 }
 
 void OtNetwork::end() {
@@ -114,6 +114,10 @@ void OtNetwork::end() {
 bool OtNetwork::startWps() {
     if (wpsActive)
         return false;
+
+    #ifdef DEBUG
+        Serial.println(F("Starting WPS..."));
+    #endif
     
     statusLed.set(StatusLed::LED_WPS);
 
