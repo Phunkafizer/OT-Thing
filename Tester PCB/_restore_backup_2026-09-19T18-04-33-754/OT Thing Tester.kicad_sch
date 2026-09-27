@@ -6460,17 +6460,6 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
-			(at 102.87 116.84 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "7fc120d3-39e9-4767-9e61-e4cfcd9197dd")
 		)
@@ -6554,17 +6543,6 @@
 			)
 		)
 		(property "LCSC" "C118848"
-			(at 62.23 44.45 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
 			(at 62.23 44.45 0)
 			(hide yes)
 			(show_name no)
@@ -6756,17 +6734,6 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "mounting_hardware/mounting_hole"
-			(at 262.89 156.21 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(instances
 			(project "OT Thing Tester"
 				(path "/97eba176-403c-4ec0-b9c4-4c27ba2f4c0b"
@@ -6831,17 +6798,6 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 186.69 106.68 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
 			(at 186.69 106.68 0)
 			(hide yes)
 			(show_name no)
@@ -7289,7 +7245,7 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "1=K 2=A"
+		(property "Sim.Pins" "1=K 2=A"
 			(at 200.66 57.15 0)
 			(hide yes)
 			(show_name no)
@@ -7373,17 +7329,6 @@
 			)
 		)
 		(property "Description" "Potentiometer"
-			(at 67.31 120.65 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "potentiometer/THT"
 			(at 67.31 120.65 0)
 			(hide yes)
 			(show_name no)
@@ -7557,7 +7502,7 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "1=K 2=A"
+		(property "Sim.Pins" "1=K 2=A"
 			(at 182.88 45.72 0)
 			(hide yes)
 			(show_name no)
@@ -7727,7 +7672,7 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "1=K 2=A"
+		(property "Sim.Pins" "1=K 2=A"
 			(at 166.37 57.15 0)
 			(hide yes)
 			(show_name no)
@@ -7989,17 +7934,6 @@
 			)
 		)
 		(property "Description" "0.1A Ic, 45V Vce, PNP Transistor, SOT-23"
-			(at 163.83 46.99 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "package/gullwing"
 			(at 163.83 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -8482,17 +8416,6 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
-			(at 158.75 40.64 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "b0a16d32-803c-441f-b8db-1b269dfee8bf")
 		)
@@ -8641,17 +8564,6 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 186.69 119.38 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
 			(at 186.69 119.38 0)
 			(hide yes)
 			(show_name no)
@@ -9052,7 +8964,7 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "1=K 2=A"
+		(property "Sim.Pins" "1=K 2=A"
 			(at 148.59 45.72 0)
 			(hide yes)
 			(show_name no)
@@ -9312,17 +9224,6 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
-			(at 71.12 44.45 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "a8cb1b55-2dc4-44ee-9036-f6825d4b8399")
 		)
@@ -9395,17 +9296,6 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 200.66 132.08 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
 			(at 200.66 132.08 0)
 			(hide yes)
 			(show_name no)
@@ -9566,17 +9456,6 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 166.37 66.04 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
 			(at 166.37 66.04 0)
 			(hide yes)
 			(show_name no)
@@ -10051,17 +9930,6 @@
 			)
 		)
 		(property "Description" "0.1A Ic, 45V Vce, NPN Transistor, SOT-23"
-			(at 146.05 64.77 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "package/gullwing"
 			(at 146.05 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -11066,17 +10934,6 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
-			(at 149.86 114.3 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "9284a356-0e55-46cb-b188-0a9202ddff95")
 		)
@@ -11717,17 +11574,6 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
-			(at 33.02 119.38 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "2"
 			(uuid "93e5fd3d-eef8-461a-868c-9646f0e5bc41")
 		)
@@ -11800,17 +11646,6 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 116.84 111.76 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
 			(at 116.84 111.76 0)
 			(hide yes)
 			(show_name no)
@@ -11984,17 +11819,6 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "mounting_hardware/mounting_hole"
-			(at 93.98 67.31 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(instances
 			(project "OT Thing Tester"
 				(path "/97eba176-403c-4ec0-b9c4-4c27ba2f4c0b"
@@ -12060,17 +11884,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 55.88 119.38 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
 			(at 55.88 119.38 0)
 			(hide yes)
 			(show_name no)
@@ -12152,17 +11965,6 @@
 			)
 		)
 		(property "Description" "Potentiometer"
-			(at 149.86 129.54 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "potentiometer/THT"
 			(at 149.86 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -12258,17 +12060,6 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
-			(at 200.66 66.04 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "58f612a9-aa2b-4b32-9965-b728e7b4e7f7")
 		)
@@ -12340,17 +12131,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 95.25 123.19 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
 			(at 95.25 123.19 0)
 			(hide yes)
 			(show_name no)
@@ -12609,17 +12389,6 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
-			(at 193.04 40.64 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "3189405c-c777-403a-a336-6f9798ba5aea")
 		)
@@ -12858,17 +12627,6 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
-			(at 67.31 139.7 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "877f6fbd-6135-431b-bc4e-50c0afd565bf")
 		)
@@ -12941,17 +12699,6 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 175.26 54.61 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
 			(at 175.26 54.61 0)
 			(hide yes)
 			(show_name no)
@@ -13037,17 +12784,6 @@
 			)
 		)
 		(property "Description" "0.1A Ic, 45V Vce, PNP Transistor, SOT-23"
-			(at 198.12 46.99 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "package/gullwing"
 			(at 198.12 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -13383,17 +13119,6 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
-			(at 148.59 54.61 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "b704721f-a557-4b63-a470-a0b691f84559")
 		)
@@ -13649,17 +13374,6 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
-			(at 182.88 54.61 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "3ad5a50e-0a5d-4ff8-ae10-3f0462a800aa")
 		)
@@ -13808,17 +13522,6 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 180.34 113.03 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
 			(at 180.34 113.03 0)
 			(hide yes)
 			(show_name no)
@@ -14138,17 +13841,6 @@
 			)
 		)
 		(property "Description" "0.1A Ic, 45V Vce, NPN Transistor, SOT-23"
-			(at 180.34 64.77 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "package/gullwing"
 			(at 180.34 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -14561,17 +14253,6 @@
 				)
 			)
 		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
-			(at 140.97 54.61 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "40fa331e-4710-4d6c-a316-c4b8cb411b85")
 		)
@@ -14642,17 +14323,6 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 102.87 129.54 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
 			(at 102.87 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -15124,17 +14794,6 @@
 			)
 		)
 		(property "Description" ""
-			(at 93.98 72.39 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "KiLib_Generator" "mounting_hardware/mounting_hole"
 			(at 93.98 72.39 0)
 			(hide yes)
 			(show_name no)

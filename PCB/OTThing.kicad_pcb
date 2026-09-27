@@ -34,9 +34,6 @@
 				(type "Top Silk Screen")
 				(color "White")
 			)
-			(layer "F.Paste"
-				(type "Top Solder Paste")
-			)
 			(layer "F.Mask"
 				(type "Top Solder Mask")
 				(color "Black")
@@ -63,9 +60,6 @@
 				(color "Black")
 				(thickness 0.01)
 			)
-			(layer "B.Paste"
-				(type "Bottom Solder Paste")
-			)
 			(layer "B.SilkS"
 				(type "Bottom Silk Screen")
 				(color "White")
@@ -89,6 +83,7 @@
 		)
 		(capping no)
 		(filling no)
+		(zone_defaults)
 		(grid_origin 140.4235 110.71)
 		(pcbplotparams
 			(layerselection 0x00000000_00000000_55555555_5755f5ff)
