@@ -12,6 +12,9 @@ static const IPAddress apAddress(4, 3, 2, 1);
 static const IPAddress apMask(255, 255, 255, 0);
 
 static void wifiEvent(WiFiEvent_t event) {
+    #ifdef DEBUG
+    Serial.printf("WiFi Event: %d\n", event);
+    #endif
     switch (event) {
     case ARDUINO_EVENT_WIFI_SCAN_DONE:
         netw.isScanning = false;
@@ -27,7 +30,8 @@ static void wifiEvent(WiFiEvent_t event) {
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
         devstatus.numWifiDiscon++;
         MDNS.end();
-        WiFi.reconnect();
+        if (netw.hasStoredWifiCredentials())
+            WiFi.reconnect();
         break;
 
     case ARDUINO_EVENT_WPS_ER_SUCCESS:
@@ -70,7 +74,7 @@ void OtNetwork::begin(const bool cfgMode) {
 
     if (cfgMode) {
         WiFi.persistent(false);
-        WiFi.mode(WiFi.SSID().isEmpty() ? WIFI_AP : WIFI_AP_STA);
+        WiFi.mode(hasStoredWifiCredentials() ? WIFI_AP_STA : WIFI_AP);
         WiFi.softAPConfig(apAddress, apAddress, apMask);
         WiFi.softAP(F(AP_SSID), F(AP_PASSWORD));
         
@@ -80,7 +84,6 @@ void OtNetwork::begin(const bool cfgMode) {
         WiFi.setAutoReconnect(false);
         WiFi.persistent(true);
 
-        
         String improvUrl = F("http://");
         improvUrl += HOSTNAME;
         improvUrl += F(".local/");
@@ -135,14 +138,10 @@ void OtNetwork::stopWps() {
     esp_wifi_wps_disable();
 
     if (configMode)
-        if (WiFi.SSID().isEmpty())    
-            WiFi.mode(WIFI_AP);
-        else
-            WiFi.mode(WIFI_AP_STA);
+        WiFi.mode(hasStoredWifiCredentials() ? WIFI_AP_STA : WIFI_AP);
     else
         WiFi.mode(WIFI_STA);
-    
-    WiFi.mode(WiFi.SSID().isEmpty() ? WIFI_AP : WIFI_AP_STA);
+
     statusLed.set(StatusLed::LED_NORMAL);
     wpsActive = false;
 }
@@ -154,4 +153,13 @@ bool OtNetwork::startScan() {
     WiFi.scanDelete();
     isScanning = WiFi.scanNetworks(true, false, false, 150) == WIFI_SCAN_RUNNING;
     return isScanning;
+}
+
+// WiFi.SSID() only reflects an active connection on this core, not the NVS-persisted config, so read it directly.
+bool OtNetwork::hasStoredWifiCredentials() {
+    WiFi.mode(WIFI_STA); // esp_wifi_get_config requires the STA driver to be initialized
+    wifi_config_t conf = {};
+    if (esp_wifi_get_config(WIFI_IF_STA, &conf) != ESP_OK)
+        return false;
+    return conf.sta.ssid[0] != 0;
 }

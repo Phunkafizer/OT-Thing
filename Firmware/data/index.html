@@ -1944,7 +1944,7 @@
                 <li tab="status">Status</li>
                 <li tab="setup">Setup</li>
                 <li tab="heatingcurve" channel="0" class="app-heat">Heating circuit 1</li>
-                <li tab="heatingcurve" channel="1" class="app-heat CH2">Heating circuit 2</li>
+                <li tab="heatingcurve" channel="1" class="app-heat CH2" hidden>Heating circuit 2</li>
                 <li tab="log">Log</li>
             </ul>
         </div>
@@ -1962,7 +1962,7 @@
                             <span class="state-label">Heating</span>
                             <span class="state-icon is-unknown" id="stateCh1" title="unknown" aria-label="CH1 status"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-icon-unknown"></use></svg></span>
                         </div>
-                        <div class="state-item app-heat CH2">
+                        <div class="state-item app-heat CH2" hidden>
                             <span class="state-label">Heating 2</span>
                             <span class="state-icon is-unknown" id="stateCh2" title="unknown" aria-label="CH2 status"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-icon-unknown"></use></svg></span>
                         </div>
@@ -2057,7 +2057,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="metric-card hero-control-card CH2" id="heroRoomSetCard2">
+                <div class="metric-card hero-control-card CH2" id="heroRoomSetCard2" hidden>
                     <h5>Room setpoint 2<span class="flow-action-icon" id="heroRoomActionIcon2"></span></h5>
                     <div class="metric-inline-row">
                         <div class="metric-value"><span id="heroRoomSet2">--</span></div>
@@ -2091,7 +2091,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="metric-card hero-control-card app-heat CH2" id="heroFlowSetCard2">
+                <div class="metric-card hero-control-card app-heat CH2" id="heroFlowSetCard2" hidden>
                     <h5>Flow set 2<span class="flow-action-icon" id="heroFlowActionIcon2"></span></h5>
                     <div class="metric-inline-row">
                         <div class="metric-value"><span id="heroFlowSet2">--</span></div>
@@ -2769,7 +2769,6 @@
                         <span class="statusvalue" field="master.rxCount"></span>
                     </div>
                 </div>
-
             </div>
 
             <h3 class="roomunit-section">Roomunit</h3>
@@ -2801,10 +2800,6 @@
                     </div>
                 </div>
                 <div class="flexline">
-                    <div class="statusfield">
-                        <h5>Status value</h5>
-                        <span class="statusvalue" field="roomunit.status.value"></span>
-                    </div>
                     <div class="statusfield">
                         <h5>Heater circuit enabled</h5>
                         <span class="statusvalue" field="roomunit.status.ch_enable"></span>
@@ -2946,16 +2941,6 @@
                     </div>
                 </div>
 
-                <div class="param">
-                    <h5>suspend below min. flow</h5>
-                    <div>
-                        <label class="switch">
-                            <input type="checkbox" field="heating.$.minSuspend" />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-
                 <div class="param range" field="heating.$.roomsetpoint.temp">
                     <h5>Room set temperature (default)</h5>
                     <div class="flexline">
@@ -3084,7 +3069,7 @@
                 </div>
                 <div id="suspendparams" class="flexline">
                     <div class="param range" field="heating.$.hysteresis">
-                        <h5>hysteresis</h5>
+                        <h5>Hysteresis</h5>
                         <div class="flexline">
                             <div class="valunit">
                                 <span class="value"></span>
@@ -3094,13 +3079,66 @@
                         </div>
                     </div>
                     <div class="param range" field="heating.$.suspOffset">
-                        <h5>suspend offset</h5>
+                        <h5>Offset</h5>
                         <div class="flexline">
                             <div class="valunit">
                                 <span class="value"></span>
                                 <span class="unit">K</span>
                             </div>
                             <input type="range" min="0.0" max="10" step="0.1">
+                        </div>
+                    </div>
+                </div>
+
+                <h4>Suspend below min. flow</h4>
+                <div class="param">
+                    <h5>enable</h5>
+                    <div>
+                        <label class="switch">
+                            <input type="checkbox" hideele="minSuspendHystParams" field="heating.$.minSuspend" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="minSuspendHystParams" class="param range" field="heating.$.minSuspHyst" hidden>
+                    <h5>Hysteresis</h5>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value"></span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input type="range" min="0" max="5" step="0.1">
+                    </div>
+                </div>
+
+                <h4>Suspend on outside temperature</h4>
+                <div class="param">
+                    <h5>Outside temperature</h5>
+                    <select id="outsideSuspendType" field="heating.$.outsideSuspend.type" hideele="outsideSuspendParams" hideelevalue="1 2" intval>
+                        <option value="0">disabled</option>
+                        <option value="1">current</option>
+                        <option value="2">24 h average</option>
+                    </select>
+                </div>
+                <div id="outsideSuspendParams" class="flexline" hidden>
+                    <div class="param range" field="heating.$.outsideSuspend.hysteresis">
+                        <h5>Hysteresis</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">K</span>
+                            </div>
+                            <input type="range" min="0.1" max="2.0" step="0.1">
+                        </div>
+                    </div>
+                    <div class="param range" field="heating.$.outsideSuspend.offset">
+                        <h5>Offset</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">K</span>
+                            </div>
+                            <input type="range" min="-5" max="5" step="0.1">
                         </div>
                     </div>
                 </div>
@@ -3215,6 +3253,22 @@
                     <div class="statusfield nohide">
                         <h5>Room temperature</h5>
                         <span class="statusvalue" field="heatercircuit.$.roomtemp" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield" data-current-channel="0">
+                        <h5>Flow temperature</h5>
+                        <span class="statusvalue" field="slave.flow_t" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield CH2" data-current-channel="1" hidden>
+                        <h5>Flow temperature</h5>
+                        <span class="statusvalue" field="slave.flow_t2" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield nohide">
+                        <h5>Flow set</h5>
+                        <span class="statusvalue" field="heatercircuit.$.flowsetpoint" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Return temperature</h5>
+                        <span class="statusvalue" field="heatercircuit.$.returnTemp" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Suspended</h5>
@@ -3424,7 +3478,7 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        <div class="param CH2">
+                        <div class="param CH2" hidden>
                             <h5>Circuit 2</h5>
                             <label class="switch">
                                 <input type="checkbox" field="heating.1.chOn" />
@@ -3585,14 +3639,14 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        <div class="param CH2">
+                        <div class="param CH2" hidden>
                             <h5>CH2 on</h5>
                             <label class="switch">
                                 <input type="checkbox" field="heating.1.overrideOn" />
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        <div class="param CH2">
+                        <div class="param CH2" hidden>
                             <h5>CH2 flow</h5>
                             <label class="switch">
                                 <input type="checkbox" field="heating.1.overrideFlow" />
@@ -3718,7 +3772,7 @@
             <h3>Outside temperature</h3>
             <div class="group">
                 <h5>Source</h5>
-                <select id="selectOutsideTempSource" field="outsideTemp.source" intval>
+                <select id="selectOutsideTempSource" field="outsideTemp.source" hideele="owdiv" hideelevalue="4" intval>
                     <option value="0">MQTT</option>
                     <option value="1">OT slave</option>
                     <option value="2">Bluetooth</option>
@@ -3760,7 +3814,7 @@
                 <div class="flexline">
                     <div class="param">
                         <h5>aux 1 (DQ)</h5>
-                        <select id="aux0mode" field="aux.0.mode" intval>
+                        <select id="aux0mode" field="aux.0.mode" hideele="aux0role" hideelevalue="1" intval>
                             <option value="0">unused</option>
                             <option value="1">digital</option>
                             <option value="3">analog</option>
@@ -3779,7 +3833,7 @@
                     </div>
                     <div class="param">
                         <h5>aux. 2 (DI)</h5>
-                        <select id="aux1mode" field="aux.1.mode" intval>
+                        <select id="aux1mode" field="aux.1.mode" hideele="aux1role" hideelevalue="1" intval>
                             <option value="0">unused</option>
                             <option value="1">digital</option>
                             <option value="4">1wire</option>
@@ -3923,8 +3977,7 @@
             valueFlashMs: 640,
             tabEnterCleanupMs: 760,
             scanXhrTimeoutMs: 15000,
-            scanInitialWaitMs: 3000,
-            scanRetryMs: 2000,
+            scanPollIntervalMs: 2000,
             scanErrorToastMs: 4000,
             statusXhrTimeoutMs: 10000,
             statusPollSuccessMs: 5000,
@@ -4014,10 +4067,13 @@
                         source: 1
                     },
                     overrideFlow: false,
+                    overrideOn: false,
                     enableHyst: false,
                     hysteresis: 0.5,
                     minSuspend: false,
+                    minSuspHyst: 0.2,
                     suspOffset: 0.0,
+                    outsideSuspend: { type: 1, hysteresis: 0.2, offset: 0.0 },
                     returnLimit: {
                         source: 1,
                         deltaT: 0.0
@@ -4051,10 +4107,13 @@
                         source: 1
                     },
                     overrideFlow: false,
+                    overrideOn: false,
                     enableHyst: false,
                     hysteresis: 0.5,
                     minSuspend: false,
+                    minSuspHyst: 0.2,
                     suspOffset: 0.0,
+                    outsideSuspend: { type: 1, hysteresis: 0.2, offset: 0.0 },
                     returnLimit: {
                         source: 1,
                         deltaT: 0.0
@@ -5457,7 +5516,7 @@
             }
 
             const flow = (currentCh === 0) ? statuscache?.slave?.flow_t : statuscache?.slave?.flow_t2;
-            const outside = statuscache?.outsideTemp.current;
+            const outside = statuscache?.outsideTemp?.current;
             const mod = statuscache?.slave?.rel_mod;
             const coolingCtrl = parseNumber(statuscache?.cooling?.setpoint);
             const coolingMode = statuscache?.cooling?.ctrlMode;
@@ -5497,6 +5556,10 @@
 
             __(".app-heat").forEach((ele) => ele.hidden = (slaveApp != 0));
             __(".app-vent").forEach((ele) => ele.hidden = (slaveApp != 1));
+            const ch2Available = statuscache?.slave?.slave_config_member?.ch2_present === true;
+            __(".CH2").forEach((ele) => {
+                ele.hidden = !ch2Available || slaveApp !== 0;
+            });
         }
 
         function updateHeroStateCard() {
@@ -6269,7 +6332,7 @@
             _("#wifiScanList").hidden = true;
             _("#wifiScanList").innerHTML = "";
             addRecentEvent("WiFi scan started");
-            scanWiFi(UI_TIMINGS.scanInitialWaitMs);
+            scanWiFi();
         }
 
         // save wifi button
@@ -7751,7 +7814,7 @@
             return names[encType] ?? `enc ${encType}`;
         }
 
-        function scanWiFi(initialRetryDelayMs = UI_TIMINGS.scanRetryMs) {
+        function scanWiFi() {
             let xhr = new XMLHttpRequest();
             xhr.timeout = UI_TIMINGS.scanXhrTimeoutMs;
             xhr.onload = (e) => {
@@ -7770,8 +7833,9 @@
                 }
 
                 let scanObj = JSON.parse(e.target.responseText);
-                if (scanObj.status < 0) {
-                    setTimeout(() => scanWiFi(UI_TIMINGS.scanRetryMs), initialRetryDelayMs);
+                let scanStatus = scanObj?.status ?? -3;
+                if (scanStatus < 0) {
+                    setTimeout(scanWiFi, UI_TIMINGS.scanPollIntervalMs);
                     return;
                 }
 
@@ -7973,21 +8037,22 @@
                 }
             };
 
-            _("#selectOutsideTempSource").addEventListener("change", (ev) => {
-                _("#owdiv").hidden = (ev.target.value != 4);
-            });
-
             _("#slaveapp").onchange = (ev) => {
                 applyAppVisibility(parseInt(ev.target.value));
             }
 
-            __('input[type="checkbox"][hideele]').forEach(cb => {
-                cb.addEventListener("change", () => {
-                    const ids = cb.getAttribute("hideele").split(/\s+/);
+            __('input[type="checkbox"][hideele], select[hideele]').forEach(control => {
+                control.addEventListener("change", () => {
+                    let showTargets = control.type === "checkbox" ? control.checked : control.value !== "0";
+                    const visibleValues = control.getAttribute("hideelevalue");
+                    if (control.type !== "checkbox" && visibleValues !== null)
+                        showTargets = visibleValues.split(/\s+/).includes(control.value);
+
+                    const ids = control.getAttribute("hideele").split(/\s+/);
                     ids.forEach(id => {
                         const el = _(`#${id}`);
                         if (el)
-                            el.hidden = !cb.checked;
+                            el.hidden = !showTargets;
                     });
                 })
             });
@@ -8021,17 +8086,6 @@
                     updateOtModeVisibility(ev.target.value);
                 });
             }
-
-            function updateAuxRoleVisibility(idx, mode) {
-                const roleDiv = _(`#aux${idx}role`);
-                if (roleDiv) roleDiv.hidden = (parseInt(mode) !== 1);
-            }
-            [0, 1].forEach(idx => {
-                const sel = _(`#aux${idx}mode`);
-                if (sel) {
-                    sel.addEventListener("change", (ev) => updateAuxRoleVisibility(idx, ev.target.value));
-                }
-            });
 
             window.drawMarkerTable = function drawMarkerTable() {
                 _("#markerbody").innerHTML = "";
@@ -8293,7 +8347,6 @@
                 _("#curveMode").dispatchEvent(new Event("change"));
 
                 updateOtModeVisibility(getConfigValFromPath("otMode"));
-                [0, 1].forEach(idx => updateAuxRoleVisibility(idx, getConfigValFromPath(`aux.${idx}.mode`)));
 
                 drawMarkerTable();
                 drawScheduleTable();
@@ -8383,7 +8436,7 @@
                     drawCurve();
                 }
 
-                __('input[type="checkbox"][hideele]').forEach(ele => {
+                __('input[type="checkbox"][hideele], select[hideele]').forEach(ele => {
                     ele.dispatchEvent(new Event("change"));
                 });
 
@@ -8481,6 +8534,14 @@
                             ele.parentElement.hidden = true;
                 });
 
+                const ch2Available = statuscache?.slave?.slave_config_member?.ch2_present === true;
+                const activeFlowField = trendFieldPathFor(currentCh, "flow");
+                __("[data-current-channel]").forEach((statusField) => {
+                    const channel = Number(statusField.dataset.currentChannel);
+                    const fieldPath = _(".statusvalue[field]", statusField)?.getAttribute("field");
+                    statusField.hidden = fieldPath !== activeFlowField || (channel === 1 && !ch2Available);
+                });
+
             }
 
             function consumeStatusCache() {
@@ -8523,18 +8584,13 @@
                 consumeStatusCache._prevFlame = flameNow;
 
                 const dhwPresent = statuscache?.slave?.slave_config_member?.dhw_present;
-                applyAppVisibility();
                 if (dhwPresent === false) {
                     __(".DHW").forEach((ele) => {
                         ele.hidden = true;
                     });
                 }
 
-                if (statuscache.slave?.slave_config_member?.ch2_present === false) {
-                    __(".CH2").forEach(ele => {
-                        ele.hidden = true;
-                    });
-                }
+                applyAppVisibility();
 
                 if (statuscache.slave?.slave_config_member?.cooling_config === false) {
                     __(".cool").forEach(ele => {

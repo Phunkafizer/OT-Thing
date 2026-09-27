@@ -207,17 +207,24 @@ void OutsideTemp::writeJson(JsonVariant val, const bool raw) {
 
     JsonObject obj = val.to<JsonObject>();
     obj[F("current")] = d;
-    double minVal = d, maxVal = d, avgVal = 0;
+    double minVal = d, maxVal = d;
     for (int i=0; i<sizeof(minValues)/sizeof(minValues[0]); i++) {
         if (minValues[i] < minVal)
             minVal = minValues[i];
         if (maxValues[i] > maxVal)
             maxVal = maxValues[i];
-        avgVal += (minValues[i] + maxValues[i]) / 2.0;
     }
     obj[F("min")] = minVal;
     obj[F("max")] = maxVal;
-    obj[F("avg")] = avgVal / (sizeof(minValues)/sizeof(minValues[0]));
+    obj[F("avg")] = getAvg();
+}
+
+double OutsideTemp::getAvg() const {
+    double avgVal = 0;
+    for (int i=0; i<sizeof(minValues)/sizeof(minValues[0]); i++) {
+        avgVal += (minValues[i] + maxValues[i]) / 2.0;
+    }
+    return avgVal / (sizeof(minValues)/sizeof(minValues[0]));
 }
 
 void OutsideTemp::loop() {

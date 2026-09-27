@@ -253,14 +253,11 @@ void Portal::begin(bool configMode) {
             return;
 
         AsyncJsonResponse *response = new AsyncJsonResponse();
-        JsonDocument doc = response->getRoot();
+        JsonObject doc = response->getRoot().to<JsonObject>();
 
         int n = WiFi.scanComplete();
         doc[F("status")] = n;
 
-        Serial.print("Called scan, status: ");
-        Serial.println(n);
-        
         if (n == WIFI_SCAN_FAILED)
             netw.startScan();
 

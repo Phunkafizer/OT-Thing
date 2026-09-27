@@ -21,6 +21,7 @@ public:
     bool startWps();
     void stopWps();
     bool startScan();
+    bool hasStoredWifiCredentials();
     bool isScanning {false};
 };
 

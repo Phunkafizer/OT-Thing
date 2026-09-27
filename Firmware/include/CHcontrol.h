@@ -19,7 +19,7 @@ private:
     bool roomCompEnabled() const;
     bool getChActive() const;
     const uint8_t channel;
-    struct {
+    struct Config {
         double roomSet; // default room set point
         double flow; // default flow temperature 
         struct {
@@ -34,6 +34,16 @@ private:
             double boost; // Kb K/K
         } roomComp;
         bool minSuspend;
+        double minSuspendHyst;
+        struct OutsideSuspend {
+            enum {
+                OUTSIDE_SUSPEND_DISABLED,
+                OUTSIDE_SUSPEND_CURRENT,
+                OUTSIDE_SUSPEND_AVERAGE
+            } type;
+            double hysteresis;
+            double offset;
+        } outsideSuspend;
     } config;
     struct PiCtrl {
         HADiscovery::ClimateMode mode {HADiscovery::MODE_AUTO};

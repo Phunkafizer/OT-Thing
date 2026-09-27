@@ -28,6 +28,12 @@ void CHcontrol::setConfig(JsonObject &obj, const bool init) {
     config.roomSuspend.offset = obj[F("suspOffset")] | 0.0;
     config.roomSuspend.enabled = obj[F("enableHyst")] | false;
     config.minSuspend = obj[F("minSuspend")] | false;
+    config.minSuspendHyst = obj[F("minSuspHyst")] | 0.2;
+
+    JsonObject os = obj[F("outsideSuspend")];
+    config.outsideSuspend.type = static_cast<decltype(config.outsideSuspend.type)>(os[F("type")] | Config::OutsideSuspend::OUTSIDE_SUSPEND_CURRENT);
+    config.outsideSuspend.hysteresis = os[F("hysteresis")] | 0.2;
+    config.outsideSuspend.offset = os[F("offset")] | 0.0;
 
     flowTemp = config.flow;
     flowMin = obj[F("flowMin")] | 20;
@@ -139,26 +145,35 @@ double CHcontrol::getFlow() {
     }
 
     if (config.minSuspend) {
-        if (result > (flowMin + 0.2))
+        if (result > (flowMin + config.minSuspendHyst))
             minSuspended = false;
 
-        if (result < (flowMin - 0.2))
+        if (result < (flowMin - config.minSuspendHyst))
             minSuspended = true;
     }
     else
         minSuspended = false;
 
-    double ost;
-    if (outsideTemp.get(ost)) {
-        if (result > (ost + 0.2))
-            outSuspended = false;
-
-        if (result < (ost - 0.2))
-            outSuspended = true;
-    }
-    else
+    if (config.outsideSuspend.type == Config::OutsideSuspend::OUTSIDE_SUSPEND_DISABLED) {
         outSuspended = false;
+    }
+    else {
+        double ost;
+        bool calcOutsideSuspend = outsideTemp.get(ost);
+        if (config.outsideSuspend.type == Config::OutsideSuspend::OUTSIDE_SUSPEND_AVERAGE)
+            ost = outsideTemp.getAvg();
 
+        if (calcOutsideSuspend) {
+            if (result > (ost + config.outsideSuspend.hysteresis + config.outsideSuspend.offset))
+                outSuspended = false;
+
+            if (result < (ost - config.outsideSuspend.hysteresis + config.outsideSuspend.offset))
+                outSuspended = true;
+        }
+        else
+            outSuspended = false;
+    }
+    
     clip(result, flowMin, curve.getFlowMax());
     return round(result * 10) / 10.0;
 }

@@ -175,7 +175,13 @@ CONFIG = {
             "hysteresis": 0.5,
             "curveMode": 0,
             "minSuspend": False,
+            "minSuspHyst": 0.2,
             "suspOffset": 0.0,
+            "outsideSuspend": {
+                "type": 1,
+                "hysteresis": 0.2,
+                "offset": 0.0
+            },
             "returnLimit": {
                 "source": 1,
                 "deltaT": 0.0
@@ -198,7 +204,13 @@ CONFIG = {
             "hysteresis": 0.5,
             "curveMode": 0,
             "minSuspend": False,
+            "minSuspHyst": 0.2,
             "suspOffset": 0.0,
+            "outsideSuspend": {
+                "type": 1,
+                "hysteresis": 0.2,
+                "offset": 0.0
+            },
             "returnLimit": {
                 "source": 1,
                 "deltaT": 0.0

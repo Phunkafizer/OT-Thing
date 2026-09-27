@@ -67,16 +67,19 @@ DevConfig::DevConfig():
     authConfigured(false) {
 }
 
-void DevConfig::begin() {
+bool DevConfig::begin() {
     LittleFS.begin(true);
-    update();
+    return update();
 }
 
-void DevConfig::update() {
+bool DevConfig::update() {
     File f = getFile();
     if (f) {
         JsonDocument doc;
-        deserializeJson(doc, f);
+        if (deserializeJson(doc, f) != DeserializationError::Ok) {
+            close(f);
+            return false;
+        }
 
         if (doc[FPSTR(CFGKEY_HOSTNAME)].is<String>())
             hostname = doc[FPSTR(CFGKEY_HOSTNAME)].as<String>();
@@ -136,6 +139,8 @@ void DevConfig::update() {
 
         f.close();
     }
+    else
+        return false;
 
     authConfigured = false;
     authSalt.clear();
@@ -150,6 +155,7 @@ void DevConfig::update() {
         }
         af.close();
     }
+    return true;
 }
 
 File DevConfig::getFile() {

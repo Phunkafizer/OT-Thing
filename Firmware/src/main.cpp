@@ -32,22 +32,26 @@ volatile bool bleClientConnected = false;
 void setup() {
     statusLed.begin();
     pinMode(GPIO_CONFIG_BUTTON, INPUT);
+    pinMode(GPIO_BOOT_BUTTON, INPUT_PULLUP);
     pinMode(GPIO_BYPASS_RELAY, INPUT_PULLUP);
 
     Serial.begin();
     Serial.setTxTimeoutMs(100);
 
-    otcontrol.begin();
+    devconfig.begin();
 
+    otcontrol.begin();
     configMode = digitalRead(GPIO_CONFIG_BUTTON) == 0;
+    
+    configMode |= !netw.hasStoredWifiCredentials();
+
     if (configMode)
         statusLed.set(StatusLed::LED_CONFIG);
-    
-    devconfig.begin();
+
     netw.begin(configMode);
     
     AddressableSensor::begin();
-    BLESensor::begin();
+    //BLESensor::begin();j
     haDisc.begin();
     mqtt.begin();
     configTime(devconfig.getTimezone(), 3600, PSTR("pool.ntp.org"));

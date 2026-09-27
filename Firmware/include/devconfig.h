@@ -7,7 +7,7 @@
 
 extern class DevConfig {
 private:
-    void update();
+    bool update();
     bool writeBufFlag;
     String hostname;
     int timezone;
@@ -16,7 +16,7 @@ private:
     String authHash;
 public:
     DevConfig();
-    void begin();
+    bool begin();
     File getFile();
     void write(String &str);
     void remove();

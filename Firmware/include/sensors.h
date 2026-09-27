@@ -116,6 +116,7 @@ public:
     void setConfig(JsonObject &obj) override;
     void set(const double val, const Source src) override;
     void writeJson(JsonVariant val, const bool raw);
+    double getAvg() const;
 protected:
     void loop() override;
 private:
