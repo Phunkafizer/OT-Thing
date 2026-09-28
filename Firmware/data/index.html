@@ -244,6 +244,7 @@
             border-radius: var(--radius-md);
             background: linear-gradient(180deg, rgba(24, 28, 34, 0.9), rgba(16, 18, 22, 0.92));
             padding: var(--space-2);
+            margin-bottom: var(--space-2);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
             position: relative;
             overflow: visible;
@@ -289,9 +290,19 @@
             text-transform: uppercase;
             letter-spacing: 0.12em;
             border-left: 5px solid var(--accent);
-            margin: 1.05em 0 0.65em 0;
+            margin: 0 0 0.65em 0;
             padding: 0.3em 0 0.3em 0.6em;
             color: var(--accent-soft);
+        }
+
+        .group > h3 {
+            margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-2)) var(--space-2);
+            padding: 0.55em var(--space-2);
+            border-bottom: 1px solid rgba(216, 162, 76, 0.2);
+            border-radius: calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0 0;
+            background: rgba(216, 162, 76, 0.055);
+            font-weight: 700;
+            letter-spacing: 0.08em;
         }
 
         h4 {
@@ -2160,8 +2171,8 @@
         </div>
 
         <div class="tab" id="status">
-            <h3>System</h3>
             <div class="group">
+                <h3>System</h3>
                 <div class="flexline">
                     <div class="statusfield">
                         <h5>Firmware</h5>
@@ -2228,8 +2239,8 @@
                     <span class="statusvalue" field="owResult"></span>
                 </div>
             </div>
-            <h3>OT slave</h3>
             <div class="group hero-pin-source">
+                <h3>OT slave</h3>
                 <h4>Status</h4>
                 <div class="flexline">
                     <div class="statusfield">
@@ -2643,8 +2654,8 @@
                 </div>
             </div>
 
-            <h3>OT master</h3>
             <div class="group hero-pin-source">
+                <h3>OT master</h3>
                 <div class="flexline">
                     <div class="statusfield">
                         <h5>Heater circuit 1 enabled</h5>
@@ -2756,23 +2767,12 @@
                         <h5>Member ID</h5>
                         <span class="statusvalue" field="master.master_config_member.data.memberId"></span>
                     </div>
-                    <div class="statusfield">
-                        <h5>Smart power</h5>
-                        <span class="statusvalue" field="master.smartPower"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Frames sent</h5>
-                        <span class="statusvalue" field="master.txCount"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Frames received</h5>
-                        <span class="statusvalue" field="master.rxCount"></span>
-                    </div>
                 </div>
             </div>
 
-            <h3 class="roomunit-section">Roomunit</h3>
+            
             <div class="group hero-pin-source roomunit-section">
+                <h3 class="roomunit-section">Roomunit</h3>
                 <div class="flexline">
                     <div class="statusfield">
                         <h5>CH set temperature</h5>
@@ -2842,23 +2842,39 @@
                         <h5>Smart power implemented</h5>
                         <span class="statusvalue" field="roomunit.master_config_member.smartPowerImplemented"></span>
                     </div>
+                    <div class="statusfield">
+                        <h5>Smart power</h5>
+                        <span class="statusvalue" field="roomunit.smartPower"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Frames sent</h5>
+                        <span class="statusvalue" field="roomunit.txCount"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Frames received</h5>
+                        <span class="statusvalue" field="roomunit.rxCount"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Frames invalid</h5>
+                        <span class="statusvalue" field="roomunit.invalidCount"></span>
+                    </div>
                 </div>
             </div>
 
-            <h3>1-wire</h3>
             <div class="group">
+                <h3>1-wire</h3>
                 <div class="flexline" id="oneWireSensors">
                 </div>
             </div>
 
-            <h3>BLE</h3>
             <div id="bleSensors" class="group">
+                <h3>BLE</h3>
             </div>
         </div>
 
         <div class="tab" id="heatingcurve">
-            <h3>Dimensioning</h3>
             <div class="group">
+                <h3>Dimensioning</h3>
                 <div class="flexline">
                     <div class="param range" field="heating.$.flowMax">
                         <h5>Max. flow temperature</h5>
@@ -2907,8 +2923,8 @@
                 </div>
             </div>
 
-            <h3>Setup</h3>
             <div class="group">
+                <h3>Setup</h3>
                 <div class="flexline">
                     <div class="param range" field="heating.$.flow">
                         <h5>flow set temperature (default)</h5>
@@ -3144,8 +3160,8 @@
                 </div>
             </div>
 
-            <h3>Heating curve</h3>
             <div class="group">
+                <h3>Heating curve</h3>
                 <div class="flexline">
                     <!-- Added curve mode switch to toggle between linear and multipoint curve. -->
                     <div class="param">
@@ -3305,8 +3321,8 @@
                 </div>
             </div>
 
-            <h3>Time program</h3>
             <div class="group" id="scheduleGroup">
+                <h3>Time program</h3>
                 <div class="flexline">
                     <div class="param">
                         <h5>enable</h5>
@@ -3381,8 +3397,8 @@
         </div>
 
         <div class="tab" id="setup">
-            <h3>Network</h3>
             <div class="group" id="wifiGroup">
+                <h3>Network</h3>
                 <div class="flexline">
                     <div class="param">
                         <h5>Hostname</h5>
@@ -3442,8 +3458,8 @@
                 </div>
             </div>
 
-            <h3>OpenTherm</h3>
             <div class="group">
+                <h3>OpenTherm</h3>
                 <h4>Mode</h4>
                 <div class="param">
                     <select id="otModeSelect" field="otMode" intval>
@@ -3696,8 +3712,8 @@
                 </div>
             </div>
 
-            <h3 class="DHW">DHW timer program</h3>
             <div class="group DHW" id="dhwScheduleGroup">
+                <h3>DHW timer program</h3>
                 <div class="flexline">
                     <div class="param">
                         <h5>enable</h5>
@@ -3769,8 +3785,8 @@
                 <div id="dhwScheduleEditHint" class="empty-state" hidden>editing slot</div>
             </div>
 
-            <h3>Outside temperature</h3>
             <div class="group">
+                <h3>Outside temperature</h3>
                 <h5>Source</h5>
                 <select id="selectOutsideTempSource" field="outsideTemp.source" hideele="owdiv" hideelevalue="4" intval>
                     <option value="0">MQTT</option>
@@ -3808,8 +3824,8 @@
                 </div>
             </div>
 
-            <h3>System</h3>
             <div class="group">
+                <h3>System</h3>
                 <h4>aux inputs</h4>
                 <div class="flexline">
                     <div class="param">

@@ -921,9 +921,11 @@ void OTControl::getJson(JsonObject &obj) {
         valobj->getJson(master, true);
 
     if (enableSlave) {
-        master[F("txCount")] = slave.txCount;
-        master[F("rxCount")] = slave.rxCount;
-        master[F("invalidCount")] = slave.invalidCount;
+        JsonObject jRu = obj[FPSTR(STR_STATKEY_ROOMUNIT)].to<JsonObject>();
+
+        jRu[F("txCount")] = slave.txCount;
+        jRu[F("rxCount")] = slave.rxCount;
+        jRu[F("invalidCount")] = slave.invalidCount;
 
         String sp;
         switch (slave.hal.getSmartPowerState()) {
@@ -937,9 +939,8 @@ void OTControl::getJson(JsonObject &obj) {
             sp = F("high");
             break;
         }
-        master[F("smartPower")] = sp;
+        jRu[F("smartPower")] = sp;
 
-        JsonObject jRu = obj[FPSTR(STR_STATKEY_ROOMUNIT)].to<JsonObject>();
         for (auto *valobj: roomUnitValues)
             valobj->getJson(jRu);
     }
