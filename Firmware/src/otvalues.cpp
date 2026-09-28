@@ -213,7 +213,7 @@ OTValue::OTValue(const OpenThermMessageID id, const int interval, PGM_P haName):
         discFlag(false),
         setFlag(false),
         numSet(0),
-        lastMsgType(OpenThermMessageType::RESERVED),
+        lastMsgResult(OpenThermMessageType::RESERVED),
         haName(haName),
         entityCategory(nullptr) {
 }
@@ -286,8 +286,8 @@ bool OTValue::hasReply() const {
     return numSet > 0;
 }
 
-OpenThermMessageType OTValue::getLastMsgType() const {
-    return lastMsgType;
+OpenThermMessageType OTValue::getLastMsgResult() const {
+    return lastMsgResult;
 }
 
 bool OTValue::sendDiscovery() {
@@ -447,12 +447,13 @@ void OTValue::setValue(const OpenThermMessageType ty, const uint16_t val) {
     if (!discFlag)
         discFlag = sendDiscovery();
 
-    if (ty != OpenThermMessageType::WRITE_DATA)
-        lastMsgType = ty;
+    // only save msgresult when message contains data (read response or write request)
+    if ( (ty != OpenThermMessageType::WRITE_DATA) && (ty != OpenThermMessageType::READ) )
+        lastMsgResult = ty;
 }
 
-void OTValue::setMsgType(const OpenThermMessageType ty) {
-    lastMsgType = ty;
+void OTValue::setMsgResult(const OpenThermMessageType ty) {
+    lastMsgResult = ty;
 }
 
 uint16_t OTValue::getValue() {
@@ -474,7 +475,7 @@ void OTValue::getJson(JsonObject &obj, const bool addResult) const {
         }
 
         if (addResult) {
-            var[F("result")] = (lastMsgType == OpenThermMessageType::WRITE_ACK) || (lastMsgType == OpenThermMessageType::READ_ACK);
+            var[F("result")] = (lastMsgResult == OpenThermMessageType::WRITE_ACK) || (lastMsgResult == OpenThermMessageType::READ_ACK);
             var = var[F("data")].to<JsonVariant>();
         }
         getValue(var);   
@@ -486,7 +487,7 @@ void OTValue::getStatus(JsonObject &obj) const {
 
     stat[F("id")] = (int) id;
     stat[F("enabled")] = enabled;
-    stat[F("lastMsgType")] = (int) lastMsgType;
+    stat[F("lastMsgResult")] = (int) lastMsgResult;
     stat[F("numSet")] = numSet;
     if (isSet()) {
         stat[F("value")] = String(value, HEX);
@@ -1043,7 +1044,7 @@ bool BrandInfo::process() {
 }
 
 void BrandInfo::setValue(const OpenThermMessageType ty, const uint16_t val) {
-    lastMsgType = ty;
+    lastMsgResult = ty;
     numSet++;
 
     if (ty == OpenThermMessageType::READ_ACK) {

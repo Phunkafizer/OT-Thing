@@ -149,7 +149,7 @@ protected:
     bool discFlag;
     bool setFlag;
     uint32_t numSet;
-    OpenThermMessageType lastMsgType;
+    OpenThermMessageType lastMsgResult;
     PGM_P haName;
     PGM_P entityCategory;
 public:
@@ -158,7 +158,7 @@ public:
     virtual bool process();
     OpenThermMessageID getId() const;
     virtual void setValue(const OpenThermMessageType ty, const uint16_t val);
-    void setMsgType(const OpenThermMessageType ty);
+    void setMsgResult(const OpenThermMessageType ty);
     uint16_t getValue();
     void setStatus(const OpenThermMessageType mt);
     void getJson(JsonObject &obj, const bool addResult = false) const;
@@ -176,7 +176,7 @@ public:
     void refreshDisc();
     bool isSet() const;
     bool hasReply() const;
-    OpenThermMessageType getLastMsgType() const;
+    OpenThermMessageType getLastMsgResult() const;
     static class OTValueStatus *status; // for quick access
     static class OTValueSlaveConfigMember *slaveConfig; // for quick access
     static class OTValueVentSlaveConfigMember *ventSlaveConfig; // for quick access

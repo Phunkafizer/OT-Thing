@@ -556,7 +556,7 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
     }
     otval = OTValue::getMasterValue(id);
     if (otval)
-        otval->setMsgType(mt);
+        otval->setMsgResult(mt);
 }
 
 unsigned long OTControl::buildBrandResponse(const OpenThermMessageID id, const String &str, const uint8_t idx) {
@@ -661,7 +661,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             case Status: {
                 // respond with masterstatus from roomunit and slavestatus from boiler
                 uint16_t data = (msg & 0xFF00) | (otval->getValue() & 0x00FF);
-                resp = OpenTherm::buildResponse(otval->getLastMsgType(), id, data);
+                resp = OpenTherm::buildResponse(otval->getLastMsgResult(), id, data);
                 chcontrol[0].ovrdOn.value = (msg & (1<<OTValueMasterStatus::BIT_CH_ENABLE)) != 0;
                 chcontrol[1].ovrdOn.value = (msg & (1<<OTValueMasterStatus::BIT_CH2_ENABLE)) != 0;
                 dhwControl.setOnRU((msg & (1<<OTValueMasterStatus::BIT_DHW_ENABLE)) != 0);
@@ -678,7 +678,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             default: {
                 if (otval != nullptr) {
                     if (otval->hasReply())
-                        resp = OpenTherm::buildResponse(otval->getLastMsgType(), id, otval->getValue());
+                        resp = OpenTherm::buildResponse(otval->getLastMsgResult(), id, otval->getValue());
                 }
                 else {
                     otval = OTValue::getMasterValue(id);
