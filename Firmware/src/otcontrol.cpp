@@ -249,7 +249,7 @@ void OTControl::setOTMode(const OTMode mode) {
     digitalWrite(GPIO_STEPUP_ENABLE, enableSlave && !bypass);
 
     for (auto *valobj: slaveValues)
-        valobj->init((mode == OTMODE_MASTER) || (mode == OTMODE_LOOPBACKTEST));
+        valobj->init(isMaster());
 
     for (auto *valobj: masterValues)
         valobj->init(false);
@@ -452,9 +452,13 @@ void OTControl::loop() {
     }
 }
 
+bool OTControl::isMaster() const {
+    return (otMode == OTMODE_MASTER) || (otMode == OTMODE_LOOPBACKTEST);
+}
+
 void OTControl::sendRequest(const char source, const unsigned long msg) {
     master.sendRequest(source, msg);
-    if (otMode == OTMODE_MASTER) {
+    if (isMaster()) {
         OTValue *val = OTValue::getMasterValue(OpenTherm::getDataID(msg));
         if (val) {
             const auto mt = OpenTherm::getMessageType(msg);

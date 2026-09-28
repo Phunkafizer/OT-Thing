@@ -4874,7 +4874,7 @@
             const flowVal = parseNumber((currentCh === 0) ? statuscache?.slave?.flow_t : statuscache?.slave?.flow_t2);
             const dhwVal = parseNumber((currentCh === 0) ? statuscache?.slave?.dhw_t : statuscache?.slave?.dhw_t2);
             const returnVal = parseNumber(statuscache?.heatercircuit?.[0]?.returnTemp);
-            const flowSetVal = parseNumber(statuscache?.master?.ch_set_t?.data);
+            const flowSetVal = parseNumber(statuscache?.heatercircuit?.[0]?.flowsetpoint);
             const chActive = (currentCh === 0)
                 ? statuscache?.slave?.status?.ch_mode === true
                 : statuscache?.slave?.status?.ch2_mode === true;

@@ -45,6 +45,7 @@ private:
     void hwYield();
     unsigned long buildBrandResponse(const OpenThermMessageID id, const String &str, const uint8_t idx);
     bool sendChDiscoveries(const uint8_t ch, const bool en);
+    bool isMaster() const;
     unsigned long lastBoilerStatus;
     enum OTMode: int8_t {
         OTMODE_BYPASS = 0,
