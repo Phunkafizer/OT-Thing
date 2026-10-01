@@ -24,7 +24,7 @@ OTthing is a versatile OpenTherm gateway that connects your heating system to th
 
 * **Dual OpenTherm Modes**: Operate as both an OpenTherm master and a slave simultaneously
 * **Single-Board Compact Design**: Cost-efficient SMD-based single-board hardware with a small enclosure footprint
-* **Broad HVAC Compatibility**: Designed for OpenTherm-enabled boilers, heat pumps, ventilation, solar storage, and similar systems
+* **OpenTherm Compatibility**: Works with OpenTherm-compatible equipment that implements the functions supported by OTthing; available features vary by device
 * **USB-C Powered**: Simple and reliable power supply through a standard USB-C connector
 * **Web Dashboard**: Real-time status monitoring with system metrics
 * **Home Assistant Integration**: Native MQTT discovery and seamless HA integration
@@ -47,6 +47,9 @@ OTthing is a versatile OpenTherm gateway that connects your heating system to th
 * **Open-Source Platform**: Open hardware and firmware for custom extensions and modifications
 * **Advanced Configuration**: Room modes (off/heat/auto), flow control, heating curves, and more
 * **Detailed Logging**: Real-time log streaming to monitor system behavior
+* **Turbo Mode**: Temporarily raises the flow target by a configurable amount and duration
+* **Automatic Suspend**: Optional suspension based on outside temperature, room conditions, and minimum flow thresholds
+* **Customizable dashboard**: add metrics to dashboard
 
 ## Architecture
 
@@ -71,6 +74,8 @@ The firmware consists of several functional modules:
 * **Power**: via USB
 * **Optional**: DS18B20 1-Wire temperature sensors and auxiliary inputs
 
+OpenTherm support and available controls depend on the boiler or other equipment. Check the device documentation and OTthing schematics before installation. Disconnect equipment from mains power before wiring; have boiler wiring performed by a qualified installer where required. Connect OpenTherm through the board's designated terminals, never directly to MCU GPIO pins.
+
 ## Installation & Setup
 
 1. **Hardware Setup**:
@@ -81,7 +86,8 @@ The firmware consists of several functional modules:
 
 2. **Access the Web Interface**:
 
-   - The device creates a WiFi AP or connects to your network. The default password is "12345678"
+   - The device creates a WiFi access point for provisioning or connects to its configured network
+   - The default access point password is `12345678`; change it before deployment
    - Access the web UI at `http://<otthing-ip>/` (default: 4.3.2.1)
 
 3. **Configure**:
@@ -90,9 +96,23 @@ The firmware consists of several functional modules:
    - Configure the MQTT broker if you are using Home Assistant
    - Adjust setpoints, heating curves, and control modes
 
+### Build and Flash (Developers)
+
+Install PlatformIO, then run these commands from the `Firmware/` directory:
+
+```bash
+platformio run --environment release
+platformio run --environment release --target upload
+platformio run --environment release --target uploadfs
+```
+
+The first command builds the firmware. The next two upload the firmware and the LittleFS web assets; perform both uploads when installing a complete build. The firmware project reads access point SSID, password, and hostname from `default.ini` unless overridden by the build environment. Set a unique access point password before deploying devices.
+
 ## API Reference
 
 OTthing exposes the following REST endpoints and WebSocket connection:
+
+When web authentication is configured, protected endpoints require a valid login session. Requests without a valid session return 401; log in through the web UI before using these endpoints.
 
 ### Core Status Endpoints
 
@@ -106,7 +126,8 @@ OTthing exposes the following REST endpoints and WebSocket connection:
 ### Control Endpoints
 
 * **`GET /set?key=value`** - Update settings via query parameters
-  - Examples: `/set?chSetTemp1=50`, `/set?chMode1=heat`, `/set?flowSetTemp=45`
+  - Examples: `/set?chSetTemp1=50`, `/set?chMode1=heat`
+  - Use `/topics` to discover supported control keys. URL-encode values when they contain reserved characters.
   - Returns 200 on success, 503 if the value cannot be set
 
 * **`GET /slaverequest?id=X&rw=Y&data=HEX`** - Send a raw OpenTherm slave request
@@ -140,13 +161,28 @@ OTthing exposes the following REST endpoints and WebSocket connection:
 
 ## Testing & Development
 
-A Python mock server is included for local testing:
+A Python mock server is included for local UI and API testing. Install its dependencies and start it from the `Firmware/` directory:
 
 ```bash
+python -m pip install -r requirements.txt
 python tools/mock_otthing.py
 ```
 
-This provides a fully functional test environment without hardware, allowing UI development and API integration testing.
+The server listens on `http://127.0.0.1:8081/`. It is useful for UI development and API integration, but it does not replace testing against physical OpenTherm hardware.
+
+### MQTT Notes
+
+The device subscribes to control topics under `otthing/<device-id>/<key>/set`; `/topics` lists the supported keys. Home Assistant discovery is provided through MQTT when a broker is configured.
+
+Changes sent through the web API are also published to the corresponding MQTT `/set` topic as retained messages. A broker can replay retained commands when the device reconnects, including after a reboot. Keep this in mind for temporary controls such as Turbo mode, and clear any stale retained command from the broker when needed.
+
+### Troubleshooting
+
+* **Cannot reach the web UI**: Confirm the phone or computer is connected to the OTthing access point or the same network as the device, then check the device IP.
+* **No OpenTherm communication**: Check the board terminals, wiring polarity where applicable, boiler compatibility, and the device's status and logs.
+* **Home Assistant entities are missing**: Confirm broker connectivity and MQTT discovery settings, then review device logs and the broker's topics.
+* **A setting returns 401**: Log in through the web UI and retry the request with the browser session.
+* **A temporary action returns after reboot**: Check whether a retained MQTT `/set` command is replaying it.
 
 ## Schematics
 
@@ -162,6 +198,7 @@ https://community.home-assistant.io/t/ot-thing-an-opentherm-wifi-gateway-with-in
 When reporting issues, please supply:
 
 * Brand and model of the boiler and room unit
+* OTthing firmware version and the steps that reproduce the issue
 * Log
 * Status JSON
 * Configuration JSON

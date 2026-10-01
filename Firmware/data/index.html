@@ -164,13 +164,14 @@
         }
 
         div.nav ul {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(130px, 100%), 1fr));
             gap: 7px;
         }
 
         div.nav li {
             list-style-type: none;
+            text-align: center;
             padding: 7px 10px;
             border-radius: 8px;
             border: 1px solid rgba(216, 162, 76, 0.3);
@@ -192,6 +193,11 @@
             border-color: rgba(216, 162, 76, 0.5);
             cursor: pointer;
             transform: translateY(-1px);
+        }
+
+        div.nav li:focus-visible {
+            outline: 2px solid var(--accent-soft);
+            outline-offset: 2px;
         }
 
         div.nav li.active {
@@ -281,6 +287,10 @@
             position: relative;
         }
 
+        div.flexline > div.param:has(.switch) {
+            min-width: 7em;
+        }
+
         div.param.range {
             min-width: 100%;
         }
@@ -312,7 +322,7 @@
             letter-spacing: 0.04em;
         }
 
-        .group h4:not(:first-child) {
+        .group h4:not(:first-of-type) {
             margin-top: 14px;
             padding-top: 6px;
             border-top: 1px dashed rgba(216, 162, 76, 0.25);
@@ -496,6 +506,7 @@
         .hero-pin-target {
             cursor: pointer;
             position: relative;
+            isolation: isolate;
             border-radius: 8px;
         }
 
@@ -513,16 +524,14 @@
             opacity: 0.85;
         }
 
-        .hero-pin-target.is-pinned {
-            background: linear-gradient(165deg, rgba(216, 162, 76, 0.1), rgba(22, 25, 31, 0.56));
-        }
-
         .hero-pin-target.is-pinned::before {
             content: "";
             position: absolute;
-            inset: -2px 8px -2px -2px;
+            inset: -2px 4px -2px -4px;
+            z-index: -1;
             border: 1px dashed rgba(240, 207, 138, 0.52);
             border-radius: 10px;
+            background: linear-gradient(165deg, rgba(216, 162, 76, 0.1), rgba(22, 25, 31, 0.56));
             pointer-events: none;
         }
 
@@ -1005,7 +1014,8 @@
         }
 
         canvas {
-            width: 350px;
+            display: block;
+            width: 100%;
         }
 
         div.toolbar {
@@ -1710,9 +1720,6 @@
             div.param.range {
                 min-width: 45%; /* 2 columns for range inputs on tablets */
             }
-            canvas {
-                width: 480px;
-            }
             #mainwrapper {
                 max-width: 620px; /* Slightly wider on tablets */
             }
@@ -1882,9 +1889,6 @@
             div.param.range {
                 min-width: 30%; /* 3 columns for range inputs on tablets */
             }
-            canvas {
-                width: 680px;
-            }
             #mainwrapper {
                 max-width: 840px; /* Wider on desktops */
             }
@@ -1968,12 +1972,12 @@
         <input id="inject_status" type="file" accept=".json" style="display: none;">
         <div class="nav">
             <ul>
-                <li tab="dashboard" class="active">Dashboard</li>
-                <li tab="status">Status</li>
-                <li tab="setup">Setup</li>
-                <li tab="heatingcurve" channel="0" class="app-heat">Heating circuit 1</li>
-                <li tab="heatingcurve" channel="1" class="app-heat CH2" hidden>Heating circuit 2</li>
-                <li tab="log">Log</li>
+                <li tab="dashboard" class="active" role="button" tabindex="0">Dashboard</li>
+                <li tab="status" role="button" tabindex="0">Status</li>
+                <li tab="setup" role="button" tabindex="0">Setup</li>
+                <li tab="heatingcurve" channel="0" class="app-heat" role="button" tabindex="0">Heating circuit 1</li>
+                <li tab="heatingcurve" channel="1" class="app-heat CH2" role="button" tabindex="0" hidden>Heating circuit 2</li>
+                <li tab="log" role="button" tabindex="0">Log</li>
             </ul>
         </div>
 
@@ -2428,7 +2432,7 @@
                         <span class="statusvalue" field="slave.rel_vent" unit="%"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Average flame ratio (3 h)</h5>
+                        <h5>&Oslash; flame ratio (3 h)</h5>
                         <span class="statusvalue" field="slave.flameStats.duty" unit="%"></span>
                     </div>
                     <div class="statusfield">
@@ -2464,11 +2468,11 @@
                         <span class="statusvalue" field="slave.flameStats.lastOnTime" unit="min"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Average flametime (10 cycles)</h5>
+                        <h5>&Oslash; flametime (10 cycles)</h5>
                         <span class="statusvalue" field="slave.flameStats.onTime" unit="min"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Average pausetime (10 cycles)</h5>
+                        <h5>&Oslash; pausetime (10 cycles)</h5>
                         <span class="statusvalue" field="slave.flameStats.offTime" unit="min"></span>
                     </div>
                     <div class="statusfield">
@@ -2548,7 +2552,7 @@
                         <span class="statusvalue" field="slave.supply_fan_speed" unit="rpm"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Average burner starts (3 h)</h5>
+                        <h5>&Oslash; burner starts (3 h)</h5>
                         <span class="statusvalue" field="slave.flameStats.freq" unit="/h"></span>
                     </div>
                 </div>
@@ -2943,6 +2947,7 @@
 
             <div class="group">
                 <h3>Setup</h3>
+                <h4></h4>
                 <div class="flexline">
                     <div class="param range" field="heating.$.flow">
                         <h5>flow setpoint (default)</h5>
@@ -2973,18 +2978,20 @@
                             <input id="flowmin" type="range" class="curveparam" min="10" max="40" step="1">
                         </div>
                     </div>
-                </div>
 
-                <div class="param range" field="heating.$.roomsetpoint.temp">
-                    <h5>Room set temperature (default)</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">&deg;C</span>
+                    <div class="param range" field="heating.$.roomsetpoint.temp">
+                        <h5>Room set temperature (default)</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">&deg;C</span>
+                            </div>
+                            <input id="roomset" type="range" class="curveparam" min="17" max="23" step="0.1">
                         </div>
-                        <input id="roomset" type="range" class="curveparam" min="17" max="23" step="0.1">
                     </div>
                 </div>
+
+                
 
                 <div class="param">
                     <h5>Room setpoint source</h5>
@@ -3456,6 +3463,7 @@
         <div class="tab" id="setup">
             <div class="group" id="wifiGroup">
                 <h3>Network</h3>
+                <h4></h4>
                 <div class="flexline">
                     <div class="param">
                         <h5>Hostname</h5>
@@ -3517,129 +3525,120 @@
 
             <div class="group">
                 <h3>OpenTherm</h3>
-                <h4>Mode</h4>
-                <div class="param">
-                    <select id="otModeSelect" field="otMode" intval>
-                        <option value="0">Bypass</option>
-                        <option value="1">Master</option>
-                        <option value="2">Repeater</option>
-                        <option value="4">Test</option>
-                    </select>
-                </div>
-                <div class="param otmode-master">
-                    <h5>Enable slave interface</h5>
-                    <label class="switch">
-                        <input type="checkbox" field="enableSlave" />
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="param">
-                    <h5>Slave application</h5>
-                    <select id="slaveapp" field="slaveApp" intval>
-                        <option value="0">heat/cool</option>
-                        <option value="1">ventilation</option>
-                    </select>
+                <h4></h4>
+                <div class="flexline">
+                    <div class="param">
+                        <h5>Mode</h5>
+                        <select id="otModeSelect" field="otMode" intval>
+                            <option value="0">Bypass</option>
+                            <option value="1">Master</option>
+                            <option value="2">Repeater</option>
+                            <option value="4">Test</option>
+                        </select>
+                    </div>
+                    <div class="param otmode-master">
+                        <h5>Enable slave interface</h5>
+                        <label class="switch">
+                            <input type="checkbox" field="enableSlave" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="param">
+                        <h5>Slave application</h5>
+                        <select id="slaveapp" field="slaveApp" intval>
+                            <option value="0">heat/cool</option>
+                            <option value="1">ventilation</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="app-heat">
-                    <h4>heat/cool</h4>
-                    <div class="flexline">
-                        <div class="param">
-                            <h5>Circuit 1</h5>
-                            <label class="switch">
-                                <input type="checkbox" field="heating.0.chOn" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="param CH2" hidden>
-                            <h5>Circuit 2</h5>
-                            <label class="switch">
-                                <input type="checkbox" field="heating.1.chOn" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="param cool">
-                            <h5>Cooling</h5>
-                            <label class="switch">
-                                <input type="checkbox" field="boiler.coolOn" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="param DHW">
-                            <h5>DHW</h5>
-                            <label class="switch">
-                                <input type="checkbox" field="boiler.dhwOn" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="param">
-                            <h5>OTC</h5>
-                            <label class="switch">
-                                <input type="checkbox" field="boiler.otc" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="param">
-                            <h5>summer mode</h5>
-                            <label class="switch">
-                                <input type="checkbox" field="boiler.summerMode" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="param DHW">
-                            <h5>DHW blocking</h5>
-                            <label class="switch">
-                                <input type="checkbox" field="boiler.dhwBlocking" />
-                                <span class="slider"></span>
-                            </label>
+                <h4 class="app-heat">heat/cool</h4>
+                <div class="flexline app-heat">
+                    <div class="param">
+                        <h5>Circuit 1</h5>
+                        <label class="switch">
+                            <input type="checkbox" field="heating.0.chOn" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="param CH2" hidden>
+                        <h5>Circuit 2</h5>
+                        <label class="switch">
+                            <input type="checkbox" field="heating.1.chOn" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="param cool">
+                        <h5>Cooling</h5>
+                        <label class="switch">
+                            <input type="checkbox" field="boiler.coolOn" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="param DHW">
+                        <h5>DHW</h5>
+                        <label class="switch">
+                            <input type="checkbox" field="boiler.dhwOn" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="param">
+                        <h5>OTC</h5>
+                        <label class="switch">
+                            <input type="checkbox" field="boiler.otc" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="param">
+                        <h5>summer mode</h5>
+                        <label class="switch">
+                            <input type="checkbox" field="boiler.summerMode" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="param DHW">
+                        <h5>DHW blocking</h5>
+                        <label class="switch">
+                            <input type="checkbox" field="boiler.dhwBlocking" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="flexline app-heat">
+                    <div class="param range" field="boiler.maxModulation">
+                        <h5>Max. modulation</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">%</span>
+                            </div>
+                            <input type="range" min="0" max="100" step="1" />
                         </div>
                     </div>
-                    <div class="flexline">
-                        <div class="param range" field="boiler.maxModulation">
-                            <h5>Max. modulation</h5>
-                            <div class="flexline">
-                                <div class="valunit">
-                                    <span class="value"></span>
-                                    <span class="unit">%</span>
-                                </div>
-                                <input type="range" min="0" max="100" step="1" />
+                    <div class="param range" field="boiler.chOffTemp">
+                        <h5>CH off temp</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">&deg;C</span>
                             </div>
+                            <input type="range" min="0" max="20" step="1" />
                         </div>
-                        <div class="param range" field="boiler.chOffTemp">
-                            <h5>CH off temp</h5>
-                            <div class="flexline">
-                                <div class="valunit">
-                                    <span class="value"></span>
-                                    <span class="unit">&deg;C</span>
-                                </div>
-                                <input type="range" min="0" max="20" step="1" />
+                    </div>
+                    <div class="param DHW range" field="boiler.dhwTemperature">
+                        <h5>DHW set temperature</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">&deg;C</span>
                             </div>
-                        </div>
-                        <div class="param DHW range" field="boiler.dhwTemperature">
-                            <h5>DHW set temperature</h5>
-                            <div class="flexline">
-                                <div class="valunit">
-                                    <span class="value"></span>
-                                    <span class="unit">&deg;C</span>
-                                </div>
-                                <input type="range" min="30" max="70" step="1" />
-                            </div>
-                        </div>
-                        <div class="param range" field="otDelay">
-                            <h5>master request delay</h5>
-                            <div class="flexline">
-                                <div class="valunit">
-                                    <span class="value"></span>
-                                    <span class="unit">ms</span>
-                                </div>
-                                <input type="range" min="100" max="500" step="100" />
-                            </div>
+                            <input type="range" min="30" max="70" step="1" />
                         </div>
                     </div>
                 </div>
 
+                <h4 class="app-vent">ventilation</h4>
                 <div class="app-vent">
-                    <h4>ventilation</h4>
                     <div class="flexline">
                         <div class="param">
                             <h5>vent. enable</h5>
@@ -3681,11 +3680,34 @@
                         </div>
                     </div>
                 </div>
-                <div>
+
+                <h4 class="otmode-master">Master settings</h4>
+                <div class="flexline otmode-master">
+                    <div class="param range" field="otDelay">
+                        <h5>master request delay</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">ms</span>
+                            </div>
+                            <input type="range" min="100" max="500" step="100" />
+                        </div>
+                    </div>
                     <div class="param">
                         <h5>Member ID</h5>
                         <input field="masterMemberId" intval />
                     </div>
+                    <div class="param">
+                        <h5>no DHW set</h5>
+                        <label class="switch">
+                            <input type="checkbox" field="noDhwSet" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <h4>Miscellaneous</h4>
+                <div class="flexline">
                     <div class="param">
                         <h5>DHW control source</h5>
                         <select field="boiler.dhwCtrlSource" intval>
@@ -3694,28 +3716,17 @@
                             <option value="2">auto</option>
                         </select>
                     </div>
-                </div>
-                <div>
-                    <h4>Miscellaneous</h4>
-                    <div class="flexline">
-                        <div class="param">
-                            <h5>no DHW set</h5>
-                            <label class="switch">
-                                <input type="checkbox" field="noDhwSet" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="param">
-                            <h5>Exhaust float</h5>
-                            <label class="switch">
-                                <input type="checkbox" field="boiler.texhaustAsFloat" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
+                    <div class="param">
+                        <h5>Exhaust float</h5>
+                        <label class="switch">
+                            <input type="checkbox" field="boiler.texhaustAsFloat" />
+                            <span class="slider"></span>
+                        </label>
                     </div>
                 </div>
+
+                <h4 class="otmode-master">Master request</h4>
                 <div class="otmode-master">
-                    <h4>Requests</h4>
                     <div>
                         <select id="selRequest">
                             <option value="0000" selected>back to normal operation</option>
@@ -8083,6 +8094,12 @@
             }
 
             __("div.nav li").forEach(li => {
+                li.addEventListener("keydown", ev => {
+                    if (ev.key === "Enter" || ev.key === " ") {
+                        ev.preventDefault();
+                        li.click();
+                    }
+                });
                 li.onclick = ev => {
                     const tabName = li.getAttribute("tab");
                     const tabElement = _(`#${tabName}`);
@@ -8127,6 +8144,16 @@
                 _("div.nav li.active");
             if (initialNav)
                 initialNav.click();
+
+            const curveCanvas = _("#canvas");
+            const curveResizeObserver = new ResizeObserver(() => {
+                if (_("#heatingcurve").hidden)
+                    return;
+                const width = Math.round(curveCanvas.getBoundingClientRect().width);
+                if (width && curveCanvas.width !== width)
+                    drawCurve();
+            });
+            curveResizeObserver.observe(curveCanvas.parentElement);
 
             _("#title").onclick  = (ev) => {
                 if (window.location.protocol == "file:")
@@ -8178,6 +8205,7 @@
 
                 switch (parseInt(mode)) {
                     case 1:
+                    case 4:
                         // show elements for master mode
                         __('.otmode-master').forEach(function(ele) {
                             ele.hidden = false;
