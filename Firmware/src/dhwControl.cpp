@@ -64,13 +64,15 @@ void DHWControl::getJson(JsonObject &obj) {
  */
 bool DHWControl::setSetpoint(const double temp, const Sensor::Source src) {
     if ((ctrlSource == SOURCE_AUTO) || (ctrlSource == SOURCE_OTTHING)) {
-        lastSetpointSrc = src;
         if (temp != setpoint) {
+            lastSetpointSrc = src;
             setpoint = temp;
             setpointRUReadback = temp;
             setDhwRequest.force();
             return true;
         }
+        if (ctrlSource == SOURCE_OTTHING)
+            lastSetpointSrc = src;
     }
     return false;
 }
@@ -79,15 +81,17 @@ bool DHWControl::setSetpoint(const double temp, const Sensor::Source src) {
  * sets setpoint written from roomunit (dhw_set_t)
  */
 void DHWControl::setSetpointRU(const double temp) {
-    setpointRUReadback = temp;
-    if (temp != setpointRU) {
-        setpointRU = temp;
-        if ((ctrlSource == SOURCE_AUTO) || (ctrlSource == SOURCE_ROOMUNIT)) {
+    if ((ctrlSource == SOURCE_AUTO) || (ctrlSource == SOURCE_ROOMUNIT)) {
+        if (temp != setpointRU) {
             lastSetpointSrc = Sensor::SOURCE_OT;
             setpoint = temp;
             setDhwRequest.force();
         }
+        if (ctrlSource == SOURCE_ROOMUNIT)
+            lastSetpointSrc = Sensor::SOURCE_OT;
     }
+    setpointRU = temp;
+    setpointRUReadback = temp;
 }
 
 double DHWControl::getSetpointRU() const {

@@ -963,16 +963,9 @@ void OTControl::getJson(JsonObject &obj) {
     for (int i=0; i<NUM_HEATCIRCUITS; i++) {
         if (!OTValue::slaveConfig->hasCh(i))
             continue;
-        double d;
+
         JsonObject hc = hcarr.add<JsonObject>();
-
         chcontrol[i].getJson(hc);
-
-        if (roomSetPoint[i].get(d))
-            hc[FPSTR(STR_STATKEY_ROOMSETPOINT)] = d;
-        
-        if (roomTemp[i].get(d))
-            hc[FPSTR(STR_STATKEY_ROOMTEMP)] = d;
     }
 
     switch (slaveApp) {

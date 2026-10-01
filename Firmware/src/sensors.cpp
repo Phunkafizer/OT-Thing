@@ -44,6 +44,8 @@ void Sensor::set(const double val, const Source src, const Source lastSrc) {
         lastSetSrc = src;
         if (lastSrc != SOURCE_NA)
             lastSetSrc = lastSrc;
+        else if (lastSrc != SOURCE_NA)
+            lastSetSrc = lastSrc;
     }
 }
 
@@ -89,14 +91,15 @@ Sensor::operator bool() const {
     return setFlag;
 }
 
-Sensor* Sensor::findByOwn(const OneWireNode *own) {
+std::vector<Sensor*> Sensor::findByOwn(const OneWireNode *own) {
+    std::vector<Sensor*> result;
     Sensor *item = lastSensor;
     while (item) {
         if (item->own == own)
-            break;
+            result.push_back(item);
         item = item->prevSensor;
     }
-    return item;
+    return result;
 }
 
 void Sensor::setConfig(JsonObject &obj) {
@@ -403,8 +406,8 @@ void OneWireNode::loop() {
         while (node) {
             node->temp = round(ds.getTempC(node->adr) * 10) / 10;
             if (node->temp != DEVICE_DISCONNECTED_C) {
-                Sensor *item = Sensor::findByOwn(node);
-                if (item)
+                std::vector<Sensor*> items = Sensor::findByOwn(node);
+                for (auto item : items)
                     item->set(node->temp, Sensor::SOURCE_1WIRE);
             }
             node = static_cast<OneWireNode*>(node->next);

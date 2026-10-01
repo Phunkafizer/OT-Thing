@@ -5,6 +5,7 @@
 #include <AsyncTCP.h>
 #include <OneWire.h>
 #include <NimBLEDevice.h>
+#include <vector>
 #include "util.h"
 
 class AddressableSensor {
@@ -88,7 +89,7 @@ public:
     bool isOtSource();
     static void loopAll();
     explicit operator bool() const;
-    static Sensor* findByOwn(const OneWireNode *own);
+    static std::vector<Sensor*> findByOwn(const OneWireNode *own);
 protected:
     Source src;
     double value;

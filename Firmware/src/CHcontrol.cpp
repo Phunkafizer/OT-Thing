@@ -94,6 +94,12 @@ void CHcontrol::getJson(JsonObject &obj) {
     obj[FPSTR(STR_STATKEY_SUSPENDED)] = roomSuspended || minSuspended || outSuspended;
 
     double d;
+    if (roomSetPoint[channel].get(d))
+        obj[FPSTR(STR_STATKEY_ROOMSETPOINT)] = d;
+        
+    if (roomTemp[channel].get(d))
+        obj[FPSTR(STR_STATKEY_ROOMTEMP)] = d;
+
     if (returnTemp[channel].get(d)) {
         obj[F("returnTemp")] = d;
         obj[F("reduction")] = round(retLimit.reduction * 10) / 10.0;
@@ -240,10 +246,13 @@ void CHcontrol::setFlowTemp(const double temp, const Sensor::Source src) {
 }
 
 void CHcontrol::setRoomComp(const HADiscovery::ClimateMode mode) {
+    const bool oldEnabled = roomCompEnabled();
     roomComp.mode = mode;
-    if (!roomCompEnabled()) {
+    if (oldEnabled != roomCompEnabled()) {
         roomComp.integState = 0;
         roomComp.deltaT = 0;
+        if (!oldEnabled)
+            loopRoomComp();
     }   
 }
 
