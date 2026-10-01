@@ -363,9 +363,15 @@
             font-family: "Menlo", "Monaco", "Segoe UI", sans-serif;
         }
 
-        .statusvalue .altvalue {
+        .statusvalue .altvalue,
+        .metric-value .altvalue {
             font-size: 0.8em;
             color: var(--text-muted);
+        }
+
+        .metric-value .altvalue {
+            font-size: 0.5em;
+            font-weight: 400;
         }
 
         .statusvalue.temp-cold,
@@ -2109,6 +2115,7 @@
                                 <button class="mode-btn" id="btnFlowModeOff" type="button" onclick="setFlowMode(0, 'off')" title="set CH1 to off" aria-label="set CH1 to off"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-icon-power"></use></svg></button>
                                 <button class="mode-btn" id="btnFlowModeOn" type="button" onclick="setFlowMode(0, 'heat')" title="set CH1 to on" aria-label="set CH1 to on"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-icon-on"></use></svg></button>
                                 <button class="mode-btn" id="btnFlowModeAuto" type="button" onclick="setFlowMode(0, 'auto')" title="set CH1 to auto" aria-label="set CH1 to auto"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-icon-auto"></use></svg></button>
+                                <button class="mode-btn" type="button" onclick="openTurboDialog(0)" title="turbo CH1" aria-label="turbo CH1"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-icon-flame"></use></svg></button>
                             </div>
                         </div>
                     </div>
@@ -2126,6 +2133,7 @@
                                 <button class="mode-btn" id="btnFlowModeOff2" type="button" onclick="setFlowMode(1, 'off')" title="set CH2 to off" aria-label="set CH2 to off"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-icon-power"></use></svg></button>
                                 <button class="mode-btn" id="btnFlowModeOn2" type="button" onclick="setFlowMode(1, 'heat')" title="set CH2 to on" aria-label="set CH2 to on"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-icon-on"></use></svg></button>
                                 <button class="mode-btn" id="btnFlowModeAuto2" type="button" onclick="setFlowMode(1, 'auto')" title="set CH2 to auto" aria-label="set CH2 to auto"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-icon-auto"></use></svg></button>
+                                <button class="mode-btn" type="button" onclick="openTurboDialog(1)" title="turbo CH2" aria-label="turbo CH2"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-icon-flame"></use></svg></button>
                             </div>
                         </div>
                     </div>
@@ -3222,7 +3230,7 @@
                             </label>
                         </div>
                     </div>
-                    <div class="param curve-only">
+                    <div class="param curve-only" hidden>
                         <h5>num. of points</h5>
                         <div>
                             <select id="selnumpoints">
@@ -3233,9 +3241,9 @@
                             </select>
                         </div>
                     </div>
-                    <div class="param">
+                    <div class="param curve-only" hidden>
                         <h5> </h5>
-                        <button onclick="copyCurve()" class="curve-only">copy from simple curve</button>
+                        <button onclick="copyCurve()">copy from simple curve</button>
                     </div>
                 </div>
                 <div class="flexline">
@@ -3304,7 +3312,7 @@
                 <div class="curve">
                     <canvas id="canvas"></canvas>
                 </div>
-                <div class="curve-hint curve-only">Drag points to tune the multipoint curve.</div>
+                <div class="curve-hint curve-only" hidden>Drag points to tune the multipoint curve.</div>
 
                 <div class="flexline hero-pin-source">
                     <div class="statusfield nohide">
@@ -3974,6 +3982,39 @@
                 <button onclick="saveWifi()">save</button>
                 <button id="wifiRescanBtn" type="button" onclick="startWifiScan()">scan</button>
                 <button onclick="closeWifiSetup()">close</button>
+            </div>
+        </div>
+    </div>
+    <div id="dlgTurbo" class="modal" hidden>
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="turboTitle">Turbo</span>
+            </div>
+            <div class="auth-login-body">
+                <div class="param range">
+                    <h5>Shift</h5>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value" id="turboShiftVal">5</span>
+                            <span class="unit">&deg;C</span>
+                        </div>
+                        <input id="turboShift" type="range" min="1" max="15" step="1" value="5" oninput="_('#turboShiftVal').textContent = this.value">
+                    </div>
+                </div>
+                <div class="param range">
+                    <h5>Duration</h5>
+                    <div class="flexline">
+                        <div class="valunit">
+                            <span class="value" id="turboDurationVal">60</span>
+                            <span class="unit">min</span>
+                        </div>
+                        <input id="turboDuration" type="range" min="0" max="120" step="5" value="60" oninput="_('#turboDurationVal').textContent = this.value">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="sendTurbo()">turbo</button>
+                <button type="button" onclick="closeTurboDialog()">close</button>
             </div>
         </div>
     </div>
@@ -5565,6 +5606,20 @@
                 const flowSetField = "heatercircuit.$.flowsetpoint";
                 updateMetric(`heroFlowSet${ch === 0 ? "" : "2"}`, "", parseNumber(flowSet), "°C", `flowset${ch}`, flowSetField);
                 updateFlowModeButtons(ch, flowCtrlMode, flowAction);
+
+                const turbo = getStatusValueByPath("heatercircuit.$.turbo", ch);
+                const flowSetEl = _(`#heroFlowSet${ch === 0 ? "" : "2"}`);
+                if (flowSetEl && turbo && (typeof turbo === "object")) {
+                    const shift = parseNumber(turbo.shift);
+                    const duration = parseNumber(turbo.duration);
+                    const parts = [];
+                    if (shift != null)
+                        parts.push(`${shift > 0 ? "+" : ""}${Math.round(shift * 10) / 10} °C`);
+                    if (duration != null)
+                        parts.push(`${Math.round(duration)} min`);
+                    if (parts.length > 0)
+                        flowSetEl.append(_$("span", {className: "altvalue", textContent: ` (${parts.join(", ")})`, title: "turbo: shift, time left"}));
+                }
             }
             updateMetric("heroDhwSet", "", dhwSetTemp, "°C", "dhwSet", "master.dhw_set_t.data");
             updateDhwModeButtons(dhwMode, dhwAction);
@@ -7818,6 +7873,39 @@
             autoscroll = !!checkbox?.checked;
         }
 
+        let turboDialogCh = 0;
+
+        function openTurboDialog(ch) {
+            turboDialogCh = ch;
+            _("#turboTitle").textContent = `Turbo CH${ch + 1}`;
+            _("#turboShiftVal").textContent = _("#turboShift").value;
+            _("#turboDurationVal").textContent = _("#turboDuration").value;
+            _("#dlgTurbo").hidden = false;
+        }
+
+        function closeTurboDialog() {
+            _("#dlgTurbo").hidden = true;
+        }
+
+        function sendTurbo() {
+            const ch = turboDialogCh;
+            const shift = parseInt(_("#turboShift").value);
+            const duration = parseInt(_("#turboDuration").value);
+            fetch(`/set?turboShift${ch + 1}=${shift}&turboDuration${ch + 1}=${duration}`)
+                .then((resp) => {
+                    if (!resp.ok)
+                        throw new Error("HTTP " + resp.status);
+
+                    closeTurboDialog();
+                    requestStatusRefresh(0);
+                    flashElement(`#heroFlowSetCard${ch === 0 ? "" : "2"}`);
+                    addRecentEvent(`Turbo CH${ch + 1}: +${shift} °C, ${duration} min`);
+                })
+                .catch((err) => {
+                    showToast("Error setting turbo:\n" + err.message, "error", 5000);
+                });
+        }
+
         function closeModal() {
             _("#dlgSlaveRequest").hidden = true;
         }
@@ -8329,7 +8417,7 @@
                     ele.dispatchEvent(new Event("change"));
                 });
 
-                __(".range", root).forEach(ele => {
+                __(".range[field]", root).forEach(ele => {
                     setRangeParam(ele);
                 });
 
@@ -8365,12 +8453,12 @@
                 });
 
                 let hcfg = config.heating[currentCh] ?? {};
-                
-                if (!('points' in hcfg))
-                    copyCurve();
 
                 _("#curveMode").checked = (hcfg.curveMode ?? 0) === CURVE_MODE_MULTIPOINT;
                 _("#curveMode").dispatchEvent(new Event("change"));
+
+                if (!('points' in hcfg))
+                    copyCurve();
 
                 updateOtModeVisibility(getConfigValFromPath("otMode"));
 
@@ -8401,7 +8489,7 @@
                     });
                 });
 
-                __(".range").forEach(ele => {
+                __(".range[field]").forEach(ele => {
                     let slider = _("input[type=range]", ele);
                     let path = ele.getAttribute("field");
                     slider.addEventListener("input", (ev) => {

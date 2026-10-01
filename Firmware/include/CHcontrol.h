@@ -84,4 +84,8 @@ public:
     ChannelOverride<bool> ovrdOn;
     ChannelOverride<double> ovrdTemp;
     HADiscovery::ClimateMode mode {HADiscovery::MODE_AUTO};
+    struct Turbo {
+        double shift {10.0};
+        time_t endTime {0};
+    } turbo;
 };

@@ -268,7 +268,7 @@ void OutsideTemp::loop() {
         else {
             if (millis() > nextMillis) {
                 nextMillis = millis() + interval;
-                acli.close(true);
+                acli.close();
                 httpState = HTTP_IDLE;
             }
         }

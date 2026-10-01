@@ -45,6 +45,10 @@ public:
         TOPIC_DHWBLOCKING,
         TOPIC_COOLINGMODE,
         TOPIC_COOLINGCTRL,
+        TOPIC_TURBOSHIFT1,
+        TOPIC_TURBOSHIFT2,
+        TOPIC_TURBODURATION1,
+        TOPIC_TURBODURATION2,
         TOPIC_UNKNOWN // has to be at end of list!
     };
     enum ValueTemplateType {

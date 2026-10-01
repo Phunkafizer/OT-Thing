@@ -1111,6 +1111,14 @@ void OTControl::setCoolingMode(const bool on) {
     boilerCtrl.coolOn = on;
 }
 
+void OTControl::setTurboShift(const double shift, const uint8_t channel) {
+    chcontrol[channel].turbo.shift = shift;
+}
+
+void OTControl::setTurboDuration(const uint32_t duration, const uint8_t channel) {
+    chcontrol[channel].turbo.endTime = time(nullptr) + duration * 60;
+}
+
 void OTControl::setCoolingCtrl(const int ctrl) {
     boilerCtrl.coolingCtrl = (uint8_t) constrain(ctrl, 0, 100);
     setCoolingCtrlSetpoint.force();

@@ -109,6 +109,12 @@ void CHcontrol::getJson(JsonObject &obj) {
 
     if (lastFlowTempSrc != Sensor::SOURCE_NA)
         obj[FPSTR(STR_STATKEY_LASTSETPOINTSRC)] = (int) lastFlowTempSrc;
+
+    if (turbo.endTime > time(nullptr)) {
+        JsonObject turboObj = obj[F("turbo")].to<JsonObject>();
+        turboObj[F("shift")] = turbo.shift;
+        turboObj[F("duration")] = (uint32_t) ((turbo.endTime - time(nullptr) + 59) / 60);
+    }
 }
 
 double CHcontrol::getFlow() {
@@ -181,6 +187,10 @@ double CHcontrol::getFlow() {
         else
             outSuspended = false;
     }
+
+    time_t now = time(nullptr);
+    if (turbo.endTime > now)
+        result += turbo.shift;
     
     clip(result, flowMin, curve.getFlowMax());
     return round(result * 10) / 10.0;

@@ -42,6 +42,10 @@ static struct {
     {Mqtt::TOPIC_DHWBLOCKING, "dhwBlocking"},
     {Mqtt::TOPIC_COOLINGMODE, "coolingMode"},
     {Mqtt::TOPIC_COOLINGCTRL, "coolingCtrl"},
+    {Mqtt::TOPIC_TURBOSHIFT1, "turboShift1"},
+    {Mqtt::TOPIC_TURBOSHIFT2, "turboShift2"},
+    {Mqtt::TOPIC_TURBODURATION1, "turboDuration1"},
+    {Mqtt::TOPIC_TURBODURATION2, "turboDuration2"},
 };
 
 Mqtt mqtt;
@@ -220,6 +224,7 @@ bool Mqtt::setValue(const String &key, const String &value, const bool viaHttp) 
         }
 
     const Sensor::Source lastSrc = viaHttp ? Sensor::SOURCE_HTTP : Sensor::SOURCE_MQTT;
+    bool retain = true;
 
     switch (etop) {
     case TOPIC_UNKNOWN: {
@@ -355,12 +360,30 @@ bool Mqtt::setValue(const String &key, const String &value, const bool viaHttp) 
         otcontrol.setCoolingCtrl(value.toInt());
         break;
 
+    case TOPIC_TURBOSHIFT1:
+    case TOPIC_TURBOSHIFT2: {
+        const uint8_t ch = (uint8_t) (etop - TOPIC_TURBOSHIFT1);
+        double d = value.toFloat();
+        otcontrol.setTurboShift(d, ch);
+        retain = false;
+        break;
+    }
+
+    case TOPIC_TURBODURATION1:
+    case TOPIC_TURBODURATION2: {
+        const uint8_t ch = (uint8_t) (etop - TOPIC_TURBODURATION1);
+        uint32_t d = value.toInt();
+        otcontrol.setTurboDuration(d, ch);
+        retain = false;
+        break;
+    }
+
     default:
         return false;
     }
 
     if (viaHttp)
-        sendValue(etop, value);
+        sendValue(etop, value, retain);
 
     return true;
 }

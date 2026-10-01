@@ -138,6 +138,8 @@ public:
     void setDhwBlocking(const bool dhwBlocking);
     bool getFlame() const;
     bool getOverrideEnabled() const;
+    void setTurboShift(const double shift, const uint8_t channel);
+    void setTurboDuration(const uint32_t duration, const uint8_t channel);
 };
 
 extern OTControl otcontrol;

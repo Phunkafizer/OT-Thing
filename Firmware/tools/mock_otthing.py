@@ -388,6 +388,7 @@ state = {
                 "flowMin": 25,
                 "reduction": 0.0,
                 "returnTemp": 41.7,
+                "turbo": {"shift": 5.0, "duration": 15},
             },
             {
                 "ovrdTemp": False,
@@ -405,6 +406,7 @@ state = {
                 "flowMin": 20,
                 "reduction": 0.0,
                 "returnTemp": 41.7,
+                "turbo": {"shift": 3.0, "duration": 10},
             },
         ],
         "dhw": {
@@ -1049,6 +1051,8 @@ const FIELDS = [
         { key: "heatercircuit.0.action",       label: "Action",             type: "select", options: ["off","heating","cooling","idle"] },
         { key: "heatercircuit.0.roomAction",   label: "Room action",        type: "select", options: ["off","heating","cooling","idle"] },
         { key: "heatercircuit.0.suspended",    label: "Suspended",          type: "bool" },
+        { key: "heatercircuit.0.turbo.shift",    label: "Turbo shift (°C)",   type: "number", step: 0.5 },
+        { key: "heatercircuit.0.turbo.duration", label: "Turbo time left (min)", type: "number", step: 1 },
     ]},
     { section: "Heater circuit 2", rows: [
         { key: "heatercircuit.1.roomsetpoint", label: "Room setpoint (°C)", type: "number", step: 0.5 },
@@ -1062,6 +1066,8 @@ const FIELDS = [
         { key: "heatercircuit.1.action",       label: "Action",             type: "select", options: ["off","heating","cooling","idle"] },
         { key: "heatercircuit.1.roomAction",   label: "Room action",        type: "select", options: ["off","heating","cooling","idle"] },
         { key: "heatercircuit.1.suspended",    label: "Suspended",          type: "bool" },
+        { key: "heatercircuit.1.turbo.shift",    label: "Turbo shift (°C)",   type: "number", step: 0.5 },
+        { key: "heatercircuit.1.turbo.duration", label: "Turbo time left (min)", type: "number", step: 1 },
     ]},
 ];
 
