@@ -46,6 +46,7 @@ private:
     unsigned long buildBrandResponse(const OpenThermMessageID id, const String &str, const uint8_t idx);
     bool sendChDiscoveries(const uint8_t ch, const bool en);
     bool isMaster() const;
+    void sendResponse(const unsigned long msg, const char source = 0);
     unsigned long lastBoilerStatus;
     enum OTMode: int8_t {
         OTMODE_BYPASS = 0,
@@ -101,7 +102,7 @@ private:
         void sendRequest(const char source, const unsigned long msg);
         void resetCounters();
         void onReceive(const char source, const unsigned long msg);
-        void sendResponse(const unsigned long msg, const char source = 0);
+        void sendResponse(const char source,const unsigned long msg);
     } master, slave;
     bool enableSlave {false};
     bool bypass {false};
@@ -119,7 +120,7 @@ public:
     void sendRequest(const char source, const unsigned long msg);
     void getJson(JsonObject &obj);
     void setConfig(JsonObject &config);
-    void setChTemp(const double temp, const uint8_t channel);
+    void setChTemp(const double temp, const uint8_t channel, const Sensor::Source src);
     void setChCtrlMode(const HADiscovery::ClimateMode mode, const uint8_t channel);
     void setDhwCtrlMode(const HADiscovery::ClimateMode mode);
     void setCoolingMode(const bool on);
@@ -136,6 +137,7 @@ public:
     void setSummerMode(const bool summerMode);
     void setDhwBlocking(const bool dhwBlocking);
     bool getFlame() const;
+    bool getOverrideEnabled() const;
 };
 
 extern OTControl otcontrol;

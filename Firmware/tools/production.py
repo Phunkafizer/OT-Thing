@@ -29,6 +29,7 @@ import time
 import webbrowser
 import shutil
 import winsound
+import serial
 
 # ANSI colour output
 if sys.platform == "win32":
@@ -147,15 +148,21 @@ CONFIG = {
     "slaveApp": 0,  # heat/cool
     "otMode": 1,  # master
     "enableSlave": False,
+    "otDelay": 100,
+    "noDhwSet": False,
     "boiler": {
         "dhwOn": True,
         "dhwTemperature": 50,
+        "dhwSchedule": {"enabled": False, "entries": []},
+        "dhwCtrlSource": 2,
         "overrideDhw": False,
         "coolOn": False,
         "maxModulation": 100,
         "otc": False,
         "summerMode": False,
         "dhwBlocking": False,
+        "chOffTemp": 10,
+        "texhaustAsFloat": False,
     },
     "heating": [
         {
@@ -167,9 +174,11 @@ CONFIG = {
             "gradient": 1.0,
             "offset": 0,
             "marker": [],
+            "schedule": {"enabled": False, "entries": []},
             "roomsetpoint": {"source": 0, "temp": 21},
             "roomtemp": {"source": 1},
             "overrideFlow": False,
+            "overrideOn": False,
             "roomComp": {"enabled": False, "p": 1.0, "i": 0.5, "boost": 1.0},
             "enableHyst": False,
             "hysteresis": 0.5,
@@ -196,11 +205,13 @@ CONFIG = {
             "gradient": 1.0,
             "offset": 0,
             "marker": [],
+            "schedule": {"enabled": False, "entries": []},
             "roomsetpoint": {"source": 0, "temp": 21},
             "roomtemp": {"source": 1},
             "overrideFlow": False,
-            "roomComp": {"enabled": False, "p": 1.0, "i": 0.5, "boost": 1.0},
-            "enablyHyst": False,
+            "overrideOn": False,
+            "roomComp": {"enabled": False, "p": 1.0, "i": 0.0, "boost": 1.0},
+            "enableHyst": False,
             "hysteresis": 0.5,
             "curveMode": 0,
             "minSuspend": False,
@@ -230,7 +241,7 @@ CONFIG = {
     "timezone": 3600,
     "hostname": "otthing",
     "haPrefix": "homeassistant",
-    "aux": [{"mode": 4}, {"mode": 0}],  # DQ: 1wire, DI: not used
+    "aux": [{"mode": 4, "digitalRole": 0}, {"mode": 0, "digitalRole": 0}],  # DQ: 1wire, DI: not used
 }
 
 def get_target_port():
@@ -569,6 +580,19 @@ def prompt_wifi_interface():
             return names[int(choice) - 1]
         print("Invalid selection, try again.")
 
+def disconnect_wifi(profile="OTthing", interface=None):
+    target = f" on interface {interface}" if interface else ""
+    print(f"Disconnecting from WiFi (profile: {profile}){target}...")
+    cmd = f'netsh wlan disconnect'
+    if interface:
+        cmd += f' interface="{interface}"'
+    result = subprocess.run(["cmd", "/c", cmd], capture_output=True, text=True)
+    if result.stdout.strip():
+        print(result.stdout.strip())
+    if result.returncode != 0:
+        print(result.stderr.strip())
+        return False
+    return True
 
 def connect_to_otthing_wifi(profile="OTthing", timeout=20, retries=3, interface=None):
     def _netsh_connect():
@@ -768,19 +792,17 @@ def batch_upload(project_dir):
         except KeyboardInterrupt:
             print(f"\n\nBatch mode stopped. Programmed {upload_count} device(s), {failure_count} failure(s).")
             break
-        
+
+        disconnect_wifi(interface=wifi_interface)
         # Upload firmware
         device_info = upload_firmware(stable_port, project_dir)
         if device_info:
             upload_count += 1
 
-            # Wait for device to reconnect after booting into the application
-            winsound.Beep(800, 100)
-            time.sleep(0.1)
-            winsound.Beep(800, 100)
-            _act("\n\nPress and hold config button!")
-            wait_for_device_disconnect()
-            wait_for_stable_target_port(stable_seconds=2)
+            # resset device by toggling DTR
+            with serial.Serial(stable_port) as port:
+                time.sleep(.20)
+
             time.sleep(2)
 
             if not connect_to_otthing_wifi(interface=wifi_interface):

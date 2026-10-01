@@ -115,8 +115,8 @@ void FlameStats::Ringbuf<T1, T2>::update(const uint8_t idx) {
 
 void FlameStats::writeJson(JsonObject &obj) const {
     JsonObject fs = obj[FPSTR(STR_STATKEY_FLAMESTATS)].to<JsonObject>();
-    fs["duty"] = getDuty();
-    fs["freq"] = getFreq();
+    fs[FPSTR(STR_STATKEY_FLAMESTATS_DUTY)] = getDuty();
+    fs[FPSTR(STR_STATKEY_FLAMESTATS_FREQ)] = getFreq();
     if (onTimesInit) {
         fs[FPSTR(STR_STATKEY_FLAMESTATS_ONTIME)] = getOnTime();
         double lasttOnTime = onTimes.buf[(idxCycles + BUFSIZE_CYCLES - 1) % BUFSIZE_CYCLES];

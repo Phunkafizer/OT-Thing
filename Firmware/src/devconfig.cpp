@@ -17,8 +17,11 @@ const char CFGKEY_HOSTNAME[] PROGMEM = "hostname";
 const char CFGKEY_HAPREFIX[] PROGMEM = "haPrefix";
 const char CFGKEY_MQTT[] PROGMEM = "mqtt";
 const char CFGKEY_OUTSIDETEMP[] PROGMEM = "outsideTemp";
-const char CFGKEY_HEATING[] PROGMEM = "heating";
 const char *CFGKEY_AUX PROGMEM = "aux";
+
+PGM_P STR_CONFKEY_HYSTERESIS PROGMEM = "hysteresis";
+PGM_P STR_CONFKEY_HEATING PROGMEM = "heating";
+PGM_P STR_CONFKEY_RETURNLIMIT PROGMEM = "returnLimit";
 
 const char AUTHKEY_SALT[] PROGMEM = "salt";
 const char AUTHKEY_HASH[] PROGMEM = "hash";
@@ -122,7 +125,7 @@ bool DevConfig::update() {
         }
 
         for (int i=0; i<2; i++) {
-            JsonObject hcfg = doc[FPSTR(CFGKEY_HEATING)][i]; 
+            JsonObject hcfg = doc[FPSTR(STR_CONFKEY_HEATING)][i]; 
             
             JsonObject obj = hcfg[F("roomtemp")];
             roomTemp[i].setConfig(obj);
@@ -130,7 +133,7 @@ bool DevConfig::update() {
             obj = hcfg[F("roomsetpoint")];
             roomSetPoint[i].setConfig(obj);
 
-            obj = hcfg[F("returnLimit")];
+            obj = hcfg[FPSTR(STR_CONFKEY_RETURNLIMIT)];
             returnTemp[i].setConfig(obj);
         }
 

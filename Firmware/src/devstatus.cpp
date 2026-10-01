@@ -34,6 +34,10 @@ PGM_P STR_STATKEY_ENABLE PROGMEM = "enable";
 PGM_P STR_STATKEY_OPENBYPASS PROGMEM = "openBypass";
 PGM_P STR_STATKEY_AUTOBYPASS PROGMEM = "autoBypass";
 PGM_P STR_STATKEY_FREEVENTENABLE PROGMEM = "freeVentEnable";
+PGM_P STR_STATKEY_LASTSETPOINTSRC PROGMEM = "lastSetpointSrc";
+PGM_P STR_STATKEY_BYPASS PROGMEM = "bypass";
+PGM_P STR_STATKEY_TXCOUNT PROGMEM = "txCount";
+PGM_P STR_STATKEY_RXCOUNT PROGMEM = "rxCount";
 
 PGM_P STR_STATKEY_FLAMESTATS PROGMEM = "flameStats";
 PGM_P STR_STATKEY_FLAMESTATS_DUTY PROGMEM = "duty";
@@ -98,7 +102,7 @@ void DevStatus::unlock() {
 
     otcontrol.getJson(doc);
 
-    outsideTemp.writeJson(doc[F("outsideTemp")].to<JsonVariant>(), true);
+    outsideTemp.writeJson(doc[F("outsideTemp")].to<JsonVariant>());
 
     if (!outsideTemp.owResult.isEmpty())
         doc[F("owResult")] = outsideTemp.owResult;

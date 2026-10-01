@@ -17,6 +17,8 @@ OTValueStatus* OTValue::status = nullptr;
 OTValueSlaveConfigMember* OTValue::slaveConfig = nullptr;
 OTValueVentSlaveConfigMember* OTValue::ventSlaveConfig = nullptr;
 
+PGM_P KEY_MEMBERID PROGMEM = "memberId";
+
 static const OTItem OTITEMS[] PROGMEM = {
 //  ID of message                                   string id for MQTT                  
     {Status,                    PSTR("status")},
@@ -429,14 +431,18 @@ const char* OTValue::getName() const {
     return OTItem::getName(id);
 }
 
+bool OTValue::isDataMessage(const OpenThermMessageID id, const OpenThermMessageType ty) {
+    return (ty == OpenThermMessageType::READ_ACK) 
+        || (ty == OpenThermMessageType::WRITE_DATA)
+        || (id == OpenThermMessageID::Status)
+        || (id == OpenThermMessageID::StatusSolarStorage)
+        || (id == OpenThermMessageID::StatusVentilationHeatRecovery);
+}
+
 void OTValue::setValue(const OpenThermMessageType ty, const uint16_t val) {
     numSet++;
-
-    bool ok = (ty == OpenThermMessageType::READ_ACK) 
-            || (ty == OpenThermMessageType::WRITE_DATA)
-            || (id == OpenThermMessageID::Status);
     
-    if (ok) {
+    if (isDataMessage(id, ty)) {
         value = val;
         setFlag = true;
         enabled = true;
@@ -447,8 +453,8 @@ void OTValue::setValue(const OpenThermMessageType ty, const uint16_t val) {
     if (!discFlag)
         discFlag = sendDiscovery();
 
-    // only save msgresult when message contains data (read response or write request)
-    if ( (ty != OpenThermMessageType::WRITE_DATA) && (ty != OpenThermMessageType::READ) )
+    // only save msgresult when message is a reply
+    if ( (ty != OpenThermMessageType::WRITE) && (ty != OpenThermMessageType::READ) )
         lastMsgResult = ty;
 }
 
@@ -463,6 +469,10 @@ uint16_t OTValue::getValue() {
 void OTValue::init(const bool enabled) {
     this->enabled = enabled;
     numSet = 0;
+    setFlag = false;
+}
+
+void OTValue::unset() {
     setFlag = false;
 }
 
@@ -753,7 +763,7 @@ OTValueSlaveConfigMember::OTValueSlaveConfigMember():
 
 void OTValueSlaveConfigMember::getValue(JsonVariant var) const {
     OTValueFlags::getValue(var);
-    var[F("memberId")] = value & 0xFF;
+    var[FPSTR(KEY_MEMBERID)] = value & 0xFF;
 }
 
 bool OTValueSlaveConfigMember::hasDHW() const {
@@ -773,7 +783,7 @@ bool OTValueSlaveConfigMember::hasCooling() const {
 
 bool OTValueSlaveConfigMember::sendDiscovery() {
     haDisc.createSensor(F("slave member ID"), F("slave_member_id"));
-    if (!OTValue::sendDiscovery(F("memberId")))
+    if (!OTValue::sendDiscovery(FPSTR(KEY_MEMBERID)))
         return false;
 
     if (!OTValueFlags::sendDiscovery())
@@ -792,12 +802,12 @@ OTValueVentSlaveConfigMember::OTValueVentSlaveConfigMember():
 
 void OTValueVentSlaveConfigMember::getValue(JsonVariant var) const {
     OTValueFlags::getValue(var);
-    var[F("memberId")] = value & 0xFF;
+    var[FPSTR(KEY_MEMBERID)] = value & 0xFF;
 }
 
 bool OTValueVentSlaveConfigMember::sendDiscovery() {
     haDisc.createSensor(F("vent member ID"), F("vent_member_id"));
-    if (!OTValue::sendDiscovery(F("memberId")))
+    if (!OTValue::sendDiscovery(FPSTR(KEY_MEMBERID)))
         return false;
 
     if (!OTValueFlags::sendDiscovery())
@@ -931,7 +941,7 @@ OTValueMasterConfig::OTValueMasterConfig():
 
 void OTValueMasterConfig::getValue(JsonVariant var) const {
     OTValueFlags::getValue(var);
-    var[F("memberId")] = value & 0xFF;
+    var[FPSTR(KEY_MEMBERID)] = value & 0xFF;
 }
 
 bool OTValueMasterConfig::sendDiscovery() {

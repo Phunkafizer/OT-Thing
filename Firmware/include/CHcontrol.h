@@ -5,13 +5,15 @@
 #include "sensors.h"
 #include "HADiscLocal.h"
 #include "scheduler.h"
+#include "sensors.h"
 #include <vector>
 
 template <typename T1>
 class ChannelOverride {
 public:
     bool active; // overriding activated
-    T1 value; // overriden value
+    T1 value; // overriden value (set from roomunit)
+    bool isMasterOverride() const;
 };
 
 class CHcontrol {
@@ -61,6 +63,8 @@ private:
     bool outSuspended {false};
     HeatingCurve curve;
     Scheduler schedule;
+    double flowTemp;
+    Sensor::Source lastFlowTempSrc;
 public:
     CHcontrol(const uint8_t channel);
     void setConfig(JsonObject &obj, const bool init);
@@ -75,7 +79,7 @@ public:
     void setMode(const HADiscovery::ClimateMode mode);
     void setRoomComp(const HADiscovery::ClimateMode mode);
     bool sendDiscoveries(const bool en);
-    double flowTemp;
+    void setFlowTemp(const double temp, const Sensor::Source src);
     double flowMin;
     ChannelOverride<bool> ovrdOn;
     ChannelOverride<double> ovrdTemp;

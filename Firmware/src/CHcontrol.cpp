@@ -5,6 +5,12 @@
 #include "auxInput.h"
 #include "otvalues.h"
 
+template <typename T1>
+bool ChannelOverride<T1>::isMasterOverride() const {
+    return devconfig.masterOvrdEnabled && active;
+}
+
+
 CHcontrol::CHcontrol(const uint8_t channel):
         channel(channel) {
 }
@@ -24,7 +30,7 @@ void CHcontrol::setConfig(JsonObject &obj, const bool init) {
     config.roomComp.i = rc[F("i")] | 0.0;
     config.roomComp.boost = rc[F("boost")] | 3.0;
     
-    config.roomSuspend.hysteresis = obj[F("hysteresis")] | 0.1;
+    config.roomSuspend.hysteresis = obj[FPSTR(STR_CONFKEY_HYSTERESIS)] | 0.1;
     config.roomSuspend.offset = obj[F("suspOffset")] | 0.0;
     config.roomSuspend.enabled = obj[F("enableHyst")] | false;
     config.minSuspend = obj[F("minSuspend")] | false;
@@ -32,7 +38,7 @@ void CHcontrol::setConfig(JsonObject &obj, const bool init) {
 
     JsonObject os = obj[F("outsideSuspend")];
     config.outsideSuspend.type = static_cast<decltype(config.outsideSuspend.type)>(os[F("type")] | Config::OutsideSuspend::OUTSIDE_SUSPEND_CURRENT);
-    config.outsideSuspend.hysteresis = os[F("hysteresis")] | 0.2;
+    config.outsideSuspend.hysteresis = os[FPSTR(STR_CONFKEY_HYSTERESIS)] | 0.2;
     config.outsideSuspend.offset = os[F("offset")] | 0.0;
 
     flowTemp = config.flow;
@@ -95,21 +101,25 @@ void CHcontrol::getJson(JsonObject &obj) {
 
     // calculate roomaction
     HADiscovery::ClimateAction roomAction;
-    if (devconfig.overrideEnabled && ovrdOn.active)
+    if (devconfig.masterOvrdEnabled && ovrdOn.active)
         roomAction = ovrdOn.value ? HADiscovery::ACTION_HEATING : HADiscovery::ACTION_OFF;
     else
         roomAction = haDisc.calcAction(getChActive(), config.roomSuspend.enabled && roomSuspended);
     obj[FPSTR(STR_STATKEY_ROOMACTION)] = haDisc.getClimateActionStr(roomAction);
+
+    if (lastFlowTempSrc != Sensor::SOURCE_NA)
+        obj[FPSTR(STR_STATKEY_LASTSETPOINTSRC)] = (int) lastFlowTempSrc;
 }
 
 double CHcontrol::getFlow() {
-    double result = config.flow;
-
-    if (devconfig.overrideEnabled && ovrdTemp.active) {
+    if (devconfig.masterOvrdEnabled && ovrdTemp.active) {
+        // we are master/test, override value with roomunit value
         if (ovrdTemp.value <= 0)
             return 0;
         return ovrdTemp.value;
     }
+
+    double result = config.flow;
 
     switch (mode) {
     case HADiscovery::MODE_HEAT:
@@ -118,15 +128,13 @@ double CHcontrol::getFlow() {
 
     case HADiscovery::MODE_AUTO: {
         double rsp = config.roomSet; // default room set point
-        result = 0.0;
-        if (roomSetPoint[channel].get(rsp))
-            result = curve.getFlowTemp(rsp);
+        roomSetPoint[channel].get(rsp);
+        result = curve.getFlowTemp(rsp);
 
-        if (std::isnan(result) || result < 0.0)
-            result = 0.0;
-        else
-            if (result == 0.0)
-                result = flowTemp;
+        if (std::isnan(result)) // happens when outside > roomset
+            result = flowMin;
+        if (result <= 0.0)
+            result = flowMin;
         break;
     }
 
@@ -179,7 +187,7 @@ double CHcontrol::getFlow() {
 }
 
 bool CHcontrol::getChOn() {
-    if (devconfig.overrideEnabled && ovrdOn.active)
+    if (devconfig.masterOvrdEnabled && ovrdOn.active)
         return ovrdOn.value;
 
     if (AuxInput::hasChDisable(channel))
@@ -214,6 +222,11 @@ bool CHcontrol::getChActive() const {
 
 void CHcontrol::setMode(const HADiscovery::ClimateMode mode) {
     this->mode = mode;
+}
+
+void CHcontrol::setFlowTemp(const double temp, const Sensor::Source src) {
+    flowTemp = temp;
+    lastFlowTempSrc = src;
 }
 
 void CHcontrol::setRoomComp(const HADiscovery::ClimateMode mode) {
@@ -438,7 +451,7 @@ bool CHcontrol::sendDiscoveries(const bool en) {
     str = replace(PSTR("suspend CH #"), channel + 1, 1);
     id = replace(PSTR("ch_susp#"), channel + 1, 1);
     haDisc.createBinarySensor(str, id, "");
-    haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_HEATING_CIRCUIT, PSTR("suspended"), channel));
+    haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_SUSPENDED, channel));
     if (!haDisc.publish(suspendEnabled() && en))
         return false;
 
@@ -456,14 +469,14 @@ bool CHcontrol::sendDiscoveries(const bool en) {
     tp = topic(Mqtt::TOPIC_OVERRIDECHON1, channel);
     haDisc.createSwitch(str, tp);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_OVERRIDE_ON, channel));
-    if (!haDisc.publish(devconfig.overrideEnabled && en))
+    if (!haDisc.publish(otcontrol.getOverrideEnabled() && en))
         return false;
 
     str = replace(PSTR("override CH flow #"), channel + 1, 1);
     tp = topic(Mqtt::TOPIC_OVERRIDECHFLOW1, channel);
     haDisc.createSwitch(str, tp);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_OVERRIDE_TEMP, channel));
-    if (!haDisc.publish(devconfig.overrideEnabled && en))
+    if (!haDisc.publish(otcontrol.getOverrideEnabled() && en))
         return false;
 
     return true;

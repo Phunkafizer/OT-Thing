@@ -159,7 +159,7 @@ void Mqtt::loop() {
     if (cli.connected()) {
         if (!discFlag) {
             discFlag = true;
-            cli.publish(statusTopic.c_str(), 0, false, PSTR("online"));
+            cli.publish(statusTopic.c_str(), 0, true, PSTR("online"));
             discFlag &= otcontrol.sendDiscovery();
             discFlag &= OneWireNode::sendDiscoveryAll();
             discFlag &= BLESensor::sendDiscoveryAll();
@@ -211,13 +211,15 @@ void Mqtt::onMessage(const char *topic, String &payload) {
     }
 }
 
-bool Mqtt::setValue(const String &key, const String &value, const bool send) {
+bool Mqtt::setValue(const String &key, const String &value, const bool viaHttp) {
     enum MqttTopic etop = TOPIC_UNKNOWN;
     for (int i=0; i<sizeof(topicList) / sizeof(topicList[0]); i++)
         if (key.compareTo(FPSTR(topicList[i].str)) == 0) {
             etop = topicList[i].topic;
             break;
         }
+
+    const Sensor::Source lastSrc = viaHttp ? Sensor::SOURCE_HTTP : Sensor::SOURCE_MQTT;
 
     switch (etop) {
     case TOPIC_UNKNOWN: {
@@ -229,13 +231,13 @@ bool Mqtt::setValue(const String &key, const String &value, const bool send) {
 
     case TOPIC_OUTSIDETEMP: {
         double d = value.toFloat();
-        outsideTemp.set(d, Sensor::SOURCE_MQTT);
+        outsideTemp.set(d, Sensor::SOURCE_MQTT, lastSrc);
         break;
     }
 
     case TOPIC_DHWSETTEMP: {
         double d = value.toFloat();
-        otcontrol.dhwControl.setSetpoint(d);
+        otcontrol.dhwControl.setSetpoint(d, lastSrc);
         break;
     }   
 
@@ -249,7 +251,7 @@ bool Mqtt::setValue(const String &key, const String &value, const bool send) {
     case TOPIC_CHSETTEMP1:
     case TOPIC_CHSETTEMP2: {
         double d = value.toFloat();
-        otcontrol.setChTemp(d, (uint8_t) (etop - TOPIC_CHSETTEMP1));
+        otcontrol.setChTemp(d, (uint8_t) (etop - TOPIC_CHSETTEMP1), lastSrc);
         break;
     }
 
@@ -273,7 +275,7 @@ bool Mqtt::setValue(const String &key, const String &value, const bool send) {
     case TOPIC_ROOMTEMP2: {
         const uint8_t ch = (uint8_t) (etop - TOPIC_ROOMTEMP1);
         double d = value.toFloat();
-        roomTemp[ch].set(d, Sensor::SOURCE_MQTT);
+        roomTemp[ch].set(d, Sensor::SOURCE_MQTT, lastSrc);
         otcontrol.forceFlowCalc(ch);
         break;
     }
@@ -282,7 +284,7 @@ bool Mqtt::setValue(const String &key, const String &value, const bool send) {
     case TOPIC_ROOMSETPOINT2: {
         const uint8_t ch = (uint8_t) (etop - TOPIC_ROOMSETPOINT1);
         double d = value.toFloat();
-        roomSetPoint[ch].set(d, Sensor::SOURCE_MQTT);
+        roomSetPoint[ch].set(d, Sensor::SOURCE_MQTT, lastSrc);
         otcontrol.forceFlowCalc(ch);
         break;
     }
@@ -357,7 +359,7 @@ bool Mqtt::setValue(const String &key, const String &value, const bool send) {
         return false;
     }
 
-    if (send)
+    if (viaHttp)
         sendValue(etop, value);
 
     return true;
@@ -404,9 +406,16 @@ String Mqtt::getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t
         break;
     }
 
-    case VALTMPL_ROOMUNIT:
+    case VALTMPL_ROOMUNIT: {
         result += F(".get('roomunit') or {})");
+
+        const int pidx = ftmp.indexOf('.');
+        if (pidx > -1)
+            ftmp = ftmp.substring(0, pidx) + F(".data") + ftmp.substring(pidx);
+        else
+            ftmp += F(".data");
         break;
+    }
 
     case VALTMPL_HEATING_CIRCUIT:
         result += F(".get('heatercircuit') or [])[#]");

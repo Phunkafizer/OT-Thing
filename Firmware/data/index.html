@@ -363,6 +363,11 @@
             font-family: "Menlo", "Monaco", "Segoe UI", sans-serif;
         }
 
+        .statusvalue .altvalue {
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+
         .statusvalue.temp-cold,
         .metric-value.temp-cold,
         .metric-value .temp-cold {
@@ -928,6 +933,12 @@
         .infobox-trigger:hover + .infobox,
         .infobox-trigger:focus-visible + .infobox {
             display: block;
+        }
+
+        /* Params inside a flexline shrink to their control width; give their infobox room. */
+        div.flexline > div.param:not(.range) > div.infobox {
+            right: auto;
+            width: min(360px, 80vw);
         }
 
         ul {
@@ -2532,18 +2543,6 @@
                         <h5>Average burner starts (3 h)</h5>
                         <span class="statusvalue" field="slave.flameStats.freq" unit="/h"></span>
                     </div>
-                    <div class="statusfield">
-                        <h5>Frames sent</h5>
-                        <span class="statusvalue" field="slave.txCount"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Frames received</h5>
-                        <span class="statusvalue" field="slave.rxCount"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Frames timeouts</h5>
-                        <span class="statusvalue" field="slave.timeouts"></span>
-                    </div>
                 </div>
                 <h4>configuration</h4>
                 <div class="flexline">
@@ -2704,11 +2703,11 @@
                 </div>
                 <div class="flexline">
                     <div class="statusfield">
-                        <h5>Flow set temperature</h5>
-                        <span class="statusvalue" field="master.ch_set_t.data" unit="&deg;C"></span>
+                        <h5>Flow setpoint</h5>
+                        <span class="statusvalue" altroomunit field="master.ch_set_t.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Flow set temperature 2</h5>
+                        <h5>Flow setpoint 2</h5>
                         <span class="statusvalue" field="master.ch_set_t2.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
@@ -2767,80 +2766,91 @@
                         <h5>Member ID</h5>
                         <span class="statusvalue" field="master.master_config_member.data.memberId"></span>
                     </div>
+                    <div class="statusfield">
+                        <h5>Frames sent</h5>
+                        <span class="statusvalue" field="master.txCount"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Frames received</h5>
+                        <span class="statusvalue" field="master.rxCount"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Frames timeouts</h5>
+                        <span class="statusvalue" field="master.timeouts"></span>
+                    </div>
                 </div>
             </div>
-
             
-            <div class="group hero-pin-source roomunit-section">
-                <h3 class="roomunit-section">Roomunit</h3>
+            <div id = "roomunit" class="group hero-pin-source">
+                <h3>Roomunit</h3>
                 <div class="flexline">
                     <div class="statusfield">
                         <h5>CH set temperature</h5>
-                        <span class="statusvalue" field="roomunit.ch_set_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="roomunit.ch_set_t.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room temperature</h5>
-                        <span class="statusvalue" field="roomunit.room_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="roomunit.room_t.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room set temperature</h5>
-                        <span class="statusvalue" field="roomunit.room_set_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="roomunit.room_set_t.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>DHW set temperature</h5>
-                        <span class="statusvalue" field="roomunit.dhw_set_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="roomunit.dhw_set_t.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Outside temperature</h5>
-                        <span class="statusvalue" field="roomunit.outside_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="roomunit.outside_t.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>max. CH setpoint</h5>
-                        <span class="statusvalue" field="roomunit.max_set_t" unit="&deg;C"></span>
+                        <span class="statusvalue" field="roomunit.max_set_t.data" unit="&deg;C"></span>
                     </div>
                 </div>
                 <div class="flexline">
                     <div class="statusfield">
                         <h5>Heater circuit enabled</h5>
-                        <span class="statusvalue" field="roomunit.status.ch_enable"></span>
+                        <span class="statusvalue" field="roomunit.status.data.ch_enable"></span>
                     </div>
                     <div class="statusfield">
                         <h5>DHW enabled</h5>
-                        <span class="statusvalue" field="roomunit.status.dhw_enable"></span>
+                        <span class="statusvalue" field="roomunit.status.data.dhw_enable"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Outside temp. compensation</h5>
-                        <span class="statusvalue" field="roomunit.status.otc_active"></span>
+                        <span class="statusvalue" field="roomunit.status.data.otc_active"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Summer mode</h5>
-                        <span class="statusvalue" field="roomunit.status.summer_mode"></span>
+                        <span class="statusvalue" field="roomunit.status.data.summer_mode"></span>
                     </div>
                     <div class="statusfield">
                         <h5>DHW blocking</h5>
-                        <span class="statusvalue" field="roomunit.status.dhw_blocking"></span>
+                        <span class="statusvalue" field="roomunit.status.data.dhw_blocking"></span>
                     </div>
                 </div>
                 <div class="flexline">
                     <div class="statusfield">
                         <h5>Max. rel. modulation</h5>
-                        <span class="statusvalue" field="roomunit.max_rel_mod" unit="%"></span>
+                        <span class="statusvalue" field="roomunit.max_rel_mod.data" unit="%"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Product version</h5>
-                        <span class="statusvalue" field="roomunit.master_prod_version"></span>
+                        <span class="statusvalue" field="roomunit.master_prod_version.data"></span>
                     </div>
                     <div class="statusfield">
                         <h5>OT version</h5>
-                        <span class="statusvalue" field="roomunit.master_ot_version"></span>
+                        <span class="statusvalue" field="roomunit.master_ot_version.data"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Member ID</h5>
-                        <span class="statusvalue" field="roomunit.master_config_member.memberId"></span>
+                        <span class="statusvalue" field="roomunit.master_config_member.data.memberId"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Smart power implemented</h5>
-                        <span class="statusvalue" field="roomunit.master_config_member.smartPowerImplemented"></span>
+                        <span class="statusvalue" field="roomunit.master_config_member.data.smartPowerImplemented"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Smart power</h5>
@@ -2927,7 +2937,7 @@
                 <h3>Setup</h3>
                 <div class="flexline">
                     <div class="param range" field="heating.$.flow">
-                        <h5>flow set temperature (default)</h5>
+                        <h5>flow setpoint (default)</h5>
                         <div class="flexline">
                             <div class="valunit">
                                 <span class="value"></span>
@@ -2979,8 +2989,10 @@
                     <div class="selopt"></div>
                     <div class="selopt"></div>
                 </div>
+
+                <h4>Current room temperature</h4>
                 <div class="param">
-                    <h5>Current room temperature source</h5>
+                    <h5>source</h5>
                     <select field="heating.$.roomtemp.source" intval>
                         <option value="0">MQTT/HTTP</option>
                         <option value="1">roomunit</option>
@@ -3006,8 +3018,9 @@
                     </div>
                 </div>
 
+                <h4>Return temperature</h4>
                 <div class="param">
-                    <h5>Return temp. source</h5>
+                    <h5>source</h5>
                     <select field="heating.$.returnLimit.source" intval>
                         <option value="1">OT slave</option>
                         <option value="3">1wire</option>
@@ -3018,6 +3031,42 @@
                         <h5>address</h5>
                         <select class="oneWireAdr" field="heating.$.returnLimit.adr">
                         </select>
+                    </div>
+                </div>
+
+                <h4>Override values</h4>
+                <div class="flexline">
+                    <div class="param">
+                        <h5>CH enable</h5>
+                        <div class="infobox">
+                            When enabled in
+                            <ul>
+                                <li>master-mode: CH enable of OTthing is overriden with roomunit's value</li>
+                                <li>repeater-mode: CH enable of roomunit is overridden with OTthing's value</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <label class="switch">
+                                <input type="checkbox" field="heating.$.overrideOn" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="param">
+                        <h5>CH flow</h5>
+                        <div class="infobox">
+                            When enabled in
+                            <ul>
+                                <li>master-mode: CH flowsetpoint of OTthing is overriden with roomunit's value</li>
+                                <li>repeater-mode: CH flowsetpoint of roomunit is overridden with OTthing's value</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <label class="switch">
+                                <input type="checkbox" field="heating.$.overrideFlow" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -3263,7 +3312,7 @@
                         <span class="statusvalue" field="outsideTemp.current" unit="°C"></span>
                     </div>
                     <div class="statusfield nohide">
-                        <h5>Room set point</h5>
+                        <h5>Room setpoint</h5>
                         <span class="statusvalue" field="heatercircuit.$.roomsetpoint" unit="°C"></span>
                     </div>
                     <div class="statusfield nohide">
@@ -3279,7 +3328,7 @@
                         <span class="statusvalue" field="slave.flow_t2" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield nohide">
-                        <h5>Flow set</h5>
+                        <h5>Flow setpoint</h5>
                         <span class="statusvalue" field="heatercircuit.$.flowsetpoint" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
@@ -3636,39 +3685,6 @@
                             <option value="1">roomunit</option>
                             <option value="2">auto</option>
                         </select>
-                    </div>
-                </div>
-                <div>
-                    <h4>override values</h4>
-                    <div class="flexline">
-                        <div class="param">
-                            <h5>CH1 on</h5>
-                            <label class="switch">
-                                <input type="checkbox" field="heating.0.overrideOn" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="param">
-                            <h5>CH1 flow</h5>
-                            <label class="switch">
-                                <input type="checkbox" field="heating.0.overrideFlow" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="param CH2" hidden>
-                            <h5>CH2 on</h5>
-                            <label class="switch">
-                                <input type="checkbox" field="heating.1.overrideOn" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="param CH2" hidden>
-                            <h5>CH2 flow</h5>
-                            <label class="switch">
-                                <input type="checkbox" field="heating.1.overrideFlow" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
                     </div>
                 </div>
                 <div>
@@ -5715,7 +5731,7 @@
             __(".statusvalue").forEach((ele) => {
                 clearValueColorClasses(ele);
                 const unit = ele.getAttribute("unit") || "";
-                const raw = ele.textContent.replace(/[^0-9.+-]/g, "");
+                const raw = (ele.firstChild?.textContent ?? "").replace(/[^0-9.+-]/g, "");
                 const val = parseNumber(raw);
                 if (val == null)
                     return;
@@ -8446,10 +8462,6 @@
                     drawCurve();
                 }
 
-                __('input[type="checkbox"][hideele], select[hideele]').forEach(ele => {
-                    ele.dispatchEvent(new Event("change"));
-                });
-
                 __(".curveparam").forEach(ele => {
                     ele.addEventListener("input", (ev) => {
                         drawCurve();
@@ -8459,6 +8471,11 @@
                 // Enable drag & drop for curve points
                 initCurveDrag();
                 updateUi();
+
+                // Must run after updateUi(): select change handlers write the control value back to config.
+                __('input[type="checkbox"][hideele], select[hideele]').forEach(ele => {
+                    ele.dispatchEvent(new Event("change"));
+                });
             }
 
             function updateStatusValues(root) {
@@ -8502,6 +8519,15 @@
                             ele.textContent += ' ' + ele.getAttribute('unit');
                             valueSignature = ele.textContent;
                         }
+
+                        if (ele.hasAttribute('altroomunit') && (val !== null) && (val !== undefined)) {
+                            const altPath = fieldPath.replace(/^master\./, "roomunit.");
+                            const altVal = getStatusValueByPath(altPath, currentCh);
+                            if ((altVal !== null) && (altVal !== undefined) && (typeof altVal !== "boolean") && (altVal !== val)) {
+                                ele.append(_$("span", {className: "altvalue", textContent: ` (${altVal})`, title: "roomunit value"}));
+                                valueSignature += `|${altVal}`;
+                            }
+                        }
                     }
                     catch (ex) {
                         val = null;
@@ -8510,7 +8536,7 @@
 
                     flashMetricValueOnChange(ele, valueSignature);
 
-                    if (fieldPath.startsWith("master.")) {
+                    if (fieldPath.startsWith("master.") || fieldPath.startsWith("roomunit.")) {
                         try {
                             let dataIdx = fieldPath.indexOf(".data.");
                             if ((dataIdx < 0) && fieldPath.endsWith(".data"))
@@ -8608,9 +8634,7 @@
                     });
                 }
 
-                __(".roomunit-section").forEach(ele => {
-                    ele.hidden = (statuscache.roomunit == null);
-                });
+                _("#roomunit").hidden = (statuscache.roomunit == null);
 
                 updateStatusValues();
                 updateHeroStateCard();

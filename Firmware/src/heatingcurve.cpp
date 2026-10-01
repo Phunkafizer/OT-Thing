@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <math.h>
 #include "sensors.h"
+#include "devconfig.h"
 
 void HeatingCurve::setConfig(JsonObject &hpObj) {
     flowMax = hpObj[F("flowMax")] | 40;
@@ -9,7 +10,7 @@ void HeatingCurve::setConfig(JsonObject &hpObj) {
     gradient = hpObj[F("gradient")] | 1.0;
     offset = hpObj[F("offset")] | 0.0;
 
-    JsonObject jrl = hpObj[F("returnLimit")];
+    JsonObject jrl = hpObj[FPSTR(STR_CONFKEY_RETURNLIMIT)];
     retLimit.deltaT = jrl[F("deltaT")] | 0.0;
 
     // Use ArduinoJson default operator to ensure a valid curveMode when missing.

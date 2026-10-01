@@ -1,6 +1,7 @@
 #include "sensors.h"
 #include <DallasTemperature.h>
 #include "HADiscLocal.h"
+#include "devstatus.h"
 
 Sensor roomTemp[2] = {
     Sensor(0.2),
@@ -34,12 +35,15 @@ Sensor::Sensor(const double alpha):
     lastSensor = this;
 }
 
-void Sensor::set(const double val, const Source src) {
+void Sensor::set(const double val, const Source src, const Source lastSrc) {
     if ((src == this->src) || (src == SOURCE_NA)) {
         value = val;
         if ((!setFlag) || (alpha == 1.0))
             smoothed = val;
         setFlag = true;
+        lastSetSrc = src;
+        if (lastSrc != SOURCE_NA)
+            lastSetSrc = lastSrc;
     }
 }
 
@@ -67,6 +71,18 @@ bool Sensor::get(double &val, const bool raw) {
     }
     
     return setFlag;
+}
+
+void Sensor::writeJson(JsonVariant val) {
+    double d;
+    if (!get(d))
+        val.set(nullptr);
+    else {
+        JsonObject obj = val.to<JsonObject>();
+        obj[F("current")] = round(smoothed * 10) / 10;
+        obj[F("raw")] = round(value * 10) / 10;
+        obj[STR_STATKEY_LASTSETPOINTSRC] = lastSetSrc;
+    }
 }
 
 Sensor::operator bool() const {
@@ -134,15 +150,15 @@ AutoSensor::AutoSensor():
     memset(values, 0, sizeof(values));
 }
 
-void AutoSensor::set(const double val, const Source src) {
+void AutoSensor::set(const double val, const Source src, const Source lastSrc) {
     if ((this->src == SOURCE_AUTO) && (src != SOURCE_NA)) {
         if (val != values[src]) {
-            Sensor::set(val, SOURCE_AUTO);
+            Sensor::set(val, SOURCE_AUTO, lastSrc);
             values[src] = val;
         }
     }
     else
-        Sensor::set(val, src);
+        Sensor::set(val, src, lastSrc);
 }
 
 OutsideTemp::OutsideTemp():
@@ -175,8 +191,8 @@ void OutsideTemp::setConfig(JsonObject &obj) {
     nextMillis = 0;
 }
 
-void OutsideTemp::set(const double val, const Source src) {
-    Sensor::set(val, src);
+void OutsideTemp::set(const double val, const Source src, const Source lastSrc) {
+    Sensor::set(val, src, lastSrc);
 
     struct tm timeinfo;
     if (!getLocalTime(&timeinfo, 0))
@@ -198,16 +214,13 @@ void OutsideTemp::set(const double val, const Source src) {
         maxValues[currentHour] = val;
 }
 
-void OutsideTemp::writeJson(JsonVariant val, const bool raw) {
-    double d;
-    if (!get(d, raw)) {
-        val.set(nullptr);
+void OutsideTemp::writeJson(JsonVariant val) {
+    Sensor::writeJson(val);
+    if (!setFlag)
         return;
-    }
 
-    JsonObject obj = val.to<JsonObject>();
-    obj[F("current")] = d;
-    double minVal = d, maxVal = d;
+    JsonObject obj = val.as<JsonObject>();
+    double minVal = value, maxVal = value;
     for (int i=0; i<sizeof(minValues)/sizeof(minValues[0]); i++) {
         if (minValues[i] < minVal)
             minVal = minValues[i];

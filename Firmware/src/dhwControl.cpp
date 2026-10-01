@@ -6,7 +6,7 @@
 void DHWControl::loop() {
     double tmp;
     if (schedule.getSetpoint(tmp)) {
-        if (setSetpoint(tmp))
+        if (setSetpoint(tmp, Sensor::SOURCE_SCHED))
             mqtt.sendValue(Mqtt::TOPIC_DHWSETTEMP, String(setpoint, 0));
     }
 }
@@ -54,14 +54,18 @@ void DHWControl::getJson(JsonObject &obj) {
 
     const HADiscovery::ClimateAction action = haDisc.calcAction(getDhwActive(), getOn());
     obj[FPSTR(STR_STATKEY_ACTION)] = haDisc.getClimateActionStr(action);
+
+    if (lastSetpointSrc != Sensor::SOURCE_NA)
+        obj[FPSTR(STR_STATKEY_LASTSETPOINTSRC)] = (int) lastSetpointSrc;
 }
 
 /**
- * sets setpoint changed from HTTP, MQTT or timer
+ * sets setpoint changed from HTTP, MQTT or scheduler
  */
-bool DHWControl::setSetpoint(const double temp) {
-    if (temp != setpoint) {
-        if ((ctrlSource == SOURCE_AUTO) || (ctrlSource == SOURCE_OTTHING)) {
+bool DHWControl::setSetpoint(const double temp, const Sensor::Source src) {
+    if ((ctrlSource == SOURCE_AUTO) || (ctrlSource == SOURCE_OTTHING)) {
+        lastSetpointSrc = src;
+        if (temp != setpoint) {
             setpoint = temp;
             setpointRUReadback = temp;
             setDhwRequest.force();
@@ -79,6 +83,7 @@ void DHWControl::setSetpointRU(const double temp) {
     if (temp != setpointRU) {
         setpointRU = temp;
         if ((ctrlSource == SOURCE_AUTO) || (ctrlSource == SOURCE_ROOMUNIT)) {
+            lastSetpointSrc = Sensor::SOURCE_OT;
             setpoint = temp;
             setDhwRequest.force();
         }
@@ -92,7 +97,7 @@ double DHWControl::getSetpointRU() const {
 bool DHWControl::sendDiscoveries(const bool en) {
     haDisc.createClima(F("DHW"), Mqtt::getTopicString(Mqtt::TOPIC_DHWSETTEMP), mqtt.getCmdTopic(Mqtt::TOPIC_DHWSETTEMP));
     haDisc.setMinMaxTemp(5, 65, 1);
-    haDisc.setCurrentTemperatureTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_SLAVE, PSTR("dhw_t")));
+    haDisc.setCurrentTemperatureTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_SLAVE, getOTname(OpenThermMessageID::Tdhw)));
     haDisc.setInitial(45);
     haDisc.setModeCommandTopic(mqtt.getCmdTopic(Mqtt::TOPIC_DHWMODE));
     haDisc.setTemperatureStateTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_DHW, STR_STATKEY_SETPOINT));

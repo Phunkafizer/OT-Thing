@@ -45,7 +45,6 @@ public:
     static void writeJsonAll(JsonObject &status);
     static BLESensor* find(const uint8_t *adr);
     static bool sendDiscoveryAll();
-
 };
 
 class OneWireNode: public AddressableSensor {
@@ -68,6 +67,8 @@ public:
 class Sensor {
 public:
     enum Source: int8_t {
+        SOURCE_SCHED = -3,
+        SOURCE_HTTP = -2,
         SOURCE_NA = -1,
         SOURCE_MQTT = 0,
         SOURCE_OT = 1,
@@ -76,10 +77,12 @@ public:
         SOURCE_OPENWEATHER = 4,
         SOURCE_AUTO = 5 // has to be last item in this list!
     };
+    Source lastSetSrc {SOURCE_NA};
     OneWireNode *own; // points to a OneWireNode if configured
     Sensor(const double alpha);
-    virtual void set(const double val, const Source src);
+    virtual void set(const double val, const Source src, const Source lastSrc = SOURCE_NA);
     bool get(double &val, const bool raw = false);
+    virtual void writeJson(JsonVariant val);
     virtual void setConfig(JsonObject &obj);
     bool isMqttSource();
     bool isOtSource();
@@ -104,7 +107,7 @@ private:
 class AutoSensor: public Sensor {
 public:
     AutoSensor();
-    void set(const double val, const Source src) override;
+    void set(const double val, const Source src, const Source lastSrc = SOURCE_NA) override;
 private:
     double values[SOURCE_AUTO + 1];
 };
@@ -114,8 +117,8 @@ public:
     String owResult;
     OutsideTemp();
     void setConfig(JsonObject &obj) override;
-    void set(const double val, const Source src) override;
-    void writeJson(JsonVariant val, const bool raw);
+    void set(const double val, const Source src, const Source lastSrc = SOURCE_NA) override;
+    void writeJson(JsonVariant val) override;
     double getAvg() const;
 protected:
     void loop() override;

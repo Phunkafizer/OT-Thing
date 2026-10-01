@@ -27,9 +27,13 @@ public:
     bool clearUiCredentials();
     String getHostname() const;
     int getTimezone() const;
-    bool overrideEnabled; // set if otMode is master and slave is enabled
+    bool masterOvrdEnabled; // set if otMode is master/test and slave is enabled
 } devconfig;
 
 extern const char CFG_FILENAME[] PROGMEM;
+
+extern PGM_P STR_CONFKEY_HYSTERESIS PROGMEM;
+extern PGM_P STR_CONFKEY_HEATING PROGMEM;
+extern PGM_P STR_CONFKEY_RETURNLIMIT PROGMEM;
 
 #endif

@@ -164,6 +164,7 @@ public:
     void getJson(JsonObject &obj, const bool addResult = false) const;
     void getStatus(JsonObject &obj) const;
     virtual void init(const bool enabled);
+    void unset();
     void setTimeout();
     static OTValue* getSlaveValue(const OpenThermMessageID id);
     static OTValue* getMasterValue(const OpenThermMessageID id);
@@ -171,7 +172,6 @@ public:
     bool isSlaveValue() const;
     bool isMasterValue() const;
     bool isRoomunitValue() const;
-
     static void setTexhaustAsFloat(bool asFloat);
     void refreshDisc();
     bool isSet() const;
@@ -180,6 +180,7 @@ public:
     static class OTValueStatus *status; // for quick access
     static class OTValueSlaveConfigMember *slaveConfig; // for quick access
     static class OTValueVentSlaveConfigMember *ventSlaveConfig; // for quick access
+    static bool isDataMessage(const OpenThermMessageID id, const OpenThermMessageType ty);
 };
 
 class OTValueu16: public OTValue {

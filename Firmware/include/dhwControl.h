@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include "scheduler.h"
 #include "masterrequests.h"
+#include "sensors.h"
 
 class DHWControl {
 private:
@@ -17,6 +18,7 @@ private:
         SOURCE_ROOMUNIT = 1,
         SOURCE_AUTO = 2
     } ctrlSource {SOURCE_AUTO};
+    Sensor::Source lastSetpointSrc {Sensor::SOURCE_NA};
 public:
     OTWRSetDhw setDhwRequest;
     void loop();
@@ -26,7 +28,7 @@ public:
     void setOnRU(const bool on);
     double getTemp();
     void getJson(JsonObject &obj);
-    bool setSetpoint(const double temp);
+    bool setSetpoint(const double temp, const Sensor::Source src);
     void setSetpointRU(const double temp);
     double getSetpointRU() const;
     bool sendDiscoveries(const bool en);
