@@ -30,6 +30,7 @@ SESSION_TTL_SEC = 30 * 60
 MOCK_CONFIG_MODE = os.getenv("OTTHING_MOCK_CONFIG_MODE", "0") == "1"
 
 scan_state = {"polls": 0}
+mock_control = {"status_enabled": True}
 
 state = {
     "config": {
@@ -523,6 +524,9 @@ def get_index() -> FileResponse:
 
 @app.get("/status")
 def get_status(request: Request) -> JSONResponse:
+    if not mock_control["status_enabled"]:
+        return JSONResponse({"detail": "device offline"}, status_code=503)
+
     denied = require_auth(request)
     if denied:
         return denied
@@ -860,6 +864,8 @@ _ADMIN_HTML = """<!DOCTYPE html>
   #reload-btn:hover { background: #444; color: #fff; }
   .load-btn { background: #1a2a3a; color: #4fc3f7; border: 1px solid #334; padding: 5px 14px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.82em; margin-bottom: 16px; margin-right: 8px; }
   .load-btn:hover { background: #0d1b2a; color: #fff; }
+        .mock-control { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; padding: 10px; border: 1px solid #754040; border-radius: 8px; background: #291c25; color: #f2b8b8; font-size: 0.84em; }
+        .mock-control input { width: 18px; height: 18px; accent-color: #ef5350; }
     .quick-set { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px; padding: 10px; border: 1px solid #334; border-radius: 8px; background: #1a1a2a; }
     .quick-set input[type=text], .quick-set input[type=number], .quick-set select { background: #0d1b2a; color: #eee; border: 1px solid #334; border-radius: 4px; padding: 5px 8px; font-family: inherit; font-size: 0.82em; }
     .quick-set input[type=checkbox].value-input { width: 18px; height: 18px; min-width: 18px; accent-color: #4fc3f7; }
@@ -899,6 +905,10 @@ _ADMIN_HTML = """<!DOCTYPE html>
 <input type="file" id="file-status" accept=".json,application/json" style="display:none" onchange="loadJsonFile(this,'status')">
 <button class="load-btn" onclick="document.getElementById('file-config').click()">📂 Load config JSON</button>
 <input type="file" id="file-config" accept=".json,application/json" style="display:none" onchange="loadJsonFile(this,'config')">
+<label class="mock-control" for="statusEndpointDisabled">
+    <input id="statusEndpointDisabled" type="checkbox" onchange="setStatusEndpointDisabled(this.checked)">
+    Disable /status endpoint (simulate device offline)
+</label>
 <div class="quick-set">
     <input id="customPath" class="path-input" list="statusPathList" type="text" placeholder="status path, e.g. slave.status.flame">
     <datalist id="statusPathList"></datalist>
@@ -1398,6 +1408,22 @@ async function sendValue(key, value) {
   } catch(e) { showToast(e.message, true); }
 }
 
+async function setStatusEndpointDisabled(disabled) {
+    try {
+        const r = await fetch('/admin/control', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({statusEnabled: !disabled})
+        });
+        if (!r.ok)
+            throw new Error('Error ' + r.status);
+        showToast(disabled ? '/status disabled' : '/status enabled');
+    } catch (err) {
+        document.getElementById('statusEndpointDisabled').checked = !disabled;
+        showToast(err.message, true);
+    }
+}
+
 function collectLeafPaths(obj, prefix = '') {
     const paths = [];
     if (obj === null || obj === undefined)
@@ -1615,7 +1641,11 @@ function buildUI(status) {
 }
 
 async function reload() {
-  const r = await fetch('/status');
+    const r = await fetch('/status');
+        if (!r.ok) {
+                showToast('/status unavailable (' + r.status + ')', true);
+                return;
+        }
     const status = await r.json();
     applyStatus(status);
     updatePathSuggestions(status);
@@ -1634,8 +1664,7 @@ async function loadJsonFile(input, target) {
   if (r.ok) {
     showToast(`Loaded ${target} from ${file.name}`);
         if (target === 'status') {
-            const s = await fetch('/status');
-            buildUI(await s.json());
+            buildUI(data);
         } else {
             const c = await fetch('/config');
             latestConfig = await c.json();
@@ -1669,12 +1698,14 @@ async function loadJsonFile(input, target) {
 
         initJsonInspectorControls();
 
-    const [statusResp, configResp] = await Promise.all([
-            fetch('/status'),
+        const [controlResp, configResp] = await Promise.all([
+            fetch('/admin/control'),
             fetch('/config'),
     ]);
+        const control = await controlResp.json();
+        document.getElementById('statusEndpointDisabled').checked = !control.statusEnabled;
     latestConfig = await configResp.json();
-    buildUI(await statusResp.json());
+        buildUI(control.status);
 })();
 </script>
 </body>
@@ -1690,6 +1721,25 @@ def get_admin() -> HTMLResponse:
 async def post_admin_status(request: Request) -> PlainTextResponse:
     state["status"] = await request.json()
     return PlainTextResponse("ok")
+
+
+@app.get("/admin/control")
+def get_admin_control() -> JSONResponse:
+    return JSONResponse({
+        "statusEnabled": mock_control["status_enabled"],
+        "status": state["status"],
+    })
+
+
+@app.post("/admin/control")
+async def post_admin_control(request: Request) -> JSONResponse:
+    control = await request.json()
+    status_enabled = control.get("statusEnabled") if isinstance(control, dict) else None
+    if not isinstance(status_enabled, bool):
+        return JSONResponse({"detail": "statusEnabled must be boolean"}, status_code=400)
+
+    mock_control["status_enabled"] = status_enabled
+    return JSONResponse({"statusEnabled": status_enabled})
 
 
 @app.post("/admin/state")
