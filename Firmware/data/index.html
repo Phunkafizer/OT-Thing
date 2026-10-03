@@ -6234,10 +6234,9 @@
 
         function drawCurve() {
             let canvas = document.getElementById(`canvas`);
-            const axes = getCurveAxes();
-            const origin = axes.origin;
-            const xaxis = axes.xaxis;
-            const yaxis = axes.yaxis;
+            const width = canvas.clientWidth;
+            if (!width)
+                return;
             // Keep a local handle to heating config for mode-aware curve drawing.
             const hcfg = config.heating?.[currentCh] ?? {};
             const flowmax = hcfg.flowMax;
@@ -6245,14 +6244,17 @@
             const minSusp = hcfg.minSuspend;
             const roomset = roomsetpoint[currentCh];
             const ostsEnabled = (hcfg.outsideSuspend?.type === 1 || hcfg.outsideSuspend?.type === 2);
+            const fmg = Math.ceil(flowmax / 10) * 10 + 5; // flowmax for graph
+
+            canvas.width = width;
+            canvas.height = 20 + (fmg - 20) * canvas.width / 100;
+            const axes = getCurveAxes();
+            const origin = axes.origin;
+            const xaxis = axes.xaxis;
+            const yaxis = axes.yaxis;
             const otStart = Math.min(roomset, xaxis.min);
             const ostsThresh = ostsEnabled ? (roomset + hcfg.outsideSuspend?.offset) : xaxis.min;
             let ostCutoff = ostsThresh;
-            const fmg = Math.ceil(flowmax / 10) * 10 + 5; // flowmax for graph
-            //let p;
-
-            canvas.width = parseInt(getComputedStyle(canvas).width);
-            canvas.height = 20 + (fmg - 20) * canvas.width / 100;
             var ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -6361,7 +6363,6 @@
                 if (ft < fmin)
                     utf = true;
 
-                    // statuscache.outsideTemp?.current
                 if ((otStart > ostsThresh) && ostsEnabled)
                     ostf = true;
                     
@@ -6404,7 +6405,7 @@
                             ctx.moveTo(p.x, p.y);
                     }
 
-                    if ((ft >= fmin) && utf) {
+                    if ((ft > fmin) && utf) {
                         utf = false;
 
                         if (!ostf) {
@@ -6414,7 +6415,7 @@
                         }
                     }
 
-                    if ((ot <= ostsThresh) && ostf) {
+                    if ((ot < ostsThresh) && ostf) {
                         ostf = false;
                         if (!utf)
                             beginUnsuspendedCurve();
@@ -6538,35 +6539,30 @@
                 drawMarkerPoint(getPoint(m.ot, m.ft), '#3f8');
             });
 
-            // draw current flow temp
-            let flow = (currentCh == 0) ? statuscache.slave?.flow_t : statuscache.slave?.flow_t2;
-            if (flow !== undefined && flow !== null) {
-                let pf = getPoint(xaxis.min, flow);
-                let flame = statuscache.slave?.status?.flame;
-                ctx.strokeStyle = "#fa0";
-                ctx.fillStyle = ctx.strokeStyle;
+            function drawIndicator(point, col, filled) {
+                ctx.strokeStyle = col;
+                ctx.fillStyle = col;
+                ctx.lineWidth = 1;
                 ctx.beginPath();
-                ctx.moveTo(pf.x , pf.y);
-                ctx.lineTo(pf.x + 9, pf.y + 4);
-                ctx.lineTo(pf.x + 9, pf.y - 4);
+                ctx.moveTo(point.x , point.y);
+                ctx.lineTo(point.x + 11, point.y + 5);
+                ctx.lineTo(point.x + 11, point.y - 5);
                 ctx.closePath();
-                if (flame === true)
+                if (filled === true)
                     ctx.fill();
                 else
                     ctx.stroke();
             }
 
+            // draw current flow temp
+            let flow = (currentCh == 0) ? statuscache.slave?.flow_t : statuscache.slave?.flow_t2;
+            if (flow !== undefined && flow !== null) {
+                drawIndicator(getPoint(xaxis.min, flow), "#fa0", statuscache.slave?.status?.flame);
+            }
+
             let ret = statuscache.heatercircuit?.[currentCh]?.returnTemp;
             if (ret !== undefined && ret !== null) {
-                ctx.strokeStyle = "#58f";
-                ctx.fillStyle = ctx.strokeStyle;
-                ctx.beginPath();
-                let p = getPoint(xaxis.min, ret);
-                ctx.moveTo(p.x , p.y);
-                ctx.lineTo(p.x + 9, p.y + 4);
-                ctx.lineTo(p.x + 9, p.y - 4);
-                ctx.closePath();
-                ctx.fill();
+                drawIndicator(getPoint(xaxis.min, ret), "#58f", true);
             }
         }
 
@@ -8300,6 +8296,9 @@
                             updateStatusValues(_("#heatingcurve"));
                         }
                     }
+
+                    if (tabName === "heatingcurve")
+                        drawCurve();
 
                     saveUiState({
                         activeTab: tabName,
