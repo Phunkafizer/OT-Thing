@@ -278,7 +278,6 @@
 
         div.flexline {
             display: flex;
-            margin-bottom: 0.55em;
             flex-wrap: wrap;
             row-gap: 4px;
         }
@@ -909,6 +908,24 @@
             background: rgba(160, 160, 180, 0.16);
             border-color: rgba(160, 160, 180, 0.4);
             color: #d8d8e0;
+        }
+
+        .suspension-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+            max-width: 240px;
+        }
+
+        .suspension-grid .state-label {
+            white-space: nowrap;
+        }
+
+        .suspension-grid .state-icon.is-suspended {
+            background: rgba(214, 79, 79, 0.16);
+            border-color: rgba(214, 79, 79, 0.58);
+            color: #ffc1c1;
         }
 
         .curve-hint {
@@ -3038,8 +3055,6 @@
                     </div>
                 </div>
 
-                
-
                 <div class="param">
                     <h5>Room setpoint source</h5>
                     <select field="heating.$.roomsetpoint.source" intval>
@@ -3047,52 +3062,56 @@
                         <option value="1">roomunit</option>
                         <option value="5">auto</option>
                     </select>
-                    <div class="selopt"></div>
-                    <div class="selopt"></div>
-                    <div class="selopt"></div>
                 </div>
 
                 <h4>Current room temperature</h4>
-                <div class="param">
-                    <h5>source</h5>
-                    <select field="heating.$.roomtemp.source" intval>
-                        <option value="0">MQTT/HTTP</option>
-                        <option value="1">roomunit</option>
-                        <option value="2">Bluetooth</option>
-                        <option value="3">1wire</option>
-                    </select>
-                    <div class="selopt">
-                        <h5>Topic</h5>
-                        <div class="statusfield statusvalue">
-                            <span class="mqttbasetopic"></span><span>/roomTemp1/set</span>
-                        </div>
-                    </div>
-                    <div class="selopt">
-                    </div>
-                    <div class="selopt">
-                        <h5>address</h5>
-                        <input field="heating.$.roomtemp.adr"/>
-                    </div>
-                    <div class="selopt">
-                        <h5>address</h5>
-                        <select class="oneWireAdr" field="heating.$.roomtemp.adr">
+                <div class="flexline">
+                    <div class="param">
+                        <h5>source</h5>
+                        <select field="heating.$.roomtemp.source" id-options="rtsource-options" intval>
+                            <option value="0">MQTT/HTTP</option>
+                            <option value="1">roomunit</option>
+                            <option value="2">Bluetooth</option>
+                            <option value="3">1wire</option>
                         </select>
+                    </div>
+                    <div id="rtsource-options">
+                        <div>
+                            <h5>Topic</h5>
+                            <div class="statusfield statusvalue">
+                                <span class="mqttbasetopic"></span><span>/roomTemp1/set</span>
+                            </div>
+                        </div>
+                        <div class="params"></div>
+                        <div class="params">
+                            <h5>address</h5>
+                            <input field="heating.$.roomtemp.adr"/>
+                        </div>
+                        <div class="params">
+                            <h5>address</h5>
+                            <select class="oneWireAdr" field="heating.$.roomtemp.adr">
+                            </select>
+                        </div>
                     </div>
                 </div>
 
                 <h4>Return temperature</h4>
-                <div class="param">
-                    <h5>source</h5>
-                    <select field="heating.$.returnLimit.source" intval>
-                        <option value="1">OT slave</option>
-                        <option value="3">1wire</option>
-                    </select>
-                    <div class="selopt">
-                    </div>
-                    <div class="selopt">
-                        <h5>address</h5>
-                        <select class="oneWireAdr" field="heating.$.returnLimit.adr">
+                <div class="flexline">
+                    <div class="param">
+                        <h5>source</h5>
+                        <select field="heating.$.returnLimit.source" id-options="retsource-options" intval>
+                            <option value="1">OT slave</option>
+                            <option value="3">1wire</option>
                         </select>
+                    </div>
+
+                    <div id="retsource-options">
+                        <div></div>
+                        <div class="param">
+                            <h5>address</h5>
+                            <select class="oneWireAdr" field="heating.$.returnLimit.adr">
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -3176,96 +3195,121 @@
                 </div>
 
                 <h4>Suspend on room setpoint</h4>
-                <div class="param">
-                    <h5>enable</h5>
-                    <div class="infobox">
-                        When enabled, the heating circuit will be suspended (turned off) when the measured room temperature reaches or exceeds the setpoint + offset.<br>
-                        <ul>
-                            <li>Prevents unnecessary heating when the room is already warm enough.</li>
-                            <li>Uses a hysteresis and offset to avoid rapid toggling.</li>
-                            <li>Not recommended for condensing boilers or heating pumps.</li>
-                        </ul>
-                        <b>Tip:</b> Adjust the hysteresis and suspend offset below to fine-tune when heating resumes after suspension.
-                    </div>
-                    <div>
-                        <label class="switch">
-                            <input type="checkbox" hideele="suspendparams" field="heating.$.enableHyst" />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-                <div id="suspendparams" class="flexline">
-                    <div class="param range" field="heating.$.hysteresis">
-                        <h5>Hysteresis</h5>
-                        <div class="flexline">
-                            <div class="valunit">
-                                <span class="value"></span>
-                                <span class="unit">K</span>
-                            </div>
-                            <input type="range" min="0.1" max="2" step="0.1">
+                <div class="flexline">
+                    <div class="param">
+                        <h5>enable</h5>
+                        <div class="infobox">
+                            When enabled, the heating circuit will be suspended (turned off) when the measured room temperature reaches or exceeds the <span class="h5-hint">roomsetpoint</span> + <span class="h5-hint">offset</span>.<br>
+                            <ul>
+                                <li>Prevents unnecessary heating when the room is already warm enough.</li>
+                                <li>Uses a hysteresis and offset to avoid rapid toggling.</li>
+                                <li>Not recommended for condensing boilers or heating pumps.</li>
+                            </ul>
+                            <b>Tip:</b> Adjust the hysteresis and suspend offset below to fine-tune when heating resumes after suspension.
+                        </div>
+                        <div>
+                            <label class="switch">
+                                <input type="checkbox" hideele="suspendparams" field="heating.$.enableHyst" />
+                                <span class="slider"></span>
+                            </label>
                         </div>
                     </div>
-                    <div class="param range" field="heating.$.suspOffset">
-                        <h5>Offset</h5>
-                        <div class="flexline">
-                            <div class="valunit">
-                                <span class="value"></span>
-                                <span class="unit">K</span>
+                    <div id="suspendparams" class="flexline">
+                        <div class="param range" field="heating.$.hysteresis">
+                            <h5>Hysteresis</h5>
+                            <div class="flexline">
+                                <div class="valunit">
+                                    <span class="value"></span>
+                                    <span class="unit">K</span>
+                                </div>
+                                <input type="range" min="0.1" max="2" step="0.1">
                             </div>
-                            <input type="range" min="0.0" max="10" step="0.1">
+                        </div>
+                        <div class="param range" field="heating.$.suspOffset">
+                            <h5>Offset</h5>
+                            <div class="flexline">
+                                <div class="valunit">
+                                    <span class="value"></span>
+                                    <span class="unit">K</span>
+                                </div>
+                                <input type="range" min="0.0" max="10" step="0.1">
+                            </div>
                         </div>
                     </div>
                 </div>
-
+                
                 <h4>Suspend below min. flow</h4>
-                <div class="param">
-                    <h5>enable</h5>
-                    <div>
-                        <label class="switch">
-                            <input type="checkbox" hideele="minSuspendHystParams" field="heating.$.minSuspend" />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-                <div id="minSuspendHystParams" class="param range" field="heating.$.minSuspHyst" hidden>
-                    <h5>Hysteresis</h5>
-                    <div class="flexline">
-                        <div class="valunit">
-                            <span class="value"></span>
-                            <span class="unit">&deg;C</span>
+                <div class="flexline">
+                    <div class="param">
+                        <h5>enable</h5>
+                        <div class="infobox">
+                            When enabled, the heating circuit will be suspended (turned off) when the flowsetpoint falls below the <span class="h5-hint">min. flow temperature</span> + <span class="h5-hint">offset</span>.<br>
+                            <ul>
+                                <li>Prevents unnecessary heating when requested heat too low.</li>
+                                <li>Uses a hysteresis to avoid rapid toggling.</li>
+                            </ul>
+                            <b>Tip:</b> Adjust the hysteresis below to fine-tune when heating resumes after suspension.
                         </div>
-                        <input type="range" min="0" max="5" step="0.1">
+                        <div>
+                            <label class="switch">
+                                <input type="checkbox" class="curveparam" hideele="minSuspendHystParams" field="heating.$.minSuspend" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
-                </div>
-
-                <h4>Suspend on outside temperature</h4>
-                <div class="param">
-                    <h5>Outside temperature</h5>
-                    <select id="outsideSuspendType" field="heating.$.outsideSuspend.type" hideele="outsideSuspendParams" hideelevalue="1 2" intval>
-                        <option value="0">disabled</option>
-                        <option value="1">current</option>
-                        <option value="2">24 h average</option>
-                    </select>
-                </div>
-                <div id="outsideSuspendParams" class="flexline" hidden>
-                    <div class="param range" field="heating.$.outsideSuspend.hysteresis">
+                    <div id="minSuspendHystParams" class="param range" field="heating.$.minSuspHyst" hidden>
                         <h5>Hysteresis</h5>
                         <div class="flexline">
                             <div class="valunit">
                                 <span class="value"></span>
-                                <span class="unit">K</span>
+                                <span class="unit">&deg;C</span>
                             </div>
-                            <input type="range" min="0.1" max="2.0" step="0.1">
+                            <input type="range" min="0" max="5" step="0.1">
                         </div>
                     </div>
-                    <div class="param range" field="heating.$.outsideSuspend.offset">
-                        <h5>Offset</h5>
-                        <div class="flexline">
-                            <div class="valunit">
-                                <span class="value"></span>
-                                <span class="unit">K</span>
+                    
+                </div>
+                
+                <h4>Suspend on outside temperature</h4>
+                <div class="flexline">
+                    <div class="param">
+                        <h5>Outside temperature</h5>
+                        <div class="infobox">
+                            When enabled, the heating circuit will be suspended (turned off) when the outside temperature exceeds the <span class="h5-hint">roomsetpoint</span> + <span class="h5-hint">offset</span>.<br>
+                            <ul>
+                                <li>Prevents unnecessary heating when the outside temperature is high enough.</li>
+                                <li>Uses a hysteresis and offset to avoid rapid toggling.</li>
+                            </ul>
+                            <b>Tip:</b> Adjust the hysteresis and suspend offset below to fine-tune when heating resumes after suspension.
+                        </div>
+                        <div>
+                            <select id="outsideSuspendType" class="curveparam" field="heating.$.outsideSuspend.type" hideele="outsideSuspendParams" hideelevalue="1 2" intval>
+                                <option value="0">disabled</option>
+                                <option value="1">current</option>
+                                <option value="2">24 h average</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="outsideSuspendParams" class="flexline" hidden>
+                        <div class="param range" field="heating.$.outsideSuspend.hysteresis">
+                            <h5>Hysteresis</h5>
+                            <div class="flexline">
+                                <div class="valunit">
+                                    <span class="value"></span>
+                                    <span class="unit">K</span>
+                                </div>
+                                <input type="range" min="0.1" max="2.0" step="0.1">
                             </div>
-                            <input type="range" min="-5" max="5" step="0.1">
+                        </div>
+                        <div class="param range" field="heating.$.outsideSuspend.offset">
+                            <h5>Offset</h5>
+                            <div class="flexline">
+                                <div class="valunit">
+                                    <span class="value"></span>
+                                    <span class="unit">K</span>
+                                </div>
+                                <input type="range" class="curveparam" min="-5" max="5" step="0.5">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -3345,7 +3389,7 @@
                     <div class="param range" field="heating.$.returnLimit.deltaT">
                         <h5>Returnlimit &Delta;T</h5>
                         <div class="infobox">
-                            If the actual system temperature is above the return heatingcurve, a PI controller throttles the flow temperature.
+                            If the actual return temperature is above the return heatingcurve, a PI controller throttles the flow temperature.
                             <ul>
                                 <li>0 K: disabled</li>
                                 <li>Higher value: stronger return-temperature limiting</li>
@@ -3398,16 +3442,30 @@
                         <span class="statusvalue" field="heatercircuit.$.returnTemp" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Suspended</h5>
-                        <span class="statusvalue" field="heatercircuit.$.suspended"></span>
-                    </div>
-                    <div class="statusfield">
                         <h5>room comp. integrator</h5>
                         <span class="statusvalue" field="heatercircuit.$.roomcompInteg" unit="K"></span>
                     </div>
                     <div class="statusfield">
                         <h5>ret. limit reduction</h5>
                         <span class="statusvalue" field="heatercircuit.$.reduction" unit="K"></span>
+                    </div>
+                    <div class="statusfield nohide">
+                        <h5>Heating suspension</h5>
+                        <span class="statusvalue nohide" field="heatercircuit.$.suspended" data-suspension="summary" hidden>Unknown</span>
+                        <div class="suspension-grid">
+                            <div class="state-item">
+                                <span class="statusvalue state-icon is-unknown nohide" field="heatercircuit.$.suspItems.room" data-suspension="reason" data-suspension-label="Room temperature" role="img" title="Room-temperature control: unknown" aria-label="Room-temperature control: unknown"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-icon-unknown"></use></svg></span>
+                                <span class="state-label">Room</span>
+                            </div>
+                            <div class="state-item">
+                                <span class="statusvalue state-icon is-unknown nohide" field="heatercircuit.$.suspItems.minFlow" data-suspension="reason" data-suspension-label="Minimum flow" role="img" title="Minimum flow temperature: unknown" aria-label="Minimum flow temperature: unknown"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-icon-unknown"></use></svg></span>
+                                <span class="state-label">Min. flow</span>
+                            </div>
+                            <div class="state-item">
+                                <span class="statusvalue state-icon is-unknown nohide" field="heatercircuit.$.suspItems.outside" data-suspension="reason" data-suspension-label="Outside temperature" role="img" title="Outside temperature: unknown" aria-label="Outside temperature: unknown"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-icon-unknown"></use></svg></span>
+                                <span class="state-label">Outside</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -3541,6 +3599,14 @@
                         <input field="mqtt.port" intval/>
                     </div>
                     <div class="param">
+                        <h5>Username</h5>
+                        <input field="mqtt.user"/>
+                    </div>
+                    <div class="param">
+                        <h5>Password</h5>
+                        <input type="password" field="mqtt.pass"/>
+                    </div>
+                    <div class="param">
                         <h5>Keep alive</h5>
                         <input field="mqtt.keepAlive" intval value="15"/>
                     </div>
@@ -3556,16 +3622,6 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
-                    </div>
-                </div>
-                <div class="flexline">
-                    <div class="param">
-                        <h5>Username</h5>
-                        <input field="mqtt.user"/>
-                    </div>
-                    <div class="param">
-                        <h5>Password</h5>
-                        <input type="password" field="mqtt.pass"/>
                     </div>
                 </div>
             </div>
@@ -3869,40 +3925,54 @@
 
             <div class="group">
                 <h3>Outside temperature</h3>
-                <h5>Source</h5>
-                <select id="selectOutsideTempSource" field="outsideTemp.source" hideele="owdiv" hideelevalue="4" intval>
-                    <option value="0">MQTT</option>
-                    <option value="1">OT slave</option>
-                    <option value="2">Bluetooth</option>
-                    <option value="3">1wire</option>
-                    <option value="4">OpenWeather</option>
-                </select>
-                <div class="selopt">
-                    <h5>Topic</h5>
-                    <div class="statusfield statusvalue">
-                        <span class="mqttbasetopic"></span><span>/outsideTemp/set</span>
+                <div class="flexline">
+                    <div class="param">
+                        <h5>Source</h5>
+                        <select id="selectOutsideTempSource" field="outsideTemp.source" hideele="owdiv" hideelevalue="4" id-options="ostsource-options" intval>
+                            <option value="0">MQTT</option>
+                            <option value="1">OT slave</option>
+                            <option value="2">Bluetooth</option>
+                            <option value="3">1wire</option>
+                            <option value="4">OpenWeather</option>
+                        </select>
                     </div>
-                </div>
-                <div class="selopt">
-                </div>
-                <div class="selopt">
-                    <h5>Address</h5>
-                    <input field="outsideTemp.adr"/>
-                </div>
-                <div class="selopt">
-                    <h5>address</h5>
-                    <select class="oneWireAdr" field="outsideTemp.adr">
-                    </select>
-                </div>
-                <div class="selopt">
-                    <h5>API key</h5>
-                    <input type="password" field="outsideTemp.apikey"/>
-                    <h5>latitude</h5>
-                    <input field="outsideTemp.lat" floatval />
-                    <h5>longitude</h5>
-                    <input field="outsideTemp.lon" floatval />
-                    <h5>interval / s</h5>
-                    <input field="outsideTemp.interval" intval />
+
+                    <div id="ostsource-options">
+                        <div class="param">
+                            <h5>Topic</h5>
+                            <div class="statusfield statusvalue">
+                                <span class="mqttbasetopic"></span><span>/outsideTemp/set</span>
+                            </div>
+                        </div>
+                        <div class="param"></div>
+                        <div class="param">
+                            <h5>Address</h5>
+                            <input field="outsideTemp.adr"/>
+                        </div>
+                        <div class="param">
+                            <h5>address</h5>
+                            <select class="oneWireAdr" field="outsideTemp.adr">
+                            </select>
+                        </div>
+                        <div class="flexline">
+                            <div class="param">
+                                <h5>API key</h5>
+                                <input type="password" field="outsideTemp.apikey"/>
+                            </div>
+                            <div class="param">
+                                <h5>latitude</h5>
+                                <input field="outsideTemp.lat" floatval />
+                            </div>
+                            <div class="param">
+                                <h5>longitude</h5>
+                                <input field="outsideTemp.lon" floatval />
+                            </div>
+                            <div class="param">
+                                <h5>interval / s</h5>
+                                <input field="outsideTemp.interval" intval />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -5218,6 +5288,24 @@
             return getStatusValueByPath(fieldPath, currentCh);
         }
 
+        function renderSuspensionStatus(valueEl, sourceValueEl = valueEl) {
+            const val = getStatusValueByField(sourceValueEl.getAttribute("field"));
+            const text = val === true ? "Suspended" : val === false ? "Not suspended" : "Unknown";
+            if (sourceValueEl.dataset.suspension === "summary") {
+                valueEl.textContent = text;
+            }
+            else {
+                const symbol = val === true ? "pause" : val === false ? "check" : "unknown";
+                valueEl.classList.remove("is-suspended", "is-inactive", "is-unknown");
+                valueEl.classList.add(val === true ? "is-suspended" : val === false ? "is-inactive" : "is-unknown");
+                valueEl.innerHTML = iconMarkup(symbol);
+                const description = `${sourceValueEl.dataset.suspensionLabel}: ${text.toLowerCase()}`;
+                valueEl.title = description;
+                valueEl.setAttribute("aria-label", description);
+            }
+            flashMetricValueOnChange(valueEl, text);
+        }
+
         function getSourceValueElementByField(fieldPath) {
             const values = __(".hero-pin-source .statusvalue[field]");
             for (const valueEl of values) {
@@ -5281,6 +5369,11 @@
                 return;
 
             clearValueColorClasses(valueEl);
+
+            if (sourceValueEl.dataset.suspension) {
+                renderSuspensionStatus(valueEl, sourceValueEl);
+                return;
+            }
 
             const boolDisplay = getPinnedMetricBoolDisplay(fieldPath, sourceValueEl);
             if (!boolDisplay) {
@@ -5717,7 +5810,12 @@
 
                 icon.classList.remove("is-true", "is-false", "is-inactive", "is-error", "is-unknown", "is-suspended");
 
-                if (suspended === true) {
+                if (enabled === false) {
+                    icon.classList.add("is-false");
+                    icon.innerHTML = iconMarkup("cross");
+                    icon.title = "disabled";
+                }
+                else if (suspended === true) {
                     icon.classList.add("is-suspended");
                     icon.innerHTML = iconMarkup("pause");
                     icon.title = "suspended";
@@ -5727,11 +5825,6 @@
                     icon.innerHTML = iconMarkup("check");
                     icon.title = "active";
                 } 
-                else if (enabled === false) {
-                    icon.classList.add("is-false");
-                    icon.innerHTML = iconMarkup("cross");
-                    icon.title = "disabled";
-                }
                 else if (enabled === true) {
                     icon.classList.add("is-inactive");
                     icon.innerHTML = iconMarkup("circle");
@@ -6122,6 +6215,8 @@
             rs: room set temperature
         */
         function getFlowTemperatureSimple(ot, rs, hcfg) {
+            if (ot > rs)
+                return rs;
             const mf = hcfg.flowMax;
             const n = hcfg.exponent;
             const g = hcfg.gradient;
@@ -6139,20 +6234,27 @@
 
         function drawCurve() {
             let canvas = document.getElementById(`canvas`);
-            let flowmax = config.heating[currentCh].flowMax;
-            let flowmin = config.heating[currentCh].flowMin;
-            let fmg = Math.ceil(flowmax / 10) * 10 + 5; // flowmax for graph
-            let p;
+            const axes = getCurveAxes();
+            const origin = axes.origin;
+            const xaxis = axes.xaxis;
+            const yaxis = axes.yaxis;
+            // Keep a local handle to heating config for mode-aware curve drawing.
+            const hcfg = config.heating?.[currentCh] ?? {};
+            const flowmax = hcfg.flowMax;
+            const flowmin = hcfg.flowMin;
+            const minSusp = hcfg.minSuspend;
+            const roomset = roomsetpoint[currentCh];
+            const ostsEnabled = (hcfg.outsideSuspend?.type === 1 || hcfg.outsideSuspend?.type === 2);
+            const otStart = Math.min(roomset, xaxis.min);
+            const ostsThresh = ostsEnabled ? (roomset + hcfg.outsideSuspend?.offset) : xaxis.min;
+            let ostCutoff = ostsThresh;
+            const fmg = Math.ceil(flowmax / 10) * 10 + 5; // flowmax for graph
+            //let p;
 
             canvas.width = parseInt(getComputedStyle(canvas).width);
             canvas.height = 20 + (fmg - 20) * canvas.width / 100;
             var ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            const axes = getCurveAxes();
-            const origin = axes.origin;
-            const xaxis = axes.xaxis;
-            const yaxis = axes.yaxis;
 
             ctx.lineWidth = 1;
             ctx.fillStyle = "#FFF";
@@ -6217,11 +6319,8 @@
             ctx.fillText("flow / °C", -47, 30);
             ctx.restore();
 
-            // Keep a local handle to heating config for mode-aware curve drawing.
-            const hcfg = config.heating?.[currentCh] ?? {};
             if (hcfg.curveMode == CURVE_MODE_MULTIPOINT)
                 hcfg.points = normalizeCurvePoints(hcfg.points);
-            let roomset = roomsetpoint[currentCh];
             let roomcomp = 0;
             if (hcfg.roomComp?.enabled ?? false) {
                 const hcs = statuscache?.heatercircuit?.[currentCh] ?? {};
@@ -6247,11 +6346,6 @@
                 ctx.fillRect(p.x - 3, p.y - 3, 6, 6);    
             }
 
-            let otStart = Math.min(roomset, xaxis.min);
-            let ft = getFlowTemperature(otStart, roomset, hcfg);
-            ft = clip(ft, 100, flowmin);
-            let p1 = getPoint(otStart, ft); //foot
-
             function drawFlowCurve(color, delta=0.0, DeltaPostLimit=false) {
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 3;
@@ -6259,14 +6353,20 @@
                 let p = getPoint(otStart, ft); 
                 ctx.beginPath();
                 ctx.moveTo(p.x, p.y);
-                let otf = false;
-                let utf = false;
+                let otf = false; // overtemperature flag
+                let utf = false; // undertemperature flag
+                let ostf = false; // outsidetemp suspend flag
                 let fmax = flowmax + (DeltaPostLimit ? delta : 0);
                 let fmin = flowmin + (DeltaPostLimit ? delta : 0);
-                if (ft < fmin) {
+                if (ft < fmin)
                     utf = true;
+
+                    // statuscache.outsideTemp?.current
+                if ((otStart > ostsThresh) && ostsEnabled)
+                    ostf = true;
+                    
+                if (utf || ostf)
                     ctx.strokeStyle = "#888";
-                }
 
                 for (var ot = otStart; ot >= xaxis.max; ot -= 0.25) {
                     ft = getFlowTemperature(ot, roomset, hcfg) + delta ;
@@ -6292,17 +6392,32 @@
                     else
                         ctx.lineTo(p.x, p.y);
 
-                    if ((ft >= fmin) && utf) {
-                        utf = false;
+                    function beginUnsuspendedCurve(sp) {
                         ctx.stroke();
-                        
                         ctx.strokeStyle = color;
                         ctx.beginPath();
-                        p = getPoint(otStart, fmin);
-                        ctx.moveTo(p.x, p.y);
-                        p = getPoint(ot, fmin);
-                        ctx.lineTo(p.x, p.y);   
-                        continue;
+                        if (sp)
+                            ctx.moveTo(sp.x, sp.y);
+                        if ((p.y <= origin.y) && sp)
+                            ctx.lineTo(p.x, p.y);
+                        else
+                            ctx.moveTo(p.x, p.y);
+                    }
+
+                    if ((ft >= fmin) && utf) {
+                        utf = false;
+
+                        if (!ostf) {
+                            beginUnsuspendedCurve(minSusp ? undefined : getPoint(ostsThresh, fmin));
+                            if (minSusp)
+                                ostCutoff = ot;
+                        }
+                    }
+
+                    if ((ot <= ostsThresh) && ostf) {
+                        ostf = false;
+                        if (!utf)
+                            beginUnsuspendedCurve();
                     }
 
                     if (ft >= yaxis.max)
@@ -6318,6 +6433,44 @@
                 drawFlowCurve("#0F0", roomcomp);
 
             drawFlowCurve("#F00");
+
+            //draw curve's basepoint
+            let ft = getFlowTemperature(ostCutoff, roomset, hcfg);
+            ft = clip(ft, 100, flowmin);
+            const bp = getPoint(ostCutoff, ft); //foot
+            if (bp.x >= xaxis.min)
+                drawMarkerPoint(bp, '#F00');
+
+            // Draw configured curve points to verify multipoint input mapping.
+            if ((hcfg.curveMode ?? 0) === CURVE_MODE_MULTIPOINT) {
+                hcfg.points.forEach((pt) => {
+                    const p = getPoint(pt.outside, pt.flow);
+                    drawMarkerPoint(p, '#FFF');
+                });
+            }
+
+            if (statuscache.outsideTemp?.current !== undefined) {
+                //draw outsidetemp & it's flowtemperature
+                let ftsensor = getFlowTemperature(statuscache.outsideTemp.current, roomset, hcfg) + roomcomp;
+                ftsensor = clip(ftsensor, flowmax, flowmin);
+                let psensor = getPoint(statuscache.outsideTemp.current, ftsensor);
+                drawMarkerPoint(psensor, '#F83');
+                
+                ctx.lineWidth = 1;
+
+                ctx.strokeStyle = "#58F";
+                ctx.beginPath();
+                ctx.moveTo(psensor.x, origin.y);
+                ctx.lineTo(psensor.x, psensor.y);
+                ctx.stroke();
+
+                ctx.strokeStyle = "#F83";
+                ctx.beginPath();
+                ctx.moveTo(origin.x, psensor.y);
+                ctx.lineTo(psensor.x, psensor.y);
+                ctx.fillText(Math.round(ftsensor * 10) / 10, psensor.x - 20, psensor.y - 12);
+                ctx.stroke();
+            }
 
             // draw outsideTemp min/max band and avg marker along the x-axis
             if (statuscache.outsideTemp?.min !== undefined && statuscache.outsideTemp?.max !== undefined) {
@@ -6343,38 +6496,6 @@
                     ctx.closePath();
                     ctx.fill();
                 }
-            }
-
-            //draw curve's basepoint
-            if ((p1.y <= origin.y) && (roomset <= xaxis.min))
-                drawMarkerPoint(p1, '#F00');
-
-            // Draw configured curve points to verify multipoint input mapping.
-            if ((hcfg.curveMode ?? 0) === CURVE_MODE_MULTIPOINT) {
-                hcfg.points.forEach((pt) => {
-                    const p = getPoint(pt.outside, pt.flow);
-                    drawMarkerPoint(p, '#FFF');
-                });
-            }
-
-            if (statuscache.outsideTemp?.current !== undefined) {
-                //draw outsidetemp & it's flowtemperature
-                let ftsensor = getFlowTemperature(statuscache.outsideTemp.current, roomset, hcfg) + roomcomp;
-                ftsensor = clip(ftsensor, flowmax, flowmin);
-                let psensor = getPoint(statuscache.outsideTemp.current, ftsensor);
-                drawMarkerPoint(psensor, '#F83');
-                ctx.strokeStyle = "#F83";
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(origin.x, psensor.y);
-                ctx.lineTo(psensor.x, psensor.y);
-                ctx.fillText(Math.round(ftsensor * 10) / 10, psensor.x - 20, psensor.y - 12);
-                ctx.stroke();
-                ctx.strokeStyle = "#58F";
-                ctx.beginPath();
-                ctx.moveTo(psensor.x, origin.y);
-                ctx.lineTo(psensor.x, psensor.y);
-                ctx.stroke();
             }
 
             if (curveDrag.active) {
@@ -8582,17 +8703,21 @@
                     ele.addEventListener("change", (ev) => {
                         setConfigVal(path, getElementValue(ev.target));
 
-                        __("div.selopt", ev.target.parentElement).forEach((ele, index) => {
-                            ele.hidden = (index != ev.target.selectedIndex);
+                        const optsele = _("#" + ev.target.getAttribute("id-options"));
+                        if (!optsele)
+                            return;
 
-                            if (!ele.hidden) {
+                        for (const child of optsele.children) {
+                            child.hidden = (child !== optsele.children[ev.target.selectedIndex]);
+
+                            if (!child.hidden) {
                                 // trigger input events for all form elements in the currently visible selopt div to update dependent UI
-                                __(`select`, ele).forEach((inputEle) => {
-                                    if (inputEle.selectedIndex > -1)
-                                        inputEle.dispatchEvent(new Event("change"));
+                                __(`select`, child).forEach((selEle) => {
+                                    if (selEle.selectedIndex > -1)
+                                        selEle.dispatchEvent(new Event("change"));
                                 });
                             }
-                        });
+                        }
                     });
                 });
 
@@ -8626,7 +8751,8 @@
                 }
 
                 __(".curveparam").forEach(ele => {
-                    ele.addEventListener("input", (ev) => {
+                    const eventName = ele.tagName === "SELECT" ? "change" : "input";
+                    ele.addEventListener(eventName, () => {
                         drawCurve();
                     });
                 });
@@ -8648,6 +8774,11 @@
                     let valueSignature = "";
                     if (!ele.hasAttribute('field'))
                         return;
+
+                    if (ele.dataset.suspension) {
+                        renderSuspensionStatus(ele);
+                        return;
+                    }
 
                     ele.classList.remove("bool-ok", "bool-off", "bool-error", "result-warn");
                     try {

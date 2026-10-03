@@ -74,6 +74,8 @@ double HeatingCurve::getReturnLimit(const double roomSet) const {
 }
 
 double HeatingCurve::getFlowTempSimple(const double outsideTemp, const double roomSet) const {
+    if (outsideTemp > roomSet)
+        return roomSet; 
 	double minOutside = roomSet - (flowMax - roomSet) / gradient;
     double c1 = (flowMax - roomSet) / pow(roomSet - minOutside, 1.0 / exponent);
     return roomSet + c1 * pow(roomSet - outsideTemp, 1.0 / exponent) + offset;

@@ -91,6 +91,10 @@ void CHcontrol::getJson(JsonObject &obj) {
     const HADiscovery::ClimateAction action = haDisc.calcAction(otcontrol.getFlame() && getChActive(), getChOn());
     obj[FPSTR(STR_STATKEY_ACTION)] = haDisc.getClimateActionStr(action);
 
+    JsonObject jSuspended = obj[F("suspItems")].to<JsonObject>();
+    jSuspended[F("room")] = roomSuspended;
+    jSuspended[F("minFlow")] = minSuspended;
+    jSuspended[F("outside")] = outSuspended;
     obj[FPSTR(STR_STATKEY_SUSPENDED)] = roomSuspended || minSuspended || outSuspended;
 
     double d;
@@ -178,17 +182,17 @@ double CHcontrol::getFlow() {
         outSuspended = false;
     }
     else {
-        double ost;
-        bool calcOutsideSuspend = outsideTemp.get(ost);
+        double ost, rsp;
+        bool calcOutsideSuspend = outsideTemp.get(ost) && roomSetPoint[channel].get(rsp);
         if (config.outsideSuspend.type == Config::OutsideSuspend::OUTSIDE_SUSPEND_AVERAGE)
             ost = outsideTemp.getAvg();
 
         if (calcOutsideSuspend) {
-            if (result > (ost + config.outsideSuspend.hysteresis + config.outsideSuspend.offset))
-                outSuspended = false;
-
-            if (result < (ost - config.outsideSuspend.hysteresis + config.outsideSuspend.offset))
+            if (ost > (rsp + config.outsideSuspend.offset + config.outsideSuspend.hysteresis))
                 outSuspended = true;
+
+            if (ost < (rsp + config.outsideSuspend.offset - config.outsideSuspend.hysteresis))
+                outSuspended = false;
         }
         else
             outSuspended = false;
