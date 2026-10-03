@@ -30,7 +30,7 @@ void CHcontrol::setConfig(JsonObject &obj, const bool init) {
     config.roomComp.i = rc[F("i")] | 0.0;
     config.roomComp.boost = rc[F("boost")] | 3.0;
     
-    config.roomSuspend.hysteresis = obj[FPSTR(STR_CONFKEY_HYSTERESIS)] | 0.1;
+    config.roomSuspend.hysteresis = obj[FPSTR(STR_CONFKEY_HYSTERESIS)] | 0.2;
     config.roomSuspend.offset = obj[F("suspOffset")] | 0.0;
     config.roomSuspend.enabled = obj[F("enableHyst")] | false;
     config.minSuspend = obj[F("minSuspend")] | false;
