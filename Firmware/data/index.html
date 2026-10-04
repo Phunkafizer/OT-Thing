@@ -6262,9 +6262,7 @@
             const roomset = roomsetpoint[currentCh];
             const ostsEnabled = (hcfg.outsideSuspend?.type === 1 || hcfg.outsideSuspend?.type === 2);
             const fmg = Math.ceil(flowmax / 10) * 10 + 5; // flowmax for graph
-
-            canvas.width = width;
-            canvas.height = 20 + (fmg - 20) * canvas.width / 100;
+            const ost = statuscache.outsideTemp?.current;
             const axes = getCurveAxes();
             const origin = axes.origin;
             const xaxis = axes.xaxis;
@@ -6273,8 +6271,10 @@
             const ostsThresh = ostsEnabled ? (roomset + hcfg.outsideSuspend?.offset) : xaxis.min;
             let ostCutoff = ostsThresh;
             var ctx = canvas.getContext("2d");
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            canvas.width = width;
+            canvas.height = 20 + (fmg - 20) * canvas.width / 100;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.lineWidth = 1;
             ctx.fillStyle = "#FFF";
             ctx.textBaseline = "middle";
@@ -6361,13 +6361,14 @@
                 }
             }
 
-            function drawMarkerPoint(p, color, fillblack = false) {
+            function drawMarkerPoint(p, color, fillblack = false, leftAligned = false) {
                 ctx.strokeStyle = color;
                 ctx.fillStyle = fillblack ? "#000" : color;
                 ctx.lineWidth = 2;
-                ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
+                const x = leftAligned ? p.x : p.x - 3;
+                ctx.fillRect(x, p.y - 3, 6, 6);
                 if (fillblack)
-                    ctx.strokeRect(p.x - 4, p.y - 4, 8, 8);
+                    ctx.strokeRect(x, p.y - 3, 6, 6);
             }
 
             function drawFlowCurve(color, delta=0.0, DeltaPostLimit=false) {
@@ -6462,7 +6463,7 @@
             ft = clip(ft, 100, flowmin);
             const bp = getPoint(ostCutoff, ft); //foot
             if (bp.x >= xaxis.min)
-                drawMarkerPoint(bp, '#F00');
+                drawMarkerPoint(bp, '#F00', false, true);
 
             // Draw configured curve points to verify multipoint input mapping.
             if ((hcfg.curveMode ?? 0) === CURVE_MODE_MULTIPOINT) {
@@ -6472,14 +6473,36 @@
                 });
             }
 
-            if (statuscache.outsideTemp?.current !== undefined) {
+            function drawAxisIndicator(axis, value, col, fillColor) {
+                const point = (axis === 'y') ? getPoint(xaxis.min, value) : getPoint(value, yaxis.min);
+                ctx.strokeStyle = col;
+                ctx.fillStyle = fillColor;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(point.x , point.y);
+                if (axis === 'y') {
+                    ctx.lineTo(point.x -8, point.y + 5);
+                    ctx.lineTo(point.x -8, point.y - 5);
+                }
+                else {
+                    ctx.lineTo(point.x + 5, point.y + 8);
+                    ctx.lineTo(point.x - 5, point.y + 8);
+                }
+                ctx.closePath();
+                if (fillColor)
+                    ctx.fill();
+
+                ctx.stroke();
+            }
+
+            if ((statuscache.outsideTemp?.current !== undefined) && (ost <= ostCutoff)) {
                 //draw outsidetemp & it's flowtemperature
-                let ftsensor = getFlowTemperature(statuscache.outsideTemp.current, roomset, hcfg);
+                let ftsensor = getFlowTemperature(ost, roomset, hcfg);
                 const deadband = (pi_err >= -0.2) && (pi_err <= 0.2);
                 if (!deadband)
                     ftsensor += roomcomp;
                 ftsensor = clip(ftsensor, flowmax, flowmin);
-                const psensor = getPoint(statuscache.outsideTemp.current, ftsensor);
+                const psensor = getPoint(ost, ftsensor);
                 const col = ((roomcomp === 0.0) || deadband) ? '#F00': '#0F0';
                 
                 ctx.lineWidth = 1;
@@ -6488,6 +6511,7 @@
                 ctx.moveTo(psensor.x, origin.y);
                 ctx.lineTo(psensor.x, psensor.y);
                 ctx.stroke();
+
                 ctx.strokeStyle = "#F83";
                 ctx.fillStyle = "#F83";
                 ctx.beginPath();
@@ -6499,30 +6523,45 @@
                 drawMarkerPoint(psensor, col, true);
             }
 
-            // draw outsideTemp min/max band and avg marker along the x-axis
+            if (hcfg.returnLimit.deltaT !== 0) {
+                // draw return limit
+                let ftsensor = getFlowTemperature(statuscache.outsideTemp?.current, roomset, hcfg);
+                ftsensor = clip(ftsensor, flowmax, flowmin) - hcfg.returnLimit.deltaT;
+                const psensor = getPoint(statuscache.outsideTemp?.current, ftsensor);
+                if (ost <= ostCutoff) {
+                    drawMarkerPoint(psensor, '#68F', true);
+                    ctx.strokeStyle = "#68F";
+                    ctx.fillStyle = "#68F";
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(origin.x, psensor.y);
+                    ctx.lineTo(psensor.x, psensor.y);
+                    ctx.lineTo(psensor.x, origin.y);
+                    ctx.fillText(Math.round(ftsensor * 10) / 10, psensor.x + 20, psensor.y + 8);
+                    ctx.stroke();
+                }
+            }
+
             if (statuscache.outsideTemp?.min !== undefined && statuscache.outsideTemp?.max !== undefined) {
+                // draw outsideTemp min/max band and avg marker along the x-axis
                 const otMin = clip(statuscache.outsideTemp.min, xaxis.min, xaxis.max);
                 const otMax = clip(statuscache.outsideTemp.max, xaxis.min, xaxis.max);
                 const pMin = getPoint(otMin, yaxis.min);
                 const pMax = getPoint(otMax, yaxis.min);
-                ctx.strokeStyle = "rgba(80, 160, 255, 0.75)";
-                ctx.lineWidth = 8;
+                ctx.strokeStyle = "rgba(80, 160, 255, 0.85)";
+                ctx.lineWidth = 4;
                 ctx.beginPath();
                 ctx.moveTo(pMax.x, pMax.y);
                 ctx.lineTo(pMin.x, pMin.y);
                 ctx.stroke();
+            }
 
-                if (statuscache.outsideTemp?.avg !== undefined) {
-                    const otAvg = clip(statuscache.outsideTemp.avg, xaxis.min, xaxis.max);
-                    const pAvg = getPoint(otAvg, yaxis.min);
-                    ctx.fillStyle = "#58F";
-                    ctx.beginPath();
-                    ctx.moveTo(pAvg.x, pAvg.y - 6);
-                    ctx.lineTo(pAvg.x - 4, pAvg.y + 2);
-                    ctx.lineTo(pAvg.x + 4, pAvg.y + 2);
-                    ctx.closePath();
-                    ctx.fill();
-                }
+            if (statuscache.outsideTemp?.avg !== undefined) {
+                drawAxisIndicator('x', statuscache.outsideTemp.avg, "#58F", "#000");
+            }
+
+            if (statuscache.outsideTemp?.current !== undefined) {
+                drawAxisIndicator('x', statuscache.outsideTemp.current, "#58F", "#58F");
             }
 
             if (curveDrag.active) {
@@ -6545,50 +6584,20 @@
                 ctx.setLineDash([]);
             }
 
-            if (hcfg.returnLimit.deltaT !== 0) {
-                // draw return limit
-                let ftsensor = getFlowTemperature(statuscache.outsideTemp?.current, roomset, hcfg) - hcfg.returnLimit.deltaT;
-                let psensor = getPoint(statuscache.outsideTemp?.current, ftsensor);
-                drawMarkerPoint(psensor, '#68F');
-                ctx.strokeStyle = "#68F";
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(origin.x, psensor.y);
-                ctx.lineTo(psensor.x, psensor.y);
-                ctx.lineTo(psensor.x, origin.y);
-                ctx.fillText(Math.round(ftsensor * 10) / 10, psensor.x + 20, psensor.y + 8);
-                ctx.stroke();
-            }
-
             //draw markers
             config.heating[currentCh].marker?.forEach(function (m) {
                 drawMarkerPoint(getPoint(m.ot, m.ft), '#38f');
             });
 
-            function drawIndicator(point, col, filled) {
-                ctx.strokeStyle = col;
-                ctx.fillStyle = col;
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(point.x , point.y);
-                ctx.lineTo(point.x + 11, point.y + 5);
-                ctx.lineTo(point.x + 11, point.y - 5);
-                ctx.closePath();
-                if (filled === true)
-                    ctx.fill();
-                else
-                    ctx.stroke();
-            }
-
             // draw current flow temp
-            let flow = (currentCh == 0) ? statuscache.slave?.flow_t : statuscache.slave?.flow_t2;
+            const flow = (currentCh == 0) ? statuscache.slave?.flow_t : statuscache.slave?.flow_t2;
             if (flow !== undefined && flow !== null) {
-                drawIndicator(getPoint(xaxis.min, flow), "#fa0", statuscache.slave?.status?.flame);
+                drawAxisIndicator('y', flow, "#fa0", statuscache.slave?.status?.flame ? "#fa0" : null);
             }
 
-            let ret = statuscache.heatercircuit?.[currentCh]?.returnTemp;
+            const ret = statuscache.heatercircuit?.[currentCh]?.returnTemp;
             if (ret !== undefined && ret !== null) {
-                drawIndicator(getPoint(xaxis.min, ret), "#58f", true);
+                drawAxisIndicator('y', ret, "#58f", "#58f");
             }
         }
 
