@@ -755,6 +755,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
     case OTMODE_REPEATER: {
         // forward received request to boiler
         // data to boiler can be modified here
+        bool noForward = false;
         if (OTValue::isDataMessage(id, mt)) {
             switch (id) {
             case TSet:
@@ -769,7 +770,12 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
 
             case TdhwSet:
                 dhwControl.setSetpointRU(OpenTherm::getFloat(msg));
-                newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(dhwControl.getTemp()));
+                if (noDhwSet) {
+                    noForward = true;
+                    sendResponse(OpenTherm::buildResponse(OpenThermMessageType::WRITE_ACK, id, msg & 0xFFFF), 'P');
+                }
+                else
+                    newMsg = OpenTherm::buildRequest(mt, id, OpenTherm::temperatureToData(dhwControl.getTemp()));
                 break;
 
             case Status:
@@ -797,57 +803,59 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             }
         }
 
-        slave.onReceive((msg == newMsg) ? 'T' : 'R', newMsg);
-        SemMaster sem(500);
-        if (sem)
-            master.sendRequest(0, newMsg);
+        if (!noForward) {
+            slave.onReceive((msg == newMsg) ? 'T' : 'R', newMsg);
+            SemMaster sem(500);
+            if (sem)
+                sendRequest(0, newMsg);
+        }
         break;
     }
 
     case OTMODE_LOOPBACKTEST: {
         slave.onReceive('S', msg);
         // we received a request from OT master
+        uint32_t response;
         switch (mt) {
-        case OpenThermMessageType::WRITE_DATA: {
-            uint32_t reply = OpenTherm::buildResponse(OpenThermMessageType::WRITE_ACK, id, msg & 0xFFFF);
+        case OpenThermMessageType::WRITE_DATA:
+            response = OpenTherm::buildResponse(OpenThermMessageType::WRITE_ACK, id, msg & 0xFFFF);
             masterTestValues[id] = msg & 0xFFFF;
-            sendResponse(reply, 'P');
+            sendResponse(response, 'P');
             break;
-        }
 
         case OpenThermMessageType::READ_DATA: {
-            uint32_t reply = OpenTherm::buildResponse(OpenThermMessageType::UNKNOWN_DATA_ID, id, msg & 0xFFFF);
+            response = OpenTherm::buildResponse(OpenThermMessageType::UNKNOWN_DATA_ID, id, msg & 0xFFFF);
 
             switch (id) {
             case Brand: {
                 String brand = PSTR(SLAVE_BRAND);
-                reply = buildBrandResponse(id, brand, msg >> 8);
+                response = buildBrandResponse(id, brand, msg >> 8);
                 break;
             }
 
             case BrandVersion: {
                 String brandVersion = PSTR(BUILD_VERSION);
-                reply = buildBrandResponse(id, brandVersion, msg >> 8);
+                response = buildBrandResponse(id, brandVersion, msg >> 8);
                 break;
             }
 
             case BrandSerialNumber: {
                 String mac = WiFi.macAddress();
-                reply = buildBrandResponse(id, mac, msg >> 8);
+                response = buildBrandResponse(id, mac, msg >> 8);
                 break;
             }
 
             default:
                 for (unsigned int i = 0; i< sizeof(loopbackTestData) / sizeof(loopbackTestData[0]); i++) {
                     if (loopbackTestData[i].id == id) {
-                        reply = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, loopbackTestData[i].value);
+                        response = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, loopbackTestData[i].value);
                         break;
                     }
                 }
                 break;
             }
 
-            sendResponse(reply, 'P');
+            sendResponse(response, 'P');
             break;
         }
 
