@@ -415,6 +415,14 @@
             color: #ffd072;
         }
 
+        .statusvalue.pi-error-in-deadband {
+            color: #7de2a8;
+        }
+
+        .statusvalue.pi-error-outside-deadband {
+            color: #ff8f7f;
+        }
+
         .hero-metrics {
             display: flex;
             flex-wrap: wrap;
@@ -3442,6 +3450,10 @@
                         <span class="statusvalue" field="heatercircuit.$.returnTemp" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
+                        <h5>PI error</h5>
+                        <span class="statusvalue" field="heatercircuit.$.piError" unit="K"></span>
+                    </div>
+                    <div class="statusfield">
                         <h5>room comp. integrator</h5>
                         <span class="statusvalue" field="heatercircuit.$.roomcompInteg" unit="K"></span>
                     </div>
@@ -5942,13 +5954,18 @@
                 if (val == null)
                     return;
 
+                if (ele.getAttribute("field") === "heatercircuit.$.piError") {
+                    ele.classList.add(val >= -2 && val <= 2 ? "pi-error-in-deadband" : "pi-error-outside-deadband");
+                    return;
+                }
+
                 const range = resolveValueRange(ele);
                 applyValueColorClass(ele, val, unit, range.minRaw, range.maxRaw);
             });
         }
 
         function clearValueColorClasses(ele) {
-            ele.classList.remove("temp-cold", "temp-hot", "temp-veryhot", "value-high");
+            ele.classList.remove("temp-cold", "temp-hot", "temp-veryhot", "value-high", "pi-error-in-deadband", "pi-error-outside-deadband");
         }
 
         function getValueColorClass(value, unit, minRaw, maxRaw) {

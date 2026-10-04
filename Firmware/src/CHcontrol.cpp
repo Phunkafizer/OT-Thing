@@ -69,8 +69,8 @@ void CHcontrol::getJson(JsonObject &obj) {
     if (modeStr != nullptr)
         obj[FPSTR(STR_STATKEY_CTRLMODE)] = FPSTR(modeStr);
 
-    obj[FPSTR(STR_STATKEY_ROOMCOMPINTEGRATOR)] = round(roomComp.integState * 10) / 10.0;
-    obj[FPSTR(STR_STATKEY_RETURNLIMITINTEGRATOR)] = round(retLimit.integState * 10) / 10.0;
+    obj[FPSTR(STR_STATKEY_ROOMCOMPINTEGRATOR)] = round(roomComp.integState * 100) / 100.0;
+    obj[FPSTR(STR_STATKEY_RETURNLIMITINTEGRATOR)] = round(retLimit.integState * 100) / 100.0;
     obj[FPSTR(STR_STATKEY_FLOWMIN)] = flowMin;
 
     switch (mode) {
@@ -97,13 +97,17 @@ void CHcontrol::getJson(JsonObject &obj) {
     jSuspended[F("outside")] = outSuspended;
     obj[FPSTR(STR_STATKEY_SUSPENDED)] = roomSuspended || minSuspended || outSuspended;
 
-    double d;
-    if (roomSetPoint[channel].get(d))
-        obj[FPSTR(STR_STATKEY_ROOMSETPOINT)] = d;
+    double rsp, rt;
+    if (roomSetPoint[channel].get(rsp))
+        obj[FPSTR(STR_STATKEY_ROOMSETPOINT)] = rsp;
         
-    if (roomTemp[channel].get(d))
-        obj[FPSTR(STR_STATKEY_ROOMTEMP)] = d;
+    if (roomTemp[channel].get(rt))
+        obj[FPSTR(STR_STATKEY_ROOMTEMP)] = rt;
 
+    if (roomSetPoint[channel].get(rsp) && roomTemp[channel].get(rt))
+        obj[FPSTR(STR_STATKEY_PIERROR)] = ((rsp - rt) * 10) / 10.0;
+
+    double d;
     if (returnTemp[channel].get(d)) {
         obj[F("returnTemp")] = d;
         obj[F("reduction")] = round(retLimit.reduction * 10) / 10.0;
