@@ -5215,6 +5215,7 @@
                 activeTab: "dashboard",
                 currentCh: 0,
                 pinnedHeroFields: [],
+                autoscroll: true,
                 history: {}
             };
         }
@@ -5233,6 +5234,8 @@
                 state.currentCh = defaults.currentCh;
 
             state.pinnedHeroFields = normalizePinnedHeroFields(state.pinnedHeroFields);
+            if (typeof state.autoscroll !== "boolean")
+                state.autoscroll = defaults.autoscroll;
             state.history = normalizeHistoryTree(state.history);
             state.currentCh = Math.max(0, Math.min(1, state.currentCh));
             state.version = UI_STATE_VERSION;
@@ -8204,6 +8207,7 @@
 
         function toggleAutoScroll(checkbox) {
             autoscroll = !!checkbox?.checked;
+            saveUiState({ autoscroll });
         }
 
         let turboDialogCh = 0;
@@ -8382,6 +8386,9 @@
             trendResizeObserver.observe(trendChart);
             let tabEnterTimer = null;
             const uiState = loadUiState();
+            autoscroll = uiState.autoscroll;
+            _("#logAutoscroll").checked = autoscroll;
+            _("#curvePinToggle").checked = false;
             const updateGlobalToolbarVisibility = (tabName) => {
                 const toolbar = _("#globalToolbar");
                 if (!toolbar)
