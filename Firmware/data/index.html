@@ -6341,14 +6341,15 @@
             if (hcfg.curveMode == CURVE_MODE_MULTIPOINT)
                 hcfg.points = normalizeCurvePoints(hcfg.points);
             let roomcomp = 0;
+            let pi_err = 0;
             if (hcfg.roomComp?.enabled ?? false) {
                 const hcs = statuscache?.heatercircuit?.[currentCh] ?? {};
                 if (hcs?.roomtemp !== undefined) {
-                    const e = roomset - hcs.roomtemp;
-                    roomcomp = (hcfg.roomComp?.p ?? 0) * e + hcs.roomcompInteg ?? 0;
+                    pi_err = roomset - hcs.roomtemp;
+                    roomcomp = (hcfg.roomComp?.p ?? 0) * pi_err + hcs.roomcompInteg ?? 0;
                     // boost
-                    if (e > 1.0)
-                        roomcomp += (hcfg.roomComp?.boost ?? 0) * e;
+                    if (pi_err > 1.0)
+                        roomcomp += (hcfg.roomComp?.boost ?? 0) * pi_err;
                     roomcomp = clip(roomcomp, 12, -5);
                 }
             }
@@ -6360,9 +6361,13 @@
                 }
             }
 
-            function drawMarkerPoint(p, color) {
-                ctx.fillStyle = color;
-                ctx.fillRect(p.x - 3, p.y - 3, 6, 6);    
+            function drawMarkerPoint(p, color, fillblack = false) {
+                ctx.strokeStyle = color;
+                ctx.fillStyle = fillblack ? "#000" : color;
+                ctx.lineWidth = 2;
+                ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
+                if (fillblack)
+                    ctx.strokeRect(p.x - 4, p.y - 4, 8, 8);
             }
 
             function drawFlowCurve(color, delta=0.0, DeltaPostLimit=false) {
@@ -6469,25 +6474,29 @@
 
             if (statuscache.outsideTemp?.current !== undefined) {
                 //draw outsidetemp & it's flowtemperature
-                let ftsensor = getFlowTemperature(statuscache.outsideTemp.current, roomset, hcfg) + roomcomp;
+                let ftsensor = getFlowTemperature(statuscache.outsideTemp.current, roomset, hcfg);
+                const deadband = (pi_err >= -0.2) && (pi_err <= 0.2);
+                if (!deadband)
+                    ftsensor += roomcomp;
                 ftsensor = clip(ftsensor, flowmax, flowmin);
-                let psensor = getPoint(statuscache.outsideTemp.current, ftsensor);
-                drawMarkerPoint(psensor, '#F83');
+                const psensor = getPoint(statuscache.outsideTemp.current, ftsensor);
+                const col = ((roomcomp === 0.0) || deadband) ? '#F00': '#0F0';
                 
                 ctx.lineWidth = 1;
-
                 ctx.strokeStyle = "#58F";
                 ctx.beginPath();
                 ctx.moveTo(psensor.x, origin.y);
                 ctx.lineTo(psensor.x, psensor.y);
                 ctx.stroke();
-
                 ctx.strokeStyle = "#F83";
+                ctx.fillStyle = "#F83";
                 ctx.beginPath();
                 ctx.moveTo(origin.x, psensor.y);
                 ctx.lineTo(psensor.x, psensor.y);
                 ctx.fillText(Math.round(ftsensor * 10) / 10, psensor.x - 20, psensor.y - 12);
                 ctx.stroke();
+
+                drawMarkerPoint(psensor, col, true);
             }
 
             // draw outsideTemp min/max band and avg marker along the x-axis
@@ -6553,7 +6562,7 @@
 
             //draw markers
             config.heating[currentCh].marker?.forEach(function (m) {
-                drawMarkerPoint(getPoint(m.ot, m.ft), '#3f8');
+                drawMarkerPoint(getPoint(m.ot, m.ft), '#38f');
             });
 
             function drawIndicator(point, col, filled) {
@@ -7112,7 +7121,7 @@
             let heatCfg = config.heating[currentCh];
             // Use selected curve mode to compute marker flow temperature.
             let ft = getFlowTemperature(
-                statuscache.outsideTemp,
+                statuscache.outsideTemp?.current,
                 roomsetpoint[currentCh],
                 heatCfg
             );
@@ -7121,7 +7130,7 @@
                 heatCfg.marker = [];
             heatCfg.marker.push({
                 comment: comment,
-                ot: statuscache.outsideTemp,
+                ot: statuscache.outsideTemp?.current,
                 ft: Math.round(ft * 10) / 10.0,
                 rs: roomsetpoint[currentCh]
             });
