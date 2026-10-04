@@ -38,13 +38,11 @@ void setup() {
     Serial.begin();
     Serial.setTxTimeoutMs(100);
 
+    otcontrol.begin();
     devconfig.begin();
 
-    otcontrol.begin();
     configMode = digitalRead(GPIO_CONFIG_BUTTON) == 0;
-    
     configMode |= !netw.hasStoredWifiCredentials();
-
     if (configMode)
         statusLed.set(StatusLed::LED_CONFIG);
 

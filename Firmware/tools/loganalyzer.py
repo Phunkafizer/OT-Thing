@@ -4,6 +4,9 @@ Connects to the firmware websocket (/ws), parses OpenTherm frames from the log
 lines and serves a small web frontend showing raw lines and interpreted data.
 The operating mode (master/repeater) is read once from the device /config
 endpoint and can be overridden with --mode.
+The web frontend's Upload log button loads a saved log and stops the live
+device connection. Uploaded logs use the current operating mode. Cards
+summarize the entire file, while the raw log shows the last 500 non-empty lines.
 
 Usage:
     python tools/loganalyzer.py [--device otthing.local] [--port 8080] [--mode master]
@@ -13,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import io
 import json
 import re
 import threading
@@ -25,7 +29,7 @@ from typing import Any
 
 import uvicorn
 import websockets
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 
 # source char + 8 hex digits, optional trailing text already decoded by firmware
@@ -552,6 +556,18 @@ class Hub:
         self.cards = Cards()
         self.lock = asyncio.Lock()
 
+    def history_message(self, reset: bool = False) -> dict[str, Any]:
+        return {
+            "type": "history",
+            "reset": reset,
+            "mode": settings["mode"],
+            "device": settings["device"],
+            "logFile": settings["logFile"],
+            "categories": categories(),
+            "entries": self.history,
+            "cards": self.cards.snapshot(),
+        }
+
     async def publish(self, entry: dict[str, Any]) -> None:
         self.history.append(entry)
         del self.history[:-MAX_HISTORY]
@@ -591,7 +607,33 @@ class Hub:
 
 hub = Hub()
 settings: dict[str, Any] = {"device": "", "url": "", "mode": DEFAULT_MODE,
-                           "modeOverride": None, "rxTimeout": 2.0}
+                           "modeOverride": None, "rxTimeout": 2.0, "logFile": None}
+device_task: asyncio.Task[None] | None = None
+source_lock = asyncio.Lock()
+
+
+def parse_log(content: bytes) -> tuple[Hub, int]:
+    parsed = Hub()
+    count = 0
+    with io.StringIO(content.decode("utf-8-sig", "replace"), newline=None) as log:
+        for line in log:
+            line = line.rstrip("\r\n")
+            if line.strip():
+                entry = parse_line(line)
+                parsed.history.append(entry)
+                del parsed.history[:-MAX_HISTORY]
+                parsed.cards.update(entry)
+                count += 1
+    return parsed, count
+
+
+async def stop_device_reader() -> None:
+    global device_task
+    if device_task is not None:
+        device_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await device_task
+        device_task = None
 
 
 async def device_reader(url: str) -> None:
@@ -621,14 +663,12 @@ async def device_reader(url: str) -> None:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    task = asyncio.create_task(device_reader(settings["url"])) if settings["url"] else None
+    global device_task
+    device_task = asyncio.create_task(device_reader(settings["url"])) if settings["url"] else None
     try:
         yield
     finally:
-        if task:
-            task.cancel()
-            with suppress(asyncio.CancelledError):
-                await task
+        await stop_device_reader()
 
 
 app = FastAPI(title="OTThing Log Analyzer", lifespan=lifespan)
@@ -639,13 +679,7 @@ async def stream(ws: WebSocket) -> None:
     await ws.accept()
     await hub.add(ws)
     try:
-        await ws.send_text(json.dumps({
-            "type": "history",
-            "mode": settings["mode"],
-            "categories": categories(),
-            "entries": hub.history,
-            "cards": hub.cards.snapshot(),
-        }))
+        await ws.send_text(json.dumps(hub.history_message()))
         while True:
             await ws.receive_text()
     except WebSocketDisconnect:
@@ -717,6 +751,8 @@ h2 { font-size: 13px; margin: 4px 0 8px; color: #888; text-transform: uppercase;
   <span id="status">connecting...</span>
   <span id="device"></span>
   <button id="clearCards">clear items</button>
+  <button id="uploadLog">Upload log</button>
+  <input type="file" id="logFile" hidden>
 </header>
 <div id="panes">
   <div id="cardPane">
@@ -751,6 +787,35 @@ document.getElementById('clearCards').onclick = () => {
 document.getElementById('clearLog').onclick = () => {
   fetch('/api/clear?scope=log', { method: 'POST' }).catch(() => {});
 };
+const uploadButton = document.getElementById('uploadLog');
+const logFileEl = document.getElementById('logFile');
+uploadButton.onclick = () => logFileEl.click();
+logFileEl.onchange = async () => {
+  const file = logFileEl.files[0];
+  if (!file) return;
+  uploadButton.disabled = true;
+  uploadButton.textContent = 'Uploading...';
+  try {
+    const body = new FormData();
+    body.append('file', file);
+    const response = await fetch('/api/upload-log', { method: 'POST', body });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Upload failed');
+    }
+  } catch (error) {
+    alert('Could not upload log: ' + error.message);
+  } finally {
+    uploadButton.disabled = false;
+    uploadButton.textContent = 'Upload log';
+    logFileEl.value = '';
+  }
+};
+
+function updateSource(info) {
+  const source = info.logFile ? 'log: ' + info.logFile : info.device;
+  document.getElementById('device').textContent = source + ' [' + info.mode + ']';
+}
 
 let dragging = false;
 document.getElementById('split').addEventListener('mousedown', () => dragging = true);
@@ -877,8 +942,8 @@ function cardNode(c) {
   el = document.createElement('div');
   el.className = 'card';
   el.dataset.id = c.id;
-  el.title = 'double-click to highlight this id in the log';
-  el.ondblclick = () => setSelection('id', String(c.id));
+  el.title = 'click to highlight this id in the log';
+  el.onclick = () => setSelection('id', String(c.id));
   el.innerHTML = '<div class="cid"></div><div class="cname"></div>'
     + '<div class="cval"></div><div class="ctype"></div>'
     + '<div class="bits"></div><div class="clast"></div><div class="counts"></div>';
@@ -934,6 +999,13 @@ function connect() {
   ws.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);
     if (msg.type === 'history') {
+      if (msg.reset) {
+        rows.innerHTML = '';
+        cardEls.clear();
+        gridEls.clear();
+        catsEl.innerHTML = '';
+      }
+      updateSource(msg);
       if (msg.categories) msg.categories.forEach(c => gridFor(c.source, c.name));
       msg.entries.forEach(addEntry);
       (msg.cards || []).forEach(c => updateCard(c, false));
@@ -950,9 +1022,7 @@ function connect() {
     }
   };
 }
-fetch('/api/info').then(r => r.json()).then(i => {
-  document.getElementById('device').textContent = i.device + ' [' + i.mode + ']';
-});
+fetch('/api/info').then(r => r.json()).then(updateSource);
 connect();
 </script>
 </body>
@@ -972,6 +1042,7 @@ async def info() -> dict[str, Any]:
         "device": settings["device"],
         "url": settings["url"],
         "mode": settings["mode"],
+        "logFile": settings["logFile"],
         "categories": categories(),
     }
 
@@ -979,6 +1050,22 @@ async def info() -> dict[str, Any]:
 @app.get("/api/cards")
 async def cards() -> list[dict[str, Any]]:
     return hub.cards.snapshot()
+
+
+@app.post("/api/upload-log")
+async def upload_log(file: UploadFile) -> dict[str, Any]:
+    async with source_lock:
+        content = await file.read()
+        parsed, count = await asyncio.to_thread(parse_log, content)
+        if count == 0:
+            raise HTTPException(status_code=400, detail="The log file contains no non-empty lines.")
+        await stop_device_reader()
+        settings["url"] = ""
+        settings["logFile"] = file.filename or "uploaded log"
+        hub.history = parsed.history
+        hub.cards = parsed.cards
+        await hub.broadcast(hub.history_message(reset=True))
+        return {"status": "ok", "lines": count}
 
 
 @app.post("/api/clear")
@@ -1015,14 +1102,15 @@ def fetch_mode(ws_url: str) -> str:
 
 async def refresh_mode() -> str:
     """Re-read the mode from the device unless it was forced on the command line."""
-    if settings.get("modeOverride") or not settings["url"]:
-        return settings["mode"]
+    async with source_lock:
+        if settings.get("modeOverride") or not settings["url"]:
+            return settings["mode"]
 
-    mode = await asyncio.to_thread(fetch_mode, settings["url"])
-    if mode != settings["mode"]:
-        settings["mode"] = mode
-        await hub.clear("cards")  # card categories depend on the mode
-    return mode
+        mode = await asyncio.to_thread(fetch_mode, settings["url"])
+        if mode != settings["mode"]:
+            settings["mode"] = mode
+            await hub.clear("cards")  # card categories depend on the mode
+        return mode
 
 
 def main() -> None:

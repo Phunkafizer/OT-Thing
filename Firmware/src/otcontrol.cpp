@@ -929,7 +929,7 @@ void OTControl::getJson(JsonObject &obj) {
     JsonObject jMaster = obj[FPSTR(STR_STATKEY_MASTER)].to<JsonObject>();
     jMaster[FPSTR(STR_STATKEY_TXCOUNT)] = master.txCount;
     jMaster[FPSTR(STR_STATKEY_RXCOUNT)] = master.rxCount;
-    if ( (otMode == OTMODE_MASTER) || (otMode == OTMODE_LOOPBACKTEST) )
+    if (isMaster())
         jMaster[F("timeouts")] = master.timeoutCount;
     for (auto *valobj: masterValues)
         valobj->getJson(jMaster, true);
