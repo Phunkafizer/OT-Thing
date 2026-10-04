@@ -1072,12 +1072,59 @@
         }
 
         div.curve {
+            position: relative;
             text-align: center;
             background-color: #0f1218;
             border-radius: 10px;
             border: 1px solid rgba(216, 162, 76, 0.25);
             padding: 7px;
             margin-bottom: 0.65em;
+        }
+
+        div.curve.is-pinned {
+            position: fixed;
+            z-index: 30;
+            margin: 0;
+            border-color: rgba(216, 162, 76, 0.6);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        .curve-pin-control {
+            position: absolute;
+            z-index: 1;
+            top: 9px;
+            left: 42px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 6px;
+            border: 1px solid rgba(216, 162, 76, 0.4);
+            border-radius: 6px;
+            background: rgba(15, 18, 24, 0.88);
+        }
+
+        .curve-pin-control > span {
+            color: var(--accent-soft);
+            font-size: 0.68em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .curve-pin-control .switch {
+            width: 40px;
+            height: 22px;
+            margin: 0;
+        }
+
+        .curve-pin-control .slider:before {
+            width: 14px;
+            height: 14px;
+            left: 3px;
+            bottom: 3px;
+        }
+
+        .curve-pin-control input:checked + .slider:before {
+            transform: translateX(18px);
         }
 
         canvas {
@@ -1846,6 +1893,27 @@
 
             .data-table thead {
                 display: none;
+            }
+
+            #markerGroup .marker-table thead {
+                display: block;
+            }
+
+            #markerGroup .marker-table thead tr {
+                display: grid;
+                grid-template-columns: minmax(84px, 1.5fr) 58px 58px 58px 36px;
+                column-gap: 2px;
+                padding: 0 6px;
+            }
+
+            #markerGroup .marker-table thead th {
+                position: static;
+                width: auto;
+                padding: 4px;
+                font-size: 0.72em;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .data-table tr {
@@ -3417,6 +3485,13 @@
 
                 <div class="curve">
                     <canvas id="canvas"></canvas>
+                    <div class="curve-pin-control">
+                        <span>pin</span>
+                        <label class="switch">
+                            <input id="curvePinToggle" type="checkbox" aria-label="Pin heating curve on screen">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                 </div>
                 <div class="curve-hint curve-only" hidden>Drag points to tune the multipoint curve.</div>
 
@@ -6033,6 +6108,54 @@
             flowmax: 0
         };
 
+        const curvePin = {
+            curve: null,
+            parent: null,
+            nextSibling: null
+        };
+
+        function unpinCurve() {
+            if (!curvePin.parent)
+                return;
+
+            const nextSibling = curvePin.nextSibling?.parentNode === curvePin.parent
+                ? curvePin.nextSibling
+                : null;
+            curvePin.parent.insertBefore(curvePin.curve, nextSibling);
+            curvePin.curve.classList.remove("is-pinned");
+            curvePin.curve.style.removeProperty("left");
+            curvePin.curve.style.removeProperty("top");
+            curvePin.curve.style.removeProperty("width");
+            curvePin.curve = null;
+            curvePin.parent = null;
+            curvePin.nextSibling = null;
+            _("#curvePinToggle").checked = false;
+        }
+
+        function setCurvePinned(pinned) {
+            if (pinned === !!curvePin.parent)
+                return;
+            if (!pinned) {
+                unpinCurve();
+                return;
+            }
+
+            const canvas = _("#canvas");
+            const curve = canvas.parentElement;
+            const rect = curve.getBoundingClientRect();
+
+            curvePin.curve = curve;
+            curvePin.parent = curve.parentElement;
+            curvePin.nextSibling = curve.nextSibling;
+            document.body.appendChild(curve);
+
+            curve.classList.add("is-pinned");
+            curve.style.left = `${rect.left}px`;
+            curve.style.top = `${rect.top}px`;
+            curve.style.width = `${rect.width}px`;
+            _("#curvePinToggle").checked = true;
+        }
+
         // Compute curve axes for current flow settings.
         function getCurveAxes() {
             const flowmax = config.heating[currentCh].flowMax;
@@ -8305,6 +8428,9 @@
                     if (!tabElement)
                         return;
 
+                    if (tabName !== "heatingcurve")
+                        unpinCurve();
+
                     __("div.nav li").forEach(x => x.classList.remove("active"));
                     __(".tab").forEach(x => x.hidden = true);
 
@@ -8348,6 +8474,9 @@
                 initialNav.click();
 
             const curveCanvas = _("#canvas");
+            _("#curvePinToggle").addEventListener("change", (ev) => {
+                setCurvePinned(ev.currentTarget.checked);
+            });
             const curveResizeObserver = new ResizeObserver(() => {
                 if (_("#heatingcurve").hidden)
                     return;
