@@ -9,6 +9,7 @@
 #include "dhwControl.h"
 #include "vent.h"
 #include "flamestats.h"
+#include "otvalues.h"
 
 const uint8_t NUM_HEATCIRCUITS = 2;
 
@@ -46,13 +47,13 @@ private:
     unsigned long buildBrandResponse(const OpenThermMessageID id, const String &str, const uint8_t idx);
     bool sendChDiscoveries(const uint8_t ch, const bool en);
     bool isMaster() const;
+    bool hasSlave() const;
     void sendResponse(const unsigned long msg, const char source = 0);
     unsigned long lastBoilerStatus;
     enum OTMode: int8_t {
-        OTMODE_BYPASS = 0,
         OTMODE_MASTER = 1,
         OTMODE_REPEATER = 2,
-        OTMODE_LOOPBACKTEST = 4
+        OTMODE_MASTER_SLAVE = 3
     } otMode;
     void setOTMode(const OTMode mode);
     enum SlaveApplication: uint8_t {
@@ -97,20 +98,19 @@ private:
         uint32_t invalidCount;
         unsigned long lastRx; // millis
         unsigned long lastTx; // millis
-        unsigned long lastTxMsg;
         SemaphoreHandle_t mutex;
         void sendRequest(const char source, const unsigned long msg);
         void resetCounters();
         void onReceive(const char source, const unsigned long msg);
         void sendResponse(const char source,const unsigned long msg);
+        bool isConnected() const;
+        void writeJson(JsonObject &obj) const;
     } master, slave;
-    bool enableSlave {false};
     bool bypass {false};
     uint16_t statusReqOvl {0}; // will be or'ed to status request as this is needed by some boilers
     bool init {false};
     bool noDhwSet;
 public:
-    std::map<OpenThermMessageID, uint16_t> masterTestValues;
     DHWControl dhwControl;
     VentControl ventCtrl;
     OTControl();
@@ -140,6 +140,9 @@ public:
     bool getOverrideEnabled() const;
     void setTurboShift(const double shift, const uint8_t channel);
     void setTurboDuration(const uint32_t duration, const uint8_t channel);
+    bool masterConnected() const;
+    bool slaveConnected() const;
+    void setOtValue(OTValue *otval, const OpenThermMessageType mt, const uint16_t data);
 };
 
 extern OTControl otcontrol;

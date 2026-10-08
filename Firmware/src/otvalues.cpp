@@ -157,40 +157,46 @@ OTValue *slaveValues[56] = { // replydata collected (read) from a connnected sla
 };
 
 
-OTValue *masterValues[20] = { // requestdata sent (written) from OTthing (mode master) or connected roomunit (mode repeater)
+OTValue *masterValues[20] = { // requestdata sent (written) from OTthing (mode master)
     new OTValueFloat(           TSet,                   -1),
     new OTValueFloat(           TsetCH2,                -1),
     new OTValueFloat(           Tr,                     -1),
     new OTValueFloat(           TrCH2,                  -1),
     new OTValueFloat(           TrSet,                  -1),
     new OTValueFloat(           TrSetCH2,               -1),
-    new OTValueProductVersion(  MasterVersion,          -1, PSTR("productversion master")),
+    new OTValueProductVersion(  MasterVersion,          -1),
     new OTValueFloat(           MaxRelModLevelSetting,  -1),
-    new OTValueProductVersion(  OpenThermVersionMaster, -1, PSTR("OT-version master")),
+    new OTValueProductVersion(  OpenThermVersionMaster, -1),
     new OTValueMasterConfig(),
     new OTValueFloat(           TdhwSet,                -1),
     new OTValueMasterStatus(),
     new OTValueVentMasterStatus(),
+    new OTValueFloat(           CoolingControl,         -1),
+    new OTValueFloat(           MaxTSet,                -1),
     new OTValueDayTime(),
     new OTValueDate(),
     new OTValueu16(             Year,                   -1),
     new OTValueu16(             Vset,                   -1),
-    new OTValueFloat(           Toutside,               -1),
-    new OTValueFloat(           MaxTSet,                -1),
-    new OTValueFloat(           CoolingControl,         -1),
+    new OTValueFloat(           Toutside,               -1)
 };
 
 
-OTValue *roomUnitValues[9] = { // requestdata sent (written) from a connected roomunit
+OTValue *roomUnitValues[15] = { // requestdata sent (written) from a connected roomunit
     new OTValueFloatTemp(       TSet,                   PSTR("flow temp. setpoint")),
     new OTValueFloatTemp(       TsetCH2,                PSTR("flow temp. 2 setpoint")),
     new OTValueFloatTemp(       Tr,                     PSTR("room temp.")),
     new OTValueFloatTemp(       TrCH2,                  PSTR("room temp. 2")),
     new OTValueFloatTemp(       TrSet,                  PSTR("room temp. setpoint")),
     new OTValueFloatTemp(       TrSetCH2,               PSTR("room temp. 2 setpoint")),
+    new OTValueProductVersion(  MasterVersion,          -1, PSTR("productversion master")),
+    new OTValueFloat(           MaxRelModLevelSetting,  -1),
+    new OTValueProductVersion(  OpenThermVersionMaster, -1, PSTR("OT-version master")),
+    new OTValueMasterConfig(),
     new OTValueFloatTemp(       TdhwSet,                PSTR("DHW setpoint")),
     new OTValueMasterStatus(),
     new OTValueVentMasterStatus(),
+    new OTValueFloat(           CoolingControl,         -1, PSTR("cooling setpoint")),
+    new OTValueFloat(           MaxTSet,                -1, PSTR("max. CH setpoint"))
 };
 
 const char* getOTname(OpenThermMessageID id) {
@@ -211,7 +217,7 @@ OTValue::OTValue(const OpenThermMessageID id, const int interval, PGM_P haName):
         interval(interval),
         id(id),
         value(0),
-        enabled(interval != -1),
+        enabled(true),
         discFlag(false),
         setFlag(false),
         numSet(0),
@@ -225,6 +231,13 @@ OTValue* OTValue::getSlaveValue(const OpenThermMessageID id) {
         if (val->id == id)
             return val;
     }
+    return nullptr;
+}
+
+OTValue* OTValue::getSlaveValue(const String otname) {
+    for (int i=0; i<sizeof(OTITEMS) / sizeof(OTITEMS[0]); i++)
+        if (otname == OTITEMS[i].name)
+            return getSlaveValue(OTITEMS[i].id);
     return nullptr;
 }
 
@@ -284,6 +297,11 @@ bool OTValue::isSet() const {
     return setFlag;
 }
 
+bool OTValue::isSet(const OpenThermMessageID id) {
+    OTValue* val = getSlaveValue(id);
+    return val ? val->isSet() : false;
+}
+
 bool OTValue::hasReply() const {
     return numSet > 0;
 }
@@ -294,6 +312,7 @@ OpenThermMessageType OTValue::getLastMsgResult() const {
 
 bool OTValue::sendDiscovery() {
     const char *name = getName();
+
     if (name == nullptr)
         return false;
 
@@ -353,6 +372,10 @@ bool OTValue::sendDiscovery() {
         haDisc.createTempSensor(F("flow set temp."), sName);
         break;
 
+    case TsetCH2:
+        haDisc.createTempSensor(F("flow set temp. 2"), sName);
+        break;
+
     case Texhaust:
         haDisc.createTempSensor(sHaName, sName);
         break;
@@ -363,8 +386,9 @@ bool OTValue::sendDiscovery() {
         break;
 
     default:
-        if (haName == nullptr)
+        if (haName == nullptr) {
             return false;
+        }
     }
 
     return sendDiscovery("");
@@ -395,6 +419,24 @@ bool OTValue::isRoomunitValue() const {
     return false;
 }
 
+Mqtt::ValueTemplateType OTValue::getValueTemplateType() const {
+    if (isSlaveValue())
+        return Mqtt::VALTMPL_SLAVE;
+    else if (isMasterValue())
+        return Mqtt::VALTMPL_MASTER;
+    else if (isRoomunitValue())
+        return Mqtt::VALTMPL_ROOMUNIT;
+    else
+        return Mqtt::VALTMPL_NONE;
+}
+
+void OTValue::setAvailability() {
+    if (isSlaveValue())
+        haDisc.setSlaveAvailability();
+    else if (isRoomunitValue())
+        haDisc.setRoomunitAvailability();
+}
+
 bool OTValue::sendDiscovery(String field) {
     String fn = FPSTR(getName());
     if (!field.isEmpty()) {
@@ -402,23 +444,16 @@ bool OTValue::sendDiscovery(String field) {
         fn += field;
     }
     
-    String valTmpl;
+    Mqtt::ValueTemplateType vt = getValueTemplateType();
+    if (vt == Mqtt::VALTMPL_NONE)
+        return haDisc.publish(false);
 
-    if (isSlaveValue())
-        valTmpl = mqtt.getValueTemplate(Mqtt::VALTMPL_SLAVE, fn.c_str());
-    else if (isMasterValue())
-        valTmpl = mqtt.getValueTemplate(Mqtt::VALTMPL_MASTER, fn.c_str());
-    else if (isRoomunitValue())
-        valTmpl = mqtt.getValueTemplate(Mqtt::VALTMPL_ROOMUNIT, fn.c_str());
-
-    if (valTmpl.isEmpty())
-        return haDisc.publish(false);    
+    setAvailability();
 
     if (interval == 0)
         haDisc.setStateClass("");
 
-    haDisc.setValueTemplate(valTmpl);
-    return haDisc.publish(enabled);
+    return haDisc.publish(enabled, vt, fn.c_str());
 }
 
 void OTValue::refreshDisc() {
@@ -432,30 +467,43 @@ const char* OTValue::getName() const {
 }
 
 bool OTValue::isDataMessage(const OpenThermMessageID id, const OpenThermMessageType ty) {
-    return (ty == OpenThermMessageType::READ_ACK) 
-        || (ty == OpenThermMessageType::WRITE_DATA)
-        || (id == OpenThermMessageID::Status)
-        || (id == OpenThermMessageID::StatusSolarStorage)
-        || (id == OpenThermMessageID::StatusVentilationHeatRecovery);
+    if ((ty == OpenThermMessageType::READ_ACK) || (ty == OpenThermMessageType::WRITE_DATA))
+        return true;
+    
+    if ( (id == OpenThermMessageID::Status) || (id == OpenThermMessageID::StatusSolarStorage) || (id == OpenThermMessageID::StatusVentilationHeatRecovery) )
+        return (ty == OpenThermMessageType::READ_DATA);
+
+    return false;
+}
+
+bool OTValue::isDataMessage(const OpenThermMessageType mt) const {
+    return isDataMessage(id, mt);
 }
 
 void OTValue::setValue(const OpenThermMessageType ty, const uint16_t val) {
     numSet++;
-    
-    if (isDataMessage(id, ty)) {
+    bool disc = false;
+
+    if (isDataMessage(ty)) {
         value = val;
         setFlag = true;
+        if (!enabled)
+            discFlag = false;
         enabled = true;
+        disc = true;
     }
-    else
-        enabled = false;
-
-    if (!discFlag)
-        discFlag = sendDiscovery();
 
     // only save msgresult when message is a reply
-    if ( (ty != OpenThermMessageType::WRITE) && (ty != OpenThermMessageType::READ) )
+    if ( (ty != OpenThermMessageType::WRITE_DATA) && (ty != OpenThermMessageType::READ_DATA) ) {
         lastMsgResult = ty;
+        if (!isDataMessage(ty)) {
+            enabled = false;
+            disc = true;
+        }
+    }
+
+    if (disc && !discFlag)
+        discFlag = sendDiscovery();
 }
 
 void OTValue::setMsgResult(const OpenThermMessageType ty) {
@@ -551,6 +599,10 @@ void OTValueFloat::getValue(JsonVariant var) const {
     var.set<double>(d);
 }
 
+double OTValueFloat::getValue() const {
+    return round((int16_t)value * 10 / 256.0) / 10.0;
+}
+
 
 OTValueFloatTemp::OTValueFloatTemp(const OpenThermMessageID id, PGM_P haName):
         OTValueFloat(id, 10, haName) {
@@ -590,7 +642,7 @@ bool OTValueFlags::sendDiscFlag(const Flag *flag, const bool enb)  {
     String sId = FPSTR(flag->field);
 
     if (isRoomunitValue()) {
-        sName += F(" RU");
+        sName += F(" roomunit");
         sId += F("_ru");
     }
 
@@ -603,16 +655,14 @@ bool OTValueFlags::sendDiscFlag(const Flag *flag, const bool enb)  {
     fn += '.';
     fn += FPSTR(flag->field);
 
-    String valTmpl;
+    Mqtt::ValueTemplateType vt = getValueTemplateType();
+    if (vt == Mqtt::VALTMPL_NONE)
+        return haDisc.publish(false);
 
-    if (isSlaveValue())
-        valTmpl = mqtt.getValueTemplateBool(Mqtt::VALTMPL_SLAVE, fn.c_str());
-    else if (isMasterValue())
-        valTmpl = mqtt.getValueTemplateBool(Mqtt::VALTMPL_MASTER, fn.c_str());
-    else if (isRoomunitValue())
-        valTmpl = mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOMUNIT, fn.c_str());
-
+    String valTmpl = mqtt.getValueTemplateBool(vt, fn.c_str());
     haDisc.setValueTemplate(valTmpl);
+
+    setAvailability();
     haDisc.setEntityCategory(entityCategory);
     return haDisc.publish(enb);
 };
@@ -629,6 +679,7 @@ bool OTValueFlags::sendDiscovery() {
 OTValueStatus::OTValueStatus():
         OTValueFlags(Status, -1, flags, sizeof(flags) / sizeof(flags[0])) {
     OTValue::status = this;
+    enabled = true;
 }
 
 bool OTValueStatus::getChActive(const uint8_t channel) const{
@@ -744,6 +795,7 @@ void OTValueMasterStatus::getValue(JsonVariant var) const {
 
 OTValueVentStatus::OTValueVentStatus():
         OTValueFlags(StatusVentilationHeatRecovery, -1, flags, sizeof(flags) / sizeof(flags[0])) {
+    enabled = true;
 }
 
 
@@ -767,18 +819,18 @@ void OTValueSlaveConfigMember::getValue(JsonVariant var) const {
 }
 
 bool OTValueSlaveConfigMember::hasDHW() const {
-    return (value & (1<<8)) != 0;
+    return (value & (1<<BIT_DHW_PRESENT)) != 0;
 }
 
 bool OTValueSlaveConfigMember::hasCh(const uint8_t ch) const {
     if (ch == 1)
-        return (value & (1<<13)) != 0;
+        return (value & (1<<BIT_CH2_PRESENT)) != 0;
     else
         return true;
 }
 
 bool OTValueSlaveConfigMember::hasCooling() const {
-    return (value & (1<<10)) != 0;
+    return (value & (1<<BIT_COOLING_CONFIG)) != 0;
 }
 
 bool OTValueSlaveConfigMember::sendDiscovery() {

@@ -20,6 +20,7 @@ class CHcontrol {
 private:
     bool roomCompEnabled() const;
     bool getChActive() const;
+    bool getCurrentFlow(double &d) const;
     const uint8_t channel;
     struct Config {
         double roomSet; // default room set point
@@ -65,6 +66,11 @@ private:
     Scheduler schedule;
     double flowTemp;
     Sensor::Source lastFlowTempSrc;
+    struct {
+        bool init {false};
+        double min;
+        double max;
+    } flowStats;
 public:
     CHcontrol(const uint8_t channel);
     void setConfig(JsonObject &obj, const bool init);
@@ -80,6 +86,7 @@ public:
     void setRoomComp(const HADiscovery::ClimateMode mode);
     bool sendDiscoveries(const bool en);
     void setFlowTemp(const double temp, const Sensor::Source src);
+    void flameChange(const bool newFlame);
     double flowMin;
     ChannelOverride<bool> ovrdOn;
     ChannelOverride<double> ovrdTemp;

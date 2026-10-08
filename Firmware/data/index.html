@@ -959,6 +959,32 @@
             opacity: 0.96;
         }
 
+        body[data-view="curve"] #mainwrapper > :not(#heatingcurve),
+        body[data-view="curve"] #heatingcurve > :not(.curve-display-group):not(#curveConnectionHint):not(#curveChannelHint),
+        body[data-view="curve"] .curve-display-group > :not(.curve),
+        body[data-view="curve"] .curve-pin-control {
+            display: none;
+        }
+
+        body[data-view="curve"] .curve-display-group {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            background: none;
+            box-shadow: none;
+        }
+
+        body[data-view="curve"] #heatingcurve .curve {
+            margin: 0;
+        }
+
+        body[data-view="curve"] #curveConnectionHint,
+        body[data-view="curve"] #curveChannelHint {
+            margin-top: var(--space-2);
+            color: var(--warn);
+            text-align: center;
+        }
+
         .statusvalue.bool-ok::after {
             content: "";
             -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m4%2012%205%205L20%206%22%2F%3E%3C%2Fsvg%3E");
@@ -2083,6 +2109,10 @@
 </head>
 
 <body>
+    <script>
+        if (new URLSearchParams(location.search).has("curve"))
+            document.body.dataset.view = "curve";
+    </script>
     <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
         <symbol id="ui-icon-power" viewBox="0 0 24 24"><path d="M12 3v9M6.3 5.7a9 9 0 1 0 11.4 0"/></symbol>
         <symbol id="ui-icon-on" viewBox="0 0 24 24"><path d="M12 4v16"/></symbol>
@@ -2126,6 +2156,14 @@
                 <div class="metric-card metric-state-card">
                     <h5 aria-label="Status"></h5>
                     <div class="state-grid">
+                        <div class="state-item" id="stateOtMasterItem" hidden>
+                            <span class="state-label">OT master</span>
+                            <span class="state-icon is-unknown" id="stateOtMaster" title="unknown" aria-label="OpenTherm master connection status"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-icon-unknown"></use></svg></span>
+                        </div>
+                        <div class="state-item" id="stateOtSlaveItem" hidden>
+                            <span class="state-label">OT slave</span>
+                            <span class="state-icon is-unknown" id="stateOtSlave" title="unknown" aria-label="OpenTherm slave connection status"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-icon-unknown"></use></svg></span>
+                        </div>
                         <div class="state-item app-heat">
                             <span class="state-label">Flame</span>
                             <span class="state-icon is-unknown" id="stateFlame" title="unknown" aria-label="Flame status"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-icon-unknown"></use></svg></span>
@@ -2875,12 +2913,12 @@
                         <span class="statusvalue" field="master.room_t.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Room set temperature</h5>
-                        <span class="statusvalue" field="master.room_set_t.data" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield">
                         <h5>Room temperature 2</h5>
                         <span class="statusvalue" field="master.room_t2.data" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Room set temperature</h5>
+                        <span class="statusvalue" field="master.room_set_t.data" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Room set temperature 2</h5>
@@ -2937,32 +2975,6 @@
                 <h3>Roomunit</h3>
                 <div class="flexline">
                     <div class="statusfield">
-                        <h5>CH set temperature</h5>
-                        <span class="statusvalue" field="roomunit.ch_set_t.data" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Room temperature</h5>
-                        <span class="statusvalue" field="roomunit.room_t.data" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Room set temperature</h5>
-                        <span class="statusvalue" field="roomunit.room_set_t.data" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>DHW set temperature</h5>
-                        <span class="statusvalue" field="roomunit.dhw_set_t.data" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>Outside temperature</h5>
-                        <span class="statusvalue" field="roomunit.outside_t.data" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>max. CH setpoint</h5>
-                        <span class="statusvalue" field="roomunit.max_set_t.data" unit="&deg;C"></span>
-                    </div>
-                </div>
-                <div class="flexline">
-                    <div class="statusfield">
                         <h5>Heater circuit enabled</h5>
                         <span class="statusvalue" field="roomunit.status.data.ch_enable"></span>
                     </div>
@@ -2985,9 +2997,47 @@
                 </div>
                 <div class="flexline">
                     <div class="statusfield">
-                        <h5>Max. rel. modulation</h5>
-                        <span class="statusvalue" field="roomunit.max_rel_mod.data" unit="%"></span>
+                        <h5>Flow setpoint</h5>
+                        <span class="statusvalue" altroomunit field="roomunit.ch_set_t.data" unit="&deg;C"></span>
                     </div>
+                    <div class="statusfield">
+                        <h5>Flow setpoint 2</h5>
+                        <span class="statusvalue" field="roomunit.ch_set_t2.data" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Cooling</h5>
+                        <span class="statusvalue" field="master.cooling_ctrl.data" unit="%"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Room temperature</h5>
+                        <span class="statusvalue" field="roomunit.room_t.data" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Room temperature 2</h5>
+                        <span class="statusvalue" field="roomunit.room_t2.data" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Room set temperature</h5>
+                        <span class="statusvalue" field="roomunit.room_set_t.data" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Room set temperature 2</h5>
+                        <span class="statusvalue" field="roomunit.room_set_t2.data" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>DHW set temperature</h5>
+                        <span class="statusvalue" field="roomunit.dhw_set_t.data" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Outside temperature</h5>
+                        <span class="statusvalue" field="roomunit.outside_t.data" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>max. CH setpoint</h5>
+                        <span class="statusvalue" field="roomunit.max_set_t.data" unit="&deg;C"></span>
+                    </div>
+                </div>
+                <div class="flexline">
                     <div class="statusfield">
                         <h5>Product version</h5>
                         <span class="statusvalue" field="roomunit.master_prod_version.data"></span>
@@ -2995,6 +3045,14 @@
                     <div class="statusfield">
                         <h5>OT version</h5>
                         <span class="statusvalue" field="roomunit.master_ot_version.data"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Max. rel. modulation</h5>
+                        <span class="statusvalue" field="roomunit.max_rel_mod.data" unit="%"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>Cooling</h5>
+                        <span class="statusvalue" field="roomunit.cooling_ctrl.data" unit="%"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Member ID</h5>
@@ -3391,7 +3449,7 @@
                 </div>
             </div>
 
-            <div class="group">
+            <div class="group curve-display-group">
                 <h3>Heating curve</h3>
                 <div class="flexline">
                     <!-- Added curve mode switch to toggle between linear and multipoint curve. -->
@@ -3577,6 +3635,8 @@
                 </div>
             </div>
 
+            <div id="curveConnectionHint" role="status" hidden>No connection to device...</div>
+            <div id="curveChannelHint" role="status" hidden></div>
             <div class="group" id="scheduleGroup">
                 <h3>Time program</h3>
                 <div class="flexline">
@@ -3720,16 +3780,15 @@
                     <div class="param">
                         <h5>Mode</h5>
                         <select id="otModeSelect" field="otMode" intval>
-                            <option value="0">Bypass</option>
                             <option value="1">Master</option>
                             <option value="2">Repeater</option>
-                            <option value="4">Test</option>
+                            <option value="3">Master+Slave</option>
                         </select>
                     </div>
-                    <div class="param otmode-master">
-                        <h5>Enable slave interface</h5>
+                    <div class="param">
+                        <h5>Bypass</h5>
                         <label class="switch">
-                            <input type="checkbox" field="enableSlave" />
+                            <input type="checkbox" field="bypass" />
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -3887,7 +3946,7 @@
                         <h5>Member ID</h5>
                         <input field="masterMemberId" intval />
                     </div>
-                    <div class="param">
+                    <div class="param app-heat">
                         <h5>no DHW set</h5>
                         <label class="switch">
                             <input type="checkbox" field="noDhwSet" />
@@ -4251,6 +4310,11 @@
     </div>
     <div id="toastContainer" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
     <script>
+        // Keep shared state in this script: release minification processes scripts independently.
+        const curveParameter = new URLSearchParams(location.search).get("curve");
+        const curveChannel = curveParameter === "0" ? 0 : curveParameter === "1" ? 1 : null;
+        const curveOnly = curveParameter !== null;
+
         // Constants + Defaults
         const 
         CURVE_MODE_SIMPLE = 0,
@@ -4306,7 +4370,7 @@
             haPrefix: "homeassistant",
             slaveApp: 0, // 0 = heat/cool, 1 = ventilation, 2 = solar storage
             otMode: 4, // Test
-            enableSlave: false,
+            bypass: false,
             otDelay: 100,
             timezone: 3600,
             noDhwSet: false,
@@ -5891,6 +5955,25 @@
         }
 
         function updateHeroStateCard() {
+            function setConnectionIcon(id, itemId, connected) {
+                const icon = _(`#${id}`);
+                const item = _(`#${itemId}`);
+                if (!icon || !item)
+                    return;
+
+                const hasConnectionStatus = connected === true || connected === false;
+                item.hidden = !hasConnectionStatus;
+                if (!hasConnectionStatus)
+                    return;
+
+                icon.classList.remove("is-true", "is-error", "is-unknown");
+                icon.classList.add(connected ? "is-true" : "is-error");
+                icon.innerHTML = iconMarkup(connected ? "dot" : "cross");
+                icon.title = connected ? "connected" : "disconnected";
+            }
+
+            setConnectionIcon("stateOtMaster", "stateOtMasterItem", statuscache?.master?.connected);
+            setConnectionIcon("stateOtSlave", "stateOtSlaveItem", statuscache?.roomunit?.connected);
             setStateIcon("stateFlame", statuscache?.slave?.status?.flame, true);
 
             function setTriStateEnabledIcon(id, active, enabled, suspended = false) {
@@ -5900,25 +5983,26 @@
 
                 icon.classList.remove("is-true", "is-false", "is-inactive", "is-error", "is-unknown", "is-suspended");
 
-                if (enabled === false) {
-                    icon.classList.add("is-false");
-                    icon.innerHTML = iconMarkup("cross");
-                    icon.title = "disabled";
+
+                if (active === true) {
+                    icon.classList.add("is-true");
+                    icon.innerHTML = iconMarkup("check");
+                    icon.title = "active";
                 }
                 else if (suspended === true) {
                     icon.classList.add("is-suspended");
                     icon.innerHTML = iconMarkup("pause");
                     icon.title = "suspended";
                 }
-                else if (active === true) {
-                    icon.classList.add("is-true");
-                    icon.innerHTML = iconMarkup("check");
-                    icon.title = "active";
-                } 
                 else if (enabled === true) {
                     icon.classList.add("is-inactive");
                     icon.innerHTML = iconMarkup("circle");
                     icon.title = "inactive";
+                }
+                else if (enabled === false){
+                    icon.classList.add("is-false");
+                    icon.innerHTML = iconMarkup("cross");
+                    icon.title = "disabled";
                 }
                 else {
                     icon.classList.add("is-unknown");
@@ -6001,11 +6085,15 @@
 
             const stateCard = _(".metric-card.metric-state-card");
             const stateSignature = [
+                statuscache?.roomunit?.connected,
+                statuscache?.slave?.connected,
                 statuscache?.slave?.status?.flame,
                 statuscache?.slave?.status?.ch_mode,
                 statuscache?.slave?.status?.ch2_mode,
                 statuscache?.master?.status?.data?.ch_enable,
                 statuscache?.master?.status?.data?.ch2_enable,
+                getStatusValueByPath("heatercircuit.$.suspended", 0),
+                getStatusValueByPath("heatercircuit.$.suspended", 1),
                 statuscache?.slave?.status?.cooling,
                 statuscache?.master?.status?.data?.cooling_enable,
                 statuscache?.slave?.status?.dhw_mode,
@@ -6389,6 +6477,8 @@
             const ostsEnabled = (hcfg.outsideSuspend?.type === 1 || hcfg.outsideSuspend?.type === 2);
             const fmg = Math.ceil(flowmax / 10) * 10 + 5; // flowmax for graph
             const ost = statuscache.outsideTemp?.current;
+            canvas.width = width;
+            canvas.height = 20 + (fmg - 20) * canvas.width / 100;
             const axes = getCurveAxes();
             const origin = axes.origin;
             const xaxis = axes.xaxis;
@@ -6398,8 +6488,6 @@
             let ostCutoff = ostsThresh;
             var ctx = canvas.getContext("2d");
 
-            canvas.width = width;
-            canvas.height = 20 + (fmg - 20) * canvas.width / 100;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.lineWidth = 1;
             ctx.fillStyle = "#FFF";
@@ -6682,13 +6770,23 @@
                 ctx.stroke();
             }
 
-            if (statuscache.outsideTemp?.avg !== undefined) {
-                drawAxisIndicator('x', statuscache.outsideTemp.avg, "#58F", "#000");
+            if (statuscache.heatercircuit?.[currentCh]?.flowStats !== undefined) {
+                const flowStats = statuscache.heatercircuit[currentCh].flowStats;
+                const pMin = getPoint(xaxis.min, flowStats.min);
+                const pMax = getPoint(xaxis.min, flowStats.max);
+                ctx.strokeStyle = "rgba(255, 128, 40, 0.85)";
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(pMax.x, pMax.y);
+                ctx.lineTo(pMin.x, pMin.y);
+                ctx.stroke();
             }
 
-            if (statuscache.outsideTemp?.current !== undefined) {
+            if (statuscache.outsideTemp?.avg !== undefined)
+                drawAxisIndicator('x', statuscache.outsideTemp.avg, "#58F", "#000");
+
+            if (statuscache.outsideTemp?.current !== undefined)
                 drawAxisIndicator('x', statuscache.outsideTemp.current, "#58F", "#58F");
-            }
 
             if (curveDrag.active) {
                 ctx.beginPath();
@@ -8394,9 +8492,27 @@
                 if (!toolbar)
                     return;
 
-                toolbar.hidden = !(tabName === "setup" || tabName === "heatingcurve");
+                toolbar.hidden = curveOnly || !(tabName === "setup" || tabName === "heatingcurve");
             };
-            currentCh = uiState.currentCh;
+            currentCh = curveOnly ? (curveChannel ?? 0) : uiState.currentCh;
+            function updateCurveChannelVisibility() {
+                if (!curveOnly)
+                    return;
+
+                const hint = _("#curveChannelHint");
+                const ch2Present = statuscache?.slave?.slave_config_member?.ch2_present;
+                if (curveChannel === null)
+                    hint.textContent = "Invalid curve parameter. Use curve=0 or curve=1.";
+                else if (curveChannel === 1 && ch2Present !== true)
+                    hint.textContent = ch2Present === undefined
+                        ? "Waiting for heating circuit 2 status..."
+                        : "Heating circuit 2 is not available.";
+                else
+                    hint.textContent = "";
+                hint.hidden = hint.textContent === "";
+                _("#heatingcurve .curve").hidden = !hint.hidden;
+            }
+            updateCurveChannelVisibility();
             pinnedHeroFields = new Set(uiState.pinnedHeroFields || []);
             historyTree = normalizeHistoryTree(uiState.history);
             if (pinnedHeroFields.size === 0) {
@@ -8468,13 +8584,16 @@
                     if (tabName === "heatingcurve")
                         drawCurve();
 
-                    saveUiState({
-                        activeTab: tabName,
-                        currentCh: currentCh
-                    });
+                    if (!curveOnly) {
+                        saveUiState({
+                            activeTab: tabName,
+                            currentCh: currentCh
+                        });
+                    }
                 };
             });
-            const initialNav = _(`div.nav li[tab="${uiState.activeTab}"][channel="${currentCh}"]`) ||
+            const initialNav = curveOnly ? _(`div.nav li[tab="heatingcurve"][channel="${currentCh}"]`) :
+                _(`div.nav li[tab="${uiState.activeTab}"][channel="${currentCh}"]`) ||
                 _(`div.nav li[tab="${uiState.activeTab}"]`) ||
                 _("div.nav li.active");
             if (initialNav)
@@ -8492,6 +8611,12 @@
                     drawCurve();
             });
             curveResizeObserver.observe(curveCanvas.parentElement);
+            if (curveOnly) {
+                const connectionHintObserver = new MutationObserver(() => {
+                    _("#curveConnectionHint").hidden = _("#nocon").hidden;
+                });
+                connectionHintObserver.observe(_("#nocon"), { attributes: true, attributeFilter: ["hidden"] });
+            }
 
             _("#title").onclick  = (ev) => {
                 if (window.location.protocol == "file:")
@@ -8542,14 +8667,14 @@
                 });
 
                 switch (parseInt(mode)) {
-                    case 1:
-                    case 4:
+                    case 1: // master
+                    case 3: // master+slave
                         // show elements for master mode
                         __('.otmode-master').forEach(function(ele) {
                             ele.hidden = false;
                         });
                         break;
-                    case 2:
+                    case 2: // repeater
                         // show elements for repeater mode
                         __('.otmode-repeater').forEach(function(ele) {
                             ele.hidden = false;
@@ -8766,6 +8891,16 @@
                 return val;
             }
 
+            function updateBypassControl(root=document) {
+                const bypass = getStatusValueByPath("bypass");
+                if (typeof bypass !== "boolean")
+                    return;
+
+                const control = _('input[type="checkbox"][field="bypass"]', root);
+                if (control)
+                    control.checked = bypass;
+            }
+
             function updateUi(root=document) {
                 __('input:not([type]), input[type="password"]', root).forEach(ele => {
                     if (!ele.hasAttribute('field') || ele.hidden)
@@ -8782,6 +8917,8 @@
                     ele.checked = getConfigValFromPath(path);
                     ele.dispatchEvent(new Event("change"));
                 });
+
+                updateBypassControl(root);
 
                 __(".range[field]", root).forEach(ele => {
                     setRangeParam(ele);
@@ -8852,6 +8989,17 @@
                     let path = ele.getAttribute('field');
                     ele.addEventListener("input", (ev) => {
                         setConfigVal(path, ev.target.checked);
+                        if (path === "bypass") {
+                            fetch(`/set?bypass=${ev.target.checked ? "ON" : "OFF"}`)
+                                .then((resp) => {
+                                    if (!resp.ok)
+                                        throw new Error("HTTP " + resp.status);
+                                })
+                                .catch((err) => {
+                                    showToast("Error setting bypass:\n" + err.message, "error", 5000);
+                                    addRecentEvent("Bypass update failed");
+                                });
+                        }
                     });
                 });
 
@@ -8928,7 +9076,8 @@
                 });
 
                 // Enable drag & drop for curve points
-                initCurveDrag();
+                if (!curveOnly)
+                    initCurveDrag();
                 updateUi();
 
                 // Must run after updateUi(): select change handlers write the control value back to config.
@@ -9046,6 +9195,8 @@
 
             function consumeStatusCache() {
                 _("#nocon").hidden = true;
+                updateBypassControl();
+                updateCurveChannelVisibility();
 
                 const titleVersion = _("#titleVersion");
                 if (titleVersion) {
@@ -9427,7 +9578,8 @@
                     websocket.close();
                 }
             }
-            connectWS();
+            if (!curveOnly)
+                connectWS();
         };
     </script>
 </body>

@@ -89,7 +89,8 @@ Mqtt::Mqtt():
         lastConTry(0),
         lastStatus(0),
         configSet(false),
-        conFlag(false) {
+        conFlag(false),
+        lastSentStatus(0) {
     cli.onConnect(mqttConnectCb);
     cli.onDisconnect(mqttDisconnectCb);
     cli.onMessage(mqttMessageReceived);
@@ -156,19 +157,29 @@ void Mqtt::loop() {
     if (!cli.connected() && ((millis() - lastConTry) > 10000) && WiFi.isConnected() && configSet) {
         lastConTry = millis();
         haDisc.defaultStateTopic = baseTopic + F("/state");
-        cli.setWill(statusTopic.c_str(), 0, true, "offline");
+        cli.setWill(statusTopic.c_str(), 0, true, "0");
+        lastSentStatus = 0;
         cli.connect();        
     }
 
     if (cli.connected()) {
         if (!discFlag) {
             discFlag = true;
-            cli.publish(statusTopic.c_str(), 0, true, PSTR("online"));
             discFlag &= otcontrol.sendDiscovery();
             discFlag &= OneWireNode::sendDiscoveryAll();
             discFlag &= BLESensor::sendDiscoveryAll();
             for (int i=0; i<sizeof(auxInput) / sizeof(auxInput[0]); i++)
                 discFlag &= auxInput[i].sendDiscovery();
+        }
+
+        int newStatus = 1 << 0;
+        if (otcontrol.masterConnected())
+            newStatus |= 1 << 1;
+        if (otcontrol.slaveConnected())
+            newStatus |= 1 << 2;
+        if (newStatus != lastSentStatus) {
+            lastSentStatus = newStatus;
+            cli.publish(statusTopic.c_str(), 0, true, String(newStatus).c_str());
         }
 
         if ((millis() - lastStatus) > 5000) {
@@ -407,38 +418,45 @@ String Mqtt::getTopicString(const MqttTopic topic) {
 
 String Mqtt::getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit) {
     String result = F("{% set tmp=(((value_json");
-    String ftmp = FPSTR(field);
+    String ftmp = FPSTR(field); // e. g. "dhw_set_t", "status.dhw_enable"
 
     switch (vt) {
+    case VALTMPL_NONE:
+        return "";
+        
     case VALTMPL_ROOT:
-        result += F(")");
+        result += F(")"); // result: {% set tmp=(((value_json)
         break;
         
     case VALTMPL_SLAVE:
-        result += F(".get('slave') or {})");
+        result += F(".get('slave') or {})"); // result: {% set tmp=(((value_json.get('slave') or {})
         break;
 
     case VALTMPL_MASTER: {
-        result += F(".get('master') or {})");
-
         const int pidx = ftmp.indexOf('.');
         if (pidx > -1)
-            ftmp = ftmp.substring(0, pidx) + F(".data") + ftmp.substring(pidx);
+            ftmp = ftmp.substring(0, pidx) + F(".data") + ftmp.substring(pidx); // adds 
         else
             ftmp += F(".data");
-        break;
+        [[fallthrough]];
     }
+
+    case VALTMPL_MASTER_ROOT:
+        result += F(".get('master') or {})"); // result: {% set tmp=(((value_json.get('master') or {})
+        break;
 
     case VALTMPL_ROOMUNIT: {
-        result += F(".get('roomunit') or {})");
-
         const int pidx = ftmp.indexOf('.');
         if (pidx > -1)
             ftmp = ftmp.substring(0, pidx) + F(".data") + ftmp.substring(pidx);
         else
             ftmp += F(".data");
-        break;
+        [[fallthrough]];
     }
+
+    case VALTMPL_ROOMUNIT_ROOT:
+        result += F(".get('roomunit') or {})");
+        break;
 
     case VALTMPL_HEATING_CIRCUIT:
         result += F(".get('heatercircuit') or [])[#]");
@@ -501,4 +519,8 @@ String Mqtt::getValueTemplateBool(const ValueTemplateType vt, PGM_P field, const
     String result = getValuePath(vt, field, ch, ommit);
     result += F("{{ none if tmp is none else 'ON' if tmp else 'OFF' }}");
     return result;
+}
+
+String &Mqtt::getStatusTopic() {
+    return statusTopic;
 }

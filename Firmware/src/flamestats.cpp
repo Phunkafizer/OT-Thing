@@ -4,43 +4,42 @@
 
 FlameStats flameStats;
 
-void FlameStats::set(const bool flame) {
-    if (currentFlame != flame) {
-        if (lastLoop == 0) {
-            // this is first flame on within 1st minute
-            memset(on.buf, 60, sizeof(on.buf));
-            on.sum = BUFSIZE_MINUTES * 60UL;
-        }
+bool FlameStats::currentFlame {false};
 
-        if (flame) {
-            cycles.current++;
-            offTimes.current = (millis() - lastEdge) / 1000;
-            if ((lastEdge > 0) && !offTimesInit) {
-                // this is first flame on after 1st flame off, initialize off times buffer
-                for (int i=0; i<BUFSIZE_CYCLES; i++)
-                    offTimes.buf[i] = offTimes.current;
-                offTimes.sum = offTimes.current * BUFSIZE_CYCLES;
-                offTimesInit = true;
-            }
-            offTimes.update(idxCycles);
-        }
-        else {
-            onTimes.current = (millis() - lastEdge) / 1000;
-            if ((lastEdge > 0) && !onTimesInit) {
-                // this is first flame off after 1st flame on, initialize on times buffer
-                for (int i=0; i<BUFSIZE_CYCLES; i++)
-                    onTimes.buf[i] = onTimes.current;
-                onTimes.sum = onTimes.current * BUFSIZE_CYCLES;
-                onTimesInit = true;
-            }
-            onTimes.update(idxCycles);
-            idxCycles = (idxCycles + 1) % BUFSIZE_CYCLES;
-        }
-        
-        update();
-        lastEdge = millis();
-        currentFlame = flame;
+void FlameStats::flameChange(const bool flame) {
+    if (lastLoop == 0) {
+        // this is first flame on within 1st minute
+        memset(on.buf, 60, sizeof(on.buf));
+        on.sum = BUFSIZE_MINUTES * 60UL;
     }
+
+    if (flame) {
+        cycles.current++;
+        offTimes.current = (millis() - lastEdge) / 1000;
+        if ((lastEdge > 0) && !offTimesInit) {
+            // this is first flame on after 1st flame off, initialize off times buffer
+            for (int i=0; i<BUFSIZE_CYCLES; i++)
+                offTimes.buf[i] = offTimes.current;
+            offTimes.sum = offTimes.current * BUFSIZE_CYCLES;
+            offTimesInit = true;
+        }
+        offTimes.update(idxCycles);
+    }
+    else {
+        onTimes.current = (millis() - lastEdge) / 1000;
+        if ((lastEdge > 0) && !onTimesInit) {
+            // this is first flame off after 1st flame on, initialize on times buffer
+            for (int i=0; i<BUFSIZE_CYCLES; i++)
+                onTimes.buf[i] = onTimes.current;
+            onTimes.sum = onTimes.current * BUFSIZE_CYCLES;
+            onTimesInit = true;
+        }
+        onTimes.update(idxCycles);
+        idxCycles = (idxCycles + 1) % BUFSIZE_CYCLES;
+    }
+    
+    update();
+    lastEdge = millis();
 }
 
 void FlameStats::update() {
@@ -92,8 +91,6 @@ double FlameStats::getOffTime() const {
 }
 
 void FlameStats::loop() {
-    set(otcontrol.getFlame());
-
     if (millis() >= lastLoop + 60000) {
         update();
 

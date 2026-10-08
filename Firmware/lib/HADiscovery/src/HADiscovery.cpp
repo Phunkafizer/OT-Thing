@@ -9,6 +9,7 @@ PGM_P HA_DEVICE_CLASS_HUMIDITY PROGMEM = "humidity";
 PGM_P HA_DEVICE_CLASS_VOLUME_FLOW_RATE PROGMEM = "volume_flow_rate";
 PGM_P HA_DEVICE_CLASS_CURRENT PROGMEM = "current";
 PGM_P HA_DEVICE_CLASS_DURATION PROGMEM = "duration";
+PGM_P HA_DEVICE_CLASS_CONNECTIVITY PROGMEM = "connectivity";
 
 PGM_P HA_UNIT_PPM PROGMEM = "ppm";
 PGM_P HA_UNIT_RPM PROGMEM = "rpm";
@@ -32,7 +33,6 @@ PGM_P HA_ACTION_HEATING PROGMEM = "heating";
 PGM_P HA_ACTION_COOLING PROGMEM = "cooling";
 PGM_P HA_ACTION_IDLE PROGMEM = "idle";
 
-PGM_P HA_AVAILABILITY                   PROGMEM = "avty";
 PGM_P HA_TOPIC                          PROGMEM = "t";
 PGM_P HA_UNIQUE_ID                      PROGMEM = "uniq_id";
 PGM_P HA_OBJECT_ID                      PROGMEM = "obj_id";
@@ -71,7 +71,10 @@ PGM_P HA_RETAIN                         PROGMEM = "ret";
 PGM_P HA_MODE_STATE_TOPIC               PROGMEM = "mode_stat_t";
 PGM_P HA_MODE_STATE_TEMPLATE            PROGMEM = "mode_stat_tpl";
 PGM_P HA_ACTION_TOPIC                   PROGMEM = "act_t";
-PGM_P HA_ACTION_TEMPLATE                PROGMEM = "act_tpl";    
+PGM_P HA_ACTION_TEMPLATE                PROGMEM = "act_tpl";
+PGM_P HA_AVAILABILITY_TOPIC             PROGMEM = "avty_t";
+PGM_P HA_AVAILABILITY_TEMPLATE          PROGMEM = "avty_tpl";
+
 
 String HADiscovery::ha_prefix = F("homeassistant");
 String HADiscovery::devName;
@@ -235,6 +238,11 @@ void HADiscovery::setActionTemplate(const String templ) {
         doc[FPSTR(HA_ACTION_TOPIC)] = defaultStateTopic;
 }
 
+void HADiscovery::setAvailability(const String &topic, const String &templ) {
+    doc[FPSTR(HA_AVAILABILITY_TOPIC)] = topic;
+    doc[FPSTR(HA_AVAILABILITY_TEMPLATE)] = templ;
+}
+
 void HADiscovery::createSensor(String name, String id) {
     init(name, id, F("sensor"));
     doc[FPSTR(HA_STATE_CLASS)] = FPSTR(HA_STATE_CLASS_MEASUREMENT);
@@ -276,6 +284,7 @@ void HADiscovery::createNumber(String name, String id, String cmdTopic) {
     init(name, id, F("number"));
     doc[FPSTR(HA_PLATFORM)] = F("number");
     doc[FPSTR(HA_COMMAND_TOPIC)] = cmdTopic;
+    setRetain(true);
 }
 
 void HADiscovery::createClima(String name, String id, String tmpCmdTopic) {
@@ -283,6 +292,7 @@ void HADiscovery::createClima(String name, String id, String tmpCmdTopic) {
     setStateTopic(""); // climate schema has no state_topic, HA rejects the config with it
     doc[FPSTR(HA_TEMPERATURE_COMMAND_TOPIC)] = tmpCmdTopic;
     setModes(0x07); // off, heat, auto
+    setRetain(true);
 }
 
 void HADiscovery::createrWaterHeater(String name, String id, String tmpCmdTopic) {
@@ -299,6 +309,7 @@ void HADiscovery::createrWaterHeater(String name, String id, String tmpCmdTopic)
 void HADiscovery::createSwitch(String name, String id, String cmdTopic) {
     init(name, id, F("switch"));
     doc[FPSTR(HA_COMMAND_TOPIC)] = cmdTopic;
+    setRetain(true);
 }
 
 PGM_P HADiscovery::getClimateModeStr(const ClimateMode mode) {

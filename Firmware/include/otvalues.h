@@ -8,10 +8,6 @@
 /*
    Class 1 : Control and Status Information
 ID	Msg SV  TV  LV  Name
-0	R-	*   *   *   Master status
-1	W	-   *   -   Control Setpoint (Tset)
-5	R	*   -   *   ASF-flags / OEM-fault-code
-8	-W	-   *   -   Control Setpoint 2 (TsetCH2)
 70	R-	*   *   *   Master status ventilation/heat-recovery
 71	W	-   *   -   Vset / Relative ventilation position
 72  R-  *   -   *   ASF-flags / OEM-fault-code (ventilation/heat-recovery)
@@ -23,8 +19,6 @@ ID	Msg SV  TV  LV  Name
 
    Class 2 : Configuration Information
 ID	Msg	Name
-2	-W	-   *   -   Master configuration
-3	R-	*   -   *   Slave configuration
 74	R-	Configuration ventilation/heat-recovery
 75	R-	*   -   *   OpenTherm version ventilation/heat-recovery
 76  R-  *   -   *   Ventilation / heat-recovery product version number and type
@@ -38,16 +32,8 @@ ID	Msg	Name
 126	-W	-   *   -   Master product version number and type
 127 R-  *   -   *   Slave product version number and type
 
-   Class 3 : Remote Request
-ID	Msg	Name
-4	-W	Remote Request
-
    Class 4 : Sensor and Informational Data
 ID	Msg	Name
-16	-W	-   *   -   Room Setpoint
-17	R-	*   -   *   Relative Modulation Level
-18	R-	*   -   *   CH water pressure
-19	R-	*   -   *   DHW flow rate
 20	RW	-   *   -   Day of Week & Time of Day
 21	RW	-   *   -   Date
 22	RW	-   *   -   Year
@@ -96,8 +82,6 @@ ID	Msg	Name
 
    Class 5 : Remote Boiler Parameters
 ID	Msg	Name
-6	R-	*   -   *   Remote-parameter transfer-enable flags
-
 48	R-	*   -   *   DHW setpoint upper/lower bound
 49	R-	*   -   *   max CH setpoint upper/lower bound
 56	RW	-   *   -   DHW Setpoint
@@ -125,10 +109,6 @@ ID	Msg	Name
 
    Class 8 : Control of Special Applications
 ID	Msg	Name
-7	-W	Cooling control signal
-9	R-	*   -   *   Remote Override Room Setpoint
-14	-W	-   *   -   Maximum relative modulation level setting
-15	R-	*   -   *   Maximum boiler capacity & Minimum modulation level
 39  R-  *   -   *   Remote Override Room Setpoint 2
 99	RW	Remote Override Operating Mode Heating
 100	R-	*   -   *   Remote Override Room Setpoint function
@@ -143,6 +123,8 @@ protected:
     virtual bool sendDiscovery();
     bool sendDiscovery(String field);
     PGM_P getName() const;
+    Mqtt::ValueTemplateType getValueTemplateType() const;
+    void setAvailability();
     const OpenThermMessageID id;
     uint16_t value;
     bool enabled;
@@ -167,6 +149,7 @@ public:
     void unset();
     void setTimeout();
     static OTValue* getSlaveValue(const OpenThermMessageID id);
+    static OTValue* getSlaveValue(const String otname);
     static OTValue* getMasterValue(const OpenThermMessageID id);
     static OTValue* getroomUnitValue(const OpenThermMessageID id);
     bool isSlaveValue() const;
@@ -175,12 +158,14 @@ public:
     static void setTexhaustAsFloat(bool asFloat);
     void refreshDisc();
     bool isSet() const;
+    static bool isSet(const OpenThermMessageID id);
     bool hasReply() const;
     OpenThermMessageType getLastMsgResult() const;
     static class OTValueStatus *status; // for quick access
     static class OTValueSlaveConfigMember *slaveConfig; // for quick access
     static class OTValueVentSlaveConfigMember *ventSlaveConfig; // for quick access
     static bool isDataMessage(const OpenThermMessageID id, const OpenThermMessageType ty);
+    virtual bool isDataMessage(const OpenThermMessageType mt) const;
 };
 
 class OTValueu16: public OTValue {
@@ -217,6 +202,7 @@ private:
     void getValue(JsonVariant var) const override;
 public:
     OTValueFloat(const OpenThermMessageID id, const int interval, PGM_P haName=nullptr);
+    double getValue() const;
 };
 
 
@@ -344,24 +330,33 @@ protected:
 };
 
 class OTValueSlaveConfigMember: public OTValueFlags {
-private:
-    void getValue(JsonVariant var) const override;
-    const Flag flags[7] PROGMEM = {
-        {8, "dhw_present",              "DHW present",              nullptr},
-        {9, "ctrl_type",                "Control type on/off",      nullptr},
-        {10, "cooling_config",          "Cooling supported",        nullptr},
-        {11, "dhw_config",              "DHW storage",              nullptr},
-        {12, "master_lowoff_pumpctrl",  "Master pump ctrl allowed", nullptr},
-        {13, "ch2_present",             "CH2 present",              nullptr},
-        {15, "heat_cool_ctrl",          "Heat/Cool master ctrl",    nullptr},
-    };
-protected:
-    bool sendDiscovery() override;
 public:    
     OTValueSlaveConfigMember();
     bool hasDHW() const;
     bool hasCh(const uint8_t ch) const;
     bool hasCooling() const;
+private:
+    void getValue(JsonVariant var) const override;
+    enum {
+        BIT_DHW_PRESENT = 8,
+        BIT_CTRL_TYPE = 9,
+        BIT_COOLING_CONFIG = 10,
+        BIT_DHW_CONFIG = 11,
+        BIT_MASTER_LOWOFF_PUMPCTRL = 12,
+        BIT_CH2_PRESENT = 13,
+        BIT_HEAT_COOL_CTRL = 15
+    };
+    const Flag flags[7] PROGMEM = {
+        {BIT_DHW_PRESENT,               "dhw_present",             "DHW present",               nullptr},
+        {BIT_CTRL_TYPE,                 "ctrl_type",               "Control type on/off",       nullptr},
+        {BIT_COOLING_CONFIG,            "cooling_config",          "Cooling supported",         nullptr},
+        {BIT_DHW_CONFIG,                "dhw_config",              "DHW storage",               nullptr},
+        {BIT_MASTER_LOWOFF_PUMPCTRL,    "master_lowoff_pumpctrl",  "Master pump ctrl allowed",  nullptr},
+        {BIT_CH2_PRESENT,               "ch2_present",             "CH2 present",               nullptr},
+        {BIT_HEAT_COOL_CTRL,            "heat_cool_ctrl",          "Heat/Cool master ctrl",     nullptr},
+    };
+protected:
+    bool sendDiscovery() override;
 };
 
 class OTValueVentSlaveConfigMember: public OTValueFlags {
@@ -420,7 +415,7 @@ private:
     void getValue(JsonVariant var) const override;
     bool sendDiscovery() override;
 public:    
-    OTValueProductVersion(const OpenThermMessageID id, const int interval, PGM_P haName);
+    OTValueProductVersion(const OpenThermMessageID id, const int interval, PGM_P haName = nullptr);
 };
 
 class OTValueCapacityModulation: public OTValue {
@@ -545,6 +540,6 @@ public:
 
 extern OTValue *slaveValues[56];
 extern OTValue *masterValues[20];
-extern OTValue *roomUnitValues[9];
+extern OTValue *roomUnitValues[15];
 
 extern const char* getOTname(OpenThermMessageID id);

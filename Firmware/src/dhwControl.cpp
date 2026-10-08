@@ -99,7 +99,7 @@ double DHWControl::getSetpointRU() const {
 }
 
 bool DHWControl::sendDiscoveries(const bool en) {
-    haDisc.createClima(F("DHW"), Mqtt::getTopicString(Mqtt::TOPIC_DHWSETTEMP), mqtt.getCmdTopic(Mqtt::TOPIC_DHWSETTEMP));
+    haDisc.createClima(F("DHW"), Mqtt::TOPIC_DHWSETTEMP);
     haDisc.setMinMaxTemp(5, 65, 1);
     haDisc.setCurrentTemperatureTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_SLAVE, getOTname(OpenThermMessageID::Tdhw)));
     haDisc.setInitial(45);
@@ -109,7 +109,6 @@ bool DHWControl::sendDiscoveries(const bool en) {
     haDisc.setActionTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_DHW, STR_STATKEY_ACTION));
     haDisc.setOptimistic(true);
     haDisc.setIcon(F("mdi:water-heater"));
-    haDisc.setRetain(true);
     haDisc.setModes(0x03);
     if (!haDisc.publish(en))
         return false;

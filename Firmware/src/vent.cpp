@@ -21,22 +21,18 @@ void VentControl::getJson(JsonObject &obj) const {
 }
 
 bool VentControl::sendDiscoveries(const bool en) {
-    haDisc.createNumber(F("ventilation set point"), Mqtt::getTopicString(Mqtt::TOPIC_VENTSETPOINT), mqtt.getCmdTopic(Mqtt::TOPIC_VENTSETPOINT));
-    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_VENT, STR_STATKEY_SETPOINT));
+    haDisc.createNumber(F("ventilation set point"), Mqtt::TOPIC_VENTSETPOINT);
     haDisc.setMinMax(0, 100, 1);
     haDisc.setOptimistic(true);
-    haDisc.setRetain(true);
-    if (!haDisc.publish(en))
+    if (!haDisc.publish(en, Mqtt::VALTMPL_VENT, STR_STATKEY_SETPOINT))
         return false;
 
     haDisc.createSwitch(F("ventilation enable"), Mqtt::TOPIC_VENTENABLE);
-    haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_VENT, STR_STATKEY_ENABLE));
-    if (!haDisc.publish(en))
+    if (!haDisc.publish(en, Mqtt::VALTMPL_VENT, STR_STATKEY_ENABLE))
         return false;
 
     haDisc.createSwitch(F("enable free vent."), Mqtt::TOPIC_FREEVENTENABLE);
-    haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_VENT, STR_STATKEY_FREEVENTENABLE));
-    if (!haDisc.publish(en))
+    if (!haDisc.publish(en, Mqtt::VALTMPL_VENT, STR_STATKEY_FREEVENTENABLE))
         return false;
 
     return true;
@@ -44,13 +40,11 @@ bool VentControl::sendDiscoveries(const bool en) {
 
 bool VentControl::sendCapDiscoveries() {
     haDisc.createSwitch(F("open bypass"), Mqtt::TOPIC_OPENBYPASS);
-    haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_VENT, STR_STATKEY_OPENBYPASS));
-    if (!haDisc.publish(OTValue::ventSlaveConfig->hasBypass()))
+    if (!haDisc.publish(OTValue::ventSlaveConfig->hasBypass(), Mqtt::VALTMPL_VENT, STR_STATKEY_OPENBYPASS))
         return false;
 
     haDisc.createSwitch(F("auto bypass"), Mqtt::TOPIC_AUTOBYPASS);
-    haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_VENT, STR_STATKEY_AUTOBYPASS));
-    if (!haDisc.publish(OTValue::ventSlaveConfig->hasBypass()))
+    if (!haDisc.publish(OTValue::ventSlaveConfig->hasBypass(), Mqtt::VALTMPL_VENT, STR_STATKEY_AUTOBYPASS))
         return false;
 
     return true;

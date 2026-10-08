@@ -3,19 +3,19 @@
 
 struct FlameStats {
     void loop();
+    void flameChange(const bool flame);
     uint8_t getDuty() const;
     double getFreq() const;
     double getOnTime() const;
     double getOffTime() const;
     int getCurrentOnTime() const;
     void writeJson(JsonObject &obj) const;
+    static bool currentFlame;
 private:
     static const uint8_t BUFSIZE_MINUTES = 180; // 3 h
     static const uint8_t BUFSIZE_CYCLES = 10;
     void update();
-    void set(const bool flame);
     double secToMin(const uint32_t sec) const;
-    bool currentFlame {false};
     uint32_t lastEdge {0};
     uint32_t lastLoop {0};
     uint8_t idxMinutes {0};

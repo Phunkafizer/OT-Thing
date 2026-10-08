@@ -51,12 +51,15 @@ public:
         TOPIC_TURBODURATION2,
         TOPIC_UNKNOWN // has to be at end of list!
     };
-    enum ValueTemplateType {
+    enum ValueTemplateType: int8_t {
+        VALTMPL_NONE = -1,
         VALTMPL_ROOT,
         VALTMPL_DHW,
         VALTMPL_SLAVE,
         VALTMPL_MASTER,
+        VALTMPL_MASTER_ROOT,
         VALTMPL_ROOMUNIT,
+        VALTMPL_ROOMUNIT_ROOT,
         VALTMPL_HEATING_CIRCUIT,
         VALTMPL_FLAMESTATS,
         VALTMPL_COOLING,
@@ -77,11 +80,14 @@ public:
     uint32_t getNumDisc() const;
     String getValueTemplate(const ValueTemplateType vt, PGM_P field, const uint8_t ch=-1, const uint8_t ommit=-1);
     String getValueTemplateBool(const ValueTemplateType vt, PGM_P field, const uint8_t ch=-1, const uint8_t ommit=-1);
+    String &getStatusTopic();
 private:
     void onConnect();
     void onDisconnect(AsyncMqttClientDisconnectReason reason);
     friend void mqttConnectCb(bool sessionPresent);
     friend void mqttDisconnectCb(AsyncMqttClientDisconnectReason reason);
+    bool strToBool(const String &str);
+    String getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit);
     AsyncMqttClient cli;
     uint32_t lastConTry;
     uint32_t lastStatus;
@@ -91,8 +97,8 @@ private:
     String statusTopic;
     bool discFlag {false}; // discovery flag; set after MQTT (re-) connect
     bool conFlag;
-    bool strToBool(const String &str);
-    String getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit);
+    int lastSentStatus;
+    
 };
 
 extern Mqtt mqtt;

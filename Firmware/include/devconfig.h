@@ -27,7 +27,7 @@ public:
     bool clearUiCredentials();
     String getHostname() const;
     int getTimezone() const;
-    bool masterOvrdEnabled; // set if otMode is master/test and slave is enabled
+    bool masterOvrdEnabled; // set if otMode is master+slave
 } devconfig;
 
 extern const char CFG_FILENAME[] PROGMEM;

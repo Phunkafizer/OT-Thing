@@ -11,6 +11,7 @@ extern PGM_P HA_DEVICE_CLASS_HUMIDITY PROGMEM;
 extern PGM_P HA_DEVICE_CLASS_VOLUME_FLOW_RATE PROGMEM;
 extern PGM_P HA_DEVICE_CLASS_CURRENT PROGMEM;
 extern PGM_P HA_DEVICE_CLASS_DURATION PROGMEM;
+extern PGM_P HA_DEVICE_CLASS_CONNECTIVITY PROGMEM;
 
 extern PGM_P HA_UNIT_PPM PROGMEM;
 extern PGM_P HA_UNIT_RPM PROGMEM;
@@ -86,13 +87,14 @@ public:
     void setEntityCategory(PGM_P cat);
     void setActionTopic(const String topic);
     void setActionTemplate(const String templ);
+    void setAvailability(const String &topic, const String &templ);
 
     void createTempSensor(String name, String id);
     void createPowerFactorSensor(String name, String id);
     void createPressureSensor(String name, String id);
     void createHourDuration(String name, String id);
     void createSensor(String name, String id);
-    void createBinarySensor(String name, String id, String deviceClass);
+    void createBinarySensor(String name, String id, String deviceClass = "");
     void createNumber(String name, String id, String cmdTopic);
     void createClima(String name, String id, String tmpCmdTopic);
     void createSwitch(String name, String id, String cmdTopic);

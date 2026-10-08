@@ -7,7 +7,11 @@
 # ]
 # ///
 
-"""Run with `uv run Firmware/tools/mock_otthing.py` from the repository root."""
+"""Run with `uv run Firmware/tools/mock_otthing.py` from the repository root.
+
+The web UI is served at /; /curve1 and /curve2 redirect to /?curve=0 and
+/?curve=1 to display only the respective heating curve.
+"""
 
 from pathlib import Path
 import asyncio
@@ -18,7 +22,7 @@ import secrets
 import time
 
 from fastapi import FastAPI, Request, UploadFile, WebSocket
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 
 app = FastAPI(title="OTthing Mock Server")
 
@@ -220,6 +224,7 @@ state = {
             "invalidCount": 0,
         },
         "roomunit": {
+            "connected": True,
             "ch_set_t": {"result": True, "data": 44.0},
             "ch_set_t2": {"result": True, "data": 22.3},
             "room_t": {"result": True, "data": 20.1},
@@ -528,6 +533,16 @@ def ensure_heatercircuit(idx: int) -> None:
 @app.get("/")
 def get_index() -> FileResponse:
     return FileResponse(INDEX_FILE)
+
+
+@app.get("/curve1")
+def get_curve1() -> RedirectResponse:
+    return RedirectResponse("/?curve=0", status_code=302)
+
+
+@app.get("/curve2")
+def get_curve2() -> RedirectResponse:
+    return RedirectResponse("/?curve=1", status_code=302)
 
 
 @app.get("/status")
@@ -1002,6 +1017,7 @@ const FIELDS = [
         { key: "master.cooling_ctrl.data", label: "Cooling ctrl (%)",       type: "number", step: 1 },
     ]},
     { section: "OT Roomunit", rows: [
+        { key: "roomunit.connected",           label: "Connected",               type: "bool" },
         { key: "roomunit.ch_set_t.data",       label: "CH flow setpoint (°C)",   type: "number", step: 0.1 },
         { key: "roomunit.ch_set_t2.data",      label: "CH2 flow setpoint (°C)",  type: "number", step: 0.1 },
         { key: "roomunit.room_t.data",         label: "Room temp 1 (°C)",        type: "number", step: 0.1 },
@@ -1026,6 +1042,7 @@ const FIELDS = [
         { key: "roomunit.invalidCount",label: "Frames invalid", type: "number", step: 1 },
     ]},
     { section: "OT Slave status", rows: [
+        { key: "slave.connected",         label: "Connected",  type: "bool" },
         { key: "slave.status.fault",      label: "Fault",      type: "bool" },
         { key: "slave.status.flame",      label: "Flame",      type: "bool" },
         { key: "slave.status.diagnostic", label: "Diagnostic", type: "bool" },

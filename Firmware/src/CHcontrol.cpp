@@ -129,6 +129,12 @@ void CHcontrol::getJson(JsonObject &obj) {
         turboObj[F("shift")] = turbo.shift;
         turboObj[F("duration")] = (uint32_t) ((turbo.endTime - time(nullptr) + 59) / 60);
     }
+
+    if (flowStats.init) {
+        JsonObject jfs = obj[F("flowStats")].to<JsonObject>();
+        jfs[F("min")] = flowStats.min;
+        jfs[F("max")] = flowStats.max;
+    }
 }
 
 double CHcontrol::getFlow() {
@@ -244,6 +250,19 @@ bool CHcontrol::getChActive() const {
     return OTValue::status->getChActive(channel);
 }
 
+bool CHcontrol::getCurrentFlow(double &d) const {
+    OTValueFloatTemp* ft = nullptr;
+    if (channel == 0)
+        ft = static_cast<OTValueFloatTemp*>(OTValue::getSlaveValue(OpenThermMessageID::Tboiler));
+    else
+        ft = static_cast<OTValueFloatTemp*>(OTValue::getSlaveValue(OpenThermMessageID::TflowCH2));
+    if (ft && ft->isSet()) {
+        d = ft->getValue();
+        return true;
+    }
+    return false;
+}
+
 void CHcontrol::setMode(const HADiscovery::ClimateMode mode) {
     this->mode = mode;
 }
@@ -251,6 +270,18 @@ void CHcontrol::setMode(const HADiscovery::ClimateMode mode) {
 void CHcontrol::setFlowTemp(const double temp, const Sensor::Source src) {
     flowTemp = temp;
     lastFlowTempSrc = src;
+}
+
+void CHcontrol::flameChange(const bool newFlame) {
+    flameStats.flameChange(newFlame);
+
+    double d;
+    if (getCurrentFlow(d)) {
+        if (newFlame)
+            flowStats.min = d;
+        else
+            flowStats.max = d;
+    }
 }
 
 void CHcontrol::setRoomComp(const HADiscovery::ClimateMode mode) {
@@ -273,13 +304,27 @@ bool CHcontrol::roomCompEnabled() const {
 }
 
 bool CHcontrol::suspendEnabled() const {
-    return config.roomSuspend.enabled || config.minSuspend;
+    return config.roomSuspend.enabled
+     || config.minSuspend 
+     || (config.outsideSuspend.type != Config::OutsideSuspend::OUTSIDE_SUSPEND_DISABLED);
 }
 
 bool CHcontrol::loop() {
     double schedTemp;
     double rt, rsp;
     bool res = false;
+    double flow;
+
+    if (getCurrentFlow(flow)) {
+        if (!flowStats.init) {
+            flowStats.min = flow;
+            flowStats.max = flow;
+            flowStats.init = true;
+        }
+
+        flowStats.min = std::min(flowStats.min, flow);
+        flowStats.max = std::max(flowStats.max, flow);
+    }
 
     if (schedule.getSetpoint(schedTemp)) {
         roomSetPoint[channel].set(schedTemp, Sensor::SOURCE_NA);
@@ -404,8 +449,7 @@ bool CHcontrol::sendDiscoveries(const bool en) {
     };
 
     String str = replace(PSTR("flow temperature #"), channel + 1, 1);
-    Mqtt::MqttTopic tp = topic(Mqtt::TOPIC_CHSETTEMP1, channel);
-    haDisc.createClima(str, Mqtt::getTopicString(tp), mqtt.getCmdTopic(tp));
+    haDisc.createClima(str, topic(Mqtt::TOPIC_CHSETTEMP1, channel));
     haDisc.setMinMaxTemp(20, getFlowMax(), 0.5);
     haDisc.setCurrentTemperatureTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_SLAVE, PSTR("flow_t#"), channel + 1, 1));
     haDisc.setInitial(35);
@@ -415,13 +459,11 @@ bool CHcontrol::sendDiscoveries(const bool en) {
     haDisc.setActionTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ACTION, channel));
     haDisc.setOptimistic(true);
     haDisc.setIcon(F("mdi:heating-coil"));
-    haDisc.setRetain(true);
     if (!haDisc.publish(en))
         return false;
 
     str = replace(PSTR("room temperature #"), channel + 1, 1);
-    tp = topic(Mqtt::TOPIC_ROOMSETPOINT1, channel);
-    haDisc.createClima(str, Mqtt::getTopicString(tp), mqtt.getCmdTopic(tp));
+    haDisc.createClima(str, topic(Mqtt::TOPIC_ROOMSETPOINT1, channel));
     haDisc.setMinMaxTemp(10, 30, 0.5);
     haDisc.setCurrentTemperatureTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMTEMP, channel));
     haDisc.setModeCommandTopic(mqtt.getCmdTopic(topic(Mqtt::TOPIC_ROOMMODE1, channel)));
@@ -430,78 +472,66 @@ bool CHcontrol::sendDiscoveries(const bool en) {
     haDisc.setTemperatureStateTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMSETPOINT, channel));
     haDisc.setActionTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMACTION, channel));
     haDisc.setOptimistic(true);
-    haDisc.setRetain(true);
     haDisc.setModes(0x00);
     if (!haDisc.publish(roomSetPoint[channel].isMqttSource() && en))
         return false;
 
     str = replace(PSTR("room setpoint #"), channel + 1, 1);
-    tp = topic(Mqtt::TOPIC_ROOMSETPOINT1, channel);
-    haDisc.createTempSensor(str, Mqtt::getTopicString(tp));
-    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMSETPOINT, channel));
-    if (!haDisc.publish(en))
+    haDisc.createTempSensor(str, topic(Mqtt::TOPIC_ROOMSETPOINT1, channel));
+    if (!haDisc.publish(en, Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMSETPOINT, channel))
         return false;
 
     str = replace(PSTR("room temperature #"), channel + 1, 1);
-    tp = topic(Mqtt::TOPIC_ROOMTEMP1, channel);
-    haDisc.createNumber(str, Mqtt::getTopicString(tp), mqtt.getCmdTopic(tp));
+    haDisc.createNumber(str, topic(Mqtt::TOPIC_ROOMTEMP1, channel));
     haDisc.setDeviceClass(FPSTR(HA_DEVICE_CLASS_TEMPERATURE));
     haDisc.setUnit(FPSTR(HA_UNIT_CELSIUS));
-    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMTEMP, channel));
     haDisc.setMinMax(0, 30, 0.1);
-    if (!haDisc.publish(roomSetPoint[channel].isMqttSource() && en))
+    if (!haDisc.publish(roomSetPoint[channel].isMqttSource() && en, Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMTEMP, channel))
         return false;
 
     str = replace(PSTR("room temperature #"), channel + 1, 1);
     String id = replace(PSTR("current_room_temp#"), channel + 1);
     haDisc.createTempSensor(str, id);
-    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMTEMP, channel));
-    if (!haDisc.publish(en))
+    if (!haDisc.publish(en, Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMTEMP, channel))
         return false;
 
     str = replace(PSTR("roomcomp. integrator #"), channel + 1, 1);
     id = replace(PSTR("roomcomp_integ#"), channel + 1);
     haDisc.createSensor(str, id);
-    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMCOMPINTEGRATOR, channel));
     haDisc.setUnit(FPSTR(HA_UNIT_KELVIN));
-    if (!haDisc.publish(en))
+    if (!haDisc.publish(en, Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMCOMPINTEGRATOR, channel))
         return false;
 
     str = replace(PSTR("ret. limit integrator #"), channel + 1, 1);
     id = replace(PSTR("retlimit_integ#"), channel + 1);
     haDisc.createSensor(str, id);
-    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_RETURNLIMITINTEGRATOR, channel));
     haDisc.setUnit(FPSTR(HA_UNIT_KELVIN));
-    if (!haDisc.publish(en))
+    if (!haDisc.publish(en, Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_RETURNLIMITINTEGRATOR, channel))
         return false;
 
-    str = replace(PSTR("suspend CH #"), channel + 1, 1);
-    id = replace(PSTR("ch_susp#"), channel + 1, 1);
+    str = replace(PSTR("CH suspended #"), channel + 1, 1);
+    id = replace(PSTR("ch_susp#"), channel + 1);
     haDisc.createBinarySensor(str, id, "");
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_SUSPENDED, channel));
     if (!haDisc.publish(suspendEnabled() && en))
         return false;
 
     str = replace(PSTR("min. flow temperature #"), channel + 1, 1);
-    tp = topic(Mqtt::TOPIC_CHMINTEMP1, channel);
-    haDisc.createNumber(str, Mqtt::getTopicString(tp), mqtt.getCmdTopic(tp));
+    haDisc.createNumber(str, topic(Mqtt::TOPIC_CHMINTEMP1, channel));
     haDisc.setDeviceClass(FPSTR(HA_DEVICE_CLASS_TEMPERATURE));
     haDisc.setUnit(FPSTR(HA_UNIT_CELSIUS));
-    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_FLOWMIN, channel));
     haDisc.setMinMax(10, 50, 1);
-    if (!haDisc.publish(en))
+    if (!haDisc.publish(en, Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_FLOWMIN, channel))
         return false;
 
     str = replace(PSTR("override CH on #"), channel + 1, 1);
-    tp = topic(Mqtt::TOPIC_OVERRIDECHON1, channel);
-    haDisc.createSwitch(str, tp);
+    haDisc.createSwitch(str, topic(Mqtt::TOPIC_OVERRIDECHON1, channel));
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_OVERRIDE_ON, channel));
     if (!haDisc.publish(otcontrol.getOverrideEnabled() && en))
         return false;
 
     str = replace(PSTR("override CH flow #"), channel + 1, 1);
-    tp = topic(Mqtt::TOPIC_OVERRIDECHFLOW1, channel);
-    haDisc.createSwitch(str, tp);
+    haDisc.createSwitch(str, topic(Mqtt::TOPIC_OVERRIDECHFLOW1, channel));
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_OVERRIDE_TEMP, channel));
     if (!haDisc.publish(otcontrol.getOverrideEnabled() && en))
         return false;

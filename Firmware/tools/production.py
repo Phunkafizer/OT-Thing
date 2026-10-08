@@ -18,6 +18,7 @@ Handles:
 - Stable USB device detection (VID/PID)
 - Bootloader, firmware, and partitions upload
 - Device configuration (MAC reading, hard reset, network setup)
+- Slave test data upload (HTTP 200 required before TCP stream verification)
 - Batch mode with continuous device reprogramming
 """
 
@@ -44,6 +45,70 @@ def _ok(msg):   print(f"{_GREEN}{msg}{_RESET}")
 def _err(msg):  print(f"{_RED}{msg}{_RESET}")
 def _warn(msg): print(f"{_YELLOW}{msg}{_RESET}")
 def _act(msg):  print(f"{_CYAN}{msg}{_RESET}")
+
+def OTFLOAT(d):
+    i = int(d);
+    f = (d - i) * 256
+    return i<<8 | int(f)
+
+def HB(i):
+    return (i << 8)
+
+def HLB(h, l):
+    return (h << 8) | l
+
+TESTDATA = {
+    "status": "0000",
+    "fault_flags": "0000",
+    "vent_fault_flags": "0000",
+    "oem_diag_code": 0,
+    "slave_config_member": HB(0b00100001) | 8,
+    "vent_slave_config_member": HB(0b00000110) | 8,
+    "slave_ot_version": HLB(4, 2),
+    "vent_ot_version": HLB(4,2 ),
+    "slave_prod_version": HLB(1, 0),
+    "vent_prod_version": HLB(1, 0),
+    "rel_mod": 63,
+    "ch_pressure": OTFLOAT(1.2),
+    "dhw_flow_rate": OTFLOAT(0.7),
+    "dhw_t": OTFLOAT(45.0),
+    "outside_t": OTFLOAT(20.0),
+    "return_t": OTFLOAT(35.0),
+    "flow_t2": OTFLOAT(50.0),
+    "dhw_t2": OTFLOAT(45.0),
+    "exhaust_t": OTFLOAT(60.0),
+    "boiler_heat_ex_t": OTFLOAT(55.0),
+    "boiler_fan": HLB(30, 31),
+    "flame_current": OTFLOAT(17.8),
+    "rel_vent": 55,
+    "rel_hum_exhaust": 74,
+    "co2_exhaust": 1200,
+    "supply_inlet_t": OTFLOAT(22.0),
+    "supply_outlet_t": OTFLOAT(22.0),
+    "exhaust_inlet_t": OTFLOAT(22.0),
+    "exhaust_outlet_t": OTFLOAT(22.0),
+    "exhaust_fan_speed": 4300,
+    "supply_fan_speed": 4600,
+    "cooling_op_hours": 1234,
+    "power_cycles": 465,
+    "unsuccessful_burner_starts": 94,
+    "num_flame_signal_low": 12,
+    "burner_starts": 150,
+    "ch_pump_starts": 200,
+    "dhw_pump_starts": 180,
+    "dhw_burner_starts": 130,
+    "burner_op_hours": 5000,
+    "chpump_op_hours": 4500,
+    "dhwpump_op_hours": 4000,
+    "dhw_burner_op_hours": 3500,
+    "rp_flags": HLB(0b00000011, 0b00000011),
+    "dhw_bounds": HLB(70, 30),
+    "ch_bounds": HLB(75, 15),
+    "max_cap_min_mod": HLB(16, 50),
+    "tr_override": OTFLOAT(22.5),
+    "tr_override2": OTFLOAT(22.6),
+    "outside_t": OTFLOAT(17.5)
+}
 
 
 def _release_artifact_paths(project_dir):
@@ -350,6 +415,27 @@ def upload_firmware(port, project_dir):
         _err(f"✗ Upload failed: {e}")
         _warn("Restarting programming cycle from device detection...")
         return None
+
+
+def send_test_data(host):
+    """Post TESTDATA as JSON and require HTTP 200 before stream verification."""
+    import requests
+
+    endpoint = f"http://{host}/setslavedata"
+    print(f"\n=== Sending slave test data to {endpoint} ===")
+    try:
+        response = requests.post(endpoint, json=TESTDATA, timeout=5, allow_redirects=False)
+    except requests.exceptions.RequestException as exc:
+        _err(f"Slave test data upload failed: {exc}")
+        return False
+
+    print(f"Response: {response.status_code}")
+    if response.status_code != 200:
+        _err(f"Slave test data upload failed: expected HTTP 200, got {response.status_code}")
+        return False
+
+    _ok("Slave test data uploaded successfully")
+    return True
 
 
 def verify_tcp_stream(host, port, max_cycles=20, connect_timeout=30, read_timeout=10):
@@ -806,6 +892,8 @@ def batch_upload(project_dir):
             time.sleep(2)
 
             if not connect_to_otthing_wifi(interface=wifi_interface):
+                failure_count += 1
+            elif not send_test_data(DEVICE_IP):
                 failure_count += 1
             elif not verify_tcp_stream(DEVICE_IP, DEVICE_DATA_PORT):
                 failure_count += 1

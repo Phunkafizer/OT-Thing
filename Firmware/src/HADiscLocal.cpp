@@ -1,6 +1,5 @@
 #include "HADiscLocal.h"
 #include <WiFi.h>
-#include "mqtt.h"
 
 OTThingHADiscovery haDisc;
 
@@ -26,7 +25,18 @@ void OTThingHADiscovery::begin() {
 
 void OTThingHADiscovery::createSwitch(String name, Mqtt::MqttTopic topic) {
     HADiscovery::createSwitch(name, Mqtt::getTopicString(topic), mqtt.getCmdTopic(topic));
-    haDisc.setRetain(true);
+}
+
+void OTThingHADiscovery::createNumber(String name, Mqtt::MqttTopic topic) {
+    HADiscovery::createNumber(name, Mqtt::getTopicString(topic), mqtt.getCmdTopic(topic));
+}
+
+void OTThingHADiscovery::createClima(String name, Mqtt::MqttTopic topic) {
+    HADiscovery::createClima(name, Mqtt::getTopicString(topic), mqtt.getCmdTopic(topic));
+}
+
+void OTThingHADiscovery::createTempSensor(String name, Mqtt::MqttTopic topic) {
+    HADiscovery::createTempSensor(name, Mqtt::getTopicString(topic));
 }
 
 bool OTThingHADiscovery::publish(const bool avail) {
@@ -40,6 +50,19 @@ bool OTThingHADiscovery::publish(const bool avail) {
     }
 
     return mqtt.publish(topic, doc, true);
+}
+
+void OTThingHADiscovery::setSlaveAvailability() {
+    setAvailability(mqtt.getStatusTopic(), F("{{ 'online' if (value | int(0) | bitwise_and(2)) != 0 else 'offline' }}"));
+}
+
+void OTThingHADiscovery::setRoomunitAvailability() {
+    setAvailability(mqtt.getStatusTopic(), F("{{ 'online' if (value | int(0) | bitwise_and(4)) != 0 else 'offline' }}"));
+}
+
+bool OTThingHADiscovery::publish(const bool avail, const Mqtt::ValueTemplateType vt, PGM_P field, const uint8_t ch) {
+    haDisc.setValueTemplate(mqtt.getValueTemplate(vt, field, ch));
+    return haDisc.publish(avail);
 }
 
 HADiscovery::ClimateAction OTThingHADiscovery::calcAction(const bool active, const bool enabled, const HADiscovery::ClimateAction actAction) {
