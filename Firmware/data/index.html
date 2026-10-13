@@ -3287,15 +3287,15 @@
 
                 <h4>Room compensation (PI controller)</h4>
                 <div class="param">
-                    <h5>enable</h5>
+                    <h5>enable (default)</h5>
                     <div>
                         <label class="switch">
-                            <input class="curveparam" type="checkbox" hideele="roomcompparams" field="heating.$.roomComp.enabled" />
+                            <input class="curveparam" type="checkbox" field="heating.$.roomComp.enabled" />
                             <span class="slider"></span>
                         </label>
                     </div>
                 </div>
-                <div id="roomcompparams" class="flexline">
+                <div class="flexline">
                     <div class="param range" field="heating.$.roomComp.p">
                         <h5>P gain</h5>
                         <div class="flexline">
@@ -6490,7 +6490,7 @@
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.lineWidth = 1;
-            ctx.fillStyle = "#FFF";
+            ctx.fillStyle = "#CCC";
             ctx.textBaseline = "middle";
             ctx.textAlign = "center";
             ctx.font = '11px sans-serif';
@@ -6508,11 +6508,11 @@
             for (let y = yaxis.min; y <= yaxis.max; y += yaxis.step) {
                 drawLine(xaxis.min, y, xaxis.max, y);
                 p = getPoint(0, y);
-                ctx.fillText(y, origin.x - 10, p.y);
+                ctx.fillText(y, origin.x - 12, p.y);
             }
             ctx.stroke();
 
-            ctx.strokeStyle = "#111";
+            ctx.strokeStyle = "#222";
             ctx.beginPath();
             for (let y = yaxis.min + yaxis.step / 2; y <= yaxis.max; y += yaxis.step) {
                 drawLine(xaxis.min, y, xaxis.max, y)
@@ -6525,10 +6525,10 @@
             for (let x = xaxis.min; x >= xaxis.max; x -= xaxis.step) {
                 drawLine(x, yaxis.min, x, yaxis.max);
                 p = getPoint(x, 0);
-                ctx.fillText(x, p.x, origin.y + 10);
+                ctx.fillText(x, p.x, origin.y + 12);
             }
             ctx.stroke();
-            ctx.strokeStyle = "#111";
+            ctx.strokeStyle = "#222";
             ctx.beginPath();
             for (var x = xaxis.min - xaxis.step / 2; x >= xaxis.max; x -= xaxis.step) {
                 drawLine(x, yaxis.min, x, yaxis.max);
@@ -6536,8 +6536,8 @@
             ctx.stroke();
 
             //draw x-axis
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = "#CCC";
             ctx.beginPath();
             drawLine(xaxis.min, yaxis.min, xaxis.max, yaxis.min);
             ctx.stroke();
@@ -6556,17 +6556,20 @@
                 hcfg.points = normalizeCurvePoints(hcfg.points);
             let roomcomp = 0;
             let pi_err = 0;
-            if (hcfg.roomComp?.enabled ?? false) {
-                const hcs = statuscache?.heatercircuit?.[currentCh] ?? {};
-                if (hcs?.roomtemp !== undefined) {
-                    pi_err = roomset - hcs.roomtemp;
-                    roomcomp = (hcfg.roomComp?.p ?? 0) * pi_err + hcs.roomcompInteg ?? 0;
-                    // boost
-                    if (pi_err > 1.0)
-                        roomcomp += (hcfg.roomComp?.boost ?? 0) * pi_err;
-                    roomcomp = clip(roomcomp, 12, -5);
-                }
+            let roomCompActive = false;
+
+            const hcs = statuscache?.heatercircuit?.[currentCh] ?? {};
+            if (hcs?.roomtemp !== undefined) {
+                pi_err = roomset - hcs.roomtemp;
+                roomcomp = (hcfg.roomComp?.p ?? 0) * pi_err + hcs.roomcompInteg ?? 0;
+                // boost
+                if (pi_err > 1.0)
+                    roomcomp += (hcfg.roomComp?.boost ?? 0) * pi_err;
+                roomcomp = clip(roomcomp, 12, -5);
+
+                roomCompActive = hcs?.roomMode === "auto";
             }
+
 
             function getPoint(ot, ft) {
                 return {
@@ -6667,8 +6670,7 @@
             if (hcfg.returnLimit.deltaT !== 0)
                 drawFlowCurve("#58F", -hcfg.returnLimit.deltaT, true); // draw return limit curve
 
-            if (roomcomp != 0)
-                drawFlowCurve("#0F0", roomcomp);
+            drawFlowCurve("#0F0", roomcomp);
 
             drawFlowCurve("#F00");
 
@@ -6713,11 +6715,16 @@
                 //draw outsidetemp & it's flowtemperature
                 let ftsensor = getFlowTemperature(ost, roomset, hcfg);
                 const deadband = (pi_err >= -0.2) && (pi_err <= 0.2);
-                if (!deadband)
+                let col;
+                if (!deadband && roomCompActive) {
                     ftsensor += roomcomp;
+                    col = '#0F0'; // green when room compensation is active
+                }
+                else
+                    col = '#F00'; // red when room compensation is inactive
+
                 ftsensor = clip(ftsensor, flowmax, flowmin);
                 const psensor = getPoint(ost, ftsensor);
-                const col = ((roomcomp === 0.0) || deadband) ? '#F00': '#0F0';
                 
                 ctx.lineWidth = 1;
                 ctx.strokeStyle = "#58F";
