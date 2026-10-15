@@ -25,6 +25,7 @@ public:
 class OTWRSetBoilerTemp: public OTWriteRequest {
 public:
     OTWRSetBoilerTemp(const uint8_t ch);
+    void sendFloat(const double f);
 };
 
 class OTWRMasterConfigMember: public OTWriteRequest {

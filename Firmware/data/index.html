@@ -3558,6 +3558,10 @@
                         <h5>Outside temperature</h5>
                         <span class="statusvalue" field="outsideTemp.current" unit="°C"></span>
                     </div>
+                    <div class="statusfield">
+                        <h5>&Oslash; Outside temperature (24 h)</h5>
+                        <span class="statusvalue" field="outsideTemp.avg" unit="°C"></span>
+                    </div>
                     <div class="statusfield nohide">
                         <h5>Room setpoint</h5>
                         <span class="statusvalue" field="heatercircuit.$.roomsetpoint" unit="°C"></span>
@@ -3565,6 +3569,14 @@
                     <div class="statusfield nohide">
                         <h5>Room temperature</h5>
                         <span class="statusvalue" field="heatercircuit.$.roomtemp" unit="&deg;C"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>room comp. error</h5>
+                        <span class="statusvalue" field="heatercircuit.$.piError" unit="K"></span>
+                    </div>
+                    <div class="statusfield">
+                        <h5>room comp. integrator</h5>
+                        <span class="statusvalue" field="heatercircuit.$.roomcompInteg" unit="K"></span>
                     </div>
                     <div class="statusfield nohide">
                         <h5>Flow setpoint</h5>
@@ -3581,14 +3593,6 @@
                     <div class="statusfield">
                         <h5>Return temperature</h5>
                         <span class="statusvalue" field="heatercircuit.$.returnTemp" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>PI error</h5>
-                        <span class="statusvalue" field="heatercircuit.$.piError" unit="K"></span>
-                    </div>
-                    <div class="statusfield">
-                        <h5>room comp. integrator</h5>
-                        <span class="statusvalue" field="heatercircuit.$.roomcompInteg" unit="K"></span>
                     </div>
                     <div class="statusfield">
                         <h5>ret. limit reduction</h5>

@@ -49,6 +49,11 @@ OTWRSetBoilerTemp::OTWRSetBoilerTemp(const uint8_t ch):
         id = OpenThermMessageID::TsetCH2;
 }
 
+void OTWRSetBoilerTemp::sendFloat(const double f) {
+    int16_t tmp = round(f);
+    send(tmp << 8);
+}
+
 OTWRMasterConfigMember::OTWRMasterConfigMember():
         OTWriteRequest(MConfigMMemberIDcode, 180) {
 }

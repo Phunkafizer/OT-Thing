@@ -273,8 +273,6 @@ void CHcontrol::setFlowTemp(const double temp, const Sensor::Source src) {
 }
 
 void CHcontrol::flameChange(const bool newFlame) {
-    flameStats.flameChange(newFlame);
-
     double d;
     if (getCurrentFlow(d)) {
         if (newFlame)
