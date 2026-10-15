@@ -3566,6 +3566,10 @@
                         <h5>Room temperature</h5>
                         <span class="statusvalue" field="heatercircuit.$.roomtemp" unit="&deg;C"></span>
                     </div>
+                    <div class="statusfield nohide">
+                        <h5>Flow setpoint</h5>
+                        <span class="statusvalue" field="heatercircuit.$.flowsetpoint" unit="&deg;C"></span>
+                    </div>
                     <div class="statusfield" data-current-channel="0">
                         <h5>Flow temperature</h5>
                         <span class="statusvalue" field="slave.flow_t" unit="&deg;C"></span>
@@ -3573,10 +3577,6 @@
                     <div class="statusfield CH2" data-current-channel="1" hidden>
                         <h5>Flow temperature</h5>
                         <span class="statusvalue" field="slave.flow_t2" unit="&deg;C"></span>
-                    </div>
-                    <div class="statusfield nohide">
-                        <h5>Flow setpoint</h5>
-                        <span class="statusvalue" field="heatercircuit.$.flowsetpoint" unit="&deg;C"></span>
                     </div>
                     <div class="statusfield">
                         <h5>Return temperature</h5>
