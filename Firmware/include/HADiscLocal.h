@@ -20,6 +20,7 @@ public:
     HADiscovery::ClimateAction calcAction(const bool active, const bool enabled, const HADiscovery::ClimateAction actAction = HADiscovery::ACTION_HEATING);
     void setSlaveAvailability();
     void setRoomunitAvailability();
+    void setOTThingAvailability();
 };
 
 extern OTThingHADiscovery haDisc;

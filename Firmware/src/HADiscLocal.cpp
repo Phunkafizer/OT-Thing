@@ -60,6 +60,10 @@ void OTThingHADiscovery::setRoomunitAvailability() {
     setAvailability(mqtt.getStatusTopic(), F("{{ 'online' if (value | int(0) | bitwise_and(4)) != 0 else 'offline' }}"));
 }
 
+void OTThingHADiscovery::setOTThingAvailability() {
+    setAvailability(mqtt.getStatusTopic(), F("{{ 'online' if (value | int(0) | bitwise_and(1)) != 0 else 'offline' }}"));
+}
+
 bool OTThingHADiscovery::publish(const bool avail, const Mqtt::ValueTemplateType vt, PGM_P field, const uint8_t ch) {
     haDisc.setValueTemplate(mqtt.getValueTemplate(vt, field, ch));
     return haDisc.publish(avail);

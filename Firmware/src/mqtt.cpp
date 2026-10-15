@@ -157,7 +157,7 @@ void Mqtt::loop() {
     if (!cli.connected() && ((millis() - lastConTry) > 10000) && WiFi.isConnected() && configSet) {
         lastConTry = millis();
         haDisc.defaultStateTopic = baseTopic + F("/state");
-        cli.setWill(statusTopic.c_str(), 0, true, "0");
+        cli.setWill(statusTopic.c_str(), 1, true, "0");
         lastSentStatus = 0;
         cli.connect();        
     }
@@ -178,8 +178,8 @@ void Mqtt::loop() {
         if (otcontrol.slaveConnected())
             newStatus |= 1 << 2;
         if (newStatus != lastSentStatus) {
-            lastSentStatus = newStatus;
-            cli.publish(statusTopic.c_str(), 0, true, String(newStatus).c_str());
+            if (cli.publish(statusTopic.c_str(), 1, true, String(newStatus).c_str()) > 0)
+                lastSentStatus = newStatus;
         }
 
         if ((millis() - lastStatus) > 5000) {
@@ -205,8 +205,8 @@ bool Mqtt::publish(String topic, JsonDocument &payload, const bool retain) {
     String ps;
     if (!payload.isNull())
         serializeJson(payload, ps);
-    cli.publish(topic.c_str(), 0, retain, ps.c_str());
-    return true;
+        
+    return (cli.publish(topic.c_str(), 1, retain, ps.c_str()) > 0);
 }
 
 void Mqtt::onMessage(const char *topic, String &payload) {

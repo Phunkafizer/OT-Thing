@@ -110,11 +110,13 @@ bool DHWControl::sendDiscoveries(const bool en) {
     haDisc.setOptimistic(true);
     haDisc.setIcon(F("mdi:water-heater"));
     haDisc.setModes(0x03);
+    haDisc.setSlaveAvailability();
     if (!haDisc.publish(en))
         return false;
 
     haDisc.createSwitch(F("DHW blocking"), Mqtt::TOPIC_DHWBLOCKING);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOT, STR_STATKEY_DHWBLOCKING));
+    haDisc.setSlaveAvailability();
     if (!haDisc.publish(en))
         return false;
 

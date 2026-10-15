@@ -459,6 +459,7 @@ bool CHcontrol::sendDiscoveries(const bool en) {
     haDisc.setActionTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ACTION, channel));
     haDisc.setOptimistic(true);
     haDisc.setIcon(F("mdi:heating-coil"));
+    haDisc.setSlaveAvailability();
     if (!haDisc.publish(en))
         return false;
 
@@ -473,11 +474,13 @@ bool CHcontrol::sendDiscoveries(const bool en) {
     haDisc.setActionTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMACTION, channel));
     haDisc.setOptimistic(true);
     haDisc.setModes(0x00);
+    haDisc.setSlaveAvailability();
     if (!haDisc.publish(roomSetPoint[channel].isMqttSource() && en))
         return false;
 
     str = replace(PSTR("room setpoint #"), channel + 1, 1);
     haDisc.createTempSensor(str, topic(Mqtt::TOPIC_ROOMSETPOINT1, channel));
+    haDisc.setSlaveAvailability();
     if (!haDisc.publish(en, Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMSETPOINT, channel))
         return false;
 
@@ -486,18 +489,21 @@ bool CHcontrol::sendDiscoveries(const bool en) {
     haDisc.setDeviceClass(FPSTR(HA_DEVICE_CLASS_TEMPERATURE));
     haDisc.setUnit(FPSTR(HA_UNIT_CELSIUS));
     haDisc.setMinMax(0, 30, 0.1);
+    haDisc.setSlaveAvailability();
     if (!haDisc.publish(roomSetPoint[channel].isMqttSource() && en, Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMTEMP, channel))
         return false;
 
     str = replace(PSTR("room temperature #"), channel + 1, 1);
     String id = replace(PSTR("current_room_temp#"), channel + 1);
     haDisc.createTempSensor(str, id);
+    haDisc.setSlaveAvailability();
     if (!haDisc.publish(en, Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMTEMP, channel))
         return false;
 
     str = replace(PSTR("roomcomp. integrator #"), channel + 1, 1);
     id = replace(PSTR("roomcomp_integ#"), channel + 1);
     haDisc.createSensor(str, id);
+    haDisc.setSlaveAvailability();
     haDisc.setUnit(FPSTR(HA_UNIT_KELVIN));
     if (!haDisc.publish(en, Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_ROOMCOMPINTEGRATOR, channel))
         return false;
@@ -505,6 +511,7 @@ bool CHcontrol::sendDiscoveries(const bool en) {
     str = replace(PSTR("ret. limit integrator #"), channel + 1, 1);
     id = replace(PSTR("retlimit_integ#"), channel + 1);
     haDisc.createSensor(str, id);
+    haDisc.setSlaveAvailability();
     haDisc.setUnit(FPSTR(HA_UNIT_KELVIN));
     if (!haDisc.publish(en, Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_RETURNLIMITINTEGRATOR, channel))
         return false;
@@ -512,6 +519,7 @@ bool CHcontrol::sendDiscoveries(const bool en) {
     str = replace(PSTR("CH suspended #"), channel + 1, 1);
     id = replace(PSTR("ch_susp#"), channel + 1);
     haDisc.createBinarySensor(str, id, "");
+    haDisc.setSlaveAvailability();
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_SUSPENDED, channel));
     if (!haDisc.publish(suspendEnabled() && en))
         return false;
@@ -521,17 +529,20 @@ bool CHcontrol::sendDiscoveries(const bool en) {
     haDisc.setDeviceClass(FPSTR(HA_DEVICE_CLASS_TEMPERATURE));
     haDisc.setUnit(FPSTR(HA_UNIT_CELSIUS));
     haDisc.setMinMax(10, 50, 1);
+    haDisc.setSlaveAvailability();
     if (!haDisc.publish(en, Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_FLOWMIN, channel))
         return false;
 
     str = replace(PSTR("override CH on #"), channel + 1, 1);
     haDisc.createSwitch(str, topic(Mqtt::TOPIC_OVERRIDECHON1, channel));
+    haDisc.setSlaveAvailability();
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_OVERRIDE_ON, channel));
     if (!haDisc.publish(otcontrol.getOverrideEnabled() && en))
         return false;
 
     str = replace(PSTR("override CH flow #"), channel + 1, 1);
     haDisc.createSwitch(str, topic(Mqtt::TOPIC_OVERRIDECHFLOW1, channel));
+    haDisc.setSlaveAvailability();
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_OVERRIDE_TEMP, channel));
     if (!haDisc.publish(otcontrol.getOverrideEnabled() && en))
         return false;

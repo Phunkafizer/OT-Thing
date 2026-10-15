@@ -898,6 +898,7 @@ bool OTControl::sendDiscovery() {
     haDisc.setDeviceClass(FPSTR(HA_DEVICE_CLASS_TEMPERATURE));
     haDisc.setUnit(FPSTR(HA_UNIT_CELSIUS));
     haDisc.setMinMax(-30, 45, 0.1);
+    haDisc.setOTThingAvailability();
     discFlag &= haDisc.publish(outsideTemp.isMqttSource(), Mqtt::VALTMPL_ROOT, PSTR("outsideTemp.current"));
 
     discFlag &= chcontrol[0].sendDiscoveries(isHeatCool);
@@ -907,50 +908,61 @@ bool OTControl::sendDiscovery() {
     haDisc.createNumber(F("Max. modulation"), Mqtt::TOPIC_MAXMODULATION);
     haDisc.setMinMax(0, 100, 1);
     haDisc.setUnit(FPSTR(HA_UNIT_PERCENT));
+    haDisc.setOTThingAvailability();
     discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_MASTER, getOTname(OpenThermMessageID::MaxRelModLevelSetting));
 
     haDisc.createSensor(F("flame ratio"), F("flame_ratio"));
     haDisc.setDeviceClass(F("power_factor"));
     haDisc.setUnit(FPSTR(HA_UNIT_PERCENT));
+    haDisc.setSlaveAvailability();
     discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_DUTY);
 
     haDisc.createSensor(F("burner starts /h"), F("flame_freq"));
     haDisc.setUnit(F("/h"));
+    haDisc.setSlaveAvailability();
     discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_FREQ);
 
     haDisc.createSensor(F("flametime per cycle"), F("flame_on"));
     haDisc.setUnit(FPSTR(HA_UNIT_MIN));
+    haDisc.setSlaveAvailability();
     discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_ONTIME);
 
     haDisc.createSensor(F("pausetime per cycle"), F("flame_off"));
     haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_OFFTIME));
+    haDisc.setSlaveAvailability();
     haDisc.setUnit(FPSTR(HA_UNIT_MIN));
     discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_OFFTIME);
 
     haDisc.createSensor(F("current on time"), F("current_on_time"));
     haDisc.setDeviceClass(PSTR(HA_DEVICE_CLASS_DURATION));
+    haDisc.setSlaveAvailability();
     haDisc.setUnit(FPSTR(HA_UNIT_MIN));
     discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_CURRENTONTIME);
 
     haDisc.createSensor(F("last on time"), F("last_on_time"));
     haDisc.setDeviceClass(PSTR(HA_DEVICE_CLASS_DURATION));
+    haDisc.setSlaveAvailability();
     haDisc.setUnit(FPSTR(HA_UNIT_MIN));
     discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_LASTONTIME);
 
     haDisc.createSwitch(F("bypass"), Mqtt::TOPIC_BYPASS);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOT, STR_STATKEY_BYPASS));
+    haDisc.setOTThingAvailability();
     discFlag &= haDisc.publish(true);
 
     haDisc.createSwitch(F("summer mode"), Mqtt::TOPIC_SUMMERMODE);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOT, STR_STATKEY_SUMMERMODE));
+    haDisc.setOTThingAvailability();
     discFlag &= haDisc.publish(isHeatCool);
 
     haDisc.createBinarySensor(F("master connection"), F("master_connection"), HA_DEVICE_CLASS_CONNECTIVITY);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_MASTER_ROOT, STR_STATKEY_CONNECTED));
+    haDisc.setOTThingAvailability();
     discFlag &= haDisc.publish(true);
 
     haDisc.createBinarySensor(F("slave connection"), F("slave_connection"), HA_DEVICE_CLASS_CONNECTIVITY);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOMUNIT_ROOT, STR_STATKEY_CONNECTED));
+    haDisc.setOTThingAvailability();
     discFlag &= haDisc.publish(hasSlave());
 
     return discFlag;
@@ -962,6 +974,7 @@ bool OTControl::sendCapDiscoveries() {
 
     haDisc.createSwitch(F("Cooling"), Mqtt::TOPIC_COOLINGMODE);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_COOLING, STR_STATKEY_CTRLMODE));
+    haDisc.setSlaveAvailability();
     if (!haDisc.publish(OTValue::slaveConfig->hasCooling()))
         return false;
 
@@ -970,6 +983,7 @@ bool OTControl::sendCapDiscoveries() {
     haDisc.setUnit(FPSTR(HA_UNIT_PERCENT));
     haDisc.setIcon(F("mdi:snowflake-thermometer"));
     haDisc.setRetain(true);
+    haDisc.setSlaveAvailability();
     if (!haDisc.publish(OTValue::slaveConfig->hasCooling(), Mqtt::VALTMPL_COOLING, STR_STATKEY_SETPOINT))
         return false;
 
