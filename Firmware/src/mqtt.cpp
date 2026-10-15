@@ -206,7 +206,7 @@ bool Mqtt::publish(String topic, JsonDocument &payload, const bool retain) {
     if (!payload.isNull())
         serializeJson(payload, ps);
         
-    return (cli.publish(topic.c_str(), 1, retain, ps.c_str()) > 0);
+    return (cli.publish(topic.c_str(), 0, retain, ps.c_str()) > 0);
 }
 
 void Mqtt::onMessage(const char *topic, String &payload) {
