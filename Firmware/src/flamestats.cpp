@@ -54,7 +54,7 @@ void FlameStats::update() {
 }
 
 double FlameStats::secToMin(const uint32_t sec) const {
-    return round(sec * 10.0 / 60.0) / 10.0;
+    return round10(sec / 60.0);
 }
 
 uint8_t FlameStats::getDuty() const {
@@ -62,7 +62,7 @@ uint8_t FlameStats::getDuty() const {
 }
 
 double FlameStats::getFreq() const {
-    return round(cycles.sum / (BUFSIZE_MINUTES / 60.0) * 10) / 10.0;
+    return round10(cycles.sum / (BUFSIZE_MINUTES / 60.0));
 }
 
 /*

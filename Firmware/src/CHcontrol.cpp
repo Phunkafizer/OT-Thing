@@ -110,7 +110,7 @@ void CHcontrol::getJson(JsonObject &obj) {
     double d;
     if (returnTemp[channel].get(d)) {
         obj[F("returnTemp")] = d;
-        obj[F("reduction")] = round(retLimit.reduction * 10) / 10.0;
+        obj[F("reduction")] = round10(retLimit.reduction);
     }
 
     // calculate roomaction
@@ -213,7 +213,7 @@ double CHcontrol::getFlow() {
         result += turbo.shift;
     
     clip(result, flowMin, curve.getFlowMax());
-    return round(result * 10) / 10.0;
+    return round10(result);
 }
 
 bool CHcontrol::getChOn() {

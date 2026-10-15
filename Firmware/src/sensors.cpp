@@ -69,7 +69,7 @@ bool Sensor::get(double &val, const bool raw) {
             val = value;
         else
             val = smoothed;
-        val = round(val * 10) / 10;
+        val = round10(val);
     }
     
     return setFlag;
@@ -81,8 +81,8 @@ void Sensor::writeJson(JsonVariant val) {
         val.set(nullptr);
     else {
         JsonObject obj = val.to<JsonObject>();
-        obj[F("current")] = round(smoothed * 10) / 10;
-        obj[F("raw")] = round(value * 10) / 10;
+        obj[F("current")] = round10(smoothed);
+        obj[F("raw")] = round10(value);
         obj[STR_STATKEY_LASTSETPOINTSRC] = lastSetSrc;
     }
 }
@@ -404,7 +404,7 @@ void OneWireNode::loop() {
         DallasTemperature ds(&oneWire);
         ds.requestTemperatures();
         while (node) {
-            node->temp = round(ds.getTempC(node->adr) * 10) / 10;
+            node->temp = round10(ds.getTempC(node->adr));
             if (node->temp != DEVICE_DISCONNECTED_C) {
                 std::vector<Sensor*> items = Sensor::findByOwn(node);
                 for (auto item : items)

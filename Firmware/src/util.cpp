@@ -43,3 +43,7 @@ void publishMdnsServices() {
     MDNS.addServiceTxt("otthing", "tcp", "id", getShortMac());
     MDNS.addServiceTxt("otthing", "tcp", "path", "/");
 }
+
+double round10(const double d) {
+    return round(d * 10.0) / 10.0;
+}

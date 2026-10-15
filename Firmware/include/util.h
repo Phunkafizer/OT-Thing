@@ -16,3 +16,4 @@ public:
 extern void clip(double &d, const double min, const double max);
 extern String getShortMac();
 extern void publishMdnsServices();
+extern double round10(const double d);
