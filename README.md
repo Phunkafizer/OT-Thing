@@ -10,6 +10,9 @@ https://www.seegel-systeme.de/2025/01/05/ot-thing-das-universelle-wifi-opentherm
 ![OTthing](assets/DSC_0550-scaled.jpg "OTthing board")
 *OTthing board*
 
+![OTthing](assets/otthing_connection.png "OTthing wiring")
+*OTthing wiring*
+
 ![OTthing web UI](assets/otthing_webui1.png "OTthing web UI status")
 *OTthing web interface*
 
