@@ -17,8 +17,6 @@ OTValueStatus* OTValue::status = nullptr;
 OTValueSlaveConfigMember* OTValue::slaveConfig = nullptr;
 OTValueVentSlaveConfigMember* OTValue::ventSlaveConfig = nullptr;
 
-PGM_P KEY_MEMBERID PROGMEM = "memberId";
-
 static const OTItem OTITEMS[] PROGMEM = {
 //  ID of message                                   string id for MQTT                  
     {Status,                    PSTR("status")},
@@ -675,6 +673,10 @@ bool OTValueFlags::sendDiscovery() {
     return true;
 }
 
+bool OTValueFlags::hasBitSet(const uint8_t bit) const {
+    return (value & (1<<bit)) != 0;
+}
+
 
 OTValueStatus::OTValueStatus():
         OTValueFlags(Status, -1, flags, sizeof(flags) / sizeof(flags[0])) {
@@ -807,39 +809,54 @@ bool OTValueVentMasterStatus::sendDiscovery() {
     return true;
 }
 
-OTValueSlaveConfigMember::OTValueSlaveConfigMember():
-        OTValueFlags(SConfigSMemberIDcode, 0, flags, sizeof(flags) / sizeof(flags[0])) {
-    entityCategory = HA_ENTITY_CATEGORY_DIAGNOSTIC;
-    slaveConfig = this;
+
+OTValueConfigMember::OTValueConfigMember(const OpenThermMessageID id, const int interval, const Flag *flagtable, const uint8_t numFlags):
+        OTValueFlags(id, interval, flagtable, numFlags) {
 }
 
-void OTValueSlaveConfigMember::getValue(JsonVariant var) const {
+void OTValueConfigMember::getValue(JsonVariant var) const {
     OTValueFlags::getValue(var);
     var[FPSTR(KEY_MEMBERID)] = value & 0xFF;
 }
 
-bool OTValueSlaveConfigMember::hasDHW() const {
-    return (value & (1<<BIT_DHW_PRESENT)) != 0;
-}
-
-bool OTValueSlaveConfigMember::hasCh(const uint8_t ch) const {
-    if (ch == 1)
-        return (value & (1<<BIT_CH2_PRESENT)) != 0;
-    else
-        return true;
-}
-
-bool OTValueSlaveConfigMember::hasCooling() const {
-    return (value & (1<<BIT_COOLING_CONFIG)) != 0;
-}
-
-bool OTValueSlaveConfigMember::sendDiscovery() {
-    haDisc.createSensor(F("slave member ID"), F("slave_member_id"));
+bool OTValueConfigMember::sendValueDiscoveries(const String &memberSensorName, const String &memberSensorId) {
+    haDisc.createSensor(memberSensorName, memberSensorId);
     if (!OTValue::sendDiscovery(FPSTR(KEY_MEMBERID)))
         return false;
 
     if (!OTValueFlags::sendDiscovery())
         return false;
+    
+    return true;
+}
+    
+
+
+OTValueSlaveConfigMember::OTValueSlaveConfigMember():
+        OTValueConfigMember(SConfigSMemberIDcode, 0, flags, sizeof(flags) / sizeof(flags[0])) {
+    entityCategory = HA_ENTITY_CATEGORY_DIAGNOSTIC;
+    slaveConfig = this;
+}
+
+bool OTValueSlaveConfigMember::hasDHW() const {
+    return hasBitSet(BIT_DHW_PRESENT);
+}
+
+bool OTValueSlaveConfigMember::hasCh(const uint8_t ch) const {
+    if (ch == 1)
+        return hasBitSet(BIT_CH2_PRESENT);
+    else
+        return true;
+}
+
+bool OTValueSlaveConfigMember::hasCooling() const {
+    return hasBitSet(BIT_COOLING_CONFIG);
+}
+
+bool OTValueSlaveConfigMember::sendDiscovery() {
+    if (!OTValueConfigMember::sendValueDiscoveries(F("slave member ID"), F("slave_member_id")))
+        return false;
+
     if (!otcontrol.sendCapDiscoveries())
         return false;
     return true;
@@ -847,22 +864,13 @@ bool OTValueSlaveConfigMember::sendDiscovery() {
 
 
 OTValueVentSlaveConfigMember::OTValueVentSlaveConfigMember():
-        OTValueFlags(SConfigSMemberIDCodeVentilationHeatRecovery, 0, flags, sizeof(flags) / sizeof(flags[0])) {
+        OTValueConfigMember(SConfigSMemberIDCodeVentilationHeatRecovery, 0, flags, sizeof(flags) / sizeof(flags[0])) {
     entityCategory = HA_ENTITY_CATEGORY_DIAGNOSTIC;
     ventSlaveConfig = this;
 }
 
-void OTValueVentSlaveConfigMember::getValue(JsonVariant var) const {
-    OTValueFlags::getValue(var);
-    var[FPSTR(KEY_MEMBERID)] = value & 0xFF;
-}
-
 bool OTValueVentSlaveConfigMember::sendDiscovery() {
-    haDisc.createSensor(F("vent member ID"), F("vent_member_id"));
-    if (!OTValue::sendDiscovery(FPSTR(KEY_MEMBERID)))
-        return false;
-
-    if (!OTValueFlags::sendDiscovery())
+    if (!OTValueConfigMember::sendValueDiscoveries(F("vent member ID"), F("vent_member_id")))
         return false;
 
     if (!otcontrol.ventCtrl.sendCapDiscoveries())
@@ -872,51 +880,51 @@ bool OTValueVentSlaveConfigMember::sendDiscovery() {
 }
 
 bool OTValueVentSlaveConfigMember::isHeatRecovery() const {
-    return (value & (1<<8)) != 0;
+    return hasBitSet(BIT_TYPE);
 }
 
 bool OTValueVentSlaveConfigMember::hasBypass() const {
-    return (value & (1<<9)) != 0;
+    return hasBitSet(BIT_BYPASS);
 }
 
 bool OTValueVentSlaveConfigMember::hasVarSpeedControl() const {
-    return (value & (1<<10)) != 0;
+    return hasBitSet(BIT_SPEED_CONTROL);
+}
+
+
+OTValueASFFlags::OTValueASFFlags(const OpenThermMessageID id, const int interval, const Flag *flagtable, const uint8_t numFlags):
+        OTValueFlags(id, interval, flagtable, numFlags) {
+}
+
+void OTValueASFFlags::getValue(JsonVariant var) const {
+    OTValueFlags::getValue(var);
+    var[PSTR(KEY_OEM_FAULT_CODE)] = value & 0xFF;
+}
+
+bool OTValueASFFlags::sendValueDiscoveries(const String &oemFaultSensorName, const String &oemFaultSensorId) {
+    if (!OTValueFlags::sendDiscovery())
+        return false;
+
+    haDisc.createSensor(oemFaultSensorName, oemFaultSensorId);
+    return OTValue::sendDiscovery(oemFaultSensorId);
 }
 
 
 OTValueFaultFlags::OTValueFaultFlags(const int interval):
-        OTValueFlags(ASFflags, interval, flags, sizeof(flags) / sizeof(flags[0])) {
-}
-
-void OTValueFaultFlags::getValue(JsonVariant var) const {
-    OTValueFlags::getValue(var);
-    var[PSTR(OEM_FAULT_CODE)] = value & 0xFF;
+        OTValueASFFlags(ASFflags, interval, flags, sizeof(flags) / sizeof(flags[0])) {
 }
 
 bool OTValueFaultFlags::sendDiscovery() {
-    if (!OTValueFlags::sendDiscovery())
-        return false;
-
-    haDisc.createSensor(F("OEM fault code"), FPSTR(OEM_FAULT_CODE));
-    return OTValue::sendDiscovery(FPSTR(OEM_FAULT_CODE));
+    return OTValueASFFlags::sendValueDiscoveries(F("OEM fault code"), F("heat_oem_fault_code"));
 }
 
 
 OTValueVentFaultFlags::OTValueVentFaultFlags(const int interval):
-        OTValueFlags(ASFflagsOEMfaultCodeVentilationHeatRecovery, interval, flags, sizeof(flags) / sizeof(flags[0])) {
-}
-
-void OTValueVentFaultFlags::getValue(JsonVariant var) const {
-    OTValueFlags::getValue(var);
-    var[PSTR(OEM_VENT_FAULT_CODE)] = value & 0xFF;
+        OTValueASFFlags(ASFflagsOEMfaultCodeVentilationHeatRecovery, interval, flags, sizeof(flags) / sizeof(flags[0])) {
 }
 
 bool OTValueVentFaultFlags::sendDiscovery() {
-    if (!OTValueFlags::sendDiscovery())
-        return false;
-
-    haDisc.createSensor(F("OEM fault code"), FPSTR(OEM_VENT_FAULT_CODE));
-    return OTValue::sendDiscovery(FPSTR(OEM_VENT_FAULT_CODE));
+    return OTValueASFFlags::sendValueDiscoveries(F("OEM fault code"), F("vent_oem_fault_code"));
 }
 
 
@@ -988,17 +996,13 @@ bool OTValueTempBounds::sendDiscovery() {
 
 
 OTValueMasterConfig::OTValueMasterConfig():
-        OTValueFlags(MConfigMMemberIDcode, -1, flags, sizeof(flags) / sizeof(flags[0])) {
-}
-
-void OTValueMasterConfig::getValue(JsonVariant var) const {
-    OTValueFlags::getValue(var);
-    var[FPSTR(KEY_MEMBERID)] = value & 0xFF;
+        OTValueConfigMember(MConfigMMemberIDcode, -1, flags, sizeof(flags) / sizeof(flags[0])) {
 }
 
 bool OTValueMasterConfig::sendDiscovery() {
     return true;
 }
+
 
 OTValueRemoteParameter::OTValueRemoteParameter():
         OTValueFlags(RBPflags, 0, flags, sizeof(flags) / sizeof(flags[0])) {

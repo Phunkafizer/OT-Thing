@@ -127,7 +127,7 @@ void OTControl::OTInterface::sendResponse(const char source, const unsigned long
 }
 
 bool OTControl::OTInterface::isConnected() const {
-    return millis() - lastRx < 2000; // consider connected if received a message within the last 2 seconds
+    return millis() - lastRx < 5000; // consider connected if received a message within the last 5 seconds
 }
 
 void OTControl::OTInterface::writeJson(JsonObject &obj) const {

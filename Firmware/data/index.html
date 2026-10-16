@@ -962,7 +962,8 @@
         body[data-view="curve"] #mainwrapper > :not(#heatingcurve),
         body[data-view="curve"] #heatingcurve > :not(.curve-display-group):not(#curveConnectionHint):not(#curveChannelHint),
         body[data-view="curve"] .curve-display-group > :not(.curve),
-        body[data-view="curve"] .curve-pin-control {
+        body[data-view="curve"] .curve-pin-control,
+        body[data-view="curve"] .curve-info-control {
             display: none;
         }
 
@@ -1119,7 +1120,7 @@
             position: absolute;
             z-index: 1;
             top: 9px;
-            left: 42px;
+            left: 78px;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -1134,6 +1135,55 @@
             font-size: 0.68em;
             font-weight: bold;
             text-transform: uppercase;
+        }
+
+        .curve-info-trigger {
+            padding: 0;
+            border: 0;
+            background: none;
+            font-size: 1em;
+            line-height: 1;
+            min-height: 0;
+            height: 22px;
+        }
+
+        .curve-info-control {
+            position: absolute;
+            z-index: 2;
+            top: 9px;
+            left: 42px;
+            display: flex;
+            align-items: center;
+            padding: 3px 6px;
+            border: 1px solid rgba(216, 162, 76, 0.4);
+            border-radius: 6px;
+            background: rgba(15, 18, 24, 0.88);
+        }
+
+        .curve-info-control > .infobox {
+            right: auto;
+            width: min(360px, calc(100vw - 90px));
+            box-sizing: border-box;
+            text-align: left;
+        }
+
+        .curve-legend {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .curve-legend li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 5px 0;
+        }
+
+        .curve-legend svg {
+            width: 24px;
+            height: 16px;
+            flex-shrink: 0;
         }
 
         .curve-pin-control .switch {
@@ -3442,7 +3492,7 @@
                                     <span class="value"></span>
                                     <span class="unit">K</span>
                                 </div>
-                                <input type="range" class="curveparam" min="-5" max="5" step="0.5">
+                                <input type="range" class="curveparam" min="-10" max="5" step="0.5">
                             </div>
                         </div>
                     </div>
@@ -3543,6 +3593,21 @@
 
                 <div class="curve">
                     <canvas id="canvas"></canvas>
+                    <div class="curve-info-control">
+                        <button class="curve-info-trigger" type="button" aria-label="Heating curve legend" aria-describedby="curveLegend"></button>
+                        <div class="infobox" id="curveLegend">
+                            <ul class="curve-legend">
+                                <li><svg viewBox="0 0 24 16" aria-hidden="true"><path d="M2 8H22" stroke="#F00" stroke-width="3"/></svg>Heating curve</li>
+                                <li><svg viewBox="0 0 24 16" aria-hidden="true"><path d="M2 8H22" stroke="#0F0" stroke-width="3"/></svg>Heating curve with room compensation</li>
+                                <li><svg viewBox="0 0 24 16" aria-hidden="true"><path d="M2 8H22" stroke="#58F" stroke-width="3"/></svg>Return limit curve</li>
+                                <li><svg viewBox="0 0 24 16" aria-hidden="true"><path d="M8 3L16 8L8 13Z" stroke="#FA0" fill="#FA0" stroke-width="2"/></svg>Current flow temperature</li>
+                                <li><svg viewBox="0 0 24 16" aria-hidden="true"><path d="M8 3L16 8L8 13Z" stroke="#58F" fill="#58F" stroke-width="2"/></svg>Current return temperature</li>
+                                <li><svg viewBox="0 0 24 16" aria-hidden="true"><path d="M7 12L12 4L17 12Z" stroke="#58F" fill="#58F" stroke-width="2"/></svg>Current outside temperature</li>
+                                <li><svg viewBox="0 0 24 16" aria-hidden="true"><path d="M7 12L12 4L17 12Z" stroke="#58F" fill="none" stroke-width="2"/></svg>Average outside temperature (24 h)</li>
+                                <li><svg viewBox="0 0 24 16" aria-hidden="true"><path d="M7 4L12 12L17 4Z" stroke="#58F" fill="#F00" stroke-width="2"/></svg>Outside cutoff temperature</li>
+                            </ul>
+                        </div>
+                    </div>
                     <div class="curve-pin-control">
                         <span>pin</span>
                         <label class="switch">
@@ -6693,7 +6758,7 @@
                 });
             }
 
-            function drawAxisIndicator(axis, value, col, fillColor) {
+            function drawAxisIndicator(axis, value, col, fillColor, inside = false) {
                 const point = (axis === 'y') ? getPoint(xaxis.min, value) : getPoint(value, yaxis.min);
                 ctx.strokeStyle = col;
                 ctx.fillStyle = fillColor;
@@ -6701,12 +6766,12 @@
                 ctx.beginPath();
                 ctx.moveTo(point.x , point.y);
                 if (axis === 'y') {
-                    ctx.lineTo(point.x -8, point.y + 5);
-                    ctx.lineTo(point.x -8, point.y - 5);
+                    ctx.lineTo(point.x + (inside ? 8 : -8), point.y + 5);
+                    ctx.lineTo(point.x + (inside ? 8 : -8), point.y - 5);
                 }
                 else {
-                    ctx.lineTo(point.x + 5, point.y + 8);
-                    ctx.lineTo(point.x - 5, point.y + 8);
+                    ctx.lineTo(point.x + 5, point.y + (inside ? -8 : 8));
+                    ctx.lineTo(point.x - 5, point.y + (inside ? -8 : 8));
                 }
                 ctx.closePath();
                 if (fillColor)
@@ -6798,6 +6863,9 @@
 
             if (statuscache.outsideTemp?.current !== undefined)
                 drawAxisIndicator('x', statuscache.outsideTemp.current, "#58F", "#58F");
+
+            if (ostsEnabled === true)
+                drawAxisIndicator('x', ostsThresh, "#58F", "#F00", true)
 
             if (curveDrag.active) {
                 ctx.beginPath();

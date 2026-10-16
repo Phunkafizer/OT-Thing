@@ -227,6 +227,7 @@ protected:
     void getValue(JsonVariant var) const override;
     bool sendDiscFlag(const Flag *flag, const bool enb);
     bool sendDiscovery() override;
+    bool hasBitSet(const uint8_t bit) const;
 };
 
 class OTValueStatus: public OTValueFlags {
@@ -246,16 +247,17 @@ public:
     bool getDhwActive() const;
     bool getCoolingActive() const;
 private:
-    const char *CH2_MODE PROGMEM = "ch2_mode";
-    const char *DHW_MODE PROGMEM = "dhw_mode";
-    const char *COOLING PROGMEM = "cooling";
-    const char *DIAGNOSTIC PROGMEM = "diagnostic";
-    const char *FAULT PROGMEM = "fault";
-    const Flag flags[7] PROGMEM = {
+    static constexpr PGM_P CH2_MODE PROGMEM = "ch2_mode";
+    static constexpr PGM_P DHW_MODE PROGMEM = "dhw_mode";
+    static constexpr PGM_P FLAME PROGMEM = "flame";
+    static constexpr PGM_P COOLING PROGMEM = "cooling";
+    static constexpr PGM_P DIAGNOSTIC PROGMEM = "diagnostic";
+    static constexpr PGM_P FAULT PROGMEM = "fault";
+    static constexpr Flag flags[7] PROGMEM = {
         {BIT_FAULT,         FAULT,          FAULT,          HA_DEVICE_CLASS_PROBLEM},
         {BIT_CH_MODE,       "ch_mode",      "heating",      HA_DEVICE_CLASS_RUNNING},
         {BIT_DHW_MODE,      DHW_MODE,       "DHW",          HA_DEVICE_CLASS_RUNNING},
-        {BIT_FLAME,         "flame",        "flame",        HA_DEVICE_CLASS_RUNNING},
+        {BIT_FLAME,         FLAME,          FLAME,          HA_DEVICE_CLASS_RUNNING},
         {BIT_COOLING,       COOLING,        COOLING,        HA_DEVICE_CLASS_RUNNING},
         {BIT_CH2_MODE,      CH2_MODE,       "heating 2",    HA_DEVICE_CLASS_RUNNING},
         {BIT_DIAGNOSTIC,    DIAGNOSTIC,     DIAGNOSTIC,     HA_DEVICE_CLASS_PROBLEM}
@@ -278,10 +280,10 @@ public:
     };
     OTValueMasterStatus();
 private:
-    const char *DHW_ENABLE PROGMEM = "dhw_enable";
-    const char *CH2_ENABLE PROGMEM = "ch2_enable";
-    const char *COOLING_ENABLE PROGMEM = "cooling_enable";
-    const Flag flags[7] PROGMEM = {
+    static constexpr PGM_P DHW_ENABLE PROGMEM = "dhw_enable";
+    static constexpr PGM_P CH2_ENABLE PROGMEM = "ch2_enable";
+    static constexpr PGM_P COOLING_ENABLE PROGMEM = "cooling_enable";
+    static constexpr Flag flags[7] PROGMEM = {
         {BIT_CH_ENABLE,         "ch_enable",        "CH enable",        nullptr},
         {BIT_DHW_ENABLE,        DHW_ENABLE,         "DHW enable",       nullptr},
         {BIT_COOLING_ENABLE,    COOLING_ENABLE,     "cooling enable",   nullptr},
@@ -297,7 +299,7 @@ protected:
 
 class OTValueVentStatus: public OTValueFlags {
 private:
-    const Flag flags[6] PROGMEM = {
+    static constexpr Flag flags[6] PROGMEM = {
         {0, "fault",        "fault",                HA_DEVICE_CLASS_PROBLEM},
         {1, "vent_active",  "Ventilation active",   HA_DEVICE_CLASS_RUNNING },
         {2, "bypass_open",  "Bypass open",          HA_DEVICE_CLASS_OPENING},
@@ -319,7 +321,7 @@ public:
     };
     OTValueVentMasterStatus();
 private:
-    const Flag flags[4] PROGMEM = {
+    static constexpr Flag flags[4] PROGMEM = {
         {BIT_VENT_ENABLE,       "vent_enable"},
         {BIT_OPEN_BYPASS,       "open_bypass"},
         {BIT_AUTO_BYPASS,       "auto_bypass"},
@@ -329,14 +331,25 @@ protected:
     bool sendDiscovery() override;
 };
 
-class OTValueSlaveConfigMember: public OTValueFlags {
+
+class OTValueConfigMember: public OTValueFlags {
+public:
+    OTValueConfigMember(const OpenThermMessageID id, const int interval, const Flag *flagtable, const uint8_t numFlags);
+private:
+    void getValue(JsonVariant var) const override;
+    static constexpr PGM_P KEY_MEMBERID PROGMEM = "memberId";
+protected:
+    bool sendValueDiscoveries(const String &memberSensorName, const String &memberSensorId);
+};
+
+
+class OTValueSlaveConfigMember: public OTValueConfigMember {
 public:    
     OTValueSlaveConfigMember();
     bool hasDHW() const;
     bool hasCh(const uint8_t ch) const;
     bool hasCooling() const;
 private:
-    void getValue(JsonVariant var) const override;
     enum {
         BIT_DHW_PRESENT = 8,
         BIT_CTRL_TYPE = 9,
@@ -346,7 +359,7 @@ private:
         BIT_CH2_PRESENT = 13,
         BIT_HEAT_COOL_CTRL = 15
     };
-    const Flag flags[7] PROGMEM = {
+    static constexpr Flag flags[7] PROGMEM = {
         {BIT_DHW_PRESENT,               "dhw_present",             "DHW present",               nullptr},
         {BIT_CTRL_TYPE,                 "ctrl_type",               "Control type on/off",       nullptr},
         {BIT_COOLING_CONFIG,            "cooling_config",          "Cooling supported",         nullptr},
@@ -359,13 +372,17 @@ protected:
     bool sendDiscovery() override;
 };
 
-class OTValueVentSlaveConfigMember: public OTValueFlags {
+class OTValueVentSlaveConfigMember: public OTValueConfigMember {
 private:
-    void getValue(JsonVariant var) const override;
-    const Flag flags[3] PROGMEM = {
-        {8, "type",                     "System type",              nullptr},
-        {9, "bypass",                   "Bypass present",           nullptr},
-        {10, "speed_control",           "Speed control",            nullptr},
+    enum {
+        BIT_TYPE = 8,
+        BIT_BYPASS = 9,
+        BIT_SPEED_CONTROL = 10
+    };
+    static constexpr Flag flags[3] PROGMEM = {
+        {BIT_TYPE,              "type",                 "System type",              nullptr},
+        {BIT_BYPASS,            "bypass",               "Bypass present",           nullptr},
+        {BIT_SPEED_CONTROL,     "speed_control",        "Speed control",            nullptr},
     };
 protected:
     bool sendDiscovery() override;
@@ -377,10 +394,20 @@ public:
 };
 
 
-class OTValueFaultFlags: public OTValueFlags {
+class OTValueASFFlags: public OTValueFlags {
+public:
+    OTValueASFFlags(const OpenThermMessageID id, const int interval, const Flag *flagtable, const uint8_t numFlags);
 private:
     void getValue(JsonVariant var) const override;
-    const Flag flags[6] PROGMEM = {
+    static constexpr PGM_P KEY_OEM_FAULT_CODE PROGMEM = "oem_fault_code";
+protected:
+    bool sendValueDiscoveries(const String &oemFaultSensorName, const String &oemFaultSensorId);
+};
+
+
+class OTValueFaultFlags: public OTValueASFFlags {
+private:
+    static constexpr Flag flags[6] PROGMEM = {
         {8, "service_request",      "service request",      HA_DEVICE_CLASS_PROBLEM},
         {9, "lockout_reset",        "lockout reset",        HA_DEVICE_CLASS_PROBLEM},
         {10, "low_water_pressure",  "low pressure",         HA_DEVICE_CLASS_PROBLEM},
@@ -388,23 +415,20 @@ private:
         {12, "air_pressure_fault",  "air pressure fault",   HA_DEVICE_CLASS_PROBLEM},
         {13, "water_over_temp",     "water over temp",      HA_DEVICE_CLASS_PROBLEM}
     };
-    const char *OEM_FAULT_CODE PROGMEM = "oem_fault_code";
     bool sendDiscovery() override;
 public:
     OTValueFaultFlags(const int interval);
 };
 
 
-class OTValueVentFaultFlags: public OTValueFlags {
+class OTValueVentFaultFlags: public OTValueASFFlags {
 private:
-    void getValue(JsonVariant var) const override;
-    const Flag flags[4] PROGMEM = {
+    static constexpr Flag flags[4] PROGMEM = {
         {8, "service_request",      "vent. service request",    HA_DEVICE_CLASS_PROBLEM},
         {9, "exhaust_fan_fault",    "exhaust fan fault",        HA_DEVICE_CLASS_PROBLEM},
         {10, "inlet_fan_fault",     "inlet fan fault",          HA_DEVICE_CLASS_PROBLEM},
         {11, "frost_protection",    "frost protection",         HA_DEVICE_CLASS_PROBLEM}
     };
-    const char *OEM_VENT_FAULT_CODE PROGMEM = "oem_vent_fault_code";
     bool sendDiscovery() override;
 public:
     OTValueVentFaultFlags(const int interval);
@@ -441,12 +465,11 @@ public:
     OTValueTempBounds(const OpenThermMessageID id, const char *namePrefix);
 };
 
-class OTValueMasterConfig: public OTValueFlags {
+class OTValueMasterConfig: public OTValueConfigMember {
 private:
-    const Flag flags[1] PROGMEM = {
+    static constexpr Flag flags[1] PROGMEM = {
         {8, "smartPowerImplemented"},
     };
-    void getValue(JsonVariant var) const override;
 protected:
     bool sendDiscovery() override;
 public:    
@@ -455,7 +478,7 @@ public:
 
 class OTValueRemoteParameter: public OTValueFlags {
 private:
-    const Flag flags[4] PROGMEM = {
+    static constexpr Flag flags[4] PROGMEM = {
         {0, "dhw_setpoint_rw",      "DHW setpoint write",           nullptr},
         {1, "max_ch_setpoint_rw",   "Max. CH setpoint write",       nullptr},
         {8, "dhw_setpoint_trans",   "DHW setpoint transfer",        nullptr},
@@ -468,7 +491,7 @@ public:
 
 class OTValueRemoteOverrideFunction: public OTValueFlags {
 private:
-    const Flag flags[2] PROGMEM = {
+    static constexpr Flag flags[2] PROGMEM = {
         {0, "manual_change_priority"},
         {1, "program_change_priority"}
     };
