@@ -4011,6 +4011,16 @@
                             <input type="range" min="100" max="500" step="100" />
                         </div>
                     </div>
+                    <div class="param range" field="otResponseTimeout">
+                        <h5>Response timeout</h5>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                                <span class="unit">ms</span>
+                            </div>
+                            <input type="range" min="300" max="1000" step="100" />
+                        </div>
+                    </div>
                     <div class="param">
                         <h5>Member ID</h5>
                         <input field="masterMemberId" intval />
@@ -4441,6 +4451,7 @@
             otMode: 4, // Test
             bypass: false,
             otDelay: 100,
+            otResponseTimeout: 1000,
             timezone: 3600,
             noDhwSet: false,
             boiler: {

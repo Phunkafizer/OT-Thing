@@ -214,6 +214,7 @@ CONFIG = {
     "otMode": 1,  # master
     "enableSlave": False,
     "otDelay": 100,
+    "otResponseTimeout": 1000,
     "noDhwSet": False,
     "boiler": {
         "dhwOn": True,

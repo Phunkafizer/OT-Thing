@@ -1076,6 +1076,7 @@ void OTControl::setConfig(JsonObject &config) {
     master.resetCounters();
     slave.resetCounters();
     master.hal.setRequestDelay(config[F("otDelay")] | 100);
+    master.hal.setResponseTimeout(config[F("otResponseTimeout")] | 1000);
 
     noDhwSet = config[F("noDhwSet")] | false;
 

@@ -44,6 +44,7 @@ state = {
         "otMode": 4,
         "enableSlave": False,
         "otDelay": 100,
+        "otResponseTimeout": 1000,
         "timezone": 3600,
         "boiler": {
             "dhwOn": True,
