@@ -9,6 +9,7 @@ struct FlameStats {
     double getOnTime() const;
     double getOffTime() const;
     int getCurrentOnTime() const;
+    int getCurrentOffTime() const;
     void writeJson(JsonObject &obj) const;
     static bool currentFlame;
 private:

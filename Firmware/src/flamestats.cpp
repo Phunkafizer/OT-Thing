@@ -74,10 +74,18 @@ int FlameStats::getCurrentOnTime() const {
     return (millis() - lastEdge) / 1000;
 }
 
+/*
+ * @brief return current off-time / seconds, 0 if flame is on
+ */
+int FlameStats::getCurrentOffTime() const {
+    if (currentFlame)
+        return 0;
+    return (millis() - lastEdge) / 1000;
+}
+
 /* 
  * @brief return average on-time over last x on/off cycles / minutes
  */
-
 double FlameStats::getOnTime() const {
     return secToMin(onTimes.sum / BUFSIZE_CYCLES);
 }
@@ -85,7 +93,6 @@ double FlameStats::getOnTime() const {
 /* 
  * @brief return average off-time over last x on/off cycles / minutes
  */
-
 double FlameStats::getOffTime() const {
     return secToMin(offTimes.sum / BUFSIZE_CYCLES);
 }
@@ -119,8 +126,15 @@ void FlameStats::writeJson(JsonObject &obj) const {
         double lasttOnTime = onTimes.buf[(idxCycles + BUFSIZE_CYCLES - 1) % BUFSIZE_CYCLES];
         fs[FPSTR(STR_STATKEY_FLAMESTATS_LASTONTIME)] = secToMin(lasttOnTime);
     }
-    if (offTimesInit)
+
+    if (offTimesInit) {
         fs[FPSTR(STR_STATKEY_FLAMESTATS_OFFTIME)] = getOffTime();
+        double lastOffTime = offTimes.buf[(idxCycles + BUFSIZE_CYCLES - 1) % BUFSIZE_CYCLES];
+        fs[FPSTR(STR_STATKEY_FLAMESTATS_LASTOFFTIME)] = secToMin(lastOffTime);
+    }
+
     if (currentFlame)
         fs[FPSTR(STR_STATKEY_FLAMESTATS_CURRENTONTIME)] = secToMin(getCurrentOnTime());
+    else
+        fs[FPSTR(STR_STATKEY_FLAMESTATS_CURRENTOFFTIME)] = secToMin(getCurrentOffTime());
 }

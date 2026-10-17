@@ -106,7 +106,7 @@ OTValue *slaveValues[56] = { // replydata collected (read) from a connnected sla
     new OTValueTempBounds(TdhwSetUBTdhwSetLB,                                   PSTR("DHW")),
     new OTValueTempBounds(MaxTSetUBMaxTSetLB,                                   PSTR("CH")),
     new OTValueFloatTemp(       TrOverride,                                     PSTR("room setpoint override")),
-    new OTValueFloat(           RelModLevel,                10,                 PSTR("rel. modulation")),
+    new OTValueFloat(           RelModLevel,                5,                  PSTR("rel. modulation")),
     new OTValueFloat(           CHPressure,                 30,                 PSTR("CH pressure")),
     new OTValueFloat(           DHWFlowRate,                10,                 PSTR("flow rate")),
     new OTValueFloatTemp(       Tboiler,                                        PSTR("flow temp.")),

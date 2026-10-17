@@ -232,7 +232,7 @@ void OutsideTemp::writeJson(JsonVariant val) {
     }
     obj[F("min")] = minVal;
     obj[F("max")] = maxVal;
-    obj[F("avg")] = getAvg();
+    obj[F("avg")] = round10(getAvg());
 }
 
 double OutsideTemp::getAvg() const {

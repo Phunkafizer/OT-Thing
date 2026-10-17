@@ -284,10 +284,8 @@ void OTControl::loop() {
         if (force)
             setBoilerRequest[ch].force();
 
-        if (newFlame != FlameStats::currentFlame) {
-            flameStats.flameChange(newFlame);
+        if (newFlame != FlameStats::currentFlame)
             chcontrol[ch].flameChange(newFlame);
-        }
     }
     FlameStats::currentFlame = newFlame;
 
