@@ -60,8 +60,11 @@ bool Sensor::get(double &val, const bool raw) {
             return false;
 
         auto *sensor = BLESensor::find(adr);
-        if (sensor != nullptr)
-            set(sensor->temp, SOURCE_BLE);
+        double bleTemp;
+        if ((sensor != nullptr) && sensor->getTemp(bleTemp))
+            set(bleTemp, SOURCE_BLE);
+        else
+            setFlag = false; // no (recent) value: report unavailable instead of a stale/invalid one
     }
 
     if (setFlag) {
@@ -457,6 +460,16 @@ class scanCallbacks : public NimBLEScanCallbacks {
 
 BLESensor::BLESensor(const uint8_t *adr):
         AddressableSensor(adr, 6, (AddressableSensor**) &last) {
+    temp = NAN;
+}
+
+bool BLESensor::getTemp(double &val) const {
+    if (!tempValid)
+        return false;
+    if ((millis() - lastTempMillis) > TEMP_TIMEOUT_MS)
+        return false;
+    val = temp;
+    return true;
 }
 
 void BLESensor::begin() {
@@ -510,14 +523,26 @@ void BLESensor::parse(std::string &data) {
             break;
 
         case 0x02: {
-            int16_t temp = ((data[i] | (data[i+1] << 8)) + 5) / 10;
-            this->temp = temp / 10.0;
+            if (i + 1 >= data.length())
+                return;
+            // BTHome: sint16, little endian, 0.01 degC. Cast bytes to uint8_t,
+            // std::string elements are char and may be signed.
+            const int16_t raw = (int16_t) ((uint8_t) data[i] | ((uint8_t) data[i+1] << 8));
+            const double t = round(raw / 10.0) / 10.0;
             i += 2;
+            if ((t < -40.0) || (t > 85.0)) // implausible, ignore
+                break;
+            this->temp = t;
+            this->tempValid = true;
+            this->lastTempMillis = millis();
             break;
         }
 
         case 0x03: {
-            this->rh = (data[i] | (data[i+1] << 8)) / 100;
+            if (i + 1 >= data.length())
+                return;
+            // BTHome: uint16, little endian, 0.01 %
+            this->rh = ((uint8_t) data[i] | ((uint8_t) data[i+1] << 8)) / 100;
             i += 2;
             break;
         }
@@ -550,10 +575,16 @@ void BLESensor::writeJsonAll(JsonObject &status) {
 
 void BLESensor::writeJson(JsonVariant val) {
     JsonObject obj = val.to<JsonObject>();
-    obj[F("temp")] = this->temp;
+    double t;
+    if (getTemp(t))
+        obj[F("temp")] = t;
+    else
+        obj[F("temp")] = nullptr;
     obj[F("rh")] = this->rh;
     obj[F("bat")] = this->bat;
     obj[F("rssi")] = this->rssi;
+    if (tempValid)
+        obj[F("age")] = (millis() - lastTempMillis) / 1000; // seconds since last temperature
 }
 
 bool BLESensor::sendDiscoveryAll() {

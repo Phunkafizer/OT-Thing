@@ -33,14 +33,19 @@ class BLESensor: public AddressableSensor {
 private:
     void parse(std::string &data);
     static BLESensor *last;
-    uint8_t rh;
-    uint8_t bat;
-    int8_t rssi;
+    uint8_t rh {0};
+    uint8_t bat {0};
+    int8_t rssi {0};
+    bool tempValid {false};       // true once a plausible temperature was received
+    uint32_t lastTempMillis {0};  // millis() of last received temperature
 protected:
     void writeJson(JsonVariant val) override;
     bool sendDiscovery() override;
 public:
+    // a BLE temperature older than this is treated as unavailable
+    static constexpr uint32_t TEMP_TIMEOUT_MS = 10UL * 60UL * 1000UL;
     BLESensor(const uint8_t *adr);
+    bool getTemp(double &val) const;
     static void begin();
     static void onDiscovery(const NimBLEAdvertisedDevice* dev);
     static void writeJsonAll(JsonObject &status);
