@@ -203,10 +203,10 @@ void OTControl::setOTMode(const OTMode mode) {
         valobj->init(isMaster());
 
     for (auto *valobj: masterValues)
-        valobj->init(false);
+        valobj->init(true);
 
     for (auto *valobj: roomUnitValues)
-        valobj->init(false);
+        valobj->init(true);
 
     master.hal.setAlwaysReceive(mode == OTMODE_REPEATER);
 

@@ -146,6 +146,7 @@ public:
     void getJson(JsonObject &obj, const bool addResult = false) const;
     void getStatus(JsonObject &obj) const;
     virtual void init(const bool enabled);
+    bool isEnabled() const;
     void unset();
     void setTimeout();
     static OTValue* getSlaveValue(const OpenThermMessageID id);

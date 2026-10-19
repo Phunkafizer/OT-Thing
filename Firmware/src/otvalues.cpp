@@ -479,7 +479,6 @@ bool OTValue::isDataMessage(const OpenThermMessageType mt) const {
 }
 
 void OTValue::setValue(const OpenThermMessageType ty, const uint16_t val) {
-    numSet++;
     bool disc = false;
 
     if (isDataMessage(ty)) {
@@ -489,23 +488,30 @@ void OTValue::setValue(const OpenThermMessageType ty, const uint16_t val) {
             discFlag = false;
         enabled = true;
         disc = true;
+        numSet++;
     }
 
     // only save msgresult when message is a reply
     if ( (ty != OpenThermMessageType::WRITE_DATA) && (ty != OpenThermMessageType::READ_DATA) ) {
         lastMsgResult = ty;
-        if (!isDataMessage(ty)) {
+        if (!isDataMessage(ty) && (numSet == 0)) {
             enabled = false;
             disc = true;
         }
     }
 
-    if (disc && !discFlag)
+    if (disc && !discFlag && !isMasterValue())
         discFlag = sendDiscovery();
 }
 
 void OTValue::setMsgResult(const OpenThermMessageType ty) {
+    /* this is called on:
+     - a received response from a connected slave (boiler, ...) if it is a mastervalue (reply to write-messages like room_t, room_set_t, outside_t, ...)
+     - a sent response to a connected master (roomunit)
+    */
     lastMsgResult = ty;
+    if ((ty == OpenThermMessageType::DATA_INVALID) || (ty == OpenThermMessageType::UNKNOWN_DATA_ID))
+        enabled = false;
 }
 
 uint16_t OTValue::getValue() {
@@ -516,6 +522,10 @@ void OTValue::init(const bool enabled) {
     this->enabled = enabled;
     numSet = 0;
     setFlag = false;
+}
+
+bool OTValue::isEnabled() const {
+    return enabled;
 }
 
 void OTValue::unset() {

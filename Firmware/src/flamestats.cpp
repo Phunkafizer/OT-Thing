@@ -129,7 +129,8 @@ void FlameStats::writeJson(JsonObject &obj) const {
 
     if (offTimesInit) {
         fs[FPSTR(STR_STATKEY_FLAMESTATS_OFFTIME)] = getOffTime();
-        double lastOffTime = offTimes.buf[(idxCycles + BUFSIZE_CYCLES - 1) % BUFSIZE_CYCLES];
+        const uint8_t lastOffIdx = (idxCycles + BUFSIZE_CYCLES - (currentFlame ? 0 : 1)) % BUFSIZE_CYCLES;
+        double lastOffTime = offTimes.buf[lastOffIdx];
         fs[FPSTR(STR_STATKEY_FLAMESTATS_LASTOFFTIME)] = secToMin(lastOffTime);
     }
 

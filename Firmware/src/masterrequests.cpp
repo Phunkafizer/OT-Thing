@@ -1,5 +1,6 @@
 #include "masterrequests.h"
 #include "otcontrol.h"
+#include "otvalues.h"
 
 using enum OpenThermMessageID;
 
@@ -34,7 +35,10 @@ void OTWriteRequest::force() {
 OTWriteRequest::operator bool() {
     if (interval == 0)
         return (nextMillis == 0);
-        
+
+    const auto val = OTValue::getMasterValue(id);
+    if (val && !val->isEnabled())
+        return false;
     return (millis() > nextMillis);
 }
 
