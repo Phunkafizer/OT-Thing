@@ -6040,6 +6040,18 @@
             __(".CH2").forEach((ele) => {
                 ele.hidden = !ch2Available || slaveApp !== 0;
             });
+            for (let ch = 0; ch < 2; ch++) {
+                const card = _(`#heroRoomSetCard${ch + 1}`);
+                if (card) {
+                    const roomUnitSource = Number(config?.heating?.[ch]?.roomsetpoint?.source) === 1;
+                    card.hidden = roomUnitSource || (ch === 1 && (!ch2Available || slaveApp !== 0));
+                }
+            }
+            const dhwCard = _("#heroDhwCard");
+            if (dhwCard) {
+                const roomUnitSource = Number(config?.boiler?.dhwCtrlSource) === 1;
+                dhwCard.hidden = roomUnitSource || slaveApp !== 0 || statuscache?.slave?.slave_config_member?.dhw_present === false;
+            }
         }
 
         function updateHeroStateCard() {
@@ -9067,6 +9079,7 @@
                 drawScheduleTable();
                 drawDhwScheduleTable();
                 drawCurve();
+                applyAppVisibility();
             }
 
             function initUi() {
@@ -9118,6 +9131,8 @@
 
                     ele.addEventListener("change", (ev) => {
                         setConfigVal(path, getElementValue(ev.target));
+                        if (path === "heating.$.roomsetpoint.source" || path === "boiler.dhwCtrlSource")
+                            applyAppVisibility();
 
                         const optsele = _("#" + ev.target.getAttribute("id-options"));
                         if (!optsele)
