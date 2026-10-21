@@ -9425,9 +9425,9 @@
                                 )
                             );
                         }
-                        __("span", __("#bleSensors div.flexline")[i])[0].innerText = statuscache["BLE"][adr]["temp"] + " °C";
-                        __("span", __("#bleSensors div.flexline")[i])[1].innerText = statuscache["BLE"][adr]["rh"] + " %";
-                        __("span", __("#bleSensors div.flexline")[i])[2].innerText = statuscache["BLE"][adr]["bat"] + " %";
+                        __("span", __("#bleSensors div.flexline")[i])[0].innerText = (statuscache["BLE"][adr]["temp"] ?? "---") + " °C";
+                        __("span", __("#bleSensors div.flexline")[i])[1].innerText = (statuscache["BLE"][adr]["rh"] ?? "---") + " %";
+                        __("span", __("#bleSensors div.flexline")[i])[2].innerText = (statuscache["BLE"][adr]["bat"] ?? "---") + " %";
                         __("span", __("#bleSensors div.flexline")[i])[3].innerText = statuscache["BLE"][adr]["rssi"] + " dBm";
                         i++;
                     }
