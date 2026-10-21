@@ -404,6 +404,20 @@ void OTControl::loop() {
         }
 
         iSlaveVal = (iSlaveVal + 1) % ((sizeof(slaveValues) / sizeof(slaveValues[0])));
+
+        if (id_scan < 256) {
+            OTValue *val = OTValue::getSlaveValue(OpenThermMessageID(id_scan));
+            while ((val != nullptr) && (id_scan < 256)) {
+                id_scan++;
+                val = OTValue::getSlaveValue(OpenThermMessageID(id_scan));
+            }
+            if (id_scan < 256) {
+                uint32_t req = OpenTherm::buildRequest(OpenThermMessageType::READ, (OpenThermMessageID) id_scan, 0);
+                sendRequest('T', req);
+                id_scan++;
+                return;
+            }
+        }
     }
 }
 
@@ -1079,6 +1093,7 @@ void OTControl::setConfig(JsonObject &config) {
     noDhwSet = config[F("noDhwSet")] | false;
 
     init = true;
+    id_scan = 0;
 }
 
 void OTControl::setChCtrlMode(const HADiscovery::ClimateMode mode, const uint8_t channel) {
