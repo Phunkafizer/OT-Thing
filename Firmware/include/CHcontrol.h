@@ -38,6 +38,8 @@ private:
         } roomComp;
         bool minSuspend;
         double minSuspendHyst;
+        double minSuspendRoomDelta; // K below room setpoint at which min. flow suspension is overridden (0 = off)
+        bool minSuspendRoomCalc;    // during override: true = request calculated flow (may be below flowMin), false = at least flowMin
         struct OutsideSuspend {
             enum {
                 OUTSIDE_SUSPEND_DISABLED,
@@ -61,6 +63,7 @@ private:
         double reduction {0}; // result of PI controller
     } retLimit;
     bool minSuspended {false};
+    bool minSuspRoomOverride {false}; // room too cold -> min. flow suspension overridden
     bool outSuspended {false};
     HeatingCurve curve;
     Scheduler schedule;

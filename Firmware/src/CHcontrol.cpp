@@ -35,6 +35,8 @@ void CHcontrol::setConfig(JsonObject &obj, const bool init) {
     config.roomSuspend.enabled = obj[F("enableHyst")] | false;
     config.minSuspend = obj[F("minSuspend")] | false;
     config.minSuspendHyst = obj[F("minSuspHyst")] | 0.2;
+    config.minSuspendRoomDelta = obj[F("minSuspRoomDelta")] | 0.0;
+    config.minSuspendRoomCalc = obj[F("minSuspRoomCalc")] | false;
 
     JsonObject os = obj[F("outsideSuspend")];
     config.outsideSuspend.type = static_cast<decltype(config.outsideSuspend.type)>(os[F("type")] | Config::OutsideSuspend::OUTSIDE_SUSPEND_CURRENT);
@@ -95,6 +97,7 @@ void CHcontrol::getJson(JsonObject &obj) {
     jSuspended[F("room")] = roomSuspended;
     jSuspended[F("minFlow")] = minSuspended;
     jSuspended[F("outside")] = outSuspended;
+    obj[F("minSuspRoomOverride")] = minSuspRoomOverride;
     obj[FPSTR(STR_STATKEY_SUSPENDED)] = roomSuspended || minSuspended || outSuspended;
 
     double rsp, rt;
@@ -184,9 +187,32 @@ double CHcontrol::getFlow() {
 
         if (result < (flowMin - config.minSuspendHyst))
             minSuspended = true;
+
+        // Room too cold: do not suspend on min. flow, heat with (at least) flowMin until the
+        // room reaches its setpoint again. Without a room temperature the normal min. flow
+        // suspension stays active (safety, e.g. BLE sensor lost).
+        if (config.minSuspendRoomDelta > 0) {
+            double rtRoom, rspRoom;
+            if (roomTemp[channel].get(rtRoom) && roomSetPoint[channel].get(rspRoom)) {
+                const double err = rspRoom - rtRoom;
+                if (err > config.minSuspendRoomDelta)
+                    minSuspRoomOverride = true;
+                else if (err <= 0)
+                    minSuspRoomOverride = false;
+            }
+            else
+                minSuspRoomOverride = false;
+
+            if (minSuspRoomOverride)
+                minSuspended = false;
+        }
+        else
+            minSuspRoomOverride = false;
     }
-    else
+    else {
         minSuspended = false;
+        minSuspRoomOverride = false;
+    }
 
     if (config.outsideSuspend.type == Config::OutsideSuspend::OUTSIDE_SUSPEND_DISABLED) {
         outSuspended = false;
@@ -212,7 +238,11 @@ double CHcontrol::getFlow() {
     if (turbo.endTime > now)
         result += turbo.shift;
     
-    clip(result, flowMin, curve.getFlowMax());
+    // Lower limit of the requested flow: normally flowMin. During the room override with
+    // "use calculated flow" the calculated value is requested even below flowMin
+    // (floor 20 C; the boiler applies its own minimum CH setpoint anyway).
+    const double flowLow = (minSuspRoomOverride && config.minSuspendRoomCalc) ? 20.0 : flowMin;
+    clip(result, flowLow, curve.getFlowMax());
     return round10(result);
 }
 

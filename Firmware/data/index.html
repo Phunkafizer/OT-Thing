@@ -3449,14 +3449,51 @@
                             </label>
                         </div>
                     </div>
-                    <div id="minSuspendHystParams" class="param range" field="heating.$.minSuspHyst" hidden>
-                        <h5>Hysteresis</h5>
-                        <div class="flexline">
-                            <div class="valunit">
-                                <span class="value"></span>
-                                <span class="unit">&deg;C</span>
+                    <div id="minSuspendHystParams" class="flexline" hidden>
+                        <div class="param range" field="heating.$.minSuspHyst">
+                            <h5>Hysteresis</h5>
+                            <div class="flexline">
+                                <div class="valunit">
+                                    <span class="value"></span>
+                                    <span class="unit">&deg;C</span>
+                                </div>
+                                <input type="range" min="0.1" max="2.0" step="0.1">
                             </div>
-                            <input type="range" min="0.1" max="2.0" step="0.1">
+                        </div>
+                        <div class="param range" field="heating.$.minSuspRoomDelta">
+                            <h5>Room below setpoint</h5>
+                            <div class="infobox">
+                                Overrides the min. flow suspension while the room is too cold.<br>
+                                <ul>
+                                    <li>When the room temperature drops more than this value below the <span class="h5-hint">roomsetpoint</span>, the circuit is no longer suspended on min. flow and heats with at least the <span class="h5-hint">min. flow temperature</span>.</li>
+                                    <li>The override ends when the room reaches the roomsetpoint again.</li>
+                                    <li>Without a valid room temperature the normal min. flow suspension stays active.</li>
+                                </ul>
+                                <b>0</b> = disabled.
+                            </div>
+                            <div class="flexline">
+                                <div class="valunit">
+                                    <span class="value"></span>
+                                    <span class="unit">K</span>
+                                </div>
+                                <input type="range" min="0" max="3.0" step="0.1">
+                            </div>
+                        </div>
+                        <div class="param">
+                            <h5>Override flow</h5>
+                            <div class="infobox">
+                                Flow temperature requested while the room override (<span class="h5-hint">Room below setpoint</span>) is active.<br>
+                                <ul>
+                                    <li><b>off</b>: at least the <span class="h5-hint">min. flow temperature</span> (boiler runs at a stable minimum, room warms up faster).</li>
+                                    <li><b>on</b>: the calculated flow temperature, even if it is below the min. flow temperature (lowest temperatures, but the boiler may cycle at its minimum output).</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" field="heating.$.minSuspRoomCalc" />
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
                         </div>
                     </div>
                     
