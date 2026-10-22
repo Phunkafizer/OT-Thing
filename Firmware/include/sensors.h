@@ -33,14 +33,23 @@ class BLESensor: public AddressableSensor {
 private:
     void parse(std::string &data);
     static BLESensor *last;
-    uint8_t rh;
-    uint8_t bat;
-    int8_t rssi;
+    uint8_t rh {0};
+    uint8_t bat {0};
+    int8_t rssi {0};
+    bool rhValid {false};         // true once a humidity value was received
+    bool batValid {false};        // true once a battery value was received
+    bool tempValid {false};       // true once a plausible temperature was received
+    uint32_t lastTempMillis {0};  // millis() of last received temperature
 protected:
     void writeJson(JsonVariant val) override;
     bool sendDiscovery() override;
 public:
+    // A temperature older than this is treated as unavailable. BTHome leaves
+    // the advertising interval to the device, so this has to tolerate slow or
+    // event-driven sensors while still catching one that stopped for good.
+    static constexpr uint32_t TEMP_TIMEOUT_MS = 30UL * 60UL * 1000UL;
     BLESensor(const uint8_t *adr);
+    bool getTemp(double &val) const;
     static void begin();
     static void onDiscovery(const NimBLEAdvertisedDevice* dev);
     static void writeJsonAll(JsonObject &status);

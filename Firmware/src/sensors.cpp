@@ -60,8 +60,11 @@ bool Sensor::get(double &val, const bool raw) {
             return false;
 
         auto *sensor = BLESensor::find(adr);
-        if (sensor != nullptr)
-            set(sensor->temp, SOURCE_BLE);
+        double bleTemp;
+        if ((sensor != nullptr) && sensor->getTemp(bleTemp))
+            set(bleTemp, SOURCE_BLE);
+        else
+            setFlag = false; // no (recent) value: report unavailable instead of a stale/invalid one
     }
 
     if (setFlag) {
@@ -457,6 +460,16 @@ class scanCallbacks : public NimBLEScanCallbacks {
 
 BLESensor::BLESensor(const uint8_t *adr):
         AddressableSensor(adr, 6, (AddressableSensor**) &last) {
+    temp = NAN;
+}
+
+bool BLESensor::getTemp(double &val) const {
+    if (!tempValid)
+        return false;
+    if ((millis() - lastTempMillis) > TEMP_TIMEOUT_MS)
+        return false;
+    val = temp;
+    return true;
 }
 
 void BLESensor::begin() {
@@ -507,17 +520,31 @@ void BLESensor::parse(std::string &data) {
 
         case 0x01:
             this->bat = data[i++];
+            this->batValid = true;
             break;
 
         case 0x02: {
-            int16_t temp = ((data[i] | (data[i+1] << 8)) + 5) / 10;
-            this->temp = temp / 10.0;
+            if (i + 1 >= data.length())
+                return;
+            // BTHome: sint16, little endian, 0.01 degC. Cast bytes to uint8_t,
+            // std::string elements are char and may be signed.
+            const int16_t raw = (int16_t) ((uint8_t) data[i] | ((uint8_t) data[i+1] << 8));
+            const double t = round10(raw / 100.0); // 0.01 degC -> 0.1 degC
             i += 2;
+            if ((t < -40.0) || (t > 85.0)) // implausible, ignore
+                break;
+            this->temp = t;
+            this->tempValid = true;
+            this->lastTempMillis = millis();
             break;
         }
 
         case 0x03: {
-            this->rh = (data[i] | (data[i+1] << 8)) / 100;
+            if (i + 1 >= data.length())
+                return;
+            // BTHome: uint16, little endian, 0.01 %
+            this->rh = ((uint8_t) data[i] | ((uint8_t) data[i+1] << 8)) / 100;
+            this->rhValid = true;
             i += 2;
             break;
         }
@@ -529,6 +556,8 @@ void BLESensor::parse(std::string &data) {
         }
 
         default:
+            // BTHome objects carry no length prefix, so an unknown object id
+            // cannot be skipped safely: stop parsing this advertisement.
             return;
         }
     }
@@ -550,10 +579,25 @@ void BLESensor::writeJsonAll(JsonObject &status) {
 
 void BLESensor::writeJson(JsonVariant val) {
     JsonObject obj = val.to<JsonObject>();
-    obj[F("temp")] = this->temp;
-    obj[F("rh")] = this->rh;
-    obj[F("bat")] = this->bat;
+    double t;
+    if (getTemp(t))
+        obj[F("temp")] = t;
+    else
+        obj[F("temp")] = nullptr;
+    // rh/bat are only reported once the device actually sent them: BTHome
+    // allows partial payloads, and a default of 0 would look like a dead
+    // battery or bone-dry air in Home Assistant.
+    if (rhValid)
+        obj[F("rh")] = this->rh;
+    else
+        obj[F("rh")] = nullptr;
+    if (batValid)
+        obj[F("bat")] = this->bat;
+    else
+        obj[F("bat")] = nullptr;
     obj[F("rssi")] = this->rssi;
+    if (tempValid)
+        obj[F("age")] = (millis() - lastTempMillis) / 1000; // seconds since last temperature
 }
 
 bool BLESensor::sendDiscoveryAll() {
@@ -572,6 +616,19 @@ bool BLESensor::sendDiscovery() {
     haDisc.createTempSensor(F("BLE temp"), id);
     String path = path1;
     path.replace("?", F("temp"));
+    haDisc.setValueTemplate(path);
+    result &= haDisc.publish();
+
+    // age is absent until the first valid temperature, so HA shows the
+    // entity as unknown until data has arrived at least once.
+    id = F("ble_age_");
+    id += getAdr();
+    haDisc.createSensor(F("BLE temp age"), id);
+    haDisc.setDeviceClass(FPSTR(HA_DEVICE_CLASS_DURATION));
+    haDisc.setUnit(F("s"));
+    haDisc.setEntityCategory(HA_ENTITY_CATEGORY_DIAGNOSTIC);
+    path = path1;
+    path.replace("?", F("age"));
     haDisc.setValueTemplate(path);
     result &= haDisc.publish();
 
