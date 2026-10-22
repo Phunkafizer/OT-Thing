@@ -350,6 +350,13 @@ void Portal::begin(bool configMode) {
             for (auto *valobj: roomUnitValues)
                 valobj->getStatus(jRoomunit);
 
+        if (!otcontrol.extraValues.empty()) {
+            JsonObject jExtra = root[FPSTR("scanned")].to<JsonObject>();
+
+            for ( const auto &[key, value]: otcontrol.extraValues )
+                jExtra[String((static_cast<uint8_t>(key)))] = value;
+        }
+
         response->setLength();
         request->send(response);
     });

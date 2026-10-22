@@ -37,6 +37,8 @@ public:
     friend void IRAM_ATTR handleTimerIrqMaster();
     friend void IRAM_ATTR handleTimerIrqSlave();
     friend class OTValue;
+    std::map<OpenThermMessageID, uint16_t> extraValues;
+    std::map<OpenThermMessageID, uint16_t>::iterator extraIterator {extraValues.begin()};
 private:
     void OnRxMaster(const unsigned long msg, const OpenThermResponseStatus status);
     void OnRxSlave(const unsigned long msg, const OpenThermResponseStatus status);
@@ -78,7 +80,7 @@ private:
     } boilerCtrl;
     FlameStats flameStats;
     bool discFlag {true};
-    uint16_t id_scan {256};
+    uint16_t id_scan {0};
     OTWRSetBoilerTemp setBoilerRequest[NUM_HEATCIRCUITS];
     OTWRMasterConfigMember setMasterConfigMember;
     OTWRSetRoomTemp setRoomTemp[NUM_HEATCIRCUITS];

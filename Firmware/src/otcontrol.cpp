@@ -418,6 +418,15 @@ void OTControl::loop() {
                 return;
             }
         }
+
+        if (extraIterator != extraValues.end()) {
+            uint32_t req = OpenTherm::buildRequest(OpenThermMessageType::READ, extraIterator->first, 0);
+            sendRequest('T', req);
+            ++extraIterator;
+            return;
+        }
+        else
+            extraIterator = extraValues.begin();
     }
 }
 
@@ -540,8 +549,10 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
     if (otval)
         setOtValue(otval, mt, newMsg & 0xFFFF);
     else {
-        if (mt == OpenThermMessageType::READ_ACK)
+        if (mt == OpenThermMessageType::READ_ACK) {
+            extraValues[id] = msg & 0xFFFF;
             portal.textAll(F("no slave val!"));
+        }
     }
 
     otval = OTValue::getMasterValue(id);
@@ -893,6 +904,13 @@ void OTControl::getJson(JsonObject &obj) {
 
     obj[FPSTR(STR_STATKEY_BYPASS)] = bypass;
     obj[FPSTR(STR_STATKEY_SUMMERMODE)] = boilerCtrl.summerMode;
+
+    if (!extraValues.empty()) {
+        JsonObject jExtra = obj[FPSTR("scanned")].to<JsonObject>();
+
+        for ( const auto &[key, value]: extraValues )
+            jExtra[String((static_cast<uint8_t>(key)))] = value;
+    }
 }
 
 bool OTControl::sendDiscovery() {
@@ -1093,7 +1111,6 @@ void OTControl::setConfig(JsonObject &config) {
     noDhwSet = config[F("noDhwSet")] | false;
 
     init = true;
-    id_scan = 0;
 }
 
 void OTControl::setChCtrlMode(const HADiscovery::ClimateMode mode, const uint8_t channel) {
