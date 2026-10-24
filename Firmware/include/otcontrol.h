@@ -113,7 +113,7 @@ private:
     uint16_t statusReqOvl {0}; // will be or'ed to status request as this is needed by some boilers
     bool init {false};
     bool noDhwSet;
-    std::vector<OpenThermMessageID> supressedMessages;
+    std::vector<OpenThermMessageID> suppressedMessages;
 public:
     DHWControl dhwControl;
     VentControl ventCtrl;
