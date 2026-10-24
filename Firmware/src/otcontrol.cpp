@@ -199,8 +199,10 @@ void OTControl::setOTMode(const OTMode mode) {
     bool slaveEn = (mode == OTMODE_MASTER_SLAVE) || (mode == OTMODE_REPEATER);
     digitalWrite(GPIO_STEPUP_ENABLE, slaveEn && !bypass);
 
-    for (auto *valobj: slaveValues)
-        valobj->init(isMaster());
+    for (auto *valobj: slaveValues) {
+        const bool sup = std::find(supressedMessages.begin(), supressedMessages.end(), valobj->getId()) != supressedMessages.end();
+        valobj->init(sup && isMaster());
+    }
 
     for (auto *valobj: masterValues)
         valobj->init(true);
@@ -1109,6 +1111,13 @@ void OTControl::setConfig(JsonObject &config) {
     master.hal.setResponseTimeout(config[F("otResponseTimeout")] | 1000);
 
     noDhwSet = config[F("noDhwSet")] | false;
+
+    if (config[F("suppressedMessages")].is<JsonArray>()) {
+        supressedMessages.clear();
+        for (JsonVariant v: config[F("suppressedMessages")].as<JsonArray>()) {
+            supressedMessages.push_back((OpenThermMessageID) (int) v);
+        }
+    }
 
     init = true;
 }

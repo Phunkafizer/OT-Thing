@@ -561,9 +561,11 @@ public:
     void setValue(const OpenThermMessageType ty, const uint16_t val) override;
 };
 
-
-extern OTValue *slaveValues[56];
-extern OTValue *masterValues[20];
-extern OTValue *roomUnitValues[15];
+constexpr uint8_t NUM_SLAVE_VALUES = 56;
+constexpr uint8_t NUM_MASTER_VALUES = 20;
+constexpr uint8_t NUM_ROOM_UNIT_VALUES = 15;
+extern OTValue *slaveValues[NUM_SLAVE_VALUES];
+extern OTValue *masterValues[NUM_MASTER_VALUES];
+extern OTValue *roomUnitValues[NUM_ROOM_UNIT_VALUES];
 
 extern const char* getOTname(OpenThermMessageID id);
