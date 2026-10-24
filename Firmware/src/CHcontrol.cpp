@@ -348,7 +348,12 @@ bool CHcontrol::loop() {
 
 void CHcontrol::loopRoomComp() {
     double rt, rsp; // roomtemp, roomsetpoint
-    
+
+    // evaluate before resetting deltaT: getChOn() -> getFlow() includes deltaT and
+    // updates minSuspended; with deltaT = 0 it would judge the bare heating curve
+    // and release a min. flow suspension that should still hold
+    const bool chOn = getChOn();
+
     roomComp.deltaT = 0;
 
     if (!roomTemp[channel].get(rt) || !roomSetPoint[channel].get(rsp))
@@ -372,7 +377,7 @@ void CHcontrol::loopRoomComp() {
     // integral part of PI controller
     roomComp.integState += rsp - roomComp.rspPrev;
     roomComp.rspPrev = rsp;
-    if (getChOn()) {
+    if (chOn) {
         if (e > 0)
             roomComp.integState += config.roomComp.i * e * PI_INTERVAL / 3600.0; // Ki * e * ts, ts = 30 s
         else
