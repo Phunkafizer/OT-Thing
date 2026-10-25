@@ -202,13 +202,15 @@ When reporting issues, please supply:
 
 * Brand and model of the boiler and room unit
 * OTthing firmware version and the steps that reproduce the issue
+* expected behaviour
 * Log
 * Status JSON
 * Configuration JSON
 * OT items JSON
 * Data history JSON
 
-All of this data can be exported from OTthing using the export function at the bottom of the web UI.
+All of this data can be exported from the OTthing using the export function at the bottom of the web UI.
+Only one concern per issue!
 
 ## Contributing
 
