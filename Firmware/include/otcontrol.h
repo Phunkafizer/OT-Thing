@@ -80,7 +80,7 @@ private:
     } boilerCtrl;
     FlameStats flameStats;
     bool discFlag {true};
-    uint16_t id_scan {0};
+    uint16_t id_scan {256};
     OTWRSetBoilerTemp setBoilerRequest[NUM_HEATCIRCUITS];
     OTWRMasterConfigMember setMasterConfigMember;
     OTWRSetRoomTemp setRoomTemp[NUM_HEATCIRCUITS];

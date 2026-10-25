@@ -201,11 +201,13 @@ void OTControl::setOTMode(const OTMode mode) {
 
     for (auto *valobj: slaveValues) {
         const bool sup = std::find(suppressedMessages.begin(), suppressedMessages.end(), valobj->getId()) != suppressedMessages.end();
-        valobj->init(sup && isMaster());
+        valobj->init(!sup && isMaster());
     }
 
-    for (auto *valobj: masterValues)
-        valobj->init(true);
+    for (auto *valobj: masterValues) {
+        const bool sup = std::find(suppressedMessages.begin(), suppressedMessages.end(), valobj->getId()) != suppressedMessages.end();
+        valobj->init(!sup);
+    }
 
     for (auto *valobj: roomUnitValues)
         valobj->init(true);
@@ -1060,6 +1062,14 @@ void OTControl::setConfig(JsonObject &config) {
         mode = (OTMode) (int) config[F("otMode")];
     bool bp = config[F("bypass")] | false;
 
+    if (config[F("suppressedMessages")].is<JsonArray>()) {
+        suppressedMessages.clear();
+        JsonArray arr = config[F("suppressedMessages")].as<JsonArray>();
+        for (JsonVariant v: arr) {
+            suppressedMessages.push_back((OpenThermMessageID) (int) v);
+        }
+    }
+
     if (!init || (mode != otMode) || (bp != bypass)) {
         bypass = bp;
         setOTMode(mode);
@@ -1111,13 +1121,6 @@ void OTControl::setConfig(JsonObject &config) {
     master.hal.setResponseTimeout(config[F("otResponseTimeout")] | 1000);
 
     noDhwSet = config[F("noDhwSet")] | false;
-
-    if (config[F("suppressedMessages")].is<JsonArray>()) {
-        suppressedMessages.clear();
-        for (JsonVariant v: config[F("suppressedMessages")].as<JsonArray>()) {
-            suppressedMessages.push_back((OpenThermMessageID) (int) v);
-        }
-    }
 
     init = true;
 }

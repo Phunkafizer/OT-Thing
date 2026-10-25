@@ -1,0 +1,48 @@
+name: 🐛 Bug Report
+description: Report a problem or an error with OTthing
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### ⚠️ IMPORTANT RULES BEFORE SUBMITTING
+        * **Only one concern per issue!**
+        * Please use the **export function at the bottom of the OTthing web UI** to gather the required data.
+
+  - type: input
+    id: hardware
+    attributes:
+      label: Brand and model of the boiler and room unit
+      placeholder: e.g., Thermona Therm 24 KD.A / OTthing ESP32-Board
+    validations:
+      required: true
+
+  - type: input
+    id: firmware
+    attributes:
+      label: OTthing firmware version
+      placeholder: e.g., v1.60
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce & expected behaviour
+      placeholder: |
+        1. What did you do?
+        2. What happened?
+        3. What did you expect to happen instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: system_data
+    attributes:
+      label: Logs & JSON Exports
+      description: Please paste your Log, Status JSON, Configuration JSON, OT items JSON, and Data history JSON here.
+      placeholder: |
+        You can paste the text from your export file here. 
+        Tip: You can use triple backticks ``` before and after your data for clean formatting.
+    validations:
+      required: true
