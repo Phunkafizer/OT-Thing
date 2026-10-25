@@ -147,6 +147,7 @@ public:
     bool masterConnected() const;
     bool slaveConnected() const;
     void setOtValue(OTValue *otval, const OpenThermMessageType mt, const uint16_t data);
+    void resetScheduler(const uint8_t channel);
 };
 
 extern OTControl otcontrol;

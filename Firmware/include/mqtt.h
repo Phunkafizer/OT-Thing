@@ -71,8 +71,8 @@ public:
     bool connected();
     void setConfig(const MqttConfig conf);
     bool publish(String topic, JsonDocument &payload, const bool retain);
-    void onMessage(const char *topic, String &payload);
-    bool setValue(const String &key, const String &value, const bool viaHttp = false);
+    void onMessage(const char *topic, String &payload, const bool retained);
+    bool setValue(const String &key, const String &value, const bool viaHttp = false, const bool retained = false);
     void sendValue(const MqttTopic topic, const String &value, const bool retain = true);
     String getBaseTopic();
     static String getTopicString(const MqttTopic topic);

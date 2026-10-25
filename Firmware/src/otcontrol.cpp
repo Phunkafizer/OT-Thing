@@ -495,6 +495,11 @@ void OTControl::setOtValue(OTValue *otval, const OpenThermMessageType mt, const 
     }
 }
 
+void OTControl::resetScheduler(const uint8_t channel) {
+    if (channel < NUM_HEATCIRCUITS)
+        chcontrol[channel].resetScheduler();
+}
+
 void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatus status) {
     if (status == OpenThermResponseStatus::TIMEOUT) {
         master.timeoutCount++;

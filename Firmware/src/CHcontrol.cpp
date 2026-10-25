@@ -272,6 +272,10 @@ void CHcontrol::setFlowTemp(const double temp, const Sensor::Source src) {
     lastFlowTempSrc = src;
 }
 
+void CHcontrol::resetScheduler() {
+    schedule.reset();
+}
+
 void CHcontrol::flameChange(const bool newFlame) {
     double d;
     if (getCurrentFlow(d)) {

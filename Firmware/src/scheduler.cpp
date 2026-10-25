@@ -70,3 +70,7 @@ bool Scheduler::getSetpoint(double &temp) {
     }
     return false;
 }
+
+void Scheduler::reset() {
+    lastIdx = -1;
+}

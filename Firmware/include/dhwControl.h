@@ -32,4 +32,5 @@ public:
     void setSetpointRU(const double temp);
     double getSetpointRU() const;
     bool sendDiscoveries(const bool en);
+    void resetScheduler();
 };

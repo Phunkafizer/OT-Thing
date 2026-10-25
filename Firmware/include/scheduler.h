@@ -18,4 +18,5 @@ private:
 public:
     void setConfig(JsonObject obj);
     bool getSetpoint(double &temp);
+    void reset();
 };

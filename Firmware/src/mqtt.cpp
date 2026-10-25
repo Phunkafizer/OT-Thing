@@ -53,6 +53,7 @@ static uint32_t numDisc = 0;
 static WiFiClient espClient;
 static String mqttRxTopic;
 static String mqttRxPayload;
+static bool mqttRxRetain;
 
 void mqttConnectCb(bool sessionPresent) {
     mqtt.onConnect();
@@ -64,22 +65,17 @@ void mqttDisconnectCb(AsyncMqttClientDisconnectReason reason) {
 
 static void mqttMessageReceived(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
     // AsyncMqttClient may deliver one MQTT message in multiple chunks.
-    if (index == 0) {
+    if ( (mqttRxTopic != String(topic)) || (index == 0) ) {
         mqttRxTopic = String(topic);
         mqttRxPayload = "";
         mqttRxPayload.reserve(total);
-    }
-
-    if (mqttRxTopic != String(topic)) {
-        mqttRxTopic = String(topic);
-        mqttRxPayload = "";
-        mqttRxPayload.reserve(total);
+        mqttRxRetain = properties.retain;
     }
 
     mqttRxPayload.concat(payload, len);
 
     if ((index + len) >= total) {
-        mqtt.onMessage(topic, mqttRxPayload);
+        mqtt.onMessage(topic, mqttRxPayload, mqttRxRetain);
         mqttRxTopic = "";
         mqttRxPayload = "";
     }
@@ -209,7 +205,7 @@ bool Mqtt::publish(String topic, JsonDocument &payload, const bool retain) {
     return (cli.publish(topic.c_str(), 0, retain, ps.c_str()) > 0);
 }
 
-void Mqtt::onMessage(const char *topic, String &payload) {
+void Mqtt::onMessage(const char *topic, String &payload, const bool retained) {
     String topicStr = topic;
     topicStr.remove(0, baseTopic.length() + 1);
     topicStr.remove(topicStr.length() - 4, 4); // remove "/set" from end of topic
@@ -220,13 +216,13 @@ void Mqtt::onMessage(const char *topic, String &payload) {
     log += payload;
     portal.textAll(log);
 
-    if (setValue(topicStr, payload)) {
+    if (setValue(topicStr, payload, false, retained)) {
         if ((millis() - lastStatus) < 4500)
             lastStatus = millis() - 4500;
     }
 }
 
-bool Mqtt::setValue(const String &key, const String &value, const bool viaHttp) {
+bool Mqtt::setValue(const String &key, const String &value, const bool viaHttp, const bool retained) {
     enum MqttTopic etop = TOPIC_UNKNOWN;
     for (int i=0; i<sizeof(topicList) / sizeof(topicList[0]); i++)
         if (key.compareTo(FPSTR(topicList[i].str)) == 0) {
@@ -254,6 +250,8 @@ bool Mqtt::setValue(const String &key, const String &value, const bool viaHttp) 
     case TOPIC_DHWSETTEMP: {
         double d = value.toFloat();
         otcontrol.dhwControl.setSetpoint(d, lastSrc);
+        if (retained)
+            otcontrol.dhwControl.resetScheduler();
         break;
     }   
 
@@ -301,6 +299,8 @@ bool Mqtt::setValue(const String &key, const String &value, const bool viaHttp) 
         const uint8_t ch = (uint8_t) (etop - TOPIC_ROOMSETPOINT1);
         double d = value.toFloat();
         roomSetPoint[ch].set(d, Sensor::SOURCE_MQTT, lastSrc);
+        if (retained)
+            otcontrol.resetScheduler(ch);
         otcontrol.forceFlowCalc(ch);
         break;
     }

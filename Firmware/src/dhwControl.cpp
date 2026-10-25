@@ -122,3 +122,7 @@ bool DHWControl::sendDiscoveries(const bool en) {
 
     return true;
 }
+
+void DHWControl::resetScheduler() {
+    schedule.reset();
+}
