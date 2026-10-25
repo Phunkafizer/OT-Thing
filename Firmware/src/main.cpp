@@ -52,12 +52,10 @@ void setup() {
     BLESensor::begin();
     haDisc.begin();
     mqtt.begin();
-    configTime(devconfig.getTimezone(), 3600, PSTR("pool.ntp.org"));
+    configTime(0, 0, PSTR("pool.ntp.org"));
 
     portal.begin(configMode);
-
     command.begin();
-
     esp_task_wdt_add(NULL);
 
 #ifdef DEBUG

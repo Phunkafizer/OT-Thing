@@ -1048,6 +1048,11 @@ void OTControl::setCoolingCtrl(const int ctrl) {
 }
 
 void OTControl::setConfig(JsonObject &config) {
+    if (config[F("timezone")].is<String>()) {
+        setenv("TZ", config[F("timezone")], 1);
+        tzset();
+    }
+
     while (!master.hal.isReady()) {
         master.hal.process();
         yield();
@@ -1074,6 +1079,10 @@ void OTControl::setConfig(JsonObject &config) {
         bypass = bp;
         setOTMode(mode);
         discFlag = false;
+        if (mode != otMode) {
+            master.resetCounters();
+            slave.resetCounters();
+        }
     }
     devconfig.masterOvrdEnabled = (otMode == OTMODE_MASTER_SLAVE);
 
@@ -1115,8 +1124,6 @@ void OTControl::setConfig(JsonObject &config) {
     setOutsideTemp.force();
     setCoolingCtrlSetpoint.force();
 
-    master.resetCounters();
-    slave.resetCounters();
     master.hal.setRequestDelay(config[F("otDelay")] | 100);
     master.hal.setResponseTimeout(config[F("otResponseTimeout")] | 1000);
 

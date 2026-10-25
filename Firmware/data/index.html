@@ -4253,10 +4253,15 @@
                 </div>
                 
                 <h4>Timezone</h4>
-                <select field="timezone" intval>
-                    <option value="0">UTC</option>
-                    <option value="3600">UTC + 1</option>
-                    <option value="7200">UTC + 2</option>
+                <select field="timezone">
+                    <option value="CET-1CEST,M3.5.0,M10.5.0/3">CET/CEST (UTC+1/UTC+2)</option>
+                    <option value="EET-2EEST,M3.5.0/3,M10.5.0/4">EET/EEST (UTC+2/UTC+3)</option>
+                    <option value="WET0WEST,M3.5.0/1,M10.5.0">WET/WEST (UTC+0/UTC+1)</option>
+                    <option value="GMT0BST,M3.5.0/1,M10.5.0">GMT/BST (UTC+0/UTC+1)</option>
+                    <option value="GMT0">GMT (UTC+0)</option>
+                    <option value="TRT-3">TRT (UTC+3)</option>
+                    <option value="MSK-3">MSK (UTC+3)</option>
+                    <option value="EET-2">EET (UTC+2)</option>
                 </select>
                 
                 <h4 class="firmware-heading">Firmware</h4>
@@ -4460,7 +4465,7 @@
             bypass: false,
             otDelay: 100,
             otResponseTimeout: 1000,
-            timezone: 3600,
+            timezone: "CET-1CEST,M3.5.0,M10.5.0/3",
             noDhwSet: false,
             boiler: {
                 dhwOn: true,
