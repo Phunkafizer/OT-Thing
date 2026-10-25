@@ -444,6 +444,7 @@ bool OTControl::hasSlave() const {
 
 void OTControl::sendRequest(const char source, const unsigned long msg) {
     master.sendRequest(source, msg);
+    lastMsgId = OpenTherm::getDataID(msg);
     if (isMaster()) {
         OTValue *val = OTValue::getMasterValue(OpenTherm::getDataID(msg));
         if (val) {
@@ -554,6 +555,11 @@ void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatu
     else
         c = (newMsg == msg) ? 'B' : 'A';
     master.onReceive(c, newMsg);
+
+    if (isMaster() && (lastMsgId != id)) {
+        portal.textAll("ID mismatch!");
+        return;
+    }
 
     if (otval)
         setOtValue(otval, mt, newMsg & 0xFFFF);
