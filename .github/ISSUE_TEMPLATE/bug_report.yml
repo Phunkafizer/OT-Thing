@@ -7,13 +7,19 @@ body:
       value: |
         ### ⚠️ IMPORTANT RULES BEFORE SUBMITTING
         * **Only one concern per issue!**
-        * Please use the **export function at the bottom of the OTthing web UI** to gather the required data.
+        * use latest OTthing firmware version, see page releases
+        * Please use the **export function at the bottom of the OTthing web UI on tab "setup"** to gather the required data
+        * Attach these exported files to your issue:
+          - Log file
+          - Status JSON
+          - Configuration JSON
+          - OT items JSON
 
   - type: input
     id: hardware
     attributes:
       label: Brand and model of the boiler and room unit
-      placeholder: e.g., Thermona Therm 24 KD.A / OTthing ESP32-Board
+      placeholder: e.g., Thermona Therm 24 KD.A / Roomona 42 X.Y
     validations:
       required: true
 
@@ -33,16 +39,5 @@ body:
         1. What did you do?
         2. What happened?
         3. What did you expect to happen instead?
-    validations:
-      required: true
-
-  - type: textarea
-    id: system_data
-    attributes:
-      label: Logs & JSON Exports
-      description: Please paste your Log, Status JSON, Configuration JSON, OT items JSON, and Data history JSON here.
-      placeholder: |
-        You can paste the text from your export file here. 
-        Tip: You can use triple backticks ``` before and after your data for clean formatting.
     validations:
       required: true
