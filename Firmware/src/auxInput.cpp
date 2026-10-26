@@ -70,6 +70,7 @@ void AuxInput::getJson(JsonObject obj) const {
         jAux[F("value")] = analogRead(gpio);
         break;
     default:
+        obj.remove(FPSTR(name));
         break;
     }
 }
