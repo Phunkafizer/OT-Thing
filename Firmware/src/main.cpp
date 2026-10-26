@@ -38,6 +38,8 @@ void setup() {
     Serial.begin();
     Serial.setTxTimeoutMs(100);
 
+    configTime(0, 0, PSTR("pool.ntp.org"));
+
     otcontrol.begin();
     devconfig.begin();
 
@@ -52,7 +54,6 @@ void setup() {
     BLESensor::begin();
     haDisc.begin();
     mqtt.begin();
-    configTime(0, 0, PSTR("pool.ntp.org"));
 
     portal.begin(configMode);
     command.begin();
