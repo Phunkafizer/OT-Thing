@@ -198,16 +198,26 @@ public:
     OTValueBufSize(const OpenThermMessageID id);
 };
 
-class OTValueFloat: public OTValue {
+
+class OTValueIFloat: public OTValue {
 private:
     void getValue(JsonVariant var) const override;
 public:
-    OTValueFloat(const OpenThermMessageID id, const int interval, PGM_P haName=nullptr);
+    OTValueIFloat(const OpenThermMessageID id, const int interval, PGM_P haName=nullptr);
     double getValue() const;
 };
 
 
-class OTValueFloatTemp: public OTValueFloat {
+class OTValueUFloat: public OTValue {
+private:
+    void getValue(JsonVariant var) const override;
+public:
+    OTValueUFloat(const OpenThermMessageID id, const int interval, PGM_P haName=nullptr);
+    double getValue() const;
+};
+
+
+class OTValueFloatTemp: public OTValueIFloat {
 private:
     bool sendDiscovery() override;
 public:
@@ -522,7 +532,7 @@ public:
 };
 
 
-class OTValueHeatExchangerTemp: public OTValueFloat {
+class OTValueHeatExchangerTemp: public OTValueIFloat {
 protected:
     bool sendDiscovery() override;
 public:
@@ -542,7 +552,7 @@ public:
 };
 
 
-class OTValueFlameCurrent: public OTValueFloat {
+class OTValueFlameCurrent: public OTValueIFloat {
 protected:
     bool sendDiscovery() override;
 public:

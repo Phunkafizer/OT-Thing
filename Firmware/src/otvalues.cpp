@@ -103,12 +103,12 @@ OTValue *slaveValues[NUM_SLAVE_VALUES] = { // replydata collected (read) from a 
     new OTValueStatus(),
     new OTValueVentStatus(),
     new OTValueCapacityModulation(),
-    new OTValueTempBounds(TdhwSetUBTdhwSetLB,                                   PSTR("DHW")),
-    new OTValueTempBounds(MaxTSetUBMaxTSetLB,                                   PSTR("CH")),
+    new OTValueTempBounds(      TdhwSetUBTdhwSetLB,                                   PSTR("DHW")),
+    new OTValueTempBounds(      MaxTSetUBMaxTSetLB,                                   PSTR("CH")),
     new OTValueFloatTemp(       TrOverride,                                     PSTR("room setpoint override")),
-    new OTValueFloat(           RelModLevel,                5,                  PSTR("rel. modulation")),
-    new OTValueFloat(           CHPressure,                 30,                 PSTR("CH pressure")),
-    new OTValueFloat(           DHWFlowRate,                10,                 PSTR("flow rate")),
+    new OTValueUFloat(          RelModLevel,                5,                  PSTR("rel. modulation")),
+    new OTValueIFloat(          CHPressure,                 30,                 PSTR("CH pressure")),
+    new OTValueIFloat(          DHWFlowRate,                10,                 PSTR("flow rate")),
     new OTValueFloatTemp(       Tboiler,                                        PSTR("flow temp.")),
     new OTValueFloatTemp(       TflowCH2,                                       PSTR("flow temp. 2")),
     new OTValueFloatTemp(       Tdhw,                                           PSTR("DHW temperature")),
@@ -156,26 +156,26 @@ OTValue *slaveValues[NUM_SLAVE_VALUES] = { // replydata collected (read) from a 
 
 
 OTValue *masterValues[NUM_MASTER_VALUES] = { // requestdata sent (written) from OTthing (mode master)
-    new OTValueFloat(           TSet,                   -1),
-    new OTValueFloat(           TsetCH2,                -1),
-    new OTValueFloat(           Tr,                     -1),
-    new OTValueFloat(           TrCH2,                  -1),
-    new OTValueFloat(           TrSet,                  -1),
-    new OTValueFloat(           TrSetCH2,               -1),
+    new OTValueIFloat(          TSet,                   -1),
+    new OTValueIFloat(          TsetCH2,                -1),
+    new OTValueUFloat(          Tr,                     -1),
+    new OTValueIFloat(          TrCH2,                  -1),
+    new OTValueIFloat(          TrSet,                  -1),
+    new OTValueIFloat(          TrSetCH2,               -1),
     new OTValueProductVersion(  MasterVersion,          -1),
-    new OTValueFloat(           MaxRelModLevelSetting,  -1),
+    new OTValueIFloat(          MaxRelModLevelSetting,  -1),
     new OTValueProductVersion(  OpenThermVersionMaster, -1),
     new OTValueMasterConfig(),
-    new OTValueFloat(           TdhwSet,                -1),
+    new OTValueIFloat(          TdhwSet,                -1),
     new OTValueMasterStatus(),
     new OTValueVentMasterStatus(),
-    new OTValueFloat(           CoolingControl,         -1),
-    new OTValueFloat(           MaxTSet,                -1),
+    new OTValueIFloat(          CoolingControl,         -1),
+    new OTValueIFloat(          MaxTSet,                -1),
     new OTValueDayTime(),
     new OTValueDate(),
     new OTValueu16(             Year,                   -1),
     new OTValueu16(             Vset,                   -1),
-    new OTValueFloat(           Toutside,               -1)
+    new OTValueIFloat(          Toutside,               -1)
 };
 
 
@@ -187,14 +187,14 @@ OTValue *roomUnitValues[NUM_ROOM_UNIT_VALUES] = { // requestdata sent (written) 
     new OTValueFloatTemp(       TrSet,                  PSTR("room temp. setpoint")),
     new OTValueFloatTemp(       TrSetCH2,               PSTR("room temp. 2 setpoint")),
     new OTValueProductVersion(  MasterVersion,          -1, PSTR("productversion master")),
-    new OTValueFloat(           MaxRelModLevelSetting,  -1),
+    new OTValueIFloat(          MaxRelModLevelSetting,  -1),
     new OTValueProductVersion(  OpenThermVersionMaster, -1, PSTR("OT-version master")),
     new OTValueMasterConfig(),
     new OTValueFloatTemp(       TdhwSet,                PSTR("DHW setpoint")),
     new OTValueMasterStatus(),
     new OTValueVentMasterStatus(),
-    new OTValueFloat(           CoolingControl,         -1, PSTR("cooling setpoint")),
-    new OTValueFloat(           MaxTSet,                -1, PSTR("max. CH setpoint"))
+    new OTValueIFloat(          CoolingControl,         -1, PSTR("cooling setpoint")),
+    new OTValueIFloat(          MaxTSet,                -1, PSTR("max. CH setpoint"))
 };
 
 const char* getOTname(OpenThermMessageID id) {
@@ -598,22 +598,36 @@ void OTValuei16::getValue(JsonVariant var) const {
 }
 
 
-OTValueFloat::OTValueFloat(const OpenThermMessageID id, const int interval, PGM_P haName):
+OTValueIFloat::OTValueIFloat(const OpenThermMessageID id, const int interval, PGM_P haName):
         OTValue(id, interval, haName) {
 }
 
-void OTValueFloat::getValue(JsonVariant var) const {
-    double d = round((int16_t)value * 10 / 256.0) / 10.0;
+void OTValueIFloat::getValue(JsonVariant var) const {
+    double d = round(static_cast<int16_t>(value) * 10 / 256.0) / 10.0;
     var.set<double>(d);
 }
 
-double OTValueFloat::getValue() const {
-    return round((int16_t)value * 10 / 256.0) / 10.0;
+double OTValueIFloat::getValue() const {
+    return round(static_cast<int16_t>(value) * 10 / 256.0) / 10.0;
+}
+
+
+OTValueUFloat::OTValueUFloat(const OpenThermMessageID id, const int interval, PGM_P haName):
+        OTValue(id, interval, haName) {
+}
+
+void OTValueUFloat::getValue(JsonVariant var) const {
+    double d = round(static_cast<uint16_t>(value) * 10 / 256.0) / 10.0;
+    var.set<double>(d);
+}
+
+double OTValueUFloat::getValue() const {
+    return round(static_cast<uint16_t>(value) * 10 / 256.0) / 10.0;
 }
 
 
 OTValueFloatTemp::OTValueFloatTemp(const OpenThermMessageID id, PGM_P haName):
-        OTValueFloat(id, 10, haName) {
+        OTValueIFloat(id, 10, haName) {
 }
 
 bool OTValueFloatTemp::sendDiscovery() {
@@ -1057,7 +1071,7 @@ bool OTValueDate::sendDiscovery() {
 
 
 OTValueHeatExchangerTemp::OTValueHeatExchangerTemp():
-        OTValueFloat(TboilerHeatExchanger, 30) {
+        OTValueIFloat(TboilerHeatExchanger, 30) {
 }
 
 bool OTValueHeatExchangerTemp::sendDiscovery() {
@@ -1089,7 +1103,7 @@ bool OTValueBoilerFanSpeed::sendDiscovery() {
 
 
 OTValueFlameCurrent::OTValueFlameCurrent():
-        OTValueFloat(FlameCurrent, 30, PSTR("Flame current")) {
+        OTValueIFloat(FlameCurrent, 30, PSTR("Flame current")) {
 }
 
 bool OTValueFlameCurrent::sendDiscovery() {
