@@ -4081,6 +4081,13 @@
                         <button onclick="sendOtRequest()">send</button>
                     </div>
                 </div>
+
+                <h4 class="otmode-master">Scan IDs</h4>
+                <div class="otmode-master">
+                    <div>
+                        <button onclick="sendScanRequest()">scan</button>
+                    </div>
+                </div>
             </div>
 
             <div class="group DHW" id="dhwScheduleGroup">
@@ -4822,7 +4829,7 @@
                 }
 
                 hideLoginDialog();
-                showToast("Login successful", "success", 2500);
+                showToast("Login successful", "success");
                 addRecentEvent("Web UI login successful");
                 if (typeof window.refreshProtectedData === "function")
                     window.refreshProtectedData();
@@ -4856,7 +4863,7 @@
                 }
 
                 if (!resp.ok) {
-                    showToast("Could not save web login credentials", "error", 5000);
+                    showToast("Could not save web login credentials", "error");
                     return;
                 }
 
@@ -4864,18 +4871,18 @@
                 authConfigured = !deleteMode;
                 hideLoginDialog();
                 if (deleteMode) {
-                    showToast("Web UI login removed", "success", 3500);
+                    showToast("Web UI login removed", "success");
                     addRecentEvent("Web UI login removed");
                 }
                 else {
                     await fetch("/auth/logout", { method: "POST" });
-                    showToast("Web UI login credentials saved", "success", 3500);
+                    showToast("Web UI login credentials saved", "success");
                     addRecentEvent("Web UI login updated");
                     showLoginDialog("Credentials updated. Please log in.");
                 }
             }
             catch (err) {
-                showToast("Could not save web login credentials", "error", 5000);
+                showToast("Could not save web login credentials", "error");
             }
         }
 
@@ -5848,11 +5855,11 @@
 
                     if (pinnedHeroFields.has(fieldPath)) {
                         pinnedHeroFields.delete(fieldPath);
-                        showToast("Removed from dashboard", "info", 1800);
+                        showToast("Removed from dashboard", "info");
                     }
                     else {
                         pinnedHeroFields.add(fieldPath);
-                        showToast("Pinned to dashboard", "success", 1800);
+                        showToast("Pinned to dashboard", "success");
                     }
 
                     syncPinnedHeroFieldsToConfig();
@@ -6979,22 +6986,22 @@
                     return;
 
                 if (xhr.status < 200 || xhr.status >= 300) {
-                    showToast("Error sending WiFi credentials:\nHTTP " + xhr.status, "error", 5000);
+                    showToast("Error sending WiFi credentials:\nHTTP " + xhr.status, "error");
                     addRecentEvent("WiFi connect failed");
                     return;
                 }
 
-                showToast("WiFi credentials sent", "success", 3000);
+                showToast("WiFi credentials sent", "success");
                 closeWifiSetup();
                 flashElement("#wifiGroup");
                 addRecentEvent("WiFi connect requested");
             };
             xhr.onerror = () => {
-                showToast("Error sending WiFi credentials:\nnetwork request failed", "error", 5000);
+                showToast("Error sending WiFi credentials:\nnetwork request failed", "error");
                 addRecentEvent("WiFi connect failed");
             };
             xhr.ontimeout = () => {
-                showToast("Error sending WiFi credentials:\nrequest timeout", "error", 5000);
+                showToast("Error sending WiFi credentials:\nrequest timeout", "error");
                 addRecentEvent("WiFi connect timeout");
             };
             xhr.timeout = UI_TIMINGS.statusXhrTimeoutMs;
@@ -7013,7 +7020,7 @@
                     return;
 
                 if (xhr.status < 200 || xhr.status >= 300) {
-                    showToast("Error saving configuration:\nHTTP " + xhr.status, "error", 5000);
+                    showToast("Error saving configuration:\nHTTP " + xhr.status, "error");
                     addRecentEvent("Configuration save failed");
                     return;
                 }
@@ -7023,11 +7030,11 @@
                 addRecentEvent("Configuration saved");
             };
             xhr.onerror = () => {
-                showToast("Error saving configuration:\nnetwork request failed", "error", 5000);
+                showToast("Error saving configuration:\nnetwork request failed", "error");
                 addRecentEvent("Configuration save failed");
             };
             xhr.ontimeout = () => {
-                showToast("Error saving configuration:\nrequest timeout", "error", 5000);
+                showToast("Error saving configuration:\nrequest timeout", "error");
                 addRecentEvent("Configuration save timeout");
             };
             xhr.timeout = UI_TIMINGS.statusXhrTimeoutMs;
@@ -7039,7 +7046,7 @@
         function adjustFlowSetTemp(ch, delta) {
             const currentValue = parseNumber(getStatusValueByPath("heatercircuit.$.flowsetpoint", ch));
             if (currentValue == null) {
-                showToast("No flow setpoint available", "warning", 3000);
+                showToast("No flow setpoint available", "warning");
                 return;
             }
 
@@ -7059,7 +7066,7 @@
                     flashElement(`#heroFlowSetCard${ch === 0 ? "" : "2"}`);
                 })
                 .catch((err) => {
-                    showToast("Error setting flow setpoint:\n" + err.message, "error", 5000);
+                    showToast("Error setting flow setpoint:\n" + err.message, "error");
                     addRecentEvent("Flow setpoint update failed");
                 });
         }
@@ -7097,7 +7104,7 @@
                     addRecentEvent(`Flow mode ${modeKey}`);
                 })
                 .catch((err) => {
-                    showToast("Error setting flow mode:\n" + err.message, "error", 5000);
+                    showToast("Error setting flow mode:\n" + err.message, "error");
                     addRecentEvent("Flow mode update failed");
                 });
         }
@@ -7105,7 +7112,7 @@
         function adjustDhwSetTemp(delta) {
             const currentValue = parseNumber(statuscache?.dhw?.setpoint);
             if (currentValue == null) {
-                showToast("No DHW setpoint available", "warning", 3000);
+                showToast("No DHW setpoint available", "warning");
                 return;
             }
 
@@ -7123,7 +7130,7 @@
                     flashElement("#heroDhwCard");
                 })
                 .catch((err) => {
-                    showToast("Error setting DHW setpoint:\n" + err.message, "error", 5000);
+                    showToast("Error setting DHW setpoint:\n" + err.message, "error");
                     addRecentEvent("DHW setpoint update failed");
                 });
         }
@@ -7148,7 +7155,7 @@
                     addRecentEvent(`DHW mode ${modeKey}`);
                 })
                 .catch((err) => {
-                    showToast("Error setting DHW mode:\n" + err.message, "error", 5000);
+                    showToast("Error setting DHW mode:\n" + err.message, "error");
                     addRecentEvent("DHW mode update failed");
                 });
         }
@@ -7156,7 +7163,7 @@
         function adjustCoolingCtrl(delta) {
             const currentValue = parseNumber(statuscache?.cooling?.setpoint);
             if (currentValue == null) {
-                showToast("No cooling control value available", "warning", 3000);
+                showToast("No cooling control value available", "warning");
                 return;
             }
 
@@ -7173,7 +7180,7 @@
                     flashElement("#heroCoolingCard");
                 })
                 .catch((err) => {
-                    showToast("Error setting cooling control:\n" + err.message, "error", 5000);
+                    showToast("Error setting cooling control:\n" + err.message, "error");
                     addRecentEvent("Cooling control update failed");
                 });
         }
@@ -7197,7 +7204,7 @@
                     addRecentEvent(`Cooling mode ${enabled ? "on" : "off"}`);
                 })
                 .catch((err) => {
-                    showToast("Error setting cooling mode:\n" + err.message, "error", 5000);
+                    showToast("Error setting cooling mode:\n" + err.message, "error");
                     addRecentEvent("Cooling mode update failed");
                 });
         }
@@ -7279,7 +7286,7 @@
         function adjustVentSetpoint(delta) {
             const currentValue = getVentSetpoint();
             if (currentValue == null) {
-                showToast("No ventilation setpoint available", "warning", 3000);
+                showToast("No ventilation setpoint available", "warning");
                 return;
             }
 
@@ -7297,7 +7304,7 @@
                     flashElement("#heroVentCard");
                 })
                 .catch((err) => {
-                    showToast("Error setting ventilation setpoint:\n" + err.message, "error", 5000);
+                    showToast("Error setting ventilation setpoint:\n" + err.message, "error");
                     addRecentEvent("Ventilation setpoint update failed");
                 });
         }
@@ -7321,7 +7328,7 @@
                     addRecentEvent(`Ventilation ${enabled ? "on" : "off"}`);
                 })
                 .catch((err) => {
-                    showToast("Error setting ventilation mode:\n" + err.message, "error", 5000);
+                    showToast("Error setting ventilation mode:\n" + err.message, "error");
                     addRecentEvent("Ventilation mode update failed");
                 });
         }
@@ -7392,7 +7399,7 @@
         function adjustRoomSetpoint(ch, delta) {
             const currentValue = parseNumber(statuscache?.heatercircuit?.[ch]?.roomsetpoint ?? roomsetpoint[ch]);
             if (currentValue == null) {
-                showToast("No room setpoint available", "warning", 3000);
+                showToast("No room setpoint available", "warning");
                 return;
             }
 
@@ -7414,7 +7421,7 @@
                     flashElement(`#heroRoomSetCard${ch + 1}`);
                 })
                 .catch((err) => {
-                    showToast("Error setting room setpoint:\n" + err.message, "error", 5000);
+                    showToast("Error setting room setpoint:\n" + err.message, "error");
                     addRecentEvent("Room setpoint update failed");
                 });
         }
@@ -7441,7 +7448,7 @@
                     addRecentEvent(`Room ${ch + 1} mode ${modeKey}`);
                 })
                 .catch((err) => {
-                    showToast("Error setting room mode:\n" + err.message, "error", 5000);
+                    showToast("Error setting room mode:\n" + err.message, "error");
                     addRecentEvent("Room mode update failed");
                 });
         }
@@ -7457,7 +7464,7 @@
                     addRecentEvent("Reboot requested");
                 })
                 .catch((err) => {
-                    showToast("Error requesting reboot:\n" + err.message, "error", 5000);
+                    showToast("Error requesting reboot:\n" + err.message, "error");
                 });
         };
 
@@ -8192,11 +8199,11 @@
             const daysVal = _(program.daysSelector)?.value;
 
             if (parseScheduleTime(timeVal) == null) {
-                showToast("Please provide a valid time", "warning", 3000);
+                showToast("Please provide a valid time", "warning");
                 return;
             }
             if (!Number.isFinite(setpointVal)) {
-                showToast(`Please provide a valid ${program.valueLabel} value`, "warning", 3000);
+                showToast(`Please provide a valid ${program.valueLabel} value`, "warning");
                 return;
             }
 
@@ -8342,11 +8349,11 @@
                 })
                 .then(data => {
                     exportJson(data, "ot_items");
-                    showToast("OT items exported successfully", "success", 3000);
+                    showToast("OT items exported successfully", "success");
                     addRecentEvent("OT items exported");
                 })
                 .catch(err => {
-                    showToast("Error exporting OT items:\n" + err.message, "error", 5000);
+                    showToast("Error exporting OT items:\n" + err.message, "error");
                     addRecentEvent("OT items export failed");
                 });
         }
@@ -8376,15 +8383,30 @@
                         _("#modalBody").innerHTML = "REFUSED<br>";
                     
                     _("#modalBody").innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-                    showToast(rc >= 128 ? "OT request accepted" : "OT request refused", rc >= 128 ? "success" : "warning", 3500);
+                    showToast(rc >= 128 ? "OT request accepted" : "OT request refused", rc >= 128 ? "success" : "warning");
                     addRecentEvent(rc >= 128 ? "OT request accepted" : "OT request refused");
                 })
                 .catch(err => {
                     _("#modalBody").textContent = "Error:\n" + err.message;
-                    showToast("Error sending OT request:\n" + err.message, "error", 5000);
+                    showToast("Error sending OT request:\n" + err.message, "error");
                     addRecentEvent("OT request failed");
                 });
         };
+
+        function sendScanRequest () {
+            fetch(`/scanids`)
+                .then(resp => {
+                    if (!resp.ok) throw new Error("HTTP " + resp.status);
+                })
+                .then(data => {
+                    showToast("Scan started.", "success");
+                    addRecentEvent("Scan started");
+                })
+                .catch(err => {
+                    showToast("Error sending scan request:\n" + err.message, "error");
+                    addRecentEvent("Scan request failed");
+                });
+        }
 
         // copy simplecurve to multipoint curve
         function copyCurve() {
@@ -8452,7 +8474,7 @@
                     addRecentEvent(`Turbo CH${ch + 1}: +${shift} °C, ${duration} min`);
                 })
                 .catch((err) => {
-                    showToast("Error setting turbo:\n" + err.message, "error", 5000);
+                    showToast("Error setting turbo:\n" + err.message, "error");
                 });
         }
 
@@ -8497,7 +8519,7 @@
                 if (xhr.status < 200 || xhr.status >= 300) {
                     wifiScanRunning = false;
                     _("#wifiRescanBtn").disabled = false;
-                    showToast("WiFi scan failed", "error", UI_TIMINGS.scanErrorToastMs);
+                    showToast("WiFi scan failed", "error");
                     addRecentEvent("WiFi scan failed");
                     return;
                 }
@@ -8749,7 +8771,7 @@
                             Object.assign(statuscache, status);
                             consumeStatusCache();
                         } catch (error) {
-                            showToast("Invalid JSON file: " + error.message, "error", 5000);
+                            showToast("Invalid JSON file: " + error.message, "error");
                         }
                     };
                     reader.readAsText(file);
@@ -9112,7 +9134,7 @@
                                         throw new Error("HTTP " + resp.status);
                                 })
                                 .catch((err) => {
-                                    showToast("Error setting bypass:\n" + err.message, "error", 5000);
+                                    showToast("Error setting bypass:\n" + err.message, "error");
                                     addRecentEvent("Bypass update failed");
                                 });
                         }
@@ -9562,7 +9584,7 @@
                             Object.assign(config, restoredConfig);
                             updateUi();
                         } catch (error) {
-                            showToast("Invalid JSON file: " + error.message, "error", 5000);
+                            showToast("Invalid JSON file: " + error.message, "error");
                         }
                     };
                     reader.readAsText(file);
@@ -9613,7 +9635,7 @@
                         progressText.innerHTML = "Error: HTTP " + xhrDownload.status;
                         _("#btn_update").disabled = false;
                         _("#firmware_file").disabled = false;
-                        showToast("Firmware update failed:\nHTTP " + xhrDownload.status, "error", 5000);
+                        showToast("Firmware update failed:\nHTTP " + xhrDownload.status, "error");
                         addRecentEvent("Firmware update failed");
                         return;
                     }
@@ -9621,7 +9643,7 @@
                     _("#firmware_file").value = "";
                     progressBar.value = 100;
                     progressText.innerHTML = "Download successful. Rebooting...";
-                    showToast("Firmware uploaded successfully. Device is rebooting...", "success", 4000);
+                    showToast("Firmware uploaded successfully. Device is rebooting...", "success");
                     addRecentEvent("Firmware update uploaded");
                     setTimeout(() => {
                         location.reload();
@@ -9642,7 +9664,7 @@
                     progressText.innerHTML = "Error: " + xhrDownload.status;
                     _("#btn_update").disabled = false;
                     _("#firmware_file").disabled = false;
-                    showToast("Firmware update failed:\nnetwork request failed", "error", 5000);
+                    showToast("Firmware update failed:\nnetwork request failed", "error");
                     addRecentEvent("Firmware update failed");
                 };
 

@@ -410,13 +410,17 @@ void OTControl::loop() {
         iSlaveVal = (iSlaveVal + 1) % ((sizeof(slaveValues) / sizeof(slaveValues[0])));
 
         if (id_scan < 256) {
-            OTValue *val = OTValue::getSlaveValue(OpenThermMessageID(id_scan));
+            OTValue *val = OTValue::getSlaveValue(static_cast<OpenThermMessageID>(id_scan));
+            if (val == nullptr)
+                val = OTValue::getMasterValue(static_cast<OpenThermMessageID>(id_scan));
             while ((val != nullptr) && (id_scan < 256)) {
                 id_scan++;
-                val = OTValue::getSlaveValue(OpenThermMessageID(id_scan));
+                val = OTValue::getSlaveValue(static_cast<OpenThermMessageID>(id_scan));
+                if (val == nullptr)
+                    val = OTValue::getMasterValue(static_cast<OpenThermMessageID>(id_scan));
             }
             if (id_scan < 256) {
-                uint32_t req = OpenTherm::buildRequest(OpenThermMessageType::READ, (OpenThermMessageID) id_scan, 0);
+                uint32_t req = OpenTherm::buildRequest(OpenThermMessageType::READ, static_cast<OpenThermMessageID>(id_scan), 0);
                 sendRequest('T', req);
                 id_scan++;
                 return;
@@ -499,6 +503,10 @@ void OTControl::setOtValue(OTValue *otval, const OpenThermMessageType mt, const 
 void OTControl::resetScheduler(const uint8_t channel) {
     if (channel < NUM_HEATCIRCUITS)
         chcontrol[channel].resetScheduler();
+}
+
+void OTControl::startScanIds() {
+    id_scan = 0;
 }
 
 void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatus status) {

@@ -447,6 +447,15 @@ void Portal::begin(bool configMode) {
             request->send(503);
     });
 
+    websrv.on(PSTR("/scanids"), HTTP_GET, [this](AsyncWebServerRequest *request) {
+        if (!ensureAuthorized(request))
+            return;
+
+        otcontrol.startScanIds();
+
+        request->send(200);
+    });
+
     websrv.on(PSTR("/topics"), HTTP_GET, [this](AsyncWebServerRequest *request) {
         if (!ensureAuthorized(request))
             return;
