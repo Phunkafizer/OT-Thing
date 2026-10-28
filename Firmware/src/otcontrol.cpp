@@ -393,7 +393,7 @@ void OTControl::loop() {
                     dhwControl.getOn(),
                     boilerCtrl.coolOn,
                     boilerConfig.otc, 
-                    chcontrol[1].getChOn(),
+                    chcontrol[1].getChOn() || boilerConfig.ch2AlwaysOn,
                     boilerCtrl.summerMode,
                     boilerCtrl.dhwBlocking);
                 req |= statusReqOvl;
@@ -1116,14 +1116,15 @@ void OTControl::setConfig(JsonObject &config) {
     JsonObject boiler = config[F("boiler")];
     dhwControl.setConfig(boiler);
     
-    boilerCtrl.maxModulation = boiler[F("maxModulation")] | 100;
+    boilerCtrl.maxModulation = constrain(boiler[F("maxModulation")] | 100, 0, 100);
     statusReqOvl = boiler[F("statusReq")] | 0x0000;
     boilerConfig.otc = boiler[F("otc")] | false;
     boilerCtrl.summerMode = boiler[F("summerMode")] | false;
     boilerCtrl.dhwBlocking = boiler[F("dhwBlocking")] | false;
     boilerCtrl.coolOn = boiler[F("coolOn")] | false;
     boilerCtrl.coolingCtrl = 0;
-    boilerConfig.chOffTemp = boiler[F("chOffTemp")] | 10.0;
+    boilerConfig.chOffTemp = constrain(boiler[F("chOffTemp")] | 10.0, 0.0, 40.0);
+    boilerConfig.ch2AlwaysOn = boiler[F("ch2AlwaysOn")] | false;
     OTValue::setTexhaustAsFloat(boiler[F("texhaustAsFloat")] | false);
 
     masterMemberId = config[F("masterMemberId")] | 22;
