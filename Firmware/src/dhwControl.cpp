@@ -16,7 +16,7 @@ void DHWControl::setConfig(JsonObject &obj) {
     setpoint = obj[F("dhwTemperature")] | 45;
     ctrlSource = (CtrlSource) (obj[F("dhwCtrlSource")] | SOURCE_AUTO);
     schedule.setConfig(obj[F("dhwSchedule")]);
-    setpointRUReadback = 0; // in order to force roomunit to send setpoint
+    setpointRUReadback = setpoint; // in order to force roomunit to send setpoint
     setDhwRequest.force();
 }
 

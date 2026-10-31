@@ -1134,8 +1134,8 @@ void OTControl::setConfig(JsonObject &config) {
     boilerCtrl.dhwBlocking = boiler[F("dhwBlocking")] | false;
     boilerCtrl.coolOn = boiler[F("coolOn")] | false;
     boilerCtrl.coolingCtrl = 0;
-    boilerConfig.chOffTemp = constrain(boiler[F("chOffTemp")] | 10.0, 0.0, 40.0);
-    boilerConfig.useChOffTemp = boiler[F("useChOffTemp")] | false;
+    boilerConfig.chOffTemp = constrain(boiler[F("chOffTemp")] | 25.0, 0.0, 40.0);
+    boilerConfig.useChOffTemp = boiler[F("useChOffTemp")] | true;
     boilerConfig.ch2AlwaysOn = boiler[F("ch2AlwaysOn")] | false;
     OTValue::setTexhaustAsFloat(boiler[F("texhaustAsFloat")] | false);
 
