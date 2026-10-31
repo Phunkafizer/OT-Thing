@@ -435,6 +435,20 @@ void OTValue::setAvailability() {
         haDisc.setRoomunitAvailability();
 }
 
+bool OTValue::stepNumSet(const bool inc) {
+    if (inc) {
+        if ((numSet < INT32_MAX) && (numSet >= 0))
+            numSet++;
+        else
+            numSet = 1;
+    } else {
+        if (numSet <= 0) {
+            numSet--;
+        }
+    }
+    return (numSet > -3);;
+}
+
 bool OTValue::sendDiscovery(String field) {
     String fn = FPSTR(getName());
     if (!field.isEmpty()) {
@@ -488,15 +502,18 @@ void OTValue::setValue(const OpenThermMessageType ty, const uint16_t val) {
             discFlag = false;
         enabled = true;
         disc = true;
-        numSet++;
+        if (ty != OpenThermMessageType::WRITE)
+            stepNumSet(true);
     }
 
     // only save msgresult when message is a reply
     if ( (ty != OpenThermMessageType::WRITE_DATA) && (ty != OpenThermMessageType::READ_DATA) ) {
         lastMsgResult = ty;
-        if (!isDataMessage(ty) && (numSet == 0)) {
-            enabled = false;
-            disc = true;
+        if (!isDataMessage(ty) && (numSet <= 0)) {
+            if (!stepNumSet(false)) {
+                enabled = false;
+                disc = true;
+            }
         }
     }
 
@@ -510,8 +527,19 @@ void OTValue::setMsgResult(const OpenThermMessageType ty) {
      - a sent response to a connected master (roomunit)
     */
     lastMsgResult = ty;
-    if ((ty == OpenThermMessageType::DATA_INVALID) || (ty == OpenThermMessageType::UNKNOWN_DATA_ID))
-        enabled = false;
+
+    switch (ty) {
+        case OpenThermMessageType::DATA_INVALID:
+        case OpenThermMessageType::UNKNOWN_DATA_ID:
+            if (!stepNumSet(false))
+                enabled = false;
+            break;
+        case OpenThermMessageType::WRITE_ACK:
+            stepNumSet(true);
+            break;
+        default:
+            break;
+    }
 }
 
 uint16_t OTValue::getValue() {

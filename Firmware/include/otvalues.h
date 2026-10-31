@@ -125,12 +125,13 @@ protected:
     PGM_P getName() const;
     Mqtt::ValueTemplateType getValueTemplateType() const;
     void setAvailability();
+    bool stepNumSet(const bool inc);
     const OpenThermMessageID id;
     uint16_t value;
     bool enabled;
     bool discFlag;
     bool setFlag;
-    uint32_t numSet;
+    int32_t numSet;
     OpenThermMessageType lastMsgResult;
     PGM_P haName;
     PGM_P entityCategory;

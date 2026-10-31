@@ -348,13 +348,16 @@ void OTControl::loop() {
                 if (!OTValue::slaveConfig->hasCh(ch))
                     continue;
                 if (setBoilerRequest[ch]) {
-                    double flow = (chcontrol[ch].getChOn() || !boilerConfig.useChOffTemp) ? chcontrol[ch].getFlow() : boilerConfig.chOffTemp;
+                    double flow = chcontrol[ch].getFlow();
+                    if (!chcontrol[ch].getChOn() && !chcontrol[ch].masterOverrideTempActive() && boilerConfig.useChOffTemp)
+                        flow = boilerConfig.chOffTemp;
+
                     setBoilerRequest[ch].sendFloat(flow);
                     return;
                 }
             }
 
-            if (OTValue::slaveConfig->hasDHW() && dhwControl.setDhwRequest &&!noDhwSet) {
+            if (OTValue::slaveConfig->hasDHW() && dhwControl.setDhwRequest && !noDhwSet) {
                 double tmp = dhwControl.getTemp();
                 dhwControl.setDhwRequest.sendFloat(tmp);
                 return;

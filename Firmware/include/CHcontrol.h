@@ -88,6 +88,7 @@ public:
     void setFlowTemp(const double temp, const Sensor::Source src);
     void flameChange(const bool newFlame);
     void resetScheduler();
+    bool masterOverrideTempActive() const;
     double flowMin;
     ChannelOverride<bool> ovrdOn;
     ChannelOverride<double> ovrdTemp;

@@ -138,8 +138,8 @@ void CHcontrol::getJson(JsonObject &obj) {
 }
 
 double CHcontrol::getFlow() {
-    if (devconfig.masterOvrdEnabled && ovrdTemp.active) {
-        // we are master/test, override value with roomunit value
+    if (masterOverrideTempActive()) {
+        // we are master, override value with roomunit value
         if (ovrdTemp.value <= 0)
             return 0;
         return ovrdTemp.value;
@@ -274,6 +274,10 @@ void CHcontrol::setFlowTemp(const double temp, const Sensor::Source src) {
 
 void CHcontrol::resetScheduler() {
     schedule.reset();
+}
+
+bool CHcontrol::masterOverrideTempActive() const {
+    return devconfig.masterOvrdEnabled && ovrdTemp.active;
 }
 
 void CHcontrol::flameChange(const bool newFlame) {
