@@ -71,6 +71,7 @@ private:
         bool otc;
         double chOffTemp;
         bool ch2AlwaysOn;
+        bool useChOffTemp;
     } boilerConfig;
     struct {
         uint8_t maxModulation;

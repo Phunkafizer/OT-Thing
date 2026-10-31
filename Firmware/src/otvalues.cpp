@@ -930,7 +930,7 @@ bool OTValueASFFlags::sendValueDiscoveries(const String &oemFaultSensorName, con
         return false;
 
     haDisc.createSensor(oemFaultSensorName, oemFaultSensorId);
-    return OTValue::sendDiscovery(oemFaultSensorId);
+    return OTValue::sendDiscovery(PSTR(KEY_OEM_FAULT_CODE));
 }
 
 

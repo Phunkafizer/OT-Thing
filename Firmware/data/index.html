@@ -3929,13 +3929,6 @@
                             <span class="slider"></span>
                         </label>
                     </div>
-                    <div class="param">
-                        <h5>CH2 always on</h5>
-                        <label class="switch">
-                            <input type="checkbox" field="boiler.ch2AlwaysOn" />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
                 </div>
                 <div class="flexline app-heat">
                     <div class="param range" field="boiler.maxModulation">
@@ -4044,6 +4037,20 @@
                         <h5>no DHW set</h5>
                         <label class="switch">
                             <input type="checkbox" field="noDhwSet" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="param">
+                        <h5>CH2 always on</h5>
+                        <label class="switch">
+                            <input type="checkbox" field="boiler.ch2AlwaysOn" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="param">
+                        <h5>use CH off temp</h5>
+                        <label class="switch">
+                            <input type="checkbox" field="boiler.useChOffTemp" />
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -4495,6 +4502,7 @@
                 dhwBlocking: false,
                 maxModulation: 100,
                 chOffTemp: 10,
+                useChOffTemp: false,
                 texhaustAsFloat: false
             },
             heating: [

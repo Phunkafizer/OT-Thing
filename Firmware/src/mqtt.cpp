@@ -417,89 +417,103 @@ String Mqtt::getTopicString(const MqttTopic topic) {
 }
 
 String Mqtt::getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit) {
-    String result = F("{% set tmp=(((value_json");
-    String ftmp = FPSTR(field); // e. g. "dhw_set_t", "status.dhw_enable"
+    String result;
+    String ftmp = FPSTR(field);
+    bool isDataResultType = false;
 
     switch (vt) {
     case VALTMPL_NONE:
         return "";
         
     case VALTMPL_ROOT:
-        result += F(")"); // result: {% set tmp=(((value_json)
+        result = F("value_json");
         break;
         
     case VALTMPL_SLAVE:
-        result += F(".get('slave') or {})"); // result: {% set tmp=(((value_json.get('slave') or {})
+        result = F("(value_json.get('slave') or {})");
         break;
 
-    case VALTMPL_MASTER: {
-        const int pidx = ftmp.indexOf('.');
-        if (pidx > -1)
-            ftmp = ftmp.substring(0, pidx) + F(".data") + ftmp.substring(pidx); // adds 
-        else
-            ftmp += F(".data");
-        [[fallthrough]];
-    }
+    case VALTMPL_MASTER:
+        result = F("(value_json.get('master') or {})");
+        isDataResultType = true;
+        break;
 
     case VALTMPL_MASTER_ROOT:
-        result += F(".get('master') or {})"); // result: {% set tmp=(((value_json.get('master') or {})
+        result = F("(value_json.get('master') or {})");
         break;
 
-    case VALTMPL_ROOMUNIT: {
-        const int pidx = ftmp.indexOf('.');
-        if (pidx > -1)
-            ftmp = ftmp.substring(0, pidx) + F(".data") + ftmp.substring(pidx);
-        else
-            ftmp += F(".data");
-        [[fallthrough]];
-    }
+    case VALTMPL_ROOMUNIT:
+        result = F("(value_json.get('roomunit') or {})");
+        isDataResultType = true;
+        break;
 
     case VALTMPL_ROOMUNIT_ROOT:
-        result += F(".get('roomunit') or {})");
+        result = F("(value_json.get('roomunit') or {})");
         break;
 
     case VALTMPL_HEATING_CIRCUIT:
-        result += F(".get('heatercircuit') or [])[#]");
+        result = F("(value_json.get('heatercircuit', [])[#] if (value_json.get('heatercircuit', []) | length > #) else {})");
         break;
 
     case VALTMPL_DHW:
-        result += F(".get('dhw') or {})");
+        result = F("(value_json.get('dhw') or {})");
         break;
 
     case VALTMPL_FLAMESTATS:
-        result += F(".get('slave') or {}).get('flameStats') or {}");
+        result = F("((value_json.get('slave') or {}).get('flameStats') or {})");
         break;
 
     case VALTMPL_COOLING:
-        result += F(".get('cooling') or {})");
+        result = F("(value_json.get('cooling') or {})");
         break;
 
     case VALTMPL_VENT:
-        result += F(".get('vent') or {})");
+        result = F("(value_json.get('vent') or {})");
         break;
     }
 
-    int numbrak = 2;
+    bool hasDot = (ftmp.indexOf('.') > -1);
 
+    // Pfad-Punkte abarbeiten (Zwischenschritte immer mit or {} absichern)
     while (true) {
         auto pidx = ftmp.indexOf('.');
-
         if (pidx > -1) {
+            String subField = ftmp.substring(0, pidx);
+            result = String(F("(")) + result;
             result += F(".get('");
-            result += ftmp.substring(0, pidx);
+            result += subField;
             result += F("') or {})");
+
+            if (isDataResultType) {
+                result = String(F("(")) + result;
+                result += F(".get('data') or {})");
+                isDataResultType = false;
+            }
+            
             ftmp.remove(0, pidx + 1);
-            numbrak--;
         }
         else
             break;
     }
-    for (int i=0; i<numbrak; i++)
-        result += ')';
 
-    result += F(".get('");
-    result += ftmp;
-    result += F("') %}");
+    // Das finale Feld holen (Hier KEIN or {} am Ende, damit bei Fehlen None statt {} kommt!)
+    if (isDataResultType && !hasDot) {
+        result = String(F("(")) + result;
+        result += F(".get('");
+        result += ftmp;
+        result += F("') or {}).get('data')");
+    } else {
+        result = String(F("(")) + result;
+        result += F(".get('");
+        result += ftmp;
+        result += F("'))");
+        
+        if (isDataResultType) {
+            result += F(".get('data')");
+        }
+    }
+
+    result = String(F("{% set tmp = ")) + result + F(" %}");
 
     if (ch == ommit)
         result.replace("#", "");
@@ -511,13 +525,13 @@ String Mqtt::getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t
 
 String Mqtt::getValueTemplate(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit) {
     String result = getValuePath(vt, field, ch, ommit);
-    result += F("{{ tmp | default(none) }}");
+    result += F("{{ tmp if tmp is not none else '' }}");
     return result;
 }
 
 String Mqtt::getValueTemplateBool(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit) {
     String result = getValuePath(vt, field, ch, ommit);
-    result += F("{{ none if tmp is none else 'ON' if tmp else 'OFF' }}");
+    result += F("{{ none if (tmp is not defined or tmp is none) else ('ON' if tmp else 'OFF') }}");
     return result;
 }
 

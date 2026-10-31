@@ -348,7 +348,7 @@ void OTControl::loop() {
                 if (!OTValue::slaveConfig->hasCh(ch))
                     continue;
                 if (setBoilerRequest[ch]) {
-                    double flow = chcontrol[ch].getChOn() ? chcontrol[ch].getFlow() : boilerConfig.chOffTemp;
+                    double flow = (chcontrol[ch].getChOn() || !boilerConfig.useChOffTemp) ? chcontrol[ch].getFlow() : boilerConfig.chOffTemp;
                     setBoilerRequest[ch].sendFloat(flow);
                     return;
                 }
@@ -983,7 +983,6 @@ bool OTControl::sendDiscovery() {
     discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_ONTIME);
 
     haDisc.createSensor(F("pausetime per cycle"), F("flame_off"));
-    haDisc.setValueTemplate(mqtt.getValueTemplate(Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_OFFTIME));
     haDisc.setSlaveAvailability();
     haDisc.setUnit(FPSTR(HA_UNIT_MIN));
     discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_OFFTIME);
@@ -999,6 +998,18 @@ bool OTControl::sendDiscovery() {
     haDisc.setSlaveAvailability();
     haDisc.setUnit(FPSTR(HA_UNIT_MIN));
     discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_LASTONTIME);
+
+    haDisc.createSensor(F("current off time"), F("current_off_time"));
+    haDisc.setDeviceClass(PSTR(HA_DEVICE_CLASS_DURATION));
+    haDisc.setSlaveAvailability();
+    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
+    discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_CURRENTOFFTIME);
+
+    haDisc.createSensor(F("last off time"), F("last_off_time"));
+    haDisc.setDeviceClass(PSTR(HA_DEVICE_CLASS_DURATION));
+    haDisc.setSlaveAvailability();
+    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
+    discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_LASTOFFTIME);
 
     haDisc.createSwitch(F("bypass"), Mqtt::TOPIC_BYPASS);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOT, STR_STATKEY_BYPASS));
@@ -1124,6 +1135,7 @@ void OTControl::setConfig(JsonObject &config) {
     boilerCtrl.coolOn = boiler[F("coolOn")] | false;
     boilerCtrl.coolingCtrl = 0;
     boilerConfig.chOffTemp = constrain(boiler[F("chOffTemp")] | 10.0, 0.0, 40.0);
+    boilerConfig.useChOffTemp = boiler[F("useChOffTemp")] | false;
     boilerConfig.ch2AlwaysOn = boiler[F("ch2AlwaysOn")] | false;
     OTValue::setTexhaustAsFloat(boiler[F("texhaustAsFloat")] | false);
 
