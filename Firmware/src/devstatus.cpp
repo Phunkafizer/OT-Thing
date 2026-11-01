@@ -40,6 +40,7 @@ PGM_P STR_STATKEY_TXCOUNT PROGMEM = "txCount";
 PGM_P STR_STATKEY_RXCOUNT PROGMEM = "rxCount";
 PGM_P STR_STATKEY_CONNECTED PROGMEM = "connected";
 PGM_P STR_STATKEY_PIERROR PROGMEM = "piError";
+PGM_P STR_STATKEY_RESETREASON PROGMEM = "resetReason";
 
 PGM_P STR_STATKEY_FLAMESTATS PROGMEM = "flameStats";
 PGM_P STR_STATKEY_FLAMESTATS_DUTY PROGMEM = "duty";
@@ -77,10 +78,9 @@ void DevStatus::unlock() {
     doc[F("runtime")] = millis() / 1000UL;
     doc[F("freeHeap")] = ESP.getFreeHeap();
     doc[F("largestBlock")] = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-    doc[F("resetInfo")] = rtc_get_reset_reason(0);
+    doc[F(STR_STATKEY_RESETREASON)] = (int) esp_reset_reason();
     doc[F("fw_version")] = F(BUILD_VERSION);
     doc[F("USB_connected")] = Serial.isConnected();
-    doc[F("reset_reason0")] = rtc_get_reset_reason(0);
     doc[F("numWifiDisc")] = numWifiDiscon;
 
     struct tm timeinfo;
@@ -119,4 +119,15 @@ void DevStatus::unlock() {
 
     for (int i=0; i<sizeof(auxInput) / sizeof(auxInput[0]); i++)
         auxInput[i].getJson(doc);
+}
+
+bool DevStatus::sendDiscovery() {
+    bool discFlag = true;
+
+    haDisc.createSensor(F("reset reason"), F("reset_reason"));
+    haDisc.setEntityCategory(HA_ENTITY_CATEGORY_DIAGNOSTIC);
+    haDisc.setOTThingAvailability();
+    discFlag &= haDisc.publish(true, Mqtt::VALTMPL_ROOT, STR_STATKEY_RESETREASON);
+
+    return discFlag;
 }

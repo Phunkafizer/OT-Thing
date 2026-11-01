@@ -103,8 +103,8 @@ OTValue *slaveValues[NUM_SLAVE_VALUES] = { // replydata collected (read) from a 
     new OTValueStatus(),
     new OTValueVentStatus(),
     new OTValueCapacityModulation(),
-    new OTValueTempBounds(      TdhwSetUBTdhwSetLB,                                   PSTR("DHW")),
-    new OTValueTempBounds(      MaxTSetUBMaxTSetLB,                                   PSTR("CH")),
+    new OTValueTempBounds(      TdhwSetUBTdhwSetLB,                             PSTR("DHW")),
+    new OTValueTempBounds(      MaxTSetUBMaxTSetLB,                             PSTR("CH")),
     new OTValueFloatTemp(       TrOverride,                                     PSTR("room setpoint override")),
     new OTValueUFloat(          RelModLevel,                5,                  PSTR("rel. modulation")),
     new OTValueIFloat(          CHPressure,                 30,                 PSTR("CH pressure")),
@@ -447,6 +447,15 @@ bool OTValue::stepNumSet(const bool inc) {
         }
     }
     return (numSet > -3);;
+}
+
+String OTValue::makeEntityId(PGM_P field) {
+    String id = FPSTR(getName());
+    if (field != nullptr) {
+        id += "_";
+        id += FPSTR(field);
+    }
+    return id;
 }
 
 bool OTValue::sendDiscovery(String field) {
@@ -1025,25 +1034,21 @@ OTValueTempBounds::OTValueTempBounds(const OpenThermMessageID id, const char *na
 }
 
 void OTValueTempBounds::getValue(JsonVariant var) const {
-    var[PSTR(MAX)] = value >> 8;
-    var[PSTR(MIN)] = value & 0xFF;
+    var[PSTR(STRMAX)] = value >> 8;
+    var[PSTR(STRMIN)] = value & 0xFF;
 }
 
 bool OTValueTempBounds::sendDiscovery() {
     String name = FPSTR(namePrefix);
     name += F(" max. temp.");
-    String id = FPSTR(namePrefix);
-    id += F("_max");
-    haDisc.createTempSensor(name, id);
-    if (!OTValue::sendDiscovery(FPSTR(MAX)))
+    haDisc.createTempSensor(name, makeEntityId(STRMAX));
+    if (!OTValue::sendDiscovery(FPSTR(STRMAX)))
         return false;
 
     name = FPSTR(namePrefix);
     name += F(" min. temp.");
-    id = FPSTR(namePrefix);
-    id += F("_min");
-    haDisc.createTempSensor(name, id);
-    return OTValue::sendDiscovery(FPSTR(MIN));
+    haDisc.createTempSensor(name, makeEntityId(STRMIN));
+    return OTValue::sendDiscovery(FPSTR(STRMIN));
 }
 
 
@@ -1118,13 +1123,13 @@ void OTValueBoilerFanSpeed::getValue(JsonVariant var) const {
 }
 
 bool OTValueBoilerFanSpeed::sendDiscovery() {
-    haDisc.createSensor(F("Boiler fan speed setpoint"), FPSTR(SETPOINT));
+    haDisc.createSensor(F("Boiler fan speed setpoint"), makeEntityId(SETPOINT));
     haDisc.setUnit(FPSTR(HA_UNIT_HZ));
     String field = FPSTR(getName());
     if (!OTValue::sendDiscovery(FPSTR(SETPOINT)))
         return false;
     
-    haDisc.createSensor(F("Boiler fan speed actual"), FPSTR(ACTUAL));
+    haDisc.createSensor(F("Boiler fan speed actual"), makeEntityId(ACTUAL));
     haDisc.setUnit(FPSTR(HA_UNIT_HZ));
     return OTValue::sendDiscovery(FPSTR(ACTUAL));
 }

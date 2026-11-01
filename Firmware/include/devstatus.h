@@ -37,6 +37,7 @@ extern PGM_P STR_STATKEY_TXCOUNT PROGMEM;
 extern PGM_P STR_STATKEY_RXCOUNT PROGMEM;
 extern PGM_P STR_STATKEY_CONNECTED PROGMEM;
 extern PGM_P STR_STATKEY_PIERROR PROGMEM;
+extern PGM_P STR_STATKEY_RESETREASON PROGMEM;
 
 extern PGM_P STR_STATKEY_FLAMESTATS PROGMEM;
 extern PGM_P STR_STATKEY_FLAMESTATS_DUTY PROGMEM;
@@ -60,6 +61,7 @@ public:
     bool lock();
     void unlock();
     void buildDoc(JsonObject doc);
+    bool sendDiscovery();
     uint32_t numWifiDiscon;
 } devstatus;
 

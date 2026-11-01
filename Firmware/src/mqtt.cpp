@@ -162,6 +162,7 @@ void Mqtt::loop() {
         if (!discFlag) {
             discFlag = true;
             discFlag &= otcontrol.sendDiscovery();
+            discFlag &= devstatus.sendDiscovery();
             discFlag &= OneWireNode::sendDiscoveryAll();
             discFlag &= BLESensor::sendDiscoveryAll();
             for (int i=0; i<sizeof(auxInput) / sizeof(auxInput[0]); i++)

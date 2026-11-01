@@ -126,6 +126,7 @@ protected:
     Mqtt::ValueTemplateType getValueTemplateType() const;
     void setAvailability();
     bool stepNumSet(const bool inc);
+    String makeEntityId(PGM_P field);
     const OpenThermMessageID id;
     uint16_t value;
     bool enabled;
@@ -468,8 +469,8 @@ public:
 class OTValueTempBounds: public OTValue {
 private:
     void getValue(JsonVariant var) const override;
-    const char *MAX = "max" PROGMEM;
-    const char *MIN = "min" PROGMEM;
+    const char *STRMAX = "max" PROGMEM;
+    const char *STRMIN = "min" PROGMEM;
     const char *namePrefix;
 protected:
     bool sendDiscovery() override;
