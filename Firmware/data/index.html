@@ -2925,7 +2925,7 @@
                         <span class="statusvalue" field="master.status.data.dhw_blocking"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Outside temp. compensation</h5>
+                        <h5>OTC</h5>
                         <span class="statusvalue" field="master.status.data.otc_active"></span>
                     </div>
                     <div class="statusfield">
@@ -3041,7 +3041,7 @@
                         <span class="statusvalue" field="roomunit.status.data.dhw_enable"></span>
                     </div>
                     <div class="statusfield">
-                        <h5>Outside temp. compensation</h5>
+                        <h5>OTC</h5>
                         <span class="statusvalue" field="roomunit.status.data.otc_active"></span>
                     </div>
                     <div class="statusfield">
@@ -4383,7 +4383,7 @@
                     <div class="flexline">
                         <div class="valunit">
                             <span class="value" id="turboShiftVal">5</span>
-                            <span class="unit">&deg;C</span>
+                            <span class="unit">K</span>
                         </div>
                         <input id="turboShift" type="range" min="1" max="15" step="1" value="5" oninput="_('#turboShiftVal').textContent = this.value">
                     </div>
@@ -6034,7 +6034,7 @@
                     const duration = parseNumber(turbo.duration);
                     const parts = [];
                     if (shift != null)
-                        parts.push(`${shift > 0 ? "+" : ""}${Math.round(shift * 10) / 10} °C`);
+                        parts.push(`${shift > 0 ? "+" : ""}${Math.round(shift * 10) / 10} K`);
                     if (duration != null)
                         parts.push(`${Math.round(duration)} min`);
                     if (parts.length > 0)

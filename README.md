@@ -106,7 +106,6 @@ Install PlatformIO, then run these commands from the `Firmware/` directory:
 ```bash
 platformio run --environment release
 platformio run --environment release --target upload
-platformio run --environment release --target uploadfs
 ```
 
 The first command builds the firmware. The next two upload the firmware and the LittleFS web assets; perform both uploads when installing a complete build. The firmware project reads access point SSID, password, and hostname from `default.ini` unless overridden by the build environment. Set a unique access point password before deploying devices.
@@ -217,3 +216,36 @@ Only one concern per issue!
 * Make changes in a new branch based on the [`develop`](../../tree/develop) branch.
 * Address only one issue per PR.
 * Create the PR against the [`develop`](../../tree/develop) branch.
+
+## Known Working Devices
+
+Below is an excerpt of hardware devices reported to work successfully with **OTthing**. If you have verified additional devices, contributions and reports are very welcome!
+
+### Boilers & Heating Systems
+* **De Dietrich** Inidens 20/24 MI
+* **De Dietrich** MCR 24 Home
+* **De Dietrich** MPX 24/29 MI Compact
+* **Domusa** BioClass HM 16 (Pellet)
+* **Hoval** TopGas
+* **Intergas** HRE 36/30A
+* **Junkers** Cerasmart ZSB 3-16 *(with OpenTherm module OTM 1)*
+* **Remeha** Tzerra 28c
+* **Remeha** Tzerra Ace
+* **Termet** Gold Plus 2
+* **Viessmann** Vitodens 100-W (B1KG)
+* **Westen** Boyler Digit+
+* **Windhager** BioWin (Pellet)
+
+### Room Units & Thermostats
+* **Baxi** RC 06.20
+* **De Dietrich** AD304
+* **De Dietrich** iSense (AD289)
+* **Honeywell** DT4M
+* **Hoval** RS-OT
+* **Junkers** TF 30
+* **Siemens** QAA73
+* **Theben / Windhager** RAM 786
+
+---
+*Feel free to open a Pull Request or issue to report additional compatible devices!*
+

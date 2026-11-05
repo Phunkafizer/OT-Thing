@@ -105,27 +105,27 @@ OTValue *slaveValues[NUM_SLAVE_VALUES] = { // replydata collected (read) from a 
     new OTValueCapacityModulation(),
     new OTValueTempBounds(      TdhwSetUBTdhwSetLB,                             PSTR("DHW")),
     new OTValueTempBounds(      MaxTSetUBMaxTSetLB,                             PSTR("CH")),
-    new OTValueFloatTemp(       TrOverride,                                     PSTR("room setpoint override")),
-    new OTValueUFloat(          RelModLevel,                5,                  PSTR("rel. modulation")),
+    new OTValueFloatTemp(       TrOverride,                 30,                 PSTR("room setpoint override")),
+    new OTValueUFloat(          RelModLevel,                4,                  PSTR("rel. modulation")),
     new OTValueIFloat(          CHPressure,                 30,                 PSTR("CH pressure")),
     new OTValueIFloat(          DHWFlowRate,                10,                 PSTR("flow rate")),
-    new OTValueFloatTemp(       Tboiler,                                        PSTR("flow temp.")),
-    new OTValueFloatTemp(       TflowCH2,                                       PSTR("flow temp. 2")),
-    new OTValueFloatTemp(       Tdhw,                                           PSTR("DHW temperature")),
-    new OTValueFloatTemp(       Tdhw2,                                          PSTR("DHW temperature 2")),
-    new OTValueFloatTemp(       Toutside,                                       PSTR("outside temp.")),
-    new OTValueFloatTemp(       Tret,                                           PSTR("return temp.")),
-    new OTValuei16(             Texhaust,                   10,                 PSTR("exhaust temp.")),
-    new OTValueFloatTemp(       TrOverride2,                                    PSTR("room setpoint 2 override")),
+    new OTValueFloatTemp(       Tboiler,                    4,                  PSTR("flow temp.")),
+    new OTValueFloatTemp(       TflowCH2,                   4,                  PSTR("flow temp. 2")),
+    new OTValueFloatTemp(       Tdhw,                       10,                 PSTR("DHW temperature")),
+    new OTValueFloatTemp(       Tdhw2,                      10,                 PSTR("DHW temperature 2")),
+    new OTValueFloatTemp(       Toutside,                   30,                 PSTR("outside temp.")),
+    new OTValueFloatTemp(       Tret,                       4,                  PSTR("return temp.")),
+    new OTValuei16(             Texhaust,                   4,                  PSTR("exhaust temp.")),
+    new OTValueFloatTemp(       TrOverride2,                30,                 PSTR("room setpoint 2 override")),
     new OTValueProductVersion(  OpenThermVersionVentilationHeatRecovery,    0,  PSTR("OT-version slave")),
     new OTValueProductVersion(  VentilationHeatRecoveryVersion,             0,  PSTR("productversion slave")),
     new OTValueu16(             RelVentLevel,               10,                 PSTR("rel. ventilation")),
     new OTValueu16(             RHexhaust,                  10,                 PSTR("humidity exhaust")),
     new OTValueu16(             CO2exhaust,                 10,                 PSTR("CO2 exhaust")),
-    new OTValueFloatTemp(       Tsi,                                            PSTR("supply inlet temp.")),
-    new OTValueFloatTemp(       Tso,                                            PSTR("supply outlet temp.")),
-    new OTValueFloatTemp(       Tei,                                            PSTR("exhaust inlet temp.")),
-    new OTValueFloatTemp(       Teo,                                            PSTR("exhaust outlet temp.")),
+    new OTValueFloatTemp(       Tsi,                        4,                  PSTR("supply inlet temp.")),
+    new OTValueFloatTemp(       Tso,                        4,                  PSTR("supply outlet temp.")),
+    new OTValueFloatTemp(       Tei,                        4,                  PSTR("exhaust inlet temp.")),
+    new OTValueFloatTemp(       Teo,                        4,                  PSTR("exhaust outlet temp.")),
     new OTValueu16(             RPMexhaust,                 10,                 PSTR("exhaust fan speed")),
     new OTValueu16(             RPMsupply,                  10,                 PSTR("supply fan speed")),
     new OTValueu16(             PowerCycles,                180,                PSTR("power cycles")),
@@ -140,10 +140,10 @@ OTValue *slaveValues[NUM_SLAVE_VALUES] = { // replydata collected (read) from a 
     new OTValueOperatingHours(  CHPumpOperationHours,                           PSTR("DHW pump op. hours")),
     new OTValueOperatingHours(  DHWPumpValveOperationHours,                     PSTR("DHW pump/value op. hours")),
     new OTValueOperatingHours(  DHWBurnerOperationHours,                        PSTR("DHW op. hours")),
-    new OTValueFaultFlags(                                                      30),
+    new OTValueFaultFlags(                                  30),
     new OTValueRemoteParameter(),
     new OTValueRemoteOverrideFunction(),
-    new OTValueVentFaultFlags(                                                  30),
+    new OTValueVentFaultFlags(                              30),
     new OTValueHeatExchangerTemp(),
     new OTValueBoilerFanSpeed(),
     new OTValueFlameCurrent(),
@@ -180,17 +180,17 @@ OTValue *masterValues[NUM_MASTER_VALUES] = { // requestdata sent (written) from 
 
 
 OTValue *roomUnitValues[NUM_ROOM_UNIT_VALUES] = { // requestdata sent (written) from a connected roomunit
-    new OTValueFloatTemp(       TSet,                   PSTR("flow temp. setpoint")),
-    new OTValueFloatTemp(       TsetCH2,                PSTR("flow temp. 2 setpoint")),
-    new OTValueFloatTemp(       Tr,                     PSTR("room temp.")),
-    new OTValueFloatTemp(       TrCH2,                  PSTR("room temp. 2")),
-    new OTValueFloatTemp(       TrSet,                  PSTR("room temp. setpoint")),
-    new OTValueFloatTemp(       TrSetCH2,               PSTR("room temp. 2 setpoint")),
+    new OTValueFloatTemp(       TSet,                   -1, PSTR("flow temp. setpoint")),
+    new OTValueFloatTemp(       TsetCH2,                -1, PSTR("flow temp. 2 setpoint")),
+    new OTValueFloatTemp(       Tr,                     -1, PSTR("room temp.")),
+    new OTValueFloatTemp(       TrCH2,                  -1, PSTR("room temp. 2")),
+    new OTValueFloatTemp(       TrSet,                  -1, PSTR("room temp. setpoint")),
+    new OTValueFloatTemp(       TrSetCH2,               -1, PSTR("room temp. 2 setpoint")),
     new OTValueProductVersion(  MasterVersion,          -1, PSTR("productversion master")),
     new OTValueIFloat(          MaxRelModLevelSetting,  -1),
     new OTValueProductVersion(  OpenThermVersionMaster, -1, PSTR("OT-version master")),
     new OTValueMasterConfig(),
-    new OTValueFloatTemp(       TdhwSet,                PSTR("DHW setpoint")),
+    new OTValueFloatTemp(       TdhwSet,                -1, PSTR("DHW setpoint")),
     new OTValueMasterStatus(),
     new OTValueVentMasterStatus(),
     new OTValueIFloat(          CoolingControl,         -1, PSTR("cooling setpoint")),
@@ -264,8 +264,8 @@ void OTValue::setTexhaustAsFloat(const bool asFloat) {
         if (val->id == Texhaust) {
             delete val;
             val = asFloat
-                ? (OTValue*) new OTValueFloatTemp(Texhaust,      PSTR("exhaust temp."))
-                : (OTValue*) new OTValuei16(      Texhaust, 10,  PSTR("exhaust temp."));
+                ? (OTValue*) new OTValueFloatTemp(Texhaust, 4,  PSTR("exhaust temp."))
+                : (OTValue*) new OTValuei16(      Texhaust, 4,  PSTR("exhaust temp."));
             return;
         }
     }
@@ -663,8 +663,8 @@ double OTValueUFloat::getValue() const {
 }
 
 
-OTValueFloatTemp::OTValueFloatTemp(const OpenThermMessageID id, PGM_P haName):
-        OTValueIFloat(id, 10, haName) {
+OTValueFloatTemp::OTValueFloatTemp(const OpenThermMessageID id, const int interval, PGM_P haName):
+        OTValueIFloat(id, interval, haName) {
 }
 
 bool OTValueFloatTemp::sendDiscovery() {

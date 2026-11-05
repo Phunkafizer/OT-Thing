@@ -111,9 +111,14 @@ TESTDATA = {
 }
 
 
+# Build environment whose binaries get flashed. "release" when run standalone;
+# overridden with the active PIOENV when invoked as a PlatformIO extra script.
+BUILD_ENV = "release"
+
+
 def _release_artifact_paths(project_dir):
-    """Return expected release binary paths."""
-    build_dir = os.path.join(project_dir, ".pio", "build", "release")
+    """Return expected binary paths for the active build environment."""
+    build_dir = os.path.join(project_dir, ".pio", "build", BUILD_ENV)
     return {
         "bootloader": os.path.join(build_dir, "bootloader.bin"),
         "partitions": os.path.join(build_dir, "partitions.bin"),
@@ -171,31 +176,31 @@ def _find_platformio_executable(project_dir):
 
 
 def ensure_release_build(project_dir):
-    """Build release firmware if required artifacts are missing."""
+    """Build firmware for the active environment if required artifacts are missing."""
     artifacts = _release_artifact_paths(project_dir)
     missing = [path for path in artifacts.values() if not os.path.exists(path)]
     if not missing:
         return True
 
-    _warn("Release build artifacts missing. Starting `platformio run --environment release`...")
+    _warn(f"Build artifacts missing. Starting `platformio run --environment {BUILD_ENV}`...")
     pio = _find_platformio_executable(project_dir)
     if not pio:
         _err("✗ PlatformIO executable not found. Install PlatformIO or add it to PATH.")
         return False
 
-    result = subprocess.run([pio, "run", "--environment", "release"], cwd=project_dir)
+    result = subprocess.run([pio, "run", "--environment", BUILD_ENV], cwd=project_dir)
     if result.returncode != 0:
-        _err("✗ Release build failed.")
+        _err(f"✗ Build for environment '{BUILD_ENV}' failed.")
         return False
 
     missing_after = [path for path in artifacts.values() if not os.path.exists(path)]
     if missing_after:
-        _err("✗ Release build finished but artifacts are still missing:")
+        _err("✗ Build finished but artifacts are still missing:")
         for path in missing_after:
             print(f"  {path}")
         return False
 
-    _ok("✓ Release build completed")
+    _ok(f"✓ Build for environment '{BUILD_ENV}' completed")
     return True
 
 # USB Device IDs
@@ -350,11 +355,11 @@ def upload_firmware(port, project_dir):
     Upload bootloader, firmware, and partitions to device using esptool.
     Reads chip info (type, MAC) before programming and returns it.
 
-    Assumes firmware has already been built in .pio/build/release/
+    Assumes firmware has already been built in .pio/build/<BUILD_ENV>/
 
     Args:
         port: Serial port (e.g., 'COM3')
-        project_dir: Project directory containing .pio/build/release/
+        project_dir: Project directory containing .pio/build/<BUILD_ENV>/
 
     Returns:
         dict with keys 'chip', 'mac' on success, or None on failure.
@@ -372,13 +377,14 @@ def upload_firmware(port, project_dir):
             print(f"  {bootloader_path}")
             print(f"  {partition_path}")
             print(f"  {firmware_path}")
-            print("\nRun: pio run -e release")
+            print(f"\nRun: pio run -e {BUILD_ENV}")
             return None
 
     print(f"\n=== Uploading firmware to {port} ===")
 
     try:
         import esptool
+        from esptool.logger import log
 
         esp = esptool.cmds.detect_chip(port=port)
         esp = esp.run_stub()
@@ -399,14 +405,18 @@ def upload_firmware(port, project_dir):
                     _warn(f"⚠ Partition '{part_name}' not found in partitions.csv, skipping erase")
 
             print("Writing bootloader, partition table, and firmware...")
-            esptool.cmds.write_flash(
-                esp,
-                [
-                    (0x0,     bootloader_path),
-                    (0x8000,  partition_path),
-                    (0x10000, firmware_path),
-                ],
-            )
+            log.set_verbosity("compact")
+            try:
+                esptool.cmds.write_flash(
+                    esp,
+                    [
+                        (0x0,     bootloader_path),
+                        (0x8000,  partition_path),
+                        (0x10000, firmware_path),
+                    ],
+                )
+            finally:
+                log.set_verbosity("auto")
             _ok("✓ Firmware uploaded successfully")
         finally:
             esp._port.close()
@@ -701,38 +711,29 @@ def connect_to_otthing_wifi(profile="OTthing", timeout=20, retries=3, interface=
             return False
 
         wait = 8 if attempt == 1 else 5
-        disconnected_early = False
+        associated = False
         for remaining in range(wait, 0, -1):
-            # Query current WiFi SSID every second during the wait, scoped to the selected interface
             all_interfaces = _query_netsh_wlan_status()
             if interface:
                 selected = next((i for i in all_interfaces if i.get("Name") == interface), None)
-                check_lines = [f"{k}                   : {v}" for k, v in selected.items()] if selected else []
             else:
-                check_lines = subprocess.run(
-                    ["cmd", "/c", "netsh wlan show interfaces"],
-                    capture_output=True, text=True, encoding="cp850", errors="replace"
-                ).stdout.splitlines()
-            ssid_line = next((l.strip() for l in check_lines if "SSID" in l and "BSSID" not in l), "SSID: ?")
-            state_line = next((l.strip() for l in check_lines if "Status" in l or "tatus" in l or "Status" in l), "State: ?")
-            print(f"  [{remaining:2d}s] {state_line} | {ssid_line}")
-            output_lower = "\n".join(check_lines).lower()
-            # Break early if already associated
-            if ("verbunden" in output_lower or "connected" in output_lower) and profile.lower() in output_lower:
+                selected = next(
+                    (i for i in all_interfaces if i.get("SSID", "").casefold() == profile.casefold()),
+                    all_interfaces[0] if all_interfaces else None,
+                )
+
+            state = selected.get("State", selected.get("Status", "?")) if selected else "?"
+            ssid = selected.get("SSID", "?") if selected else "?"
+            print(f"  [{remaining:2d}s] State: {state} | SSID: {ssid}")
+            if ssid.casefold() == profile.casefold():
                 print(f"  WiFi associated after {wait - remaining + 1}s")
-                break
-            if "verbindung wird getrennt" in output_lower:
-                time.sleep(1)
-                continue
-            # If fully disconnected (not just associating), retry connect immediately
-            if "getrennt" in output_lower or "disconnected" in output_lower:
-                _warn("  Disconnected — retrying netsh connect immediately...")
-                disconnected_early = True
+                associated = True
                 break
             time.sleep(1)
 
-        if disconnected_early:
-            continue  # skip IP probe, go straight to next netsh connect attempt
+        if not associated:
+            _warn(f"  WiFi not associated after attempt {attempt}/{retries}, retrying netsh...")
+            continue
 
         # Probe the device IP to confirm the WiFi link is up
         deadline = time.time() + timeout
@@ -934,3 +935,21 @@ if __name__ == "__main__":
         batch_upload(project_dir)
     except KeyboardInterrupt:
         print("\nBatch upload cancelled.")
+else:
+    # Invoked as a PlatformIO extra script: register the interactive uploader.
+    Import("env")
+    BUILD_ENV = env["PIOENV"]
+    project_dir = env.subst("$PROJECT_DIR")
+
+    def run_batch_upload(source, target, env):
+        batch_upload(project_dir)
+
+    env.AddCustomTarget(
+        name="production-upload",
+        dependencies="buildprog",
+        actions=run_batch_upload,
+        title="Production Upload",
+        description="Build and start continuous production device programming",
+    )
+
+    
