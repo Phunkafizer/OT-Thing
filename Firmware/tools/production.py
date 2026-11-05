@@ -29,8 +29,12 @@ import subprocess
 import time
 import webbrowser
 import shutil
-import winsound
 import serial
+
+try:
+    import winsound  # Windows-only, optional
+except ImportError:
+    winsound = None
 
 # ANSI colour output
 if sys.platform == "win32":
@@ -911,9 +915,10 @@ def batch_upload(project_dir):
                     _ok("\n" + "=" * 50)
                     _ok(f"  ✓  DEVICE #{upload_count} COMPLETE — ALL STEPS PASSED")
                     _ok("=" * 50 + "\n")
-                    winsound.Beep(800, 100)
-                    winsound.Beep(1200, 100)
-                    winsound.Beep(1600, 100)
+                    if winsound:
+                        winsound.Beep(800, 100)
+                        winsound.Beep(1200, 100)
+                        winsound.Beep(1600, 100)
         else:
             failure_count += 1
             time.sleep(1)
