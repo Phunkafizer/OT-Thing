@@ -3384,9 +3384,22 @@
                             <input type="range" class="curveparam" min="0" max="4" step="0.1">
                         </div>
                     </div>
+                    <div class="param range" field="heating.$.roomComp.coolFactor">
+                        <h5>I gain factor (room too warm)</h5>
+                        <div class="infobox">
+                            Factor applied to the I gain when the room is warmer than the setpoint. Default 0.3, i.e. the integrator decreases slower than it increases.
+                        </div>
+                        <div class="flexline">
+                            <div class="valunit">
+                                <span class="value"></span>
+                            </div>
+                            <input type="range" min="0.1" max="1" step="0.1">
+                        </div>
+                    </div>
                 </div>
 
                 <h4>Suspend on room setpoint</h4>
+
                 <div class="flexline">
                     <div class="param">
                         <h5>enable</h5>
@@ -4513,7 +4526,8 @@
                         enabled: false,
                         p: 1.0,
                         i: 0.5,
-                        boost: 1
+                        boost: 1,
+                        coolFactor: 0.3
                     },
                     chOn: true,
                     flowMax: 60,
@@ -4553,7 +4567,8 @@
                         enabled: false,
                         p: 1.0,
                         i: 0.0,
-                        boost: 1
+                        boost: 1,
+                        coolFactor: 0.3
                     },
                     chOn: false,
                     flowMax: 40,
