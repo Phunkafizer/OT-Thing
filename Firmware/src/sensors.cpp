@@ -1,7 +1,9 @@
 #include "sensors.h"
 #include <DallasTemperature.h>
+#include <WiFi.h>
 #include "HADiscLocal.h"
 #include "devstatus.h"
+#include "main.h"
 
 Sensor roomTemp[2] = {
     Sensor(0.2),
@@ -138,6 +140,16 @@ bool Sensor::isOtSource() {
 }
 
 void Sensor::loopAll() {
+    static uint32_t wifiConnectedMs = 0;
+    NimBLEScan* pBLEScan = NimBLEDevice::getScan();
+    if (!WiFi.isConnected() && !configMode) {
+        wifiConnectedMs = millis();
+        if (pBLEScan && pBLEScan->isScanning())
+            pBLEScan->stop();
+    }
+    else if (pBLEScan && !pBLEScan->isScanning() && ((millis() - wifiConnectedMs) > 10000))
+        pBLEScan->start(0, false, true);
+
     const bool smooth = ((millis() - lastSmooth) >= 60000);
     if (smooth)
         lastSmooth = millis();
@@ -483,7 +495,6 @@ void BLESensor::begin() {
     pBLEScan->setMaxResults(0);
     pBLEScan->setInterval(160);
     pBLEScan->setWindow(80);
-    pBLEScan->start(0, false, true);
 }
 
 void BLESensor::onDiscovery(const NimBLEAdvertisedDevice* dev) {
