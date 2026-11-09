@@ -36,7 +36,6 @@ private:
             double i; // Ki 1/h
             double boost; // Kb K/K
             double coolFactor; // factor on Ki when room is too warm
-
         } roomComp;
         bool minSuspend;
         double minSuspendHyst;

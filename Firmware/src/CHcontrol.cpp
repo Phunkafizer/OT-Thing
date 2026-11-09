@@ -392,7 +392,6 @@ void CHcontrol::loopRoomComp() {
             roomComp.integState += config.roomComp.i * e * PI_INTERVAL / 3600.0; // Ki * e * ts, ts = 30 s
         else
             roomComp.integState += config.roomComp.i * e * config.roomComp.coolFactor * PI_INTERVAL / 3600.0; // slower as cooling takes more time
-
     }
     else
         roomComp.integState = roomComp.integState * 0.95; // decay
