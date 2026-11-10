@@ -223,7 +223,7 @@ class OTValueFloatTemp: public OTValueIFloat {
 private:
     bool sendDiscovery() override;
 public:
-    OTValueFloatTemp(const OpenThermMessageID id, PGM_P haName);
+    OTValueFloatTemp(const OpenThermMessageID id, const int interval, PGM_P haName);
 };
 
 class OTValueFlags: public OTValue {

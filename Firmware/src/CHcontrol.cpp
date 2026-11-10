@@ -29,6 +29,8 @@ void CHcontrol::setConfig(JsonObject &obj, const bool init) {
     config.roomComp.p = rc[F("p")] | 0.0;
     config.roomComp.i = rc[F("i")] | 0.0;
     config.roomComp.boost = rc[F("boost")] | 3.0;
+    config.roomComp.coolFactor = rc[F("coolFactor")] | 0.3;
+    clip(config.roomComp.coolFactor, 0.1, 1.0); // 0 would never let the integrator decrease
     
     config.roomSuspend.hysteresis = obj[FPSTR(STR_CONFKEY_HYSTERESIS)] | 0.2;
     config.roomSuspend.offset = obj[F("suspOffset")] | 0.0;
@@ -389,7 +391,7 @@ void CHcontrol::loopRoomComp() {
         if (e > 0)
             roomComp.integState += config.roomComp.i * e * PI_INTERVAL / 3600.0; // Ki * e * ts, ts = 30 s
         else
-            roomComp.integState += config.roomComp.i * e * 0.3 * PI_INTERVAL / 3600.0; // slower as cooling takes more time
+            roomComp.integState += config.roomComp.i * e * config.roomComp.coolFactor * PI_INTERVAL / 3600.0; // slower as cooling takes more time
     }
     else
         roomComp.integState = roomComp.integState * 0.95; // decay
