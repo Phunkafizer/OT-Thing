@@ -68,7 +68,7 @@ static bool improvConnectWifi(const char *ssid, const char *password) {
 
 void OtNetwork::begin(const bool cfgMode) {
     wifiEventId = WiFi.onEvent(wifiEvent);
-    WiFi.setSleep(false);
+    WiFi.setSleep(WIFI_PS_MIN_MODEM);
     String hn = devconfig.getHostname();
     WiFi.setHostname(hn.c_str());
 
