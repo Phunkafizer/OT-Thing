@@ -4634,7 +4634,9 @@
                 }
             ]
         };
-        const HISTORY_MAX = 120;
+        const HISTORY_WINDOW_MS = 60 * 60 * 1000; // visible time window of history charts
+        const HISTORY_GAP_MS = 3 * UI_TIMINGS.statusPollSuccessMs; // break lines/bars when samples are further apart
+        const HISTORY_MAX = 1000; // safety cap per series (> window / poll interval)
         let config = defaultConfig,
         statuscache = {},
         roomsetpoint = [21, 21], // used for drawing curve
@@ -5018,6 +5020,30 @@
             return null;
         }
 
+        function sanitizeHistoryEntry(entry) {
+            // Only timestamped {t, v} entries are valid; legacy plain values are dropped.
+            if (!entry || typeof entry !== "object" || Array.isArray(entry))
+                return null;
+
+            const t = Number(entry.t);
+            if (!Number.isFinite(t) || t <= 0)
+                return null;
+
+            const v = sanitizeHistoryValue(entry.v);
+            if (v === null)
+                return null;
+
+            return { t, v };
+        }
+
+        function pruneHistorySeries(series, now = Date.now()) {
+            const cutoff = now - HISTORY_WINDOW_MS;
+            const pruned = series.filter((entry) => entry !== null && entry.t >= cutoff);
+            if (pruned.length > HISTORY_MAX)
+                pruned.splice(0, pruned.length - HISTORY_MAX);
+            return pruned;
+        }
+
         function historyFieldToParts(fieldPath, channelOverride = currentCh) {
             if (typeof fieldPath !== "string" || fieldPath.length === 0)
                 return [];
@@ -5041,9 +5067,8 @@
             if (!Array.isArray(node[leaf]))
                 node[leaf] = [];
 
-            node[leaf].push(sanitizeHistoryValue(value));
-            if (node[leaf].length > HISTORY_MAX)
-                node[leaf].splice(0, node[leaf].length - HISTORY_MAX);
+            node[leaf].push({ t: Date.now(), v: sanitizeHistoryValue(value) });
+            node[leaf] = pruneHistorySeries(node[leaf].map((entry) => sanitizeHistoryEntry(entry)));
             return true;
         }
 
@@ -5064,7 +5089,7 @@
 
         function getNumericHistorySeries(fieldPath, channelOverride = currentCh) {
             return getHistorySeriesFromTree(historyTree, fieldPath, channelOverride)
-                .filter((value) => typeof value === "number" && Number.isFinite(value));
+                .filter((entry) => entry && typeof entry.v === "number" && Number.isFinite(entry.v));
         }
 
         function trendFieldPathFor(channelIdx, key) {
@@ -5143,6 +5168,7 @@
 
             const numericValuesFor = (keys) => keys
                 .flatMap((key) => history[key] || [])
+                .map((entry) => entry && entry.v)
                 .filter((value) => typeof value === "number" && Number.isFinite(value));
 
             const allValues = numericValuesFor(lineSeries.map((series) => series.key));
@@ -5180,19 +5206,13 @@
                 return linePadTop + (1 - ratio) * plotH;
             };
 
-            const maxLen = Math.max(
-                ...lineSeries.map((series) => (history[series.key] || []).length),
-                ...barDefs.map((barDef) => (history[barDef.key] || []).length)
-            );
-            const xFor = (idx) => {
-                if (maxLen <= 1)
-                    return padLeft;
-                return padLeft + (idx / (maxLen - 1)) * plotW;
-            };
-            const sampleOffsetFor = (samples) => Math.max(0, maxLen - ((samples && samples.length) || 0));
+            // Time axis: fixed sliding window ending now.
+            const windowEnd = Date.now();
+            const windowStart = windowEnd - HISTORY_WINDOW_MS;
+            const xFor = (t) => padLeft + ((t - windowStart) / HISTORY_WINDOW_MS) * plotW;
+            const halfSampleW = (UI_TIMINGS.statusPollSuccessMs / 2 / HISTORY_WINDOW_MS) * plotW;
 
             // Draw bool timelines (CH, DHW, Flame) as horizontal bars above the temperature lines.
-            const stepW = (maxLen <= 1) ? plotW : (plotW / (maxLen - 1));
             barDefs.forEach((barDef, barIdx) => {
                 const y = barRowsTop + (barIdx * (barRowHeight + barRowGap));
 
@@ -5216,19 +5236,19 @@
                 svg.appendChild(label);
 
                 const samples = history[barDef.key] || [];
-                const sampleOffset = sampleOffsetFor(samples);
-                let runStart = null;
-                const flushRun = (runEndIdx) => {
-                    if (runStart === null)
+                let runStartT = null;
+                const flushRun = (runEndT) => {
+                    if (runStartT === null)
                         return;
 
-                    // Each sample occupies half an interval on either side of its
+                    // Each sample occupies half a poll interval on either side of its
                     // timestamp, bounded by the same plot edges as the lines.
-                    const x0 = Math.max(padLeft, xFor(runStart + sampleOffset) - stepW / 2);
-                    const alignedEndIdx = runEndIdx + sampleOffset;
-                    const x1 = maxLen <= 1
-                        ? padLeft + plotW
-                        : Math.min(padLeft + plotW, xFor(alignedEndIdx) + stepW / 2);
+                    const x0 = Math.max(padLeft, xFor(runStartT) - halfSampleW);
+                    const x1 = Math.min(padLeft + plotW, xFor(runEndT) + halfSampleW);
+                    if (x1 <= x0) {
+                        runStartT = null;
+                        return;
+                    }
                     const inset = Math.min(0.5, (x1 - x0) / 4);
                     const activeRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     activeRect.setAttribute("x", (x0 + inset).toFixed(2));
@@ -5238,19 +5258,29 @@
                     activeRect.setAttribute("rx", "1");
                     activeRect.setAttribute("fill", barDef.color);
                     svg.appendChild(activeRect);
-                    runStart = null;
+                    runStartT = null;
                 };
 
-                samples.forEach((value, idx) => {
-                    if (value === true) {
-                        if (runStart === null)
-                            runStart = idx;
+                let prevT = null;
+                samples.forEach((entry) => {
+                    if (!entry)
                         return;
-                    }
 
-                    flushRun(idx - 1);
+                    // Break the run across data gaps so offline periods stay blank.
+                    if (prevT !== null && entry.t - prevT > HISTORY_GAP_MS)
+                        flushRun(prevT);
+
+                    if (entry.v === true) {
+                        if (runStartT === null)
+                            runStartT = entry.t;
+                    }
+                    else {
+                        flushRun(prevT ?? entry.t);
+                    }
+                    prevT = entry.t;
                 });
-                flushRun(samples.length - 1);
+                if (prevT !== null)
+                    flushRun(prevT);
             });
 
             const separatorTop = barRowsTop + barsHeight + 1;
@@ -5297,14 +5327,42 @@
                 svg.appendChild(label);
             }
 
+            // X-axis time ticks (HH:MM) across the fixed window.
+            const timeTicks = 4;
+            const formatTickTime = (t) => {
+                const d = new Date(t);
+                return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+            };
+            for (let i = 0; i <= timeTicks; i++) {
+                const t = windowStart + (i / timeTicks) * HISTORY_WINDOW_MS;
+                const x = xFor(t);
+
+                const tick = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                tick.setAttribute("x1", x.toFixed(2));
+                tick.setAttribute("x2", x.toFixed(2));
+                tick.setAttribute("y1", (linePadTop + plotH).toFixed(2));
+                tick.setAttribute("y2", (linePadTop + plotH + 3).toFixed(2));
+                tick.setAttribute("stroke", "rgba(255,188,131,0.34)");
+                tick.setAttribute("stroke-width", "1");
+                svg.appendChild(tick);
+
+                const tickLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                tickLabel.setAttribute("x", x.toFixed(2));
+                tickLabel.setAttribute("y", (height - 2).toFixed(2));
+                tickLabel.setAttribute("fill", "rgba(220,190,165,0.74)");
+                tickLabel.setAttribute("font-size", "10");
+                tickLabel.setAttribute("text-anchor", (i === 0) ? "start" : (i === timeTicks) ? "end" : "middle");
+                tickLabel.textContent = formatTickTime(t);
+                svg.appendChild(tickLabel);
+            }
+
             // Clip the complete painted stroke and endpoint dots, not just their centers.
             const lineLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
             lineLayer.setAttribute("clip-path", "url(#hero-temp-plot-clip)");
             svg.appendChild(lineLayer);
             lineSeries.forEach((series) => {
                 const samples = history[series.key] || [];
-                const sampleOffset = sampleOffsetFor(samples);
-                if (samples.length < 2)
+                if (samples.length < 1)
                     return;
 
                 let points = [];
@@ -5325,24 +5383,29 @@
                     points = [];
                 };
 
-                samples.forEach((value, idx) => {
-                    if (value == null || !Number.isFinite(value)) {
-                        flushSegment();
+                let prevT = null;
+                samples.forEach((entry) => {
+                    if (!entry || typeof entry.v !== "number" || !Number.isFinite(entry.v)) {
                         return;
                     }
 
-                    points.push(`${xFor(idx + sampleOffset).toFixed(2)},${yFor(value).toFixed(2)}`);
+                    // Break the line across data gaps so offline periods stay blank.
+                    if (prevT !== null && entry.t - prevT > HISTORY_GAP_MS)
+                        flushSegment();
+
+                    points.push(`${xFor(entry.t).toFixed(2)},${yFor(entry.v).toFixed(2)}`);
+                    prevT = entry.t;
                 });
                 flushSegment();
 
                 for (let idx = samples.length - 1; idx >= 0; idx--) {
-                    const value = samples[idx];
-                    if (value == null || !Number.isFinite(value))
+                    const entry = samples[idx];
+                    if (!entry || typeof entry.v !== "number" || !Number.isFinite(entry.v))
                         continue;
 
                     const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    dot.setAttribute("cx", xFor(idx + sampleOffset).toFixed(2));
-                    dot.setAttribute("cy", yFor(value).toFixed(2));
+                    dot.setAttribute("cx", xFor(entry.t).toFixed(2));
+                    dot.setAttribute("cy", yFor(entry.v).toFixed(2));
                     dot.setAttribute("r", "2");
                     dot.setAttribute("fill", series.color);
                     lineLayer.appendChild(dot);
@@ -5493,6 +5556,7 @@
         }
 
         function normalizeHistoryTree(rawTree) {
+            const now = Date.now();
             const walk = (node) => {
                 if (!node || typeof node !== "object")
                     return {};
@@ -5501,9 +5565,10 @@
                 Object.keys(node).forEach((key) => {
                     const value = node[key];
                     if (Array.isArray(value)) {
-                        out[key] = value
-                            .map((entry) => sanitizeHistoryValue(entry))
-                            .slice(-HISTORY_MAX);
+                        out[key] = pruneHistorySeries(
+                            value.map((entry) => sanitizeHistoryEntry(entry)),
+                            now
+                        );
                         return;
                     }
 
@@ -5789,37 +5854,54 @@
             refreshHeroPinTargetState();
         }
 
-        function drawSparkline(svg, values) {
+        function drawSparkline(svg, entries) {
             svg.innerHTML = "";
             const w = 80, h = 44, pad = 3;
-            if (values.length < 2) return;
+            if (entries.length < 2) return;
 
+            const values = entries.map((entry) => entry.v);
             let min = Math.min(...values);
             let max = Math.max(...values);
             if (min === max) { min -= 0.5; max += 0.5; }
 
-            const pts = values.map((v, i) => {
-                const x = pad + (i / (values.length - 1)) * (w - pad * 2);
-                const y = h - pad - ((v - min) / (max - min)) * (h - pad * 2);
-                return `${x.toFixed(1)},${y.toFixed(1)}`;
-            }).join(" ");
+            // Same fixed time window as the live trend so gaps stay blank.
+            const windowEnd = Date.now();
+            const windowStart = windowEnd - HISTORY_WINDOW_MS;
+            const xFor = (t) => pad + ((t - windowStart) / HISTORY_WINDOW_MS) * (w - pad * 2);
+            const yFor = (v) => h - pad - ((v - min) / (max - min)) * (h - pad * 2);
 
-            const poly = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-            poly.setAttribute("points", pts);
-            poly.setAttribute("fill", "none");
-            poly.setAttribute("stroke", "rgba(255,188,131,0.75)");
-            poly.setAttribute("stroke-width", "1.5");
-            poly.setAttribute("stroke-linecap", "round");
-            poly.setAttribute("stroke-linejoin", "round");
-            svg.appendChild(poly);
+            let pts = [];
+            const flushSegment = () => {
+                if (pts.length < 2) {
+                    pts = [];
+                    return;
+                }
+
+                const poly = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+                poly.setAttribute("points", pts.join(" "));
+                poly.setAttribute("fill", "none");
+                poly.setAttribute("stroke", "rgba(255,188,131,0.75)");
+                poly.setAttribute("stroke-width", "1.5");
+                poly.setAttribute("stroke-linecap", "round");
+                poly.setAttribute("stroke-linejoin", "round");
+                svg.appendChild(poly);
+                pts = [];
+            };
+
+            let prevT = null;
+            entries.forEach((entry) => {
+                if (prevT !== null && entry.t - prevT > HISTORY_GAP_MS)
+                    flushSegment();
+                pts.push(`${xFor(entry.t).toFixed(1)},${yFor(entry.v).toFixed(1)}`);
+                prevT = entry.t;
+            });
+            flushSegment();
 
             // Dot on last value
-            const lastVal = values[values.length - 1];
-            const lx = w - pad;
-            const ly = h - pad - ((lastVal - min) / (max - min)) * (h - pad * 2);
+            const last = entries[entries.length - 1];
             const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            dot.setAttribute("cx", lx.toFixed(1));
-            dot.setAttribute("cy", ly.toFixed(1));
+            dot.setAttribute("cx", xFor(last.t).toFixed(1));
+            dot.setAttribute("cy", yFor(last.v).toFixed(1));
             dot.setAttribute("r", "2.5");
             dot.setAttribute("fill", "rgba(255,188,131,0.95)");
             svg.appendChild(dot);

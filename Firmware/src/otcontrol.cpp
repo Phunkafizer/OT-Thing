@@ -298,9 +298,6 @@ void OTControl::loop() {
 
     if (OTValue::slaveConfig->hasDHW())
         dhwControl.loop();
-    
-    if (!discFlag)
-        discFlag = sendDiscovery();
 
     flameStats.loop();
 
@@ -510,6 +507,10 @@ void OTControl::resetScheduler(const uint8_t channel) {
 
 void OTControl::startScanIds() {
     id_scan = 0;
+}
+
+bool OTControl::isHeatCool() const {
+    return slaveApp == SLAVEAPP_HEATCOOL;
 }
 
 void OTControl::OnRxMaster(const unsigned long msg, const OpenThermResponseStatus status) {
@@ -949,95 +950,58 @@ bool OTControl::sendDiscovery() {
     for (auto *valobj: roomUnitValues)
         valobj->refreshDisc();
 
-    bool discFlag = true;
-    const bool isHeatCool = (slaveApp == SLAVEAPP_HEATCOOL);
-
     haDisc.createNumber(F("outside temperature"), Mqtt::TOPIC_OUTSIDETEMP);
     haDisc.setDeviceClass(FPSTR(HA_DEVICE_CLASS_TEMPERATURE));
     haDisc.setUnit(FPSTR(HA_UNIT_CELSIUS));
     haDisc.setMinMax(-30, 45, 0.1);
     haDisc.setOTThingAvailability();
-    discFlag &= haDisc.publish(outsideTemp.isMqttSource(), Mqtt::VALTMPL_ROOT, PSTR("outsideTemp.current"));
+    if (!haDisc.publish(outsideTemp.isMqttSource(), Mqtt::VALTMPL_ROOT, PSTR("outsideTemp.current")))
+        return false;
 
-    discFlag &= chcontrol[0].sendDiscoveries(isHeatCool);
+    if (!chcontrol[0].sendDiscoveries(isHeatCool()))
+        return false;
 
-    discFlag &= ventCtrl.sendDiscoveries(slaveApp == SLAVEAPP_VENT);
+    if (!ventCtrl.sendDiscoveries(slaveApp == SLAVEAPP_VENT))
+        return false;
 
     haDisc.createNumber(F("Max. modulation"), Mqtt::TOPIC_MAXMODULATION);
     haDisc.setMinMax(0, 100, 1);
     haDisc.setUnit(FPSTR(HA_UNIT_PERCENT));
     haDisc.setOTThingAvailability();
-    discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_MASTER, getOTname(OpenThermMessageID::MaxRelModLevelSetting));
-
-    haDisc.createSensor(F("flame ratio"), F("flame_ratio"));
-    haDisc.setDeviceClass(F("power_factor"));
-    haDisc.setUnit(FPSTR(HA_UNIT_PERCENT));
-    haDisc.setSlaveAvailability();
-    discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_DUTY);
-
-    haDisc.createSensor(F("burner starts /h"), F("flame_freq"));
-    haDisc.setUnit(F("/h"));
-    haDisc.setSlaveAvailability();
-    discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_FREQ);
-
-    haDisc.createSensor(F("flametime per cycle"), F("flame_on"));
-    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
-    haDisc.setSlaveAvailability();
-    discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_ONTIME);
-
-    haDisc.createSensor(F("pausetime per cycle"), F("flame_off"));
-    haDisc.setSlaveAvailability();
-    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
-    discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_OFFTIME);
-
-    haDisc.createSensor(F("current on time"), F("current_on_time"));
-    haDisc.setDeviceClass(PSTR(HA_DEVICE_CLASS_DURATION));
-    haDisc.setSlaveAvailability();
-    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
-    discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_CURRENTONTIME);
-
-    haDisc.createSensor(F("last on time"), F("last_on_time"));
-    haDisc.setDeviceClass(PSTR(HA_DEVICE_CLASS_DURATION));
-    haDisc.setSlaveAvailability();
-    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
-    discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_LASTONTIME);
-
-    haDisc.createSensor(F("current off time"), F("current_off_time"));
-    haDisc.setDeviceClass(PSTR(HA_DEVICE_CLASS_DURATION));
-    haDisc.setSlaveAvailability();
-    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
-    discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_CURRENTOFFTIME);
-
-    haDisc.createSensor(F("last off time"), F("last_off_time"));
-    haDisc.setDeviceClass(PSTR(HA_DEVICE_CLASS_DURATION));
-    haDisc.setSlaveAvailability();
-    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
-    discFlag &= haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_LASTOFFTIME);
+    if (!haDisc.publish(isHeatCool(), Mqtt::VALTMPL_MASTER, getOTname(OpenThermMessageID::MaxRelModLevelSetting)))
+        return false;
 
     haDisc.createSwitch(F("bypass"), Mqtt::TOPIC_BYPASS);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOT, STR_STATKEY_BYPASS));
     haDisc.setOTThingAvailability();
-    discFlag &= haDisc.publish(true);
+    if (!haDisc.publish(true))
+        return false;
 
     haDisc.createSwitch(F("summer mode"), Mqtt::TOPIC_SUMMERMODE);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOT, STR_STATKEY_SUMMERMODE));
     haDisc.setOTThingAvailability();
-    discFlag &= haDisc.publish(isHeatCool);
+    if (!haDisc.publish(isHeatCool()))
+        return false;
 
     haDisc.createBinarySensor(F("master connection"), F("master_connection"), HA_DEVICE_CLASS_CONNECTIVITY);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_MASTER_ROOT, STR_STATKEY_CONNECTED));
     haDisc.setOTThingAvailability();
-    discFlag &= haDisc.publish(true);
+    if (!haDisc.publish(true))
+        return false;
 
     haDisc.createBinarySensor(F("slave connection"), F("slave_connection"), HA_DEVICE_CLASS_CONNECTIVITY);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOMUNIT_ROOT, STR_STATKEY_CONNECTED));
     haDisc.setOTThingAvailability();
-    discFlag &= haDisc.publish(hasSlave());
+    if (!haDisc.publish(isHeatCool()))
+        return false;
 
-    return discFlag;
+    return true;
 }
 
 bool OTControl::sendCapDiscoveries() {
+    if (!OTValue::slaveConfig->isSet())
+        return false;
+
     if (!dhwControl.sendDiscoveries(OTValue::slaveConfig->hasDHW()))
         return false;
 
@@ -1111,7 +1075,6 @@ void OTControl::setConfig(JsonObject &config) {
     if (!init || (mode != otMode) || (bp != bypass)) {
         bypass = bp;
         setOTMode(mode);
-        discFlag = false;
         if (mode != otMode) {
             master.resetCounters();
             slave.resetCounters();

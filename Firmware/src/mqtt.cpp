@@ -3,7 +3,6 @@
 #include <devstatus.h>
 #include "portal.h"
 #include "sensors.h"
-#include "hwdef.h"
 #include "auxInput.h"
 #include "otcontrol.h"
 #include "util.h"
@@ -82,8 +81,11 @@ static void mqttMessageReceived(char* topic, char* payload, AsyncMqttClientMessa
 }
 
 Mqtt::Mqtt():
+        discFlags(0),
+        discFlagPos(0),
         lastConTry(0),
         lastStatus(0),
+        lastDisc(0),
         configSet(false),
         conFlag(false),
         lastSentStatus(0) {
@@ -105,7 +107,9 @@ void Mqtt::onConnect() {
     String topic = baseTopic + F("/+/set");
     cli.subscribe(topic.c_str(), 0);
 
-    discFlag = false;
+    discFlags = 0;
+    discFlagPos = DISC_OTCONTROL;
+    lastDisc = 0;
     conFlag = true;
 }
 
@@ -155,18 +159,54 @@ void Mqtt::loop() {
         haDisc.defaultStateTopic = baseTopic + F("/state");
         cli.setWill(statusTopic.c_str(), 1, true, "0");
         lastSentStatus = 0;
+        lastDisc = millis();
         cli.connect();        
     }
 
     if (cli.connected()) {
-        if (!discFlag) {
-            discFlag = true;
-            discFlag &= otcontrol.sendDiscovery();
-            discFlag &= devstatus.sendDiscovery();
-            discFlag &= OneWireNode::sendDiscoveryAll();
-            discFlag &= BLESensor::sendDiscoveryAll();
-            for (int i=0; i<sizeof(auxInput) / sizeof(auxInput[0]); i++)
-                discFlag &= auxInput[i].sendDiscovery();
+        if (millis() > (lastDisc + 5000)) {
+            lastDisc = millis();
+            while (discFlagPos <= DISC_AUX) {
+                if ((discFlags & (1<<discFlagPos)) == 0) {
+                    bool result = false;
+                    switch (discFlagPos) {                            
+                        case DISC_OTCONTROL:
+                            result = otcontrol.sendDiscovery();
+                            break;
+                        case DISC_OTCONTROL_CAP:
+                            result = otcontrol.sendCapDiscoveries();
+                            break;
+                        case DISC_DEVSTATUS:
+                            result = devstatus.sendDiscovery();
+                            break;
+                        case DISC_FLAMESTATS:
+                            result = flameStats.sendDiscovery();
+                            break;
+                        case DISC_1WIRE:
+                            result = OneWireNode::sendDiscoveryAll();
+                            break;
+                        case DISC_BLE:
+                            result = BLESensor::sendDiscoveryAll();
+                            break;
+                        case DISC_AUX:
+                            result = true;
+                            for (int i=0; i<sizeof(auxInput) / sizeof(auxInput[0]); i++) {
+                                if (!auxInput[i].sendDiscovery()) {
+                                    result = false;
+                                    break;
+                                }
+                            }
+                            break;
+                    }
+                    if (result)
+                        discFlags |= 1<<discFlagPos;
+                    discFlagPos++; // advance even on failure so one failing discovery can't block the others
+                    break;
+                }
+                discFlagPos++;
+            }
+            if (discFlagPos > DISC_AUX)
+                discFlagPos = DISC_OTCONTROL;
         }
 
         int newStatus = 1 << 0;

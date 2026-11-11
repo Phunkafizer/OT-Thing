@@ -11,6 +11,7 @@ struct FlameStats {
     int getCurrentOnTime() const;
     int getCurrentOffTime() const;
     void writeJson(JsonObject &obj) const;
+    bool sendDiscovery();
     static bool currentFlame;
 private:
     static const uint8_t BUFSIZE_MINUTES = 180; // 3 h

@@ -88,14 +88,25 @@ private:
     friend void mqttDisconnectCb(AsyncMqttClientDisconnectReason reason);
     bool strToBool(const String &str);
     String getValuePath(const ValueTemplateType vt, PGM_P field, const uint8_t ch, const uint8_t ommit);
+    enum DiscFlags {
+        DISC_OTCONTROL,
+        DISC_OTCONTROL_CAP,
+        DISC_FLAMESTATS,
+        DISC_DEVSTATUS,
+        DISC_1WIRE,
+        DISC_BLE,
+        DISC_AUX
+    };
+    uint16_t discFlags;
+    uint8_t discFlagPos;
     AsyncMqttClient cli;
     uint32_t lastConTry;
     uint32_t lastStatus;
+    uint32_t lastDisc;
     MqttConfig config;
     bool configSet;
     String baseTopic;
     String statusTopic;
-    bool discFlag {false}; // discovery flag; set after MQTT (re-) connect
     bool conFlag;
     int lastSentStatus;
     

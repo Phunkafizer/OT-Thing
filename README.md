@@ -227,6 +227,7 @@ Below is an excerpt of hardware devices reported to work successfully with **OTt
 * **De Dietrich** MPX 24/29 MI Compact
 * **Domusa** BioClass HM 16 (Pellet)
 * **Hoval** TopGas
+* **Intergas** Xtreme 36
 * **Intergas** HRE 36/30A
 * **Junkers** Cerasmart ZSB 3-16 *(with OpenTherm module OTM 1)*
 * **Remeha** Tzerra 28c

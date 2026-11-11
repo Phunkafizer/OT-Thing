@@ -139,3 +139,61 @@ void FlameStats::writeJson(JsonObject &obj) const {
     else
         fs[FPSTR(STR_STATKEY_FLAMESTATS_CURRENTOFFTIME)] = secToMin(getCurrentOffTime());
 }
+
+bool FlameStats::sendDiscovery() {
+    const bool isHeatCool = otcontrol.isHeatCool();
+    
+    haDisc.createSensor(F("flame ratio"), F("flame_ratio"));
+    haDisc.setDeviceClass(F("power_factor"));
+    haDisc.setUnit(FPSTR(HA_UNIT_PERCENT));
+    haDisc.setSlaveAvailability();
+    if (!haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_DUTY))
+        return false;
+
+    haDisc.createSensor(F("burner starts /h"), F("flame_freq"));
+    haDisc.setUnit(F("/h"));
+    haDisc.setSlaveAvailability();
+    if (!haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_FREQ))
+        return false;
+
+    haDisc.createSensor(F("flametime per cycle"), F("flame_on"));
+    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
+    haDisc.setSlaveAvailability();
+    if (!haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_ONTIME))
+        return false;
+
+    haDisc.createSensor(F("pausetime per cycle"), F("flame_off"));
+    haDisc.setSlaveAvailability();
+    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
+    if (!haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_OFFTIME))
+        return false;
+
+    haDisc.createSensor(F("current on time"), F("current_on_time"));
+    haDisc.setDeviceClass(PSTR(HA_DEVICE_CLASS_DURATION));
+    haDisc.setSlaveAvailability();
+    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
+    if (!haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_CURRENTONTIME))
+        return false;
+
+    haDisc.createSensor(F("last on time"), F("last_on_time"));
+    haDisc.setDeviceClass(PSTR(HA_DEVICE_CLASS_DURATION));
+    haDisc.setSlaveAvailability();
+    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
+    if (!haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_LASTONTIME))
+        return false;
+
+    haDisc.createSensor(F("current off time"), F("current_off_time"));
+    haDisc.setDeviceClass(PSTR(HA_DEVICE_CLASS_DURATION));
+    haDisc.setSlaveAvailability();
+    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
+    if (!haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_CURRENTOFFTIME))
+        return false;
+
+    haDisc.createSensor(F("last off time"), F("last_off_time"));
+    haDisc.setDeviceClass(PSTR(HA_DEVICE_CLASS_DURATION));
+    haDisc.setSlaveAvailability();
+    haDisc.setUnit(FPSTR(HA_UNIT_MIN));
+    if (!haDisc.publish(isHeatCool, Mqtt::VALTMPL_FLAMESTATS, STR_STATKEY_FLAMESTATS_LASTOFFTIME))
+        return false;
+    return true;
+}

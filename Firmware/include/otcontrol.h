@@ -81,7 +81,6 @@ private:
         uint8_t coolingCtrl;
     } boilerCtrl;
     FlameStats flameStats;
-    bool discFlag {true};
     OpenThermMessageID lastMsgId;
     uint16_t id_scan {256};
     OTWRSetBoilerTemp setBoilerRequest[NUM_HEATCIRCUITS];
@@ -152,6 +151,7 @@ public:
     void setOtValue(OTValue *otval, const OpenThermMessageType mt, const uint16_t data);
     void resetScheduler(const uint8_t channel);
     void startScanIds();
+    bool isHeatCool() const;
 };
 
 extern OTControl otcontrol;
