@@ -69,6 +69,9 @@ static bool improvConnectWifi(const char *ssid, const char *password) {
 void OtNetwork::begin(const bool cfgMode) {
     wifiEventId = WiFi.onEvent(wifiEvent);
     WiFi.setSleep(WIFI_PS_MIN_MODEM);
+    WiFi.setScanMethod(WIFI_ALL_CHANNEL_SCAN);
+    WiFi.setSortMethod(WIFI_CONNECT_AP_BY_SIGNAL);
+
     String hn = devconfig.getHostname();
     WiFi.setHostname(hn.c_str());
 
@@ -159,8 +162,8 @@ bool OtNetwork::startScan() {
     return isScanning;
 }
 
-// WiFi.SSID() only reflects an active connection on this core, not the NVS-persisted config, so read it directly.
 bool OtNetwork::hasStoredWifiCredentials() {
+    WiFi.setHostname(devconfig.getHostname().c_str());
     WiFi.mode(WIFI_STA); // esp_wifi_get_config requires the STA driver to be initialized
     wifi_config_t conf = {};
     if (esp_wifi_get_config(WIFI_IF_STA, &conf) != ESP_OK)

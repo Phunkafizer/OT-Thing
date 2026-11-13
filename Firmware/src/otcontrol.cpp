@@ -992,7 +992,7 @@ bool OTControl::sendDiscovery() {
     haDisc.createBinarySensor(F("slave connection"), F("slave_connection"), HA_DEVICE_CLASS_CONNECTIVITY);
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_ROOMUNIT_ROOT, STR_STATKEY_CONNECTED));
     haDisc.setOTThingAvailability();
-    if (!haDisc.publish(isHeatCool()))
+    if (!haDisc.publish(hasSlave()))
         return false;
 
     return true;

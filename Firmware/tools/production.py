@@ -6,6 +6,7 @@
 #     "pyserial>=3.5",
 #     "requests>=2.31",
 #     "platformio>=6.1,<7",
+#     "esp-idf-nvs-partition-gen",
 # ]
 # ///
 
@@ -30,6 +31,7 @@ import time
 import webbrowser
 import shutil
 import serial
+import tempfile
 
 try:
     import winsound  # Windows-only, optional
@@ -353,6 +355,40 @@ def wait_for_stable_target_port(stable_seconds=STABLE_DEVICE_SECONDS):
         _act(f"Device {port} present. Starting upload.")
         return port
 
+def create_nvs_bin(hw_major: int, hw_minor: int, output_bin_path: str):
+    # Lazy import: not needed for normal builds when used as a PIO extra script.
+    try:
+        from esp_idf_nvs_partition_gen import nvs_partition_gen
+    except ImportError as exc:
+        raise RuntimeError(
+            "Missing package 'esp-idf-nvs-partition-gen'. "
+            "Install it into this Python environment with: "
+            "pip install esp-idf-nvs-partition-gen"
+        ) from exc
+
+    csv_content = (
+        "key,type,encoding,value\n"
+        "hw_info,namespace,,\n"
+        f"major,data,u8,{hw_major}\n"
+        f"minor,data,u8,{hw_minor}\n"
+    )
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as tmp_csv:
+        tmp_csv.write(csv_content)
+        tmp_csv_path = tmp_csv.name
+
+    try:
+        args = nvs_partition_gen.Args(
+            input=tmp_csv_path,
+            output=output_bin_path,
+            size="0x5000",
+            version=2,
+            outdir=None
+        )
+        nvs_partition_gen.generate(args)
+    finally:
+        if os.path.exists(tmp_csv_path):
+            os.remove(tmp_csv_path)
 
 def upload_firmware(port, project_dir):
     """
@@ -373,14 +409,17 @@ def upload_firmware(port, project_dir):
     bootloader_path = artifacts["bootloader"]
     partition_path = artifacts["partitions"]
     firmware_path = artifacts["firmware"]
+    nvs_bin_path = "nvs_hw_info.bin"
+    create_nvs_bin(hw_major=2, hw_minor=2, output_bin_path=nvs_bin_path)
 
     # Check if all binaries exist
-    if not all(os.path.exists(p) for p in [bootloader_path, partition_path, firmware_path]):
+    if not all(os.path.exists(p) for p in [bootloader_path, partition_path, firmware_path, nvs_bin_path]):
         if not ensure_release_build(project_dir):
             _err("✗ Build artifacts not found at:")
             print(f"  {bootloader_path}")
             print(f"  {partition_path}")
             print(f"  {firmware_path}")
+            print(f"  {nvs_bin_path}")
             print(f"\nRun: pio run -e {BUILD_ENV}")
             return None
 
@@ -416,6 +455,7 @@ def upload_firmware(port, project_dir):
                     [
                         (0x0,     bootloader_path),
                         (0x8000,  partition_path),
+                        (0x9000,  nvs_bin_path),
                         (0x10000, firmware_path),
                     ],
                 )

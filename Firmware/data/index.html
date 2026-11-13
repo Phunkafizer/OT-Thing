@@ -5418,20 +5418,22 @@
             const flowVal = parseNumber((currentCh === 0) ? statuscache?.slave?.flow_t : statuscache?.slave?.flow_t2);
             const dhwVal = parseNumber((currentCh === 0) ? statuscache?.slave?.dhw_t : statuscache?.slave?.dhw_t2);
             const returnVal = parseNumber(statuscache?.heatercircuit?.[0]?.returnTemp);
-            const flowSetVal = parseNumber(statuscache?.heatercircuit?.[0]?.flowsetpoint);
+            const flowSetVal = parseNumber(statuscache?.heatercircuit?.[currentCh]?.flowsetpoint);
             const chActive = (currentCh === 0)
                 ? statuscache?.slave?.status?.ch_mode === true
                 : statuscache?.slave?.status?.ch2_mode === true;
             const dhwActive = statuscache?.slave?.status?.dhw_mode === true;
             const flameActive = statuscache?.slave?.status?.flame === true;
 
-            appendHistoryValueToTree(historyTree, trendFieldPathFor(currentCh, "flow"), flowVal, currentCh);
-            appendHistoryValueToTree(historyTree, trendFieldPathFor(currentCh, "dhw"), dhwVal, currentCh);
-            appendHistoryValueToTree(historyTree, trendFieldPathFor(currentCh, "ret"), returnVal, currentCh);
-            appendHistoryValueToTree(historyTree, trendFieldPathFor(currentCh, "flowSet"), flowSetVal, currentCh);
-            appendHistoryValueToTree(historyTree, trendFieldPathFor(currentCh, "ch"), chActive, currentCh);
-            appendHistoryValueToTree(historyTree, trendFieldPathFor(currentCh, "dhwMode"), dhwActive, currentCh);
-            appendHistoryValueToTree(historyTree, trendFieldPathFor(currentCh, "flame"), flameActive, currentCh);
+            const sampledPaths = new Set();
+            Object.entries({
+                flow: flowVal, dhw: dhwVal, ret: returnVal, flowSet: flowSetVal,
+                ch: chActive, dhwMode: dhwActive, flame: flameActive
+            }).forEach(([key, value]) => {
+                const fieldPath = trendFieldPathFor(currentCh, key);
+                appendHistoryValueToTree(historyTree, fieldPath, value, currentCh);
+                sampledPaths.add(historyFieldToParts(fieldPath, currentCh).join("."));
+            });
 
             const activeHistory = getTrendHistoryForChannel(currentCh);
 
@@ -5450,6 +5452,7 @@
             saveUiState({
                 history: normalizeHistoryTree(historyTree)
             });
+            return sampledPaths;
         }
 
         function initInfoboxTooltips() {
@@ -5907,9 +5910,11 @@
             svg.appendChild(dot);
         }
 
-        function updatePinnedHeroHistory() {
+        function updatePinnedHeroHistory(sampledPaths = new Set()) {
             let historyChanged = false;
             for (const fieldPath of pinnedHeroFields) {
+                if (sampledPaths.has(historyFieldToParts(fieldPath).join(".")))
+                    continue;
                 const val = getStatusValueByField(fieldPath);
                 const num = typeof val === "number" ? val : parseFloat(val);
                 if (!isFinite(num)) continue;
@@ -6146,9 +6151,8 @@
             updateMetric("heroFlow", "heroFlowTrendIcon", parseNumber(flow), "°C", `flow${currentCh}`, flowField);
             updateMetric("heroOutside", "heroOutsideTrendIcon", parseNumber(outside), "°C", "outside", "outsideTemp.current");
             updateMetric("heroMod", "heroModTrendIcon", parseNumber(mod), "%", "mod", "slave.rel_mod");
-            if (redrawTrend)
-                updateHeroTempTrendCard();
-            updatePinnedHeroHistory();
+            const sampledPaths = redrawTrend ? updateHeroTempTrendCard() : new Set();
+            updatePinnedHeroHistory(sampledPaths);
             updatePinnedHeroCardsDisplay();
         }
 

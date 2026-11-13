@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <nvs_flash.h>
+#include <nvs.h>
 #include "hwdef.h"
 #include "portal.h"
 #include "otcontrol.h"
@@ -8,7 +10,6 @@
 #include "command.h"
 #include "sensors.h"
 #include "HADiscLocal.h"
-#include "time.h"
 #include "main.h"
 #include "util.h"
 #include "esp_task_wdt.h"
@@ -28,6 +29,30 @@ NimBLECharacteristic *bleSerialTx = nullptr;
 volatile bool bleClientConnected = false;
 #endif
 
+
+bool readHWVersion(uint8_t &hwMajor, uint8_t &hwMinor) {
+  esp_err_t err = nvs_flash_init();
+  if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+    nvs_flash_erase();
+    err = nvs_flash_init();
+  }
+  if (err != ESP_OK) {
+    return false;
+  }
+
+  nvs_handle_t my_handle;
+  err = nvs_open("hw_info", NVS_READONLY, &my_handle);
+  if (err != ESP_OK)
+    return false;
+
+  // 3. Beide Werte auslesen und prüfen, ob beide Schlüssel existieren
+  esp_err_t errMajor = nvs_get_u8(my_handle, "major", &hwMajor);
+  esp_err_t errMinor = nvs_get_u8(my_handle, "minor", &hwMinor);
+
+  nvs_close(my_handle);
+
+  return (errMajor == ESP_OK && errMinor == ESP_OK);
+}
 
 void setup() {
     statusLed.begin();
