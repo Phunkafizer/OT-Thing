@@ -49,6 +49,8 @@ public:
         TOPIC_TURBOSHIFT2,
         TOPIC_TURBODURATION1,
         TOPIC_TURBODURATION2,
+        TOPIC_FLOW_OFFSET1,
+        TOPIC_FLOW_OFFSET2,
         TOPIC_UNKNOWN // has to be at end of list!
     };
     enum ValueTemplateType: int8_t {

@@ -1,5 +1,5 @@
 blueprint:
-  name: Weather to OTthing
+  name: "OTthing: send outside temperature to OTthing"
   domain: automation
   author: "S. Seegel"
 

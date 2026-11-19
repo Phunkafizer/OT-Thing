@@ -98,4 +98,5 @@ public:
         double shift {10.0};
         time_t endTime {0};
     } turbo;
+    double flowOffset;
 };

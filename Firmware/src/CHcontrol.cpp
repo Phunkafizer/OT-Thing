@@ -74,6 +74,7 @@ void CHcontrol::getJson(JsonObject &obj) {
     obj[FPSTR(STR_STATKEY_ROOMCOMPINTEGRATOR)] = round(roomComp.integState * 100) / 100.0;
     obj[FPSTR(STR_STATKEY_RETURNLIMITINTEGRATOR)] = round(retLimit.integState * 100) / 100.0;
     obj[FPSTR(STR_STATKEY_FLOWMIN)] = flowMin;
+    obj[FPSTR(STR_STATKEY_FLOWOFFSET)] = flowOffset;
 
     switch (mode) {
     case HADiscovery::MODE_HEAT:
@@ -213,6 +214,8 @@ double CHcontrol::getFlow() {
     time_t now = time(nullptr);
     if (turbo.endTime > now)
         result += turbo.shift;
+
+    result += flowOffset;
     
     clip(result, flowMin, curve.getFlowMax());
     return round10(result);
@@ -558,6 +561,15 @@ bool CHcontrol::sendDiscoveries(const bool en) {
     haDisc.setSlaveAvailability();
     haDisc.setValueTemplate(mqtt.getValueTemplateBool(Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_OVERRIDE_TEMP, channel));
     if (!haDisc.publish(otcontrol.getOverrideEnabled() && en))
+        return false;
+
+    str = replace(PSTR("flow offset #"), channel + 1, 1);
+    haDisc.createNumber(str, topic(Mqtt::TOPIC_FLOW_OFFSET1, channel));
+    haDisc.setDeviceClass(FPSTR(HA_DEVICE_CLASS_TEMPERATURE));
+    haDisc.setUnit(FPSTR(HA_UNIT_CELSIUS));
+    haDisc.setMinMax(-10, 15, 0.1);
+    haDisc.setSlaveAvailability();
+    if (!haDisc.publish(otcontrol.getOverrideEnabled() && en, Mqtt::VALTMPL_HEATING_CIRCUIT, STR_STATKEY_FLOWOFFSET, channel))
         return false;
 
     return true;

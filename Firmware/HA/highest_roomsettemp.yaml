@@ -1,0 +1,83 @@
+blueprint:
+  name: "OTThing: Sync Highest Room Setpoint"
+  description: >
+    Finds the highest valid target temperature (between 10 °C and 30 °C) from a list
+    of room thermostats and applies this value as the target temperature for the
+    selected OTThing climate control (e.g., flowOffset).
+  domain: automation
+  input:
+    otthing_climate:
+      name: OTThing Climate Control (flowOffset)
+      description: The OTThing climate entity to which the highest setpoint will be sent.
+      selector:
+        entity:
+          filter:
+            - domain: climate
+    room_climates:
+      name: Room Thermostats
+      description: Select all room thermostats to be included in the calculation.
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: climate
+    fallback_temp:
+      name: Fallback Temperature (Optional)
+      description: >
+        Temperature to set if all selected room thermostats are turned off ('off'),
+        outside the valid 10–30 °C range, or do not provide a valid target temperature.
+      default: 15.0
+      selector:
+        number:
+          min: 5.0
+          max: 30.0
+          step: 0.5
+          unit_of_measurement: "°C"
+          mode: box
+
+mode: restart
+max_exceeded: silent
+
+variables:
+  target_otthing: !input otthing_climate
+  rooms: !input room_climates
+  fallback: !input fallback_temp
+  # Calculate the highest target temperature of active thermostats within the valid 10-30 °C range
+  highest_temp: >
+    {% set ns = namespace(temps=[]) %}
+    {% for entity_id in rooms %}
+      {% set state = states(entity_id) %}
+      {% set temp = state_attr(entity_id, 'temperature') %}
+      {% if state not in ['off', 'unavailable', 'unknown'] and temp is number %}
+        {% set temp_val = temp | float %}
+        {% if 10.0 <= temp_val <= 30.0 %}
+          {% set ns.temps = ns.temps + [temp_val] %}
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+    {% if ns.temps | count > 0 %}
+      {{ ns.temps | max }}
+    {% else %}
+      {{ fallback | float }}
+    {% endif %}
+
+trigger:
+  # Trigger whenever any state or attribute (e.g. target temperature) of the room thermostats changes
+  - platform: state
+    entity_id: !input room_climates
+  # Also trigger on Home Assistant startup to ensure values are synced immediately
+  - platform: homeassistant
+    event: start
+
+condition:
+  # Prevent unnecessary commands to OTThing if the target value is already identical
+  - condition: template
+    value_template: >
+      {{ state_attr(target_otthing, 'temperature') | float(0) != highest_temp | float }}
+
+action:
+  - service: climate.set_temperature
+    target:
+      entity_id: !input otthing_climate
+    data:
+      temperature: "{{ highest_temp }}"

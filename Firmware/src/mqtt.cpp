@@ -45,6 +45,8 @@ static struct {
     {Mqtt::TOPIC_TURBOSHIFT2, "turboShift2"},
     {Mqtt::TOPIC_TURBODURATION1, "turboDuration1"},
     {Mqtt::TOPIC_TURBODURATION2, "turboDuration2"},
+    {Mqtt::TOPIC_FLOW_OFFSET1, "flowOffset1"},
+    {Mqtt::TOPIC_FLOW_OFFSET2, "flowOffset2"},
 };
 
 Mqtt mqtt;
@@ -164,7 +166,7 @@ void Mqtt::loop() {
     }
 
     if (cli.connected()) {
-        if (millis() > (lastDisc + 5000)) {
+        if (millis() - lastDisc > 5000) {
             lastDisc = millis();
             while (discFlagPos <= DISC_AUX) {
                 if ((discFlags & (1<<discFlagPos)) == 0) {
@@ -426,6 +428,15 @@ bool Mqtt::setValue(const String &key, const String &value, const bool viaHttp, 
         const uint8_t ch = (uint8_t) (etop - TOPIC_TURBODURATION1);
         uint32_t d = value.toInt();
         otcontrol.setTurboDuration(d, ch);
+        retain = false;
+        break;
+    }
+
+    case TOPIC_FLOW_OFFSET1:
+    case TOPIC_FLOW_OFFSET2: {
+        const uint8_t ch = (uint8_t) (etop - TOPIC_FLOW_OFFSET1);
+        double d = value.toFloat();
+        otcontrol.setFlowOffset(d, ch);
         retain = false;
         break;
     }

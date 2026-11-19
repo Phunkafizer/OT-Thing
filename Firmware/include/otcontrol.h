@@ -146,6 +146,7 @@ public:
     bool getOverrideEnabled() const;
     void setTurboShift(const double shift, const uint8_t channel);
     void setTurboDuration(const uint32_t duration, const uint8_t channel);
+    void setFlowOffset(const double offset, const uint8_t channel);
     bool masterConnected() const;
     bool slaveConnected() const;
     void setOtValue(OTValue *otval, const OpenThermMessageType mt, const uint16_t data);

@@ -32,6 +32,7 @@ import webbrowser
 import shutil
 import serial
 import tempfile
+from types import SimpleNamespace
 
 try:
     import winsound  # Windows-only, optional
@@ -378,12 +379,12 @@ def create_nvs_bin(hw_major: int, hw_minor: int, output_bin_path: str):
         tmp_csv_path = tmp_csv.name
 
     try:
-        args = nvs_partition_gen.Args(
+        args = SimpleNamespace(
             input=tmp_csv_path,
             output=output_bin_path,
             size="0x5000",
             version=2,
-            outdir=None
+            outdir=os.getcwd()
         )
         nvs_partition_gen.generate(args)
     finally:

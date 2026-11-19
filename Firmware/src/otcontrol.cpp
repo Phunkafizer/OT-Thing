@@ -1039,6 +1039,10 @@ void OTControl::setTurboDuration(const uint32_t duration, const uint8_t channel)
     chcontrol[channel].turbo.endTime = time(nullptr) + duration * 60;
 }
 
+void OTControl::setFlowOffset(const double offset, const uint8_t channel) {
+    chcontrol[channel].flowOffset = offset;
+}
+
 void OTControl::setCoolingCtrl(const int ctrl) {
     boilerCtrl.coolingCtrl = (uint8_t) constrain(ctrl, 0, 100);
     setCoolingCtrlSetpoint.force();
