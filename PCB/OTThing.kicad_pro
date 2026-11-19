@@ -755,7 +755,7 @@
         "uuid": "cb61f12f-ab02-48e5-a06c-10aea7e452c9"
       }
     ],
-    "used_designators": "",
+    "used_designators": "J1,R24,R26,R34-35,R41,D11,#PWR14,#PWR41,#PWR44,#PWR67-84,Q3,Q14,C11-15,LED1-4,U2,TP17",
     "variants": []
   },
   "sheets": [
@@ -766,6 +766,10 @@
     [
       "a574d69d-1f3b-4c57-80b8-ab8b11fede3f",
       "OpenTherm interface"
+    ],
+    [
+      "3993ba3d-0cfe-42f3-a841-15db1696d8d7",
+      "LEDs"
     ]
   ],
   "text_variables": {},
