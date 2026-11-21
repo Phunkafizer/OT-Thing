@@ -229,10 +229,11 @@ Below is an excerpt of hardware devices reported to work successfully with **OTt
 * **Domusa** BioClass HM 16 (Pellet)
 * **Hoval** TopGas
 * **Ideal** Logic Max combi
+* **Immergas* Victrix Tera 24 Plus
 * **Intergas** Xtreme 36
 * **Intergas** HRE 36/30A
 * **Junkers** Cerasmart ZSB 3-16 *(with OpenTherm module OTM 1)*
-* **Lamborghini* IX Condens 25 C
+* **Lamborghini** IX Condens 25 C
 * **MHG**
 * **Remeha** Tzerra 28c
 * **Remeha** Tzerra Ace
@@ -249,6 +250,7 @@ Below is an excerpt of hardware devices reported to work successfully with **OTt
 * **Evohome** R8810 bridge
 * **Honeywell** DT4M
 * **Hoval** RS-OT
+* **Immergas** CAR V2
 * **Junkers** TF 30
 * **MHG** Ceta 107
 * **Siemens** QAA73

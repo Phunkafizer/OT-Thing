@@ -198,7 +198,10 @@ OutsideTemp::OutsideTemp():
 }
 
 void OutsideTemp::setConfig(JsonObject &obj) {
+    const Source prevSrc = src;
     Sensor::setConfig(obj);
+    if (src != prevSrc)
+        lastHistPos = -1;
     lat = obj[F("lat")];
     lon = obj[F("lon")];
     apikey = obj[F("apikey")].as<String>();
@@ -210,6 +213,9 @@ void OutsideTemp::setConfig(JsonObject &obj) {
 }
 
 void OutsideTemp::set(const double val, const Source src, const Source lastSrc) {
+    if ((src != this->src) && (src != SOURCE_NA))
+        return;
+
     Sensor::set(val, src, lastSrc);
 
     struct tm timeinfo;
@@ -239,11 +245,13 @@ void OutsideTemp::writeJson(JsonVariant val) {
 
     JsonObject obj = val.as<JsonObject>();
     double minVal = value, maxVal = value;
-    for (int i=0; i<sizeof(minValues)/sizeof(minValues[0]); i++) {
-        if (minValues[i] < minVal)
-            minVal = minValues[i];
-        if (maxValues[i] > maxVal)
-            maxVal = maxValues[i];
+    if (lastHistPos >= 0) {
+        for (int i=0; i<sizeof(minValues)/sizeof(minValues[0]); i++) {
+            if (minValues[i] < minVal)
+                minVal = minValues[i];
+            if (maxValues[i] > maxVal)
+                maxVal = maxValues[i];
+        }
     }
     obj[F("min")] = minVal;
     obj[F("max")] = maxVal;
@@ -251,6 +259,9 @@ void OutsideTemp::writeJson(JsonVariant val) {
 }
 
 double OutsideTemp::getAvg() const {
+    if (lastHistPos < 0)
+        return setFlag ? value : 0.0;
+
     double avgVal = 0;
     for (int i=0; i<sizeof(minValues)/sizeof(minValues[0]); i++) {
         avgVal += (minValues[i] + maxValues[i]) / 2.0;
@@ -302,8 +313,7 @@ void OutsideTemp::loop() {
             
             if (deserializeJson(doc, replyBuf) == DeserializationError::Ok) {
                 if (doc[F("main")][F("temp")].is<JsonFloat>()) {
-                    value = doc[F("main")][F("temp")];
-                    setFlag = true;
+                    set(doc[F("main")][F("temp")].as<double>(), SOURCE_OPENWEATHER);
                     owResult = F("Ok");
                 }
                 else
