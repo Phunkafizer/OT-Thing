@@ -227,9 +227,10 @@ Below is an excerpt of hardware devices reported to work successfully with **OTt
 * **De Dietrich** MCR 24 Home
 * **De Dietrich** MPX 24/29 MI Compact
 * **Domusa** BioClass HM 16 (Pellet)
+* **Elco** Trigon S 
 * **Hoval** TopGas
 * **Ideal** Logic Max combi
-* **Immergas* Victrix Tera 24 Plus
+* **Immergas** Victrix Tera 24 Plus
 * **Intergas** Xtreme 36
 * **Intergas** HRE 36/30A
 * **Junkers** Cerasmart ZSB 3-16 *(with OpenTherm module OTM 1)*
@@ -238,6 +239,7 @@ Below is an excerpt of hardware devices reported to work successfully with **OTt
 * **Remeha** Tzerra 28c
 * **Remeha** Tzerra Ace
 * **Termet** Gold Plus 2
+* **Viadrus** K4 (e-board SIT 7530197_01)
 * **Viessmann** Vitodens 100-W (B1KG)
 * **Weheat** Sparrow P60
 * **Westen** Boyler Digit+
@@ -248,11 +250,13 @@ Below is an excerpt of hardware devices reported to work successfully with **OTt
 * **De Dietrich** AD304
 * **De Dietrich** iSense (AD289)
 * **Evohome** R8810 bridge
+* **Google** Nest Thermostat E
 * **Honeywell** DT4M
 * **Hoval** RS-OT
 * **Immergas** CAR V2
 * **Junkers** TF 30
 * **MHG** Ceta 107
+* **REMEHA** iSense
 * **Siemens** QAA73
 * **Theben / Windhager** RAM 786
 

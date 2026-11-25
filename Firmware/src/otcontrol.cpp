@@ -461,11 +461,11 @@ void OTControl::sendRequest(const char source, const unsigned long msg) {
 
 void OTControl::sendResponse(const unsigned long msg, const char source) {
     slave.sendResponse(source, msg);
+    
     OTValue *val = OTValue::getroomUnitValue(OpenTherm::getDataID(msg));
-    if (val) {
-        const auto mt = OpenTherm::getMessageType(msg);
+    const auto mt = OpenTherm::getMessageType(msg);
+    if (val && ((mt == OpenThermMessageType::READ_ACK) || (mt == OpenThermMessageType::WRITE_ACK)))
         val->setMsgResult(mt);
-    }
 }
 
 void OTControl::setOtValue(OTValue *otval, const OpenThermMessageType mt, const uint16_t data) {
