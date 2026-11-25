@@ -338,7 +338,7 @@ bool CHcontrol::loop() {
     }
 
     if (schedule.getSetpoint(schedTemp)) {
-        roomSetPoint[channel].set(schedTemp, Sensor::SOURCE_NA);
+        roomSetPoint[channel].set(schedTemp, Sensor::SOURCE_NA, Sensor::SOURCE_SCHED);
         mqtt.sendValue(static_cast<Mqtt::MqttTopic>(Mqtt::TOPIC_ROOMSETPOINT1 + channel), String(schedTemp, 1));
         res = true;
     }

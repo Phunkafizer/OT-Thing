@@ -43,9 +43,10 @@ void Sensor::set(const double val, const Source src, const Source lastSrc) {
         if ((!setFlag) || (alpha == 1.0))
             smoothed = val;
         setFlag = true;
-        lastSetSrc = src;
         if (lastSrc != SOURCE_NA)
             lastSetSrc = lastSrc;
+        else if (src != SOURCE_NA)
+            lastSetSrc = src;
     }
 }
 

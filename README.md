@@ -231,6 +231,7 @@ Below is an excerpt of hardware devices reported to work successfully with **OTt
 * **Hoval** TopGas
 * **Ideal** Logic Max combi
 * **Immergas** Victrix Tera 24 Plus
+* **Intergas** Kombi Kompakt HRE 36/30 A
 * **Intergas** Xtreme 36
 * **Intergas** HRE 36/30A
 * **Junkers** Cerasmart ZSB 3-16 *(with OpenTherm module OTM 1)*
@@ -254,6 +255,7 @@ Below is an excerpt of hardware devices reported to work successfully with **OTt
 * **Honeywell** DT4M
 * **Hoval** RS-OT
 * **Immergas** CAR V2
+* **Intergas** Comfort Touch
 * **Junkers** TF 30
 * **MHG** Ceta 107
 * **REMEHA** iSense
