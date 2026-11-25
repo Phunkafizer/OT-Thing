@@ -18,6 +18,7 @@
 | 4     | 17  | R -	| rel_mod              | * - -       | f8.8        | %     | Relative Modulation Level |
 | 4     | 18  | R - | ch_pressure          | * - -       | f8.8        | bar   | CH water pressure |
 | 4     | 19  | R - | dhw_flow_rate        | * - -       | f8.8        | l/min | DHW flow rate |
+| 8     | 39  |	R -	| tr_override2         | * - -       | f8.8        | °C    | Remote Override Room Setpoint 
 
 - SV: value present in table slaveValues
 - MV: value present in table masterValues

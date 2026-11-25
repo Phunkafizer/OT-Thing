@@ -109,7 +109,6 @@ ID	Msg	Name
 
    Class 8 : Control of Special Applications
 ID	Msg	Name
-39  R-  *   -   *   Remote Override Room Setpoint 2
 99	RW	Remote Override Operating Mode Heating
 100	R-	*   -   *   Remote Override Room Setpoint function
 */

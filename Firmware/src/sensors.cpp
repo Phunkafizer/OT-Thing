@@ -46,8 +46,6 @@ void Sensor::set(const double val, const Source src, const Source lastSrc) {
         lastSetSrc = src;
         if (lastSrc != SOURCE_NA)
             lastSetSrc = lastSrc;
-        else if (lastSrc != SOURCE_NA)
-            lastSetSrc = lastSrc;
     }
 }
 

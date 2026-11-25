@@ -704,6 +704,24 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 break;
             }
 
+            case TrOverride: {
+                double t = 0; // no override
+                if (roomSetPoint[0].lastSetSrc != Sensor::SOURCE_OT)
+                    roomSetPoint[0].get(t);
+
+                resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, tmpToData(t));
+                break;
+            }
+
+            case TrOverride2: {
+                double t = 0; // no override
+                if (roomSetPoint[1].lastSetSrc != Sensor::SOURCE_OT)
+                    roomSetPoint[1].get(t);
+
+                resp = OpenTherm::buildResponse(OpenThermMessageType::READ_ACK, id, tmpToData(t));
+                break;
+            }
+
             default: {
                 if (otval != nullptr) {
                     if (otval->hasReply())
