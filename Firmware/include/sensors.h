@@ -118,6 +118,7 @@ class AutoSensor: public Sensor {
 public:
     AutoSensor();
     void set(const double val, const Source src, const Source lastSrc = SOURCE_NA) override;
+    bool isNotOtSourced() const;
 private:
     double values[SOURCE_AUTO + 1];
 };

@@ -181,6 +181,10 @@ void AutoSensor::set(const double val, const Source src, const Source lastSrc) {
         Sensor::set(val, src, lastSrc);
 }
 
+bool AutoSensor::isNotOtSourced() const {
+    return (lastSetSrc != SOURCE_OT) && (lastSetSrc != SOURCE_NA);
+}
+
 OutsideTemp::OutsideTemp():
         Sensor(0.2),
         nextMillis(0),
