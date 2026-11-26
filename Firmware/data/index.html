@@ -6348,7 +6348,7 @@
                     return;
 
                 if (ele.getAttribute("field") === "heatercircuit.$.piError") {
-                    ele.classList.add(val >= -2 && val <= 2 ? "pi-error-in-deadband" : "pi-error-outside-deadband");
+                    ele.classList.add(Math.abs(val) < 0.2 ? "pi-error-in-deadband" : "pi-error-outside-deadband");
                     return;
                 }
 
@@ -6788,6 +6788,10 @@
             const hcs = statuscache?.heatercircuit?.[currentCh] ?? {};
             if (hcs?.roomtemp !== undefined) {
                 pi_err = roomset - hcs.roomtemp;
+
+                if (Math.abs(pi_err) < 0.2)
+                    pi_err = 0; // deadband
+
                 roomcomp = (hcfg.roomComp?.p ?? 0) * pi_err + hcs.roomcompInteg ?? 0;
                 // boost
                 if (pi_err > 1.0)
@@ -6941,9 +6945,8 @@
             if ((statuscache.outsideTemp?.current !== undefined) && (ost <= ostCutoff)) {
                 //draw outsidetemp & it's flowtemperature
                 let ftsensor = getFlowTemperature(ost, roomset, hcfg);
-                const deadband = (pi_err >= -0.2) && (pi_err <= 0.2);
                 let col;
-                if (!deadband && roomCompActive) {
+                if (roomCompActive) {
                     ftsensor += roomcomp;
                     col = '#0F0'; // green when room compensation is active
                 }
