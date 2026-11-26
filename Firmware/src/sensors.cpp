@@ -170,7 +170,10 @@ AutoSensor::AutoSensor():
 void AutoSensor::set(const double val, const Source src, const Source lastSrc) {
     if ((this->src == SOURCE_AUTO) && (src != SOURCE_NA)) {
         if (val != values[src]) {
-            Sensor::set(val, SOURCE_AUTO, lastSrc);
+            Source tmp = lastSrc;
+            if (tmp == SOURCE_NA)
+                tmp = src;
+            Sensor::set(val, SOURCE_AUTO, tmp);
             values[src] = val;
         }
     }

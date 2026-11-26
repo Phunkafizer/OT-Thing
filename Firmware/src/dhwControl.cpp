@@ -14,14 +14,17 @@ void DHWControl::loop() {
 void DHWControl::setConfig(JsonObject &obj) {
     ctrlSource = (CtrlSource) (obj[F("dhwCtrlSource")] | SOURCE_AUTO);
 
-    if (ctrlSource == SOURCE_ROOMUNIT)
+    on = obj[F("dhwOn")];
+
+    if (ctrlSource == SOURCE_ROOMUNIT) {
         if (roomunit.setpoint != 0)
             setpoint = roomunit.setpoint;
+        if (roomunit.onSet)
+            on = roomunit.on;
+    }
 
     if (setpoint == 0)
         setpoint = obj[F("dhwTemperature")] | 45;
-
-    roomunit.on = obj[F("dhwOn")];
 
     schedule.setConfig(obj[F("dhwSchedule")]);
     roomunit.setpointReadback = setpoint; // in order to force roomunit to send setpoint
@@ -37,11 +40,12 @@ void DHWControl::setOn(const bool on) {
 }
 
 void DHWControl::setOnRU(const bool on) {
-    if (roomunit.on != on) {
+    if (!roomunit.onSet || (roomunit.on != on)) {
         roomunit.on = on;
         if ((ctrlSource == SOURCE_AUTO) || (ctrlSource == SOURCE_ROOMUNIT))
             this->on = on;
     }
+    roomunit.onSet = true;
 }
 
 double DHWControl::getTemp() {

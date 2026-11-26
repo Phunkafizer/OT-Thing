@@ -221,7 +221,7 @@ Only one concern per issue!
 
 Below is an excerpt of hardware devices reported to work successfully with **OTthing**. If you have verified additional devices, contributions and reports are very welcome!
 
-### Boilers & Heating Systems
+### Boilers, heatpumps, heating systems, ventilation systems
 * **ACV** compact HRE eco 18 solo
 * **De Dietrich** Inidens 20/24 MI
 * **De Dietrich** MCR 24 Home
@@ -237,6 +237,7 @@ Below is an excerpt of hardware devices reported to work successfully with **OTt
 * **Junkers** Cerasmart ZSB 3-16 *(with OpenTherm module OTM 1)*
 * **Lamborghini** IX Condens 25 C
 * **MHG**
+* **Remeha** Elga Ace
 * **Remeha** Tzerra 28c
 * **Remeha** Tzerra Ace
 * **Termet** Gold Plus 2
@@ -246,7 +247,7 @@ Below is an excerpt of hardware devices reported to work successfully with **OTt
 * **Westen** Boyler Digit+
 * **Windhager** BioWin (Pellet)
 
-### Room Units, Thermostats, Others
+### Roomunits, thermostats, others
 * **Baxi** RC 06.20
 * **De Dietrich** AD304
 * **De Dietrich** iSense (AD289)
@@ -260,6 +261,7 @@ Below is an excerpt of hardware devices reported to work successfully with **OTt
 * **MHG** Ceta 107
 * **REMEHA** iSense
 * **Siemens** QAA73
+* **TADO** Thermostat X
 * **Theben / Windhager** RAM 786
 
 ---

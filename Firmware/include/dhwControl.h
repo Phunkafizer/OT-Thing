@@ -13,6 +13,7 @@ private:
         double setpoint {0};
         double setpointReadback {0};
         bool on;
+        bool onSet {false}; // set on first call from roomunit
     } roomunit;
     bool getDhwActive() const;
     enum CtrlSource {
