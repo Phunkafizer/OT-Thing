@@ -461,11 +461,6 @@ void OTControl::sendRequest(const char source, const unsigned long msg) {
 
 void OTControl::sendResponse(const unsigned long msg, const char source) {
     slave.sendResponse(source, msg);
-    
-    OTValue *val = OTValue::getroomUnitValue(OpenTherm::getDataID(msg));
-    const auto mt = OpenTherm::getMessageType(msg);
-    if (val && ((mt == OpenThermMessageType::READ_ACK) || (mt == OpenThermMessageType::WRITE_ACK)))
-        val->setMsgResult(mt);
 }
 
 void OTControl::setOtValue(OTValue *otval, const OpenThermMessageType mt, const uint16_t data) {
@@ -619,12 +614,19 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
         return;
     }
 
+    OTValue *otval = OTValue::getroomUnitValue(id);
+    if (otval) {
+        otval->setValue(mt, msg & 0xFFFF);
+        if (mt == OpenThermMessageType::WRITE_DATA)
+            otval->setMsgResult(OpenThermMessageType::WRITE_ACK);
+    }
+
     switch (otMode) {
     case OTMODE_MASTER:
     case OTMODE_MASTER_SLAVE: {
         unsigned long resp = OpenTherm::buildResponse(OpenThermMessageType::UNKNOWN_DATA_ID, id, 0x0000);
         slave.onReceive('S', msg);
-        OTValue *otval = OTValue::getSlaveValue(id);
+        otval = OTValue::getSlaveValue(id);
 
         switch (mt) {
         case OpenThermMessageType::READ_DATA: {
@@ -722,7 +724,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                 break;
             }
 
-            default: {
+            default:
                 if (otval != nullptr) {
                     if (otval->hasReply())
                         resp = OpenTherm::buildResponse(otval->getLastMsgResult(), id, otval->getValue());
@@ -735,7 +737,6 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
                     }
                 }
                 break;
-            }
             }
 
             sendResponse(resp, 'P');
@@ -843,36 +844,14 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
             if (sem)
                 sendRequest(0, newMsg);
         }
-        break;
-    }
-
-    default:
-        break;
-    }
-
-    OTValue *otval = nullptr;
-    uint16_t data = msg & 0xFFFF;
-
-    switch (otMode) {
-    case OTMODE_MASTER:
-    case OTMODE_MASTER_SLAVE: {
-        otval = OTValue::getroomUnitValue(id);
-        break;
-    }
-    case OTMODE_REPEATER: {
-        otval = OTValue::getroomUnitValue(id); // update room unit value with original message from roomunit
-        if (otval)
-            otval->setValue(mt, msg & 0xFFFF);
-
         otval = OTValue::getMasterValue(id);
-        data = newMsg & 0xFFFF;
-        break;
-    }
-    default:
+        setOtValue(otval, mt, newMsg & 0xFFFF);
         break;
     }
 
-    setOtValue(otval, mt, data);
+    default:
+        break;
+    }
 }
 
 void OTControl::getJson(JsonObject &obj) {

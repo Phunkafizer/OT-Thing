@@ -534,6 +534,7 @@ void OTValue::setMsgResult(const OpenThermMessageType ty) {
     /* this is called on:
      - a received response from a connected slave (boiler, ...) if it is a mastervalue (reply to write-messages like room_t, room_set_t, outside_t, ...)
      - a sent response to a connected master (roomunit)
+     - a received 
     */
     lastMsgResult = ty;
 
