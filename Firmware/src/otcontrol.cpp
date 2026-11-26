@@ -616,7 +616,7 @@ void OTControl::OnRxSlave(const unsigned long msg, const OpenThermResponseStatus
 
     OTValue *otval = OTValue::getroomUnitValue(id);
     if (otval) {
-        otval->setValue(mt, msg & 0xFFFF);
+        setOtValue(otval, mt, msg & 0xFFFF);
         if (mt == OpenThermMessageType::WRITE_DATA)
             otval->setMsgResult(OpenThermMessageType::WRITE_ACK);
     }
