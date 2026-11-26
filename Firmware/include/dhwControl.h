@@ -8,10 +8,12 @@ class DHWControl {
 private:
     Scheduler schedule;
     bool on;
-    bool onRU;
-    double setpoint;
-    double setpointRU {0};
-    double setpointRUReadback {0};
+    double setpoint {0};
+    struct {
+        double setpoint {0};
+        double setpointReadback {0};
+        bool on;
+    } roomunit;
     bool getDhwActive() const;
     enum CtrlSource {
         SOURCE_OTTHING = 0,

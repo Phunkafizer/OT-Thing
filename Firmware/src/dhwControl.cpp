@@ -12,11 +12,19 @@ void DHWControl::loop() {
 }
 
 void DHWControl::setConfig(JsonObject &obj) {
-    on = obj[F("dhwOn")];
-    setpoint = obj[F("dhwTemperature")] | 45;
     ctrlSource = (CtrlSource) (obj[F("dhwCtrlSource")] | SOURCE_AUTO);
+
+    if (ctrlSource == SOURCE_ROOMUNIT)
+        if (roomunit.setpoint != 0)
+            setpoint = roomunit.setpoint;
+
+    if (setpoint == 0)
+        setpoint = obj[F("dhwTemperature")] | 45;
+
+    roomunit.on = obj[F("dhwOn")];
+
     schedule.setConfig(obj[F("dhwSchedule")]);
-    setpointRUReadback = setpoint; // in order to force roomunit to send setpoint
+    roomunit.setpointReadback = setpoint; // in order to force roomunit to send setpoint
     setDhwRequest.force();
 }
 
@@ -29,8 +37,8 @@ void DHWControl::setOn(const bool on) {
 }
 
 void DHWControl::setOnRU(const bool on) {
-    if (this->onRU != on) {
-        this->onRU = on;
+    if (roomunit.on != on) {
+        roomunit.on = on;
         if ((ctrlSource == SOURCE_AUTO) || (ctrlSource == SOURCE_ROOMUNIT))
             this->on = on;
     }
@@ -67,7 +75,7 @@ bool DHWControl::setSetpoint(const double temp, const Sensor::Source src) {
         if (temp != setpoint) {
             lastSetpointSrc = src;
             setpoint = temp;
-            setpointRUReadback = temp;
+            roomunit.setpointReadback = temp;
             setDhwRequest.force();
             return true;
         }
@@ -82,7 +90,7 @@ bool DHWControl::setSetpoint(const double temp, const Sensor::Source src) {
  */
 void DHWControl::setSetpointRU(const double temp) {
     if ((ctrlSource == SOURCE_AUTO) || (ctrlSource == SOURCE_ROOMUNIT)) {
-        if (temp != setpointRU) {
+        if (temp != roomunit.setpoint) {
             lastSetpointSrc = Sensor::SOURCE_OT;
             setpoint = temp;
             setDhwRequest.force();
@@ -90,12 +98,12 @@ void DHWControl::setSetpointRU(const double temp) {
         if (ctrlSource == SOURCE_ROOMUNIT)
             lastSetpointSrc = Sensor::SOURCE_OT;
     }
-    setpointRU = temp;
-    setpointRUReadback = temp;
+    roomunit.setpoint = temp;
+    roomunit.setpointReadback = temp;
 }
 
 double DHWControl::getSetpointRU() const {
-    return setpointRUReadback;
+    return roomunit.setpointReadback;
 }
 
 bool DHWControl::sendDiscoveries(const bool en) {
